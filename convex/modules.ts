@@ -1,38 +1,60 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { v } from 'convex/values'
+import { mutation, query } from './_generated/server'
 
-export const getModulesByCourse = query({
-  args: { courseId: v.id("courses") },
-  handler: async (ctx, args) => {
-    const modules = await ctx.db
-      .query("modules")
-      .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
-      .collect();
-    return modules.sort((a, b) => a.order - b.order);
+export const listByCourse = query({
+  args: { courseId: v.id('courses'), creatorId: v.string() },
+  handler: async (ctx, { courseId, creatorId }) => {
+    const course = await ctx.db.get(courseId)
+    if (!course || course.creatorId !== creatorId) return []
+
+    return await ctx.db
+      .query('modules')
+      .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+      .order('asc')
+      .collect()
   },
-});
+})
 
-export const createModule = mutation({
+export const create = mutation({
   args: {
-    courseId: v.id("courses"),
+    courseId: v.id('courses'),
+    creatorId: v.string(),
     title: v.string(),
     order: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("modules", args);
-  },
-});
+    const course = await ctx.db.get(args.courseId)
+    if (!course || course.creatorId !== args.creatorId) throw new Error('Não autorizado')
 
-export const updateModule = mutation({
-  args: { moduleId: v.id("modules"), title: v.string() },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.moduleId, { title: args.title });
+    const moduleId = await ctx.db.insert('modules', args)
+    await ctx.db.patch(args.courseId, { totalModules: course.totalModules + 1 })
+    return moduleId
   },
-});
+})
 
-export const deleteModule = mutation({
-  args: { moduleId: v.id("modules") },
-  handler: async (ctx, args) => {
-    await ctx.db.delete(args.moduleId);
+export const update = mutation({
+  args: {
+    id: v.id('modules'),
+    creatorId: v.string(),
+    title: v.optional(v.string()),
+    order: v.optional(v.number()),
   },
-});
+  handler: async (ctx, { id, creatorId, ...fields }) => {
+    const mod = await ctx.db.get(id)
+    if (!mod || mod.creatorId !== creatorId) throw new Error('Não autorizado')
+    await ctx.db.patch(id, fields)
+  },
+})
+
+export const remove = mutation({
+  args: { id: v.id('modules'), creatorId: v.string() },
+  handler: async (ctx, { id, creatorId }) => {
+    const mod = await ctx.db.get(id)
+    if (!mod || mod.creatorId !== creatorId) throw new Error('Não autorizado')
+    const course = await ctx.db.get(mod.courseId)
+    if (course) {
+      await ctx.db.patch(mod.courseId, { totalModules: Math.max(0, course.totalModules - 1) })
+    }
+    await ctx.db.delete(id)
+  },
+})

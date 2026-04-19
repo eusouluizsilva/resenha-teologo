@@ -1,95 +1,105 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { v } from 'convex/values'
+import { mutation, query } from './_generated/server'
 
-export const listAll = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("courses").collect();
-  },
-});
-
-export const listPublished = query({
-  args: {},
-  handler: async (ctx) => {
+export const listByCreator = query({
+  args: { creatorId: v.string() },
+  handler: async (ctx, { creatorId }) => {
     return await ctx.db
-      .query("courses")
-      .filter((q) => q.eq(q.field("status"), "published"))
-      .collect();
+      .query('courses')
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+      .order('desc')
+      .collect()
   },
-});
+})
 
-export const getCourse = query({
-  args: { courseId: v.id("courses") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.courseId);
+export const getById = query({
+  args: { id: v.id('courses'), creatorId: v.string() },
+  handler: async (ctx, { id, creatorId }) => {
+    const course = await ctx.db.get(id)
+    if (!course || course.creatorId !== creatorId) return null
+    return course
   },
-});
+})
 
-export const listMyCourses = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("courses")
-      .filter((q) => q.eq(q.field("createdBy"), args.userId))
-      .collect();
-  },
-});
-
-export const createCourse = mutation({
+export const create = mutation({
   args: {
+    creatorId: v.string(),
     title: v.string(),
     description: v.string(),
-    thumbnailUrl: v.optional(v.string()),
-    createdBy: v.optional(v.id("users")),
+    category: v.string(),
+    level: v.union(v.literal('iniciante'), v.literal('intermediario'), v.literal('avancado')),
+    thumbnail: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    language: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("courses", {
-      title: args.title,
-      description: args.description,
-      thumbnailUrl: args.thumbnailUrl,
-      status: "draft",
-      createdAt: Date.now(),
-      createdBy: args.createdBy,
-    });
+    return await ctx.db.insert('courses', {
+      ...args,
+      isPublished: false,
+      totalLessons: 0,
+      totalStudents: 0,
+      totalModules: 0,
+    })
   },
-});
+})
 
-export const updateCourse = mutation({
+export const update = mutation({
   args: {
-    courseId: v.id("courses"),
+    id: v.id('courses'),
+    creatorId: v.string(),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
-    thumbnailUrl: v.optional(v.string()),
-    welcomeVideoUrl: v.optional(v.string()),
-    status: v.optional(v.union(v.literal("draft"), v.literal("published"))),
-    requesterId: v.optional(v.id("users")),
+    category: v.optional(v.string()),
+    level: v.optional(v.union(v.literal('iniciante'), v.literal('intermediario'), v.literal('avancado'))),
+    thumbnail: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    isPublished: v.optional(v.boolean()),
+    language: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const { courseId, requesterId, ...fields } = args;
-    if (requesterId) {
-      const requester = await ctx.db.get(requesterId);
-      if (!requester) return;
-      const course = await ctx.db.get(courseId);
-      if (!course) return;
-      if (requester.role !== "admin" && course.createdBy !== requesterId) return;
-    }
-    await ctx.db.patch(courseId, fields);
+  handler: async (ctx, { id, creatorId, ...fields }) => {
+    const course = await ctx.db.get(id)
+    if (!course || course.creatorId !== creatorId) throw new Error('Não autorizado')
+    await ctx.db.patch(id, fields)
   },
-});
+})
 
-export const deleteCourse = mutation({
-  args: {
-    courseId: v.id("courses"),
-    requesterId: v.optional(v.id("users")),
+export const remove = mutation({
+  args: { id: v.id('courses'), creatorId: v.string() },
+  handler: async (ctx, { id, creatorId }) => {
+    const course = await ctx.db.get(id)
+    if (!course || course.creatorId !== creatorId) throw new Error('Não autorizado')
+    await ctx.db.delete(id)
   },
-  handler: async (ctx, args) => {
-    if (args.requesterId) {
-      const requester = await ctx.db.get(args.requesterId);
-      if (!requester) return;
-      const course = await ctx.db.get(args.courseId);
-      if (!course) return;
-      if (requester.role !== "admin" && course.createdBy !== args.requesterId) return;
+})
+
+export const getStats = query({
+  args: { creatorId: v.string() },
+  handler: async (ctx, { creatorId }) => {
+    const courses = await ctx.db
+      .query('courses')
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+      .collect()
+
+    const totalCourses = courses.length
+    const publishedCourses = courses.filter((c) => c.isPublished).length
+    const totalStudents = courses.reduce((acc, c) => acc + c.totalStudents, 0)
+    const totalLessons = courses.reduce((acc, c) => acc + c.totalLessons, 0)
+
+    const donations = await ctx.db
+      .query('donations')
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+      .collect()
+
+    const totalDonationsCents = donations
+      .filter((d) => d.status === 'completed')
+      .reduce((acc, d) => acc + d.amountCents, 0)
+
+    return {
+      totalCourses,
+      publishedCourses,
+      totalStudents,
+      totalLessons,
+      totalDonationsCents,
     }
-    await ctx.db.delete(args.courseId);
   },
-});
+})
