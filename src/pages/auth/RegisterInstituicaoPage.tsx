@@ -86,7 +86,13 @@ export function RegisterInstituicaoPage() {
   }
 
   return (
-    <AuthLayout maxWidth="max-w-lg">
+    <AuthLayout
+      maxWidth="max-w-lg"
+      asideEyebrow="Para igrejas e instituições"
+      asideTitle="Gerencie a formação teológica da sua comunidade em um só lugar."
+      asideDescription="Acompanhe progresso, organize membros e ofereça trilhas de estudo com a estrutura que sua instituição precisa."
+      highlights={['Matrícula e acompanhamento centralizado', 'Relatórios de progresso por membro', 'Trilha própria de formação institucional']}
+    >
       <motion.div variants={fadeUp} className="mb-8">
         <Link
           to="/cadastro"
