@@ -17,14 +17,30 @@ jobs:
       - name: Deploy preview
         id: deploy
         run: |
-          DEPLOY_URL=$(npx vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }} \
-            --scope=${{ secrets.VERCEL_TEAM_ID }} 2>&1 \
-            | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | tail -1)
+          OUTPUT=$(npx vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }} \
+            --scope=${{ secrets.VERCEL_TEAM_ID }} 2>&1)
+          echo "$OUTPUT"
+          DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | tail -1)
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           echo "Deployed preview: $DEPLOY_URL"
 
-      - name: Promote to production
+      - name: Promote to production via API
         run: |
-          npx vercel promote ${{ steps.deploy.outputs.url }} --yes \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --scope=${{ secrets.VERCEL_TEAM_ID }}
+          DEPLOY_URL="${{ steps.deploy.outputs.url }}"
+          HOSTNAME="${DEPLOY_URL#https://}"
+
+          # Get deployment ID from URL
+          DEPLOY_ID=$(curl -sf \
+            "https://api.vercel.com/v13/deployments/$HOSTNAME?teamId=${{ secrets.VERCEL_TEAM_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+
+          echo "Promoting deployment $DEPLOY_ID to production..."
+
+          curl -sf -X POST \
+            "https://api.vercel.com/v10/projects/${{ secrets.VERCEL_PROJECT_ID }}/promote/$DEPLOY_ID?teamId=${{ secrets.VERCEL_TEAM_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+
+          echo "Promoted successfully."
