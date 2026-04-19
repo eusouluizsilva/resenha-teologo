@@ -4,7 +4,6 @@ import { useSignUp } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
 import { fadeUp } from '@/lib/motion'
 import { AuthLayout } from '@/components/auth/AuthLayout'
-import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { VerifyStep } from '@/components/auth/VerifyStep'
 import { clerkErrorMessage } from '@/lib/auth'
 
@@ -55,7 +54,7 @@ export function RegisterAlunoPage() {
       const result = await signUp.attemptEmailAddressVerification({ code })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        navigate('/dashboard/aluno')
+        navigate('/dashboard')
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
@@ -69,16 +68,6 @@ export function RegisterAlunoPage() {
     try {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
     } catch {}
-  }
-
-  async function handleOAuth(strategy: 'oauth_google' | 'oauth_facebook') {
-    if (!isLoaded) return
-    sessionStorage.setItem('signup_perfil', 'aluno')
-    await signUp.authenticateWithRedirect({
-      strategy,
-      redirectUrl: `${window.location.origin}/sso-callback`,
-      redirectUrlComplete: '/dashboard/aluno',
-    })
   }
 
   return (
@@ -107,18 +96,6 @@ export function RegisterAlunoPage() {
         />
       ) : (
         <motion.div variants={fadeUp} className="bg-[#151B23] border border-[#2A313B] rounded-2xl p-8 space-y-4">
-          <OAuthButtons
-            onGoogle={() => handleOAuth('oauth_google')}
-            onFacebook={() => handleOAuth('oauth_facebook')}
-            loading={loading}
-          />
-
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-[#2A313B]" />
-            <span className="text-white/30 text-xs">ou cadastre com email</span>
-            <div className="flex-1 h-px bg-[#2A313B]" />
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <input type="text" placeholder="Nome" required value={form.firstName} onChange={set('firstName')} className={inputClass} />

@@ -1,7 +1,11 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { useCreatorId } from '@/lib/useCreatorId'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,57 +58,21 @@ type VideoInfo = {
 function detectVideo(url: string): VideoInfo {
   if (!url) return { platform: 'unknown', embedUrl: null, label: '', color: '' }
 
-  // YouTube
   const yt = url.match(/(?:youtu\.be\/|[?&]v=|embed\/)([a-zA-Z0-9_-]{11})/)
-  if (yt) return {
-    platform: 'youtube',
-    embedUrl: `https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1`,
-    label: 'YouTube',
-    color: '#FF0000',
-  }
+  if (yt) return { platform: 'youtube', embedUrl: `https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1`, label: 'YouTube', color: '#FF0000' }
 
-  // Vimeo
   const vi = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
-  if (vi) return {
-    platform: 'vimeo',
-    embedUrl: `https://player.vimeo.com/video/${vi[1]}`,
-    label: 'Vimeo',
-    color: '#1AB7EA',
-  }
+  if (vi) return { platform: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vi[1]}`, label: 'Vimeo', color: '#1AB7EA' }
 
-  // Loom
   const lo = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/)
-  if (lo) return {
-    platform: 'loom',
-    embedUrl: `https://www.loom.com/embed/${lo[1]}`,
-    label: 'Loom',
-    color: '#625DF5',
-  }
+  if (lo) return { platform: 'loom', embedUrl: `https://www.loom.com/embed/${lo[1]}`, label: 'Loom', color: '#625DF5' }
 
-  // Panda Video
-  if (url.includes('pandavideo.com') || url.includes('player-vz')) return {
-    platform: 'panda',
-    embedUrl: url.includes('embed') ? url : null,
-    label: 'Panda Video',
-    color: '#F37E20',
-  }
+  if (url.includes('pandavideo.com') || url.includes('player-vz')) return { platform: 'panda', embedUrl: url.includes('embed') ? url : null, label: 'Panda Video', color: '#F37E20' }
 
-  // Google Drive
   const gd = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)
-  if (gd) return {
-    platform: 'drive',
-    embedUrl: `https://drive.google.com/file/d/${gd[1]}/preview`,
-    label: 'Google Drive',
-    color: '#4285F4',
-  }
+  if (gd) return { platform: 'drive', embedUrl: `https://drive.google.com/file/d/${gd[1]}/preview`, label: 'Google Drive', color: '#4285F4' }
 
-  // Bunny.net
-  if (url.includes('iframe.mediadelivery.net') || url.includes('bunnycdn.com')) return {
-    platform: 'bunny',
-    embedUrl: url,
-    label: 'Bunny.net',
-    color: '#FF6633',
-  }
+  if (url.includes('iframe.mediadelivery.net') || url.includes('bunnycdn.com')) return { platform: 'bunny', embedUrl: url, label: 'Bunny.net', color: '#FF6633' }
 
   return { platform: 'unknown', embedUrl: null, label: '', color: '' }
 }
@@ -205,12 +173,12 @@ function VideoSection({ url, setUrl, description, setDescription }: {
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=... ou outro link de vídeo"
+              placeholder="https://www.youtube.com/watch?v=..."
               className={`${inputCls} ${info.platform !== 'unknown' && url ? 'pr-28' : ''}`}
             />
             {info.platform !== 'unknown' && url && (
               <div
-                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
                 style={{ backgroundColor: `${info.color}25`, border: `1px solid ${info.color}40`, color: info.color }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: info.color }} />
@@ -224,13 +192,7 @@ function VideoSection({ url, setUrl, description, setDescription }: {
               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
-              Plataforma não reconhecida. Verifique se a URL está correta.
-            </p>
-          )}
-
-          {url && info.platform === 'panda' && !info.embedUrl && (
-            <p className="text-xs text-amber-400/80 mt-1.5">
-              Para Panda Video, use a URL de embed (iframe) gerada no painel da plataforma.
+              Plataforma nao reconhecida. Verifique se a URL esta correta.
             </p>
           )}
         </div>
@@ -242,21 +204,21 @@ function VideoSection({ url, setUrl, description, setDescription }: {
               className="w-full h-full"
               allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              title="Preview do vídeo"
+              title="Preview do video"
             />
           </div>
         )}
 
         <div>
           <label className="block text-sm font-medium text-white/80 mb-1.5">
-            Descrição da aula
-            <span className="ml-2 text-white/30 font-normal text-xs">Visível abaixo do player</span>
+            Descricao da aula
+            <span className="ml-2 text-white/30 font-normal text-xs">Visivel abaixo do player</span>
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            placeholder="Descreva o que o aluno vai aprender nesta aula, referências utilizadas, pontos principais..."
+            placeholder="Descreva o que o aluno vai aprender nesta aula..."
             className={`${inputCls} resize-none`}
           />
         </div>
@@ -303,7 +265,7 @@ function MaterialsSection({ materials, setMaterials }: {
               className="p-1.5 rounded text-white/30 hover:text-red-400 hover:bg-red-500/5 opacity-0 group-hover:opacity-100 transition-all"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -315,7 +277,7 @@ function MaterialsSection({ materials, setMaterials }: {
           onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
           onClick={() => inputRef.current?.click()}
           className={`cursor-pointer border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 py-8 transition-all duration-200 ${
-            dragging ? 'border-[#F37E20] bg-[#F37E20]/5' : 'border-[#2A313B] hover:border-[#F37E20]/40 hover:bg-[#F37E20]/3'
+            dragging ? 'border-[#F37E20] bg-[#F37E20]/5' : 'border-[#2A313B] hover:border-[#F37E20]/40'
           }`}
         >
           <div className="p-2.5 rounded-xl bg-[#F37E20]/10">
@@ -323,18 +285,10 @@ function MaterialsSection({ materials, setMaterials }: {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
           </div>
-          <p className="text-sm text-white/60 font-medium">
-            {dragging ? 'Solte os arquivos aqui' : 'Clique ou arraste arquivos'}
-          </p>
+          <p className="text-sm text-white/60 font-medium">{dragging ? 'Solte os arquivos aqui' : 'Clique ou arraste arquivos'}</p>
           <p className="text-xs text-white/30">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX e outros</p>
         </div>
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(e) => { if (e.target.files) handleFiles(e.target.files) }}
-        />
+        <input ref={inputRef} type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) handleFiles(e.target.files) }} />
       </div>
     </SectionCard>
   )
@@ -343,6 +297,8 @@ function MaterialsSection({ materials, setMaterials }: {
 // ─── Quiz Section ──────────────────────────────────────────────────────────────
 
 const LETTERS = ['A', 'B', 'C', 'D']
+const MIN_QUIZ = 5
+const MAX_QUIZ = 20
 
 function QuestionCard({ q, index, onChange, onDelete }: {
   q: QuizQuestion
@@ -352,16 +308,9 @@ function QuestionCard({ q, index, onChange, onDelete }: {
 }) {
   const [open, setOpen] = useState(true)
 
-  function setOption(optId: string, text: string) {
-    onChange({ ...q, options: q.options.map((o) => o.id === optId ? { ...o, text } : o) })
-  }
-
   return (
     <div className="bg-[#0F141A] border border-[#2A313B] rounded-xl overflow-hidden">
-      <div
-        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/2 transition-colors"
-        onClick={() => setOpen((p) => !p)}
-      >
+      <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setOpen((p) => !p)}>
         <div className="flex items-center gap-3">
           <span className="w-6 h-6 rounded-full bg-[#F37E20]/10 text-[#F37E20] text-xs font-bold flex items-center justify-center flex-shrink-0">
             {index + 1}
@@ -382,7 +331,7 @@ function QuestionCard({ q, index, onChange, onDelete }: {
             className="p-1.5 rounded text-white/20 hover:text-red-400 hover:bg-red-500/5 transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
           <svg
@@ -404,66 +353,47 @@ function QuestionCard({ q, index, onChange, onDelete }: {
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-4 border-t border-[#2A313B] pt-4">
-              <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Texto da pergunta</label>
-                <textarea
-                  value={q.text}
-                  onChange={(e) => onChange({ ...q, text: e.target.value })}
-                  rows={2}
-                  placeholder="Digite a pergunta..."
-                  className={`${inputCls} resize-none text-sm`}
-                />
+              <textarea
+                value={q.text}
+                onChange={(e) => onChange({ ...q, text: e.target.value })}
+                rows={2}
+                placeholder="Digite a pergunta..."
+                className={`${inputCls} resize-none`}
+              />
+              <div className="space-y-2">
+                {q.options.map((opt, i) => (
+                  <div key={opt.id} className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => onChange({ ...q, correctId: opt.id })}
+                      className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        q.correctId === opt.id ? 'border-emerald-400 bg-emerald-400/20' : 'border-[#2A313B] hover:border-white/30'
+                      }`}
+                    >
+                      {q.correctId === opt.id ? (
+                        <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      ) : (
+                        <span className="text-xs text-white/30 font-medium">{LETTERS[i]}</span>
+                      )}
+                    </button>
+                    <input
+                      value={opt.text}
+                      onChange={(e) => onChange({ ...q, options: q.options.map((o) => o.id === opt.id ? { ...o, text: e.target.value } : o) })}
+                      placeholder={`Alternativa ${LETTERS[i]}`}
+                      className={`${inputCls} flex-1`}
+                    />
+                  </div>
+                ))}
               </div>
-
-              <div>
-                <label className="block text-xs font-medium text-white/50 mb-2">
-                  Alternativas
-                  <span className="ml-2 text-white/25 font-normal">Clique no circulo para marcar a correta</span>
-                </label>
-                <div className="space-y-2">
-                  {q.options.map((opt, i) => (
-                    <div key={opt.id} className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => onChange({ ...q, correctId: opt.id })}
-                        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                          q.correctId === opt.id
-                            ? 'border-emerald-400 bg-emerald-400/20'
-                            : 'border-[#2A313B] hover:border-white/30'
-                        }`}
-                      >
-                        {q.correctId === opt.id ? (
-                          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                        ) : (
-                          <span className="text-xs text-white/30 font-medium">{LETTERS[i]}</span>
-                        )}
-                      </button>
-                      <input
-                        value={opt.text}
-                        onChange={(e) => setOption(opt.id, e.target.value)}
-                        placeholder={`Alternativa ${LETTERS[i]}`}
-                        className={`${inputCls} flex-1`}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">
-                  Explicação da resposta correta
-                  <span className="ml-2 text-white/25 font-normal">Opcional, exibida após o aluno responder</span>
-                </label>
-                <textarea
-                  value={q.explanation}
-                  onChange={(e) => onChange({ ...q, explanation: e.target.value })}
-                  rows={2}
-                  placeholder="Explique por que esta é a resposta correta..."
-                  className={`${inputCls} resize-none text-sm`}
-                />
-              </div>
+              <textarea
+                value={q.explanation}
+                onChange={(e) => onChange({ ...q, explanation: e.target.value })}
+                rows={2}
+                placeholder="Explicacao da resposta correta (opcional)..."
+                className={`${inputCls} resize-none`}
+              />
             </div>
           </motion.div>
         )}
@@ -476,43 +406,21 @@ function QuizSection({ questions, setQuestions }: {
   questions: QuizQuestion[]
   setQuestions: React.Dispatch<React.SetStateAction<QuizQuestion[]>>
 }) {
-  const MIN = 5
-  const MAX = 20
-  const canAdd = questions.length < MAX
-  const belowMin = questions.length < MIN
-
-  function addQuestion() {
-    if (!canAdd) return
-    setQuestions((p) => [...p, emptyQuestion()])
-  }
-
-  function updateQuestion(id: string, updated: QuizQuestion) {
-    setQuestions((p) => p.map((q) => q.id === id ? updated : q))
-  }
-
-  function deleteQuestion(id: string) {
-    setQuestions((p) => p.filter((q) => q.id !== id))
-  }
+  const canAdd = questions.length < MAX_QUIZ
+  const belowMin = questions.length > 0 && questions.length < MIN_QUIZ
 
   return (
     <SectionCard
       title="Perguntas do quiz"
-      subtitle={`Obrigatório mínimo ${MIN} perguntas, máximo ${MAX}. (${questions.length}/${MAX})`}
+      subtitle={`Minimo ${MIN_QUIZ} perguntas, maximo ${MAX_QUIZ}. (${questions.length}/${MAX_QUIZ})`}
     >
       <div className="space-y-3">
         {belowMin && (
-          <div className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm ${
-            questions.length === 0
-              ? 'bg-amber-500/5 border-amber-500/20 text-amber-400/80'
-              : 'bg-amber-500/5 border-amber-500/20 text-amber-400/80'
-          }`}>
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm text-amber-400/80">
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
-            {questions.length === 0
-              ? `Adicione pelo menos ${MIN} perguntas para ativar o quiz desta aula.`
-              : `Faltam ${MIN - questions.length} pergunta${MIN - questions.length > 1 ? 's' : ''} para atingir o mínimo obrigatório.`
-            }
+            {`Faltam ${MIN_QUIZ - questions.length} pergunta${MIN_QUIZ - questions.length > 1 ? 's' : ''} para atingir o minimo.`}
           </div>
         )}
 
@@ -521,28 +429,22 @@ function QuizSection({ questions, setQuestions }: {
             key={q.id}
             q={q}
             index={i}
-            onChange={(updated) => updateQuestion(q.id, updated)}
-            onDelete={() => deleteQuestion(q.id)}
+            onChange={(updated) => setQuestions((p) => p.map((x) => x.id === q.id ? updated : x))}
+            onDelete={() => setQuestions((p) => p.filter((x) => x.id !== q.id))}
           />
         ))}
 
         {canAdd && (
           <button
             type="button"
-            onClick={addQuestion}
+            onClick={() => setQuestions((p) => [...p, emptyQuestion()])}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[#2A313B] text-white/40 hover:border-[#F37E20]/40 hover:text-[#F37E20] text-sm font-medium transition-all duration-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Adicionar pergunta {questions.length > 0 && `(${questions.length}/${MAX})`}
+            Adicionar pergunta {questions.length > 0 && `(${questions.length}/${MAX_QUIZ})`}
           </button>
-        )}
-
-        {!canAdd && (
-          <p className="text-center text-xs text-white/30 py-2">
-            Limite de {MAX} perguntas atingido.
-          </p>
         )}
       </div>
     </SectionCard>
@@ -552,7 +454,20 @@ function QuizSection({ questions, setQuestions }: {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export function EditarAulaPage() {
-  const { courseId, lessonId: _lessonId } = useParams()
+  const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>()
+  const creatorId = useCreatorId()
+
+  const lesson = useQuery(
+    api.lessons.getById,
+    creatorId && lessonId ? { id: lessonId as Id<'lessons'>, creatorId } : 'skip'
+  )
+  const quiz = useQuery(
+    api.quizzes.getByLesson,
+    creatorId && lessonId ? { lessonId: lessonId as Id<'lessons'>, creatorId } : 'skip'
+  )
+
+  const updateLesson = useMutation(api.lessons.update)
+  const upsertQuiz = useMutation(api.quizzes.upsert)
 
   const [title, setTitle] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
@@ -560,34 +475,101 @@ export function EditarAulaPage() {
   const [isPublished, setIsPublished] = useState(false)
   const [materials, setMaterials] = useState<Material[]>([])
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
+  const [initialized, setInitialized] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
 
-  const MIN_QUIZ = 5
-  const quizIncomplete = questions.length > 0 && questions.length < MIN_QUIZ
+  useEffect(() => {
+    if (lesson && !initialized) {
+      setTitle(lesson.title)
+      setVideoUrl(lesson.youtubeUrl)
+      setDescription(lesson.description ?? '')
+      setIsPublished(lesson.isPublished)
+      setInitialized(true)
+    }
+  }, [lesson, initialized])
+
+  useEffect(() => {
+    if (quiz && initialized) {
+      setQuestions(
+        quiz.questions.map((q) => ({
+          id: q.id,
+          text: q.text,
+          options: q.options,
+          correctId: q.correctOptionId,
+          explanation: q.explanation ?? '',
+        }))
+      )
+    }
+  }, [quiz, initialized])
+
+  const belowMin = questions.length > 0 && questions.length < MIN_QUIZ
+  const canSave = !belowMin && title.trim().length > 0 && videoUrl.trim().length > 0
 
   async function handleSave() {
-    if (quizIncomplete) return
+    if (!canSave || !creatorId || !lessonId) return
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 700))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setError('')
+    try {
+      await updateLesson({
+        id: lessonId as Id<'lessons'>,
+        creatorId,
+        title: title.trim(),
+        youtubeUrl: videoUrl.trim(),
+        description: description.trim() || undefined,
+        isPublished,
+        hasMandatoryQuiz: questions.length >= MIN_QUIZ,
+      })
+
+      if (questions.length >= MIN_QUIZ && courseId) {
+        await upsertQuiz({
+          lessonId: lessonId as Id<'lessons'>,
+          courseId: courseId as Id<'courses'>,
+          creatorId,
+          questions: questions.map((q) => ({
+            id: q.id,
+            text: q.text,
+            options: q.options,
+            correctOptionId: q.correctId,
+            explanation: q.explanation || undefined,
+          })),
+        })
+      }
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar aula.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!creatorId || lesson === undefined) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-[#F37E20]/30 border-t-[#F37E20] rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (lesson === null) {
+    return (
+      <div className="p-8 text-center text-white/40 mt-20">
+        Aula nao encontrada.{' '}
+        <Link to={`/dashboard/cursos/${courseId}`} className="text-[#F37E20] underline">Voltar</Link>
+      </div>
+    )
   }
 
   return (
     <div className="p-8">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="max-w-3xl mx-auto"
-      >
-        {/* Header */}
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-3xl mx-auto">
         <motion.div variants={fadeUp} className="flex items-start justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <Link
-              to={`/dashboard/criador/cursos/${courseId}`}
+              to={`/dashboard/cursos/${courseId}/modulos`}
               className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -598,7 +580,7 @@ export function EditarAulaPage() {
               <input
                 value={title}
                 onChange={(e) => { setTitle(e.target.value); setSaved(false) }}
-                placeholder="Título da aula..."
+                placeholder="Titulo da aula..."
                 className="text-2xl font-bold bg-transparent text-white font-display focus:outline-none placeholder-white/20 w-full"
               />
               <p className="text-white/40 text-sm mt-0.5">Editor de aula</p>
@@ -620,8 +602,8 @@ export function EditarAulaPage() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving || quizIncomplete}
-              title={quizIncomplete ? `O quiz precisa de pelo menos ${MIN_QUIZ} perguntas` : ''}
+              disabled={saving || !canSave}
+              title={!title.trim() ? 'Adicione um titulo' : !videoUrl.trim() ? 'Adicione a URL do video' : belowMin ? `Adicione pelo menos ${MIN_QUIZ} perguntas ao quiz` : ''}
               className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200"
             >
               {saving ? (
@@ -643,21 +625,22 @@ export function EditarAulaPage() {
           </div>
         </motion.div>
 
-        {/* Sections */}
+        {error && (
+          <motion.div variants={fadeUp} className="mb-5 flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            {error}
+          </motion.div>
+        )}
+
         <div className="space-y-5">
           <motion.div variants={fadeUp}>
-            <VideoSection
-              url={videoUrl}
-              setUrl={setVideoUrl}
-              description={description}
-              setDescription={setDescription}
-            />
+            <VideoSection url={videoUrl} setUrl={setVideoUrl} description={description} setDescription={setDescription} />
           </motion.div>
-
           <motion.div variants={fadeUp}>
             <MaterialsSection materials={materials} setMaterials={setMaterials} />
           </motion.div>
-
           <motion.div variants={fadeUp}>
             <QuizSection questions={questions} setQuestions={setQuestions} />
           </motion.div>

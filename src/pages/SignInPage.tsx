@@ -1,13 +1,18 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSignIn } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
-import { fadeUp, staggerContainer } from '@/lib/motion'
-import { OAuthButtons } from '@/components/auth/OAuthButtons'
+import { AuthLayout } from '@/components/auth/AuthLayout'
+import { fadeUp } from '@/lib/motion'
+import {
+  brandEyebrowClass,
+  brandGhostButtonClass,
+  brandInputClass,
+  brandPanelSoftClass,
+  brandPrimaryButtonClass,
+  cn,
+} from '@/lib/brand'
 import { clerkErrorMessage } from '@/lib/auth'
-
-const inputClass =
-  'w-full bg-[#0F141A] border border-[#2A313B] focus:border-[#F37E20] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors duration-200'
 
 type Step = 'login' | 'forgot' | 'forgot-verify'
 
@@ -23,17 +28,68 @@ export function SignInPage() {
   const [resetCode, setResetCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
 
+  const aside = useMemo(() => {
+    if (step === 'forgot') {
+      return {
+        eyebrow: 'Recuperação de acesso',
+        title: 'Retome sua trilha com a mesma clareza do primeiro acesso.',
+        description:
+          'A recuperação de senha segue a mesma linguagem sóbria do restante da plataforma, simples o bastante para não criar fricção e segura o bastante para transmitir confiança.',
+        highlights: [
+          'Fluxo curto, objetivo e fácil de compreender',
+          'Linguagem visual consistente com a identidade institucional',
+          'Continuidade de estudo sem ruído visual desnecessário',
+        ],
+        quote: '“Todo ambiente de formação precisa acolher o retorno com a mesma seriedade do começo.”',
+        quoteReference: 'Experiência de acesso',
+        imageSrc: '/fotos/bible-laptop-headphones.jpg',
+      }
+    }
+
+    if (step === 'forgot-verify') {
+      return {
+        eyebrow: 'Nova senha',
+        title: 'Confirme o código e volte ao ambiente de estudo.',
+        description:
+          'O fluxo foi desenhado para reduzir ansiedade e manter a sensação de produto confiável. Cada passo fica claro, com foco total em legibilidade e continuidade.',
+        highlights: [
+          'Código visual limpo para leitura rápida',
+          'Tom premium, sem excesso de elementos',
+          'Transição natural de volta ao dashboard',
+        ],
+        quote: '“Clareza também é uma forma de cuidado.”',
+        quoteReference: 'Direção de produto',
+        imageSrc: '/fotos/library-hall.jpg',
+      }
+    }
+
+    return {
+      eyebrow: 'Acesso institucional',
+      title: 'Entre para continuar uma experiência de estudo mais séria e mais elegante.',
+      description:
+        'A nova camada visual da plataforma também precisa aparecer no acesso. Menos aparência de formulário genérico, mais sensação de biblioteca digital e produto confiável.',
+      highlights: [
+        'Ambiente feito para estudo contínuo e leitura prolongada',
+        'Identidade editorial premium sem perder clareza de uso',
+        'Entrada direta para alunos, criadores e instituições',
+      ],
+      quote: '“A primeira tela também ensina o que a marca valoriza.”',
+      quoteReference: 'Resenha do Teólogo',
+      imageSrc: '/fotos/hero-bible.jpg',
+    }
+  }, [step])
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     if (!isLoaded) return
     setLoading(true)
     setError('')
+
     try {
       const result = await signIn.create({ identifier: email, password })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        const perfil = (result.userData as any)?.unsafeMetadata?.perfil ?? 'aluno'
-        navigate(`/dashboard/${perfil}`)
+        navigate('/dashboard')
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
@@ -47,6 +103,7 @@ export function SignInPage() {
     if (!isLoaded) return
     setLoading(true)
     setError('')
+
     try {
       await signIn.create({ strategy: 'reset_password_email_code', identifier: email })
       setStep('forgot-verify')
@@ -62,15 +119,17 @@ export function SignInPage() {
     if (!isLoaded) return
     setLoading(true)
     setError('')
+
     try {
       const result = await signIn.attemptFirstFactor({
         strategy: 'reset_password_email_code',
         code: resetCode,
         password: newPassword,
       })
+
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        navigate('/dashboard/aluno')
+        navigate('/dashboard')
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
@@ -79,176 +138,167 @@ export function SignInPage() {
     }
   }
 
-  async function handleOAuth(strategy: 'oauth_google' | 'oauth_facebook') {
-    if (!isLoaded) return
-    await signIn.authenticateWithRedirect({
-      strategy,
-      redirectUrl: `${window.location.origin}/sso-callback`,
-      redirectUrlComplete: '/dashboard/aluno',
-    })
-  }
-
   return (
-    <div className="min-h-screen bg-[#0F141A] flex items-center justify-center px-6 py-16">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#F37E20]/4 rounded-full blur-[100px]" />
-      </div>
+    <AuthLayout
+      asideEyebrow={aside.eyebrow}
+      asideTitle={aside.title}
+      asideDescription={aside.description}
+      highlights={aside.highlights}
+      quote={aside.quote}
+      quoteReference={aside.quoteReference}
+      imageSrc={aside.imageSrc}
+    >
+      <motion.div variants={fadeUp}>
+        {step !== 'login' && (
+          <button
+            type="button"
+            onClick={() => {
+              setStep('login')
+              setError('')
+            }}
+            className={cn('mb-6', brandGhostButtonClass)}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Voltar
+          </button>
+        )}
 
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="relative z-10 w-full max-w-md"
-      >
-        <motion.div variants={fadeUp} className="text-center mb-10">
-          <Link to="/">
-            <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-28 w-auto mx-auto mb-8" />
-          </Link>
+        <p className={brandEyebrowClass}>
+          {step === 'login' ? 'Entrar' : step === 'forgot' ? 'Recuperar senha' : 'Confirmar código'}
+        </p>
+        <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-white">
+          {step === 'login' && 'Bem-vindo de volta'}
+          {step === 'forgot' && 'Receba seu código de recuperação'}
+          {step === 'forgot-verify' && 'Defina sua nova senha'}
+        </h2>
+        <p className="mt-3 max-w-lg text-sm leading-7 text-white/58">
+          {step === 'login' && 'Acesse sua conta e volte ao dashboard com a mesma continuidade visual da landing.'}
+          {step === 'forgot' && 'Digite seu email para continuar com um fluxo simples, claro e seguro.'}
+          {step === 'forgot-verify' && `Digite o código enviado para ${email} e escolha a nova senha.`}
+        </p>
+      </motion.div>
 
-          {step === 'login' && (
-            <>
-              <h1 className="font-display font-bold text-2xl mb-2">Bem-vindo de volta</h1>
-              <p className="text-white/50 text-sm">Entre na sua conta para continuar</p>
-            </>
-          )}
-          {step === 'forgot' && (
-            <>
-              <button onClick={() => { setStep('login'); setError('') }} className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/70 text-sm transition-colors mb-4">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Voltar
-              </button>
-              <h1 className="font-display font-bold text-2xl mb-2">Recuperar senha</h1>
-              <p className="text-white/50 text-sm">Digite seu email para receber o código de recuperação</p>
-            </>
-          )}
-          {step === 'forgot-verify' && (
-            <>
-              <h1 className="font-display font-bold text-2xl mb-2">Nova senha</h1>
-              <p className="text-white/50 text-sm">Digite o código enviado para <span className="text-white/80">{email}</span></p>
-            </>
-          )}
-        </motion.div>
-
-        {step === 'login' && (
-          <motion.div variants={fadeUp} className="bg-[#151B23] border border-[#2A313B] rounded-2xl p-8 space-y-4">
-            <OAuthButtons
-              onGoogle={() => handleOAuth('oauth_google')}
-              onFacebook={() => handleOAuth('oauth_facebook')}
-              loading={loading}
-            />
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#2A313B]" />
-              <span className="text-white/30 text-xs">ou</span>
-              <div className="flex-1 h-px bg-[#2A313B]" />
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-3">
+      {step === 'login' && (
+        <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Email</label>
               <input
                 type="email"
                 placeholder="seu@email.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={inputClass}
+                className={brandInputClass}
               />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-sm font-medium text-white/72">Senha</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('forgot')
+                    setError('')
+                  }}
+                  className="text-xs font-medium text-[#F2BD8A] transition-colors hover:text-white"
+                >
+                  Esqueceu a senha?
+                </button>
+              </div>
               <input
                 type="password"
-                placeholder="Senha"
+                placeholder="Sua senha"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={inputClass}
+                className={brandInputClass}
               />
+            </div>
 
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && <p className="text-xs text-red-300">{error}</p>}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors duration-200 text-sm"
-              >
-                {loading ? 'Entrando...' : 'Entrar'}
-              </button>
-            </form>
-
-            <button
-              onClick={() => { setStep('forgot'); setError('') }}
-              className="w-full text-center text-xs text-white/30 hover:text-white/50 transition-colors"
-            >
-              Esqueceu a senha?
+            <button type="submit" disabled={loading} className={cn('mt-2 w-full', brandPrimaryButtonClass)}>
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
-          </motion.div>
-        )}
+          </form>
+        </motion.div>
+      )}
 
-        {step === 'forgot' && (
-          <motion.div variants={fadeUp} className="bg-[#151B23] border border-[#2A313B] rounded-2xl p-8 space-y-4">
-            <form onSubmit={handleForgotSend} className="space-y-3">
+      {step === 'forgot' && (
+        <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
+          <form onSubmit={handleForgotSend} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Email</label>
               <input
                 type="email"
                 placeholder="seu@email.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={inputClass}
+                className={brandInputClass}
               />
-              {error && <p className="text-red-400 text-xs">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors duration-200 text-sm"
-              >
-                {loading ? 'Enviando...' : 'Enviar código de recuperação'}
-              </button>
-            </form>
-          </motion.div>
-        )}
+            </div>
 
-        {step === 'forgot-verify' && (
-          <motion.div variants={fadeUp} className="bg-[#151B23] border border-[#2A313B] rounded-2xl p-8 space-y-4">
-            <form onSubmit={handleResetPassword} className="space-y-3">
+            {error && <p className="text-xs text-red-300">{error}</p>}
+
+            <button type="submit" disabled={loading} className={cn('mt-2 w-full', brandPrimaryButtonClass)}>
+              {loading ? 'Enviando...' : 'Enviar código'}
+            </button>
+          </form>
+        </motion.div>
+      )}
+
+      {step === 'forgot-verify' && (
+        <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Código de verificação</label>
               <input
                 type="text"
                 inputMode="numeric"
-                placeholder="Código de 6 dígitos"
+                placeholder="000000"
                 required
                 maxLength={6}
                 value={resetCode}
                 onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className={`${inputClass} text-center tracking-[0.4em] font-display`}
+                className={cn('text-center font-display text-3xl font-bold tracking-[0.45em]', brandInputClass)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Nova senha</label>
               <input
                 type="password"
-                placeholder="Nova senha (mínimo 8 caracteres)"
+                placeholder="Mínimo 8 caracteres"
                 required
                 minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className={inputClass}
+                className={brandInputClass}
               />
-              {error && <p className="text-red-400 text-xs">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors duration-200 text-sm"
-              >
-                {loading ? 'Salvando...' : 'Redefinir senha'}
-              </button>
-            </form>
-          </motion.div>
-        )}
+            </div>
 
-        <motion.div variants={fadeUp} className="text-center mt-6">
-          <p className="text-white/40 text-sm">
-            Não tem conta?{' '}
-            <Link to="/cadastro" className="text-[#F37E20] hover:text-[#e06e10] font-medium transition-colors">
-              Criar conta grátis
-            </Link>
-          </p>
+            {error && <p className="text-xs text-red-300">{error}</p>}
+
+            <button type="submit" disabled={loading} className={cn('mt-2 w-full', brandPrimaryButtonClass)}>
+              {loading ? 'Salvando...' : 'Redefinir senha'}
+            </button>
+          </form>
         </motion.div>
+      )}
+
+      <motion.div variants={fadeUp} className="mt-8 text-center">
+        <p className="text-sm text-white/44">
+          Não tem conta?{' '}
+          <Link to="/cadastro" className="font-semibold text-[#F2BD8A] transition-colors hover:text-white">
+            Criar conta grátis
+          </Link>
+        </p>
       </motion.div>
-    </div>
+    </AuthLayout>
   )
 }

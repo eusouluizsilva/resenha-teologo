@@ -84,7 +84,7 @@ function CourseCard({ course, onDelete }: { course: Course; onDelete: (id: Id<'c
 
         <div className="flex gap-2">
           <Link
-            to={`/dashboard/criador/cursos/${course._id}`}
+            to={`/dashboard/cursos/${course._id}`}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-[#2A313B] text-white/60 hover:border-[#F37E20]/40 hover:text-[#F37E20] text-sm font-medium transition-all duration-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -108,10 +108,11 @@ function CourseCard({ course, onDelete }: { course: Course; onDelete: (id: Id<'c
 
 export function CursosPage() {
   const creatorId = useCreatorId()
-  const courses = useQuery(api.courses.listByCreator, { creatorId }) ?? []
+  const courses = useQuery(api.courses.listByCreator, creatorId ? { creatorId } : 'skip') ?? []
   const removeCourse = useMutation(api.courses.remove)
 
   async function handleDelete(id: Id<'courses'>) {
+    if (!creatorId) return
     await removeCourse({ id, creatorId })
   }
 
@@ -129,7 +130,7 @@ export function CursosPage() {
             <p className="text-white/50 mt-1 text-sm">Gerencie seus cursos, módulos e aulas</p>
           </div>
           <Link
-            to="/dashboard/criador/cursos/novo"
+            to="/dashboard/cursos/novo"
             className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors duration-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -152,7 +153,7 @@ export function CursosPage() {
                 Crie seu primeiro curso teológico e comece a compartilhar conhecimento.
               </p>
               <Link
-                to="/dashboard/criador/cursos/novo"
+                to="/dashboard/cursos/novo"
                 className="inline-flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

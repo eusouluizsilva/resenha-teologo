@@ -68,6 +68,29 @@ export const remove = mutation({
   handler: async (ctx, { id, creatorId }) => {
     const course = await ctx.db.get(id)
     if (!course || course.creatorId !== creatorId) throw new Error('Não autorizado')
+
+    const lessons = await ctx.db
+      .query('lessons')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+
+    for (const lesson of lessons) {
+      const quiz = await ctx.db
+        .query('quizzes')
+        .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
+        .first()
+      if (quiz) await ctx.db.delete(quiz._id)
+      await ctx.db.delete(lesson._id)
+    }
+
+    const modules = await ctx.db
+      .query('modules')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+    for (const mod of modules) {
+      await ctx.db.delete(mod._id)
+    }
+
     await ctx.db.delete(id)
   },
 })
@@ -94,12 +117,6 @@ export const getStats = query({
       .filter((d) => d.status === 'completed')
       .reduce((acc, d) => acc + d.amountCents, 0)
 
-    return {
-      totalCourses,
-      publishedCourses,
-      totalStudents,
-      totalLessons,
-      totalDonationsCents,
-    }
+    return { totalCourses, publishedCourses, totalStudents, totalLessons, totalDonationsCents }
   },
 })

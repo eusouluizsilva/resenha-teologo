@@ -51,10 +51,29 @@ export const remove = mutation({
   handler: async (ctx, { id, creatorId }) => {
     const mod = await ctx.db.get(id)
     if (!mod || mod.creatorId !== creatorId) throw new Error('Não autorizado')
+
+    const lessons = await ctx.db
+      .query('lessons')
+      .withIndex('by_moduleId', (q) => q.eq('moduleId', id))
+      .collect()
+
+    for (const lesson of lessons) {
+      const quiz = await ctx.db
+        .query('quizzes')
+        .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
+        .first()
+      if (quiz) await ctx.db.delete(quiz._id)
+      await ctx.db.delete(lesson._id)
+    }
+
     const course = await ctx.db.get(mod.courseId)
     if (course) {
-      await ctx.db.patch(mod.courseId, { totalModules: Math.max(0, course.totalModules - 1) })
+      await ctx.db.patch(mod.courseId, {
+        totalModules: Math.max(0, course.totalModules - 1),
+        totalLessons: Math.max(0, course.totalLessons - lessons.length),
+      })
     }
+
     await ctx.db.delete(id)
   },
 })

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation } from 'convex/react'
@@ -13,16 +13,67 @@ const categories = [
   'Eclesiologia', 'Escatologia', 'Teologia Prática', 'Outro',
 ]
 
+const MAX_BASE64_BYTES = 750_000
+
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      const maxDim = 1280
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+      let quality = 0.85
+      let result = canvas.toDataURL('image/jpeg', quality)
+      while (result.length > MAX_BASE64_BYTES && quality > 0.3) {
+        quality -= 0.1
+        result = canvas.toDataURL('image/jpeg', quality)
+      }
+      if (result.length > MAX_BASE64_BYTES) {
+        reject(new Error('Imagem muito grande mesmo após compressão. Use uma imagem menor.'))
+      } else {
+        resolve(result)
+      }
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Erro ao carregar imagem.')) }
+    img.src = url
+  })
+}
+
 function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
+  const [compressing, setCompressing] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = (e) => onChange(e.target?.result as string)
-    reader.readAsDataURL(file)
+    if (file.size > 5_000_000) { setUploadError('Arquivo muito grande. Máximo 5 MB.'); return }
+    setUploadError('')
+    setCompressing(true)
+    try {
+      onChange(await compressImage(file))
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Erro ao processar imagem.')
+    } finally {
+      setCompressing(false)
+    }
   }, [onChange])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFile(file)
+  }, [handleFile])
 
   return (
     <div>
@@ -45,19 +96,27 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
         <div
           onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
           onDragLeave={() => setDragging(false)}
-          onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
-          onClick={() => inputRef.current?.click()}
+          onDrop={handleDrop}
+          onClick={() => !compressing && inputRef.current?.click()}
           className={`cursor-pointer aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-all duration-200 ${dragging ? 'border-[#F37E20] bg-[#F37E20]/5' : 'border-[#2A313B] bg-[#0F141A] hover:border-[#F37E20]/40'}`}
         >
           <div className="p-3 rounded-xl bg-[#F37E20]/10">
-            <svg className="w-6 h-6 text-[#F37E20]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+            {compressing ? (
+              <svg className="w-6 h-6 text-[#F37E20] animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-[#F37E20]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+            )}
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-white/70">{dragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}</p>
-            <p className="text-xs text-white/30 mt-0.5">PNG, JPG ou WEBP. Proporção 16:9 recomendada.</p>
+            <p className="text-sm font-medium text-white/70">{compressing ? 'Comprimindo...' : dragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}</p>
+            <p className="text-xs text-white/30 mt-0.5">PNG, JPG ou WEBP. Máximo 5 MB. Proporção 16:9 recomendada.</p>
           </div>
         </div>
       )}
+      {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
     </div>
   )
@@ -72,7 +131,7 @@ export function EditarInfoCursoPage() {
 
   const course = useQuery(
     api.courses.getById,
-    id ? { id: id as Id<'courses'>, creatorId } : 'skip'
+    id && creatorId ? { id: id as Id<'courses'>, creatorId } : 'skip'
   )
   const updateCourse = useMutation(api.courses.update)
 
@@ -89,18 +148,19 @@ export function EditarInfoCursoPage() {
     tags: string
   } | null>(null)
 
-  // Initialize form once course loads
-  if (course && form === null) {
-    setForm({
-      title: course.title,
-      description: course.description,
-      category: course.category,
-      level: course.level,
-      language: course.language ?? 'Português',
-      tags: course.tags?.join(', ') ?? '',
-    })
-    setThumbnail(course.thumbnail ?? '')
-  }
+  useEffect(() => {
+    if (course && form === null) {
+      setForm({
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        level: course.level,
+        language: course.language ?? 'Português',
+        tags: course.tags?.join(', ') ?? '',
+      })
+      setThumbnail(course.thumbnail ?? '')
+    }
+  }, [course]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (course === undefined) {
     return (
@@ -114,7 +174,7 @@ export function EditarInfoCursoPage() {
     return (
       <div className="p-8 text-center text-white/40">
         Curso não encontrado.{' '}
-        <Link to="/dashboard/criador/cursos" className="text-[#F37E20] underline">Voltar</Link>
+        <Link to="/dashboard/cursos" className="text-[#F37E20] underline">Voltar</Link>
       </div>
     )
   }
@@ -134,6 +194,7 @@ export function EditarInfoCursoPage() {
 
     setLoading(true)
     try {
+      if (!creatorId) return setError('Sessão expirada. Faça login novamente.')
       await updateCourse({
         id: id as Id<'courses'>,
         creatorId,
@@ -145,7 +206,7 @@ export function EditarInfoCursoPage() {
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         language: form.language,
       })
-      navigate('/dashboard/criador/cursos')
+      navigate('/dashboard/cursos')
     } catch {
       setError('Erro ao salvar. Tente novamente.')
     } finally {
@@ -158,7 +219,7 @@ export function EditarInfoCursoPage() {
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-2xl mx-auto">
 
         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-8">
-          <Link to="/dashboard/criador/cursos" className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200">
+          <Link to="/dashboard/cursos" className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
@@ -168,7 +229,7 @@ export function EditarInfoCursoPage() {
             <p className="text-white/50 mt-0.5 text-sm">Altere as informações do curso</p>
           </div>
           <Link
-            to={`/dashboard/criador/cursos/${id}/modulos`}
+            to={`/dashboard/cursos/${id}/modulos`}
             className="flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white border border-[#2A313B] hover:border-[#F37E20]/30 px-4 py-2 rounded-lg transition-all duration-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -226,7 +287,7 @@ export function EditarInfoCursoPage() {
           )}
 
           <motion.div variants={fadeUp} className="flex items-center justify-between">
-            <Link to={`/dashboard/criador/cursos/${id}/modulos`} className="flex items-center gap-2 text-sm text-[#F37E20] hover:text-white transition-colors">
+            <Link to={`/dashboard/cursos/${id}/modulos`} className="flex items-center gap-2 text-sm text-[#F37E20] hover:text-white transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
               Ir para módulos e aulas
             </Link>
@@ -237,7 +298,7 @@ export function EditarInfoCursoPage() {
                   Salvo
                 </span>
               )}
-              <Link to="/dashboard/criador/cursos" className="px-5 py-2.5 rounded-lg border border-[#2A313B] text-white/60 hover:text-white text-sm font-medium transition-all duration-200">
+              <Link to="/dashboard/cursos" className="px-5 py-2.5 rounded-lg border border-[#2A313B] text-white/60 hover:text-white text-sm font-medium transition-all duration-200">
                 Cancelar
               </Link>
               <button type="submit" disabled={loading} className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200">

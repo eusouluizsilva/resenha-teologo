@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
-import { CriadorSidebar } from './CriadorSidebar'
+import { DashboardSidebar } from './DashboardSidebar'
 
-export function CriadorLayout() {
+export function DashboardLayout() {
   const { user, isLoaded } = useUser()
   const [timedOut, setTimedOut] = useState(false)
 
@@ -12,13 +12,6 @@ export function CriadorLayout() {
     const t = setTimeout(() => setTimedOut(true), 10000)
     return () => clearTimeout(t)
   }, [isLoaded])
-
-  useEffect(() => {
-    if (!isLoaded || !user) return
-    if (!user.unsafeMetadata?.perfil) {
-      user.update({ unsafeMetadata: { ...user.unsafeMetadata, perfil: 'criador' } }).catch(() => {})
-    }
-  }, [isLoaded, user])
 
   if (!isLoaded) {
     if (timedOut) {
@@ -31,9 +24,7 @@ export function CriadorLayout() {
           </div>
           <p className="text-white font-semibold">Falha ao carregar autenticacao</p>
           <p className="text-white/50 text-sm max-w-sm">
-            O dominio pode nao estar autorizado no Clerk. Adicione{' '}
-            <span className="text-white/80 font-mono text-xs">{window.location.origin}</span>{' '}
-            em Clerk Dashboard, Allowed Origins.
+            Tente recarregar a pagina. Se o problema persistir, faca login novamente.
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -55,7 +46,7 @@ export function CriadorLayout() {
 
   return (
     <div className="min-h-screen bg-[#0F141A] text-white flex">
-      <CriadorSidebar />
+      <DashboardSidebar />
       <main className="flex-1 ml-64 min-h-screen">
         <Outlet />
       </main>

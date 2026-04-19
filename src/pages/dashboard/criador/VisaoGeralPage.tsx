@@ -13,9 +13,9 @@ const icons = [
 ]
 
 const quickActions = [
-  { title: 'Criar novo curso', description: 'Comece a construir seu próximo curso teológico', href: '/dashboard/criador/cursos/novo', primary: true },
-  { title: 'Ver meus cursos', description: 'Gerencie cursos, módulos e aulas', href: '/dashboard/criador/cursos', primary: false },
-  { title: 'Financeiro', description: 'Acompanhe doações e repasses', href: '/dashboard/criador/financeiro', primary: false },
+  { title: 'Criar novo curso', description: 'Comece a construir seu próximo curso teológico', href: '/dashboard/cursos/novo', primary: true },
+  { title: 'Ver meus cursos', description: 'Gerencie cursos, módulos e aulas', href: '/dashboard/cursos', primary: false },
+  { title: 'Financeiro', description: 'Acompanhe doações e repasses', href: '/dashboard/financeiro', primary: false },
 ]
 
 function formatBRL(cents: number) {
@@ -24,8 +24,8 @@ function formatBRL(cents: number) {
 
 export function VisaoGeralPage() {
   const creatorId = useCreatorId()
-  const statsData = useQuery(api.courses.getStats, { creatorId })
-  const courses = useQuery(api.courses.listByCreator, { creatorId }) ?? []
+  const statsData = useQuery(api.courses.getStats, creatorId ? { creatorId } : 'skip')
+  const courses = useQuery(api.courses.listByCreator, creatorId ? { creatorId } : 'skip') ?? []
 
   const stats = [
     {
@@ -104,7 +104,7 @@ export function VisaoGeralPage() {
                 Crie seu primeiro curso e comece a compartilhar conhecimento teológico com alunos de todo o Brasil.
               </p>
               <Link
-                to="/dashboard/criador/cursos/novo"
+                to="/dashboard/cursos/novo"
                 className="inline-flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -121,7 +121,7 @@ export function VisaoGeralPage() {
               {courses.slice(0, 5).map((c: typeof courses[0]) => (
                 <Link
                   key={c._id}
-                  to={`/dashboard/criador/cursos/${c._id}`}
+                  to={`/dashboard/cursos/${c._id}`}
                   className="flex items-center justify-between bg-[#151B23] border border-[#2A313B] rounded-xl px-5 py-4 hover:border-[#F37E20]/20 transition-all duration-200 group"
                 >
                   <div className="flex items-center gap-4">

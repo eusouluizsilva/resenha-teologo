@@ -1,4 +1,5 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { useUser, useClerk } from '@clerk/clerk-react'
 
 const nav = [
   {
@@ -41,30 +42,35 @@ const nav = [
 
 export function CriadorSidebar() {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
+  const { user } = useUser()
+  const { signOut } = useClerk()
 
-  function handleSignOut() {
-    navigate('/')
+  const displayName = user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ?? 'Criador'
+  const initials = displayName.slice(0, 2).toUpperCase()
+
+  async function handleSignOut() {
+    await signOut({ redirectUrl: '/' })
   }
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-[#151B23] border-r border-[#2A313B] flex flex-col z-40">
       <div className="px-6 py-5 border-b border-[#2A313B]">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#F37E20]/20 flex items-center justify-center">
-            <span className="text-[#F37E20] text-sm font-bold">R</span>
-          </div>
-          <span className="text-white font-semibold text-sm font-display">Resenha do Teólogo</span>
+          <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-8 w-auto" />
         </Link>
       </div>
 
       <div className="px-4 py-4 border-b border-[#2A313B]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#F37E20]/20 flex items-center justify-center">
-            <span className="text-[#F37E20] text-sm font-semibold">C</span>
-          </div>
+          {user?.imageUrl ? (
+            <img src={user.imageUrl} alt={displayName} className="w-9 h-9 rounded-full object-cover" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-[#F37E20]/20 flex items-center justify-center">
+              <span className="text-[#F37E20] text-sm font-semibold">{initials}</span>
+            </div>
+          )}
           <div className="min-w-0">
-            <p className="text-sm font-medium text-white truncate">Criador</p>
+            <p className="text-sm font-medium text-white truncate">{displayName}</p>
             <p className="text-xs text-white/40">Criador de conteúdo</p>
           </div>
         </div>

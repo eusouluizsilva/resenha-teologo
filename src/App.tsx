@@ -7,15 +7,21 @@ import { RegisterAlunoPage } from '@/pages/auth/RegisterAlunoPage'
 import { RegisterCriadorPage } from '@/pages/auth/RegisterCriadorPage'
 import { RegisterInstituicaoPage } from '@/pages/auth/RegisterInstituicaoPage'
 import { SSOCallbackPage } from '@/pages/auth/SSOCallbackPage'
-import { CriadorLayout } from '@/components/dashboard/criador/CriadorLayout'
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { VisaoGeralPage } from '@/pages/dashboard/criador/VisaoGeralPage'
 import { CursosPage } from '@/pages/dashboard/criador/CursosPage'
 import { NovoCursoPage } from '@/pages/dashboard/criador/NovoCursoPage'
 import { EditarCursoPage } from '@/pages/dashboard/criador/EditarCursoPage'
+import { EditarInfoCursoPage } from '@/pages/dashboard/criador/EditarInfoCursoPage'
+import { EditarAulaPage } from '@/pages/dashboard/criador/EditarAulaPage'
 import { FinanceiroPage } from '@/pages/dashboard/criador/FinanceiroPage'
 import { PerfilPage } from '@/pages/dashboard/criador/PerfilPage'
-import { EditarAulaPage } from '@/pages/dashboard/criador/EditarAulaPage'
-import { EditarInfoCursoPage } from '@/pages/dashboard/criador/EditarInfoCursoPage'
+
+const EmConstrucao = () => (
+  <div className="p-8 flex items-center justify-center min-h-screen">
+    <p className="text-white/40 text-sm">Em construção</p>
+  </div>
+)
 
 export default function App() {
   return (
@@ -33,20 +39,29 @@ export default function App() {
           <Route path="/cadastro/instituicao" element={<RegisterInstituicaoPage />} />
           <Route path="/sso-callback" element={<SSOCallbackPage />} />
 
-          {/* Dashboard do Criador */}
-          <Route path="/dashboard/criador" element={<CriadorLayout />}>
+          {/* Dashboard unificado */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<VisaoGeralPage />} />
+
+            {/* Criador */}
             <Route path="cursos" element={<CursosPage />} />
             <Route path="cursos/novo" element={<NovoCursoPage />} />
             <Route path="cursos/:id" element={<EditarInfoCursoPage />} />
             <Route path="cursos/:id/modulos" element={<EditarCursoPage />} />
-            <Route path="financeiro" element={<FinanceiroPage />} />
-            <Route path="perfil" element={<PerfilPage />} />
             <Route path="cursos/:courseId/aula/:lessonId" element={<EditarAulaPage />} />
-          </Route>
+            <Route path="financeiro" element={<FinanceiroPage />} />
 
-          {/* Outros dashboards (a construir) */}
-          <Route path="/dashboard/*" element={<div className="min-h-screen bg-[#0F141A] text-white flex items-center justify-center text-white/40">Em construção</div>} />
+            {/* Aluno */}
+            <Route path="meus-cursos" element={<EmConstrucao />} />
+            <Route path="certificados" element={<EmConstrucao />} />
+
+            {/* Instituição */}
+            <Route path="membros" element={<EmConstrucao />} />
+            <Route path="relatorios" element={<EmConstrucao />} />
+
+            {/* Compartilhado */}
+            <Route path="perfil" element={<PerfilPage />} />
+          </Route>
         </Routes>
       </AnimatePresence>
     </BrowserRouter>

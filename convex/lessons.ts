@@ -1,6 +1,15 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 
+export const getById = query({
+  args: { id: v.id('lessons'), creatorId: v.string() },
+  handler: async (ctx, { id, creatorId }) => {
+    const lesson = await ctx.db.get(id)
+    if (!lesson || lesson.creatorId !== creatorId) return null
+    return lesson
+  },
+})
+
 export const listByCourse = query({
   args: { courseId: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { courseId, creatorId }) => {
@@ -18,6 +27,9 @@ export const listByCourse = query({
 export const listByModule = query({
   args: { moduleId: v.id('modules'), creatorId: v.string() },
   handler: async (ctx, { moduleId, creatorId }) => {
+    const mod = await ctx.db.get(moduleId)
+    if (!mod || mod.creatorId !== creatorId) return []
+
     return await ctx.db
       .query('lessons')
       .withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
@@ -25,6 +37,18 @@ export const listByModule = query({
       .collect()
   },
 })
+
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const p of patterns) {
+    const m = url.match(p)
+    if (m) return m[1]
+  }
+  return null
+}
 
 export const create = mutation({
   args: {
@@ -43,7 +67,18 @@ export const create = mutation({
     if (!course || course.creatorId !== args.creatorId) throw new Error('Não autorizado')
 
     const lessonId = await ctx.db.insert('lessons', { ...args, isPublished: false })
-    await ctx.db.patch(args.courseId, { totalLessons: course.totalLessons + 1 })
+
+    const newTotal = course.totalLessons + 1
+    if (!course.thumbnail) {
+      const videoId = extractYouTubeId(args.youtubeUrl)
+      const thumbnail = videoId
+        ? `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+        : undefined
+      await ctx.db.patch(args.courseId, { totalLessons: newTotal, ...(thumbnail ? { thumbnail } : {}) })
+    } else {
+      await ctx.db.patch(args.courseId, { totalLessons: newTotal })
+    }
+
     return lessonId
   },
 })
@@ -72,10 +107,18 @@ export const remove = mutation({
   handler: async (ctx, { id, creatorId }) => {
     const lesson = await ctx.db.get(id)
     if (!lesson || lesson.creatorId !== creatorId) throw new Error('Não autorizado')
+
     const course = await ctx.db.get(lesson.courseId)
     if (course) {
       await ctx.db.patch(lesson.courseId, { totalLessons: Math.max(0, course.totalLessons - 1) })
     }
+
+    const quiz = await ctx.db
+      .query('quizzes')
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
+      .first()
+    if (quiz) await ctx.db.delete(quiz._id)
+
     await ctx.db.delete(id)
   },
 })
