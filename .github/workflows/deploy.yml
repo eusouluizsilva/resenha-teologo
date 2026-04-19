@@ -17,7 +17,8 @@ jobs:
       - name: Deploy preview
         id: deploy
         run: |
-          DEPLOY_URL=$(npx vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | grep -E "^https://" | tail -1)
+          DEPLOY_URL=$(npx vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }} 2>&1 \
+            | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | tail -1)
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           echo "Deployed preview: $DEPLOY_URL"
 
