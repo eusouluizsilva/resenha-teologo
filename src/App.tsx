@@ -25,6 +25,7 @@ import { PrivacidadePage, TermosPage } from '@/pages/legal/LegalPages'
 import { MeusCursosPage } from '@/pages/dashboard/aluno/MeusCursosPage'
 import { CertificadosPage } from '@/pages/dashboard/aluno/CertificadosPage'
 import { CatalogPage } from '@/pages/public/CatalogPage'
+import { PlanosPage } from '@/pages/dashboard/PlanosPage'
 
 function DashboardRouteLoader() {
   return (
@@ -190,6 +191,7 @@ export default function App() {
 
             {/* Compartilhado */}
             <Route path="perfil" element={<DashboardPerfilPage />} />
+            <Route path="planos" element={<PlanosPage />} />
           </Route>
         </Routes>
       </AnimatePresence>
