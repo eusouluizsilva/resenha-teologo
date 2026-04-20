@@ -180,7 +180,7 @@ export default function App() {
           {/* Público */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
-          <Route path="/@:handle" element={<PublicProfilePage />} />
+          <Route path="/:handle" element={<PublicProfilePage />} />
 
           {/* Autenticação */}
           <Route path="/entrar" element={<SignInPage />} />

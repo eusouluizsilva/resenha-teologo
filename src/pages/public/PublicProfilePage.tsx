@@ -105,7 +105,7 @@ function TestimonialCard({
         )}
         <div>
           {authorHandle ? (
-            <Link to={`/@${authorHandle}`} className="text-sm font-medium text-white hover:text-[#F2BD8A]">
+            <Link to={`/${authorHandle}`} className="text-sm font-medium text-white hover:text-[#F2BD8A]">
               {authorName}
             </Link>
           ) : (

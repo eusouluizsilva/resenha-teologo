@@ -156,39 +156,37 @@ export function DashboardSidebar() {
         </p>
       </div>
 
-      <div className={cn('mt-6 p-4', brandPanelSoftClass)}>
-        <Link to="/dashboard/meu-perfil-publico" className="flex items-center gap-3 -mx-2 rounded-2xl px-2 py-1 transition-all hover:bg-white/[0.04]">
-          {clerkUser?.imageUrl ? (
-            <img
-              src={clerkUser.imageUrl}
-              alt={displayName}
-              className="h-12 w-12 rounded-2xl object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/10">
-              <span className="text-sm font-semibold text-[#F2BD8A]">{initials}</span>
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-white">{displayName}</p>
-            {isLoading ? (
-              <p className="mt-1 text-xs text-white/30">Carregando...</p>
-            ) : hasFunctions ? (
-              <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/36">
-                {functions.length === 1
-                  ? functions[0] === 'aluno'
-                    ? 'Aluno'
-                    : functions[0] === 'criador'
-                    ? 'Criador'
-                    : 'Instituição'
-                  : `${functions.length} funções ativas`}
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-[#F2BD8A]/70">Configurar funções</p>
-            )}
+      <Link to="/dashboard/meu-perfil-publico" className={cn('mt-6 flex items-center gap-3 p-4 transition-all hover:brightness-110', brandPanelSoftClass)}>
+        {clerkUser?.imageUrl ? (
+          <img
+            src={clerkUser.imageUrl}
+            alt={displayName}
+            className="h-12 w-12 rounded-2xl object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/10">
+            <span className="text-sm font-semibold text-[#F2BD8A]">{initials}</span>
           </div>
-        </Link>
-      </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-white">{displayName}</p>
+          {isLoading ? (
+            <p className="mt-1 text-xs text-white/30">Carregando...</p>
+          ) : hasFunctions ? (
+            <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/36">
+              {functions.length === 1
+                ? functions[0] === 'aluno'
+                  ? 'Aluno'
+                  : functions[0] === 'criador'
+                  ? 'Criador'
+                  : 'Instituição'
+                : `${functions.length} funções ativas`}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-[#F2BD8A]/70">Configurar funções</p>
+          )}
+        </div>
+      </Link>
 
       <nav className="mt-6 flex flex-1 flex-col gap-1 overflow-y-auto lg:pr-1">
         {activeGroups.length > 1 ? (

@@ -271,7 +271,7 @@ export function PerfilPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-white">@{currentUser.handle}</span>
                 <a
-                  href={`/@${currentUser.handle}`}
+                  href={`/${currentUser.handle}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-[#F2BD8A] hover:underline"
