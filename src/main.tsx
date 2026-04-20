@@ -1,4 +1,5 @@
-import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
+import { StrictMode, useEffect, useMemo, useRef, useState, Component } from 'react'
+import type { ReactNode, ErrorInfo } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-react'
 import { ConvexReactClient, useMutation } from 'convex/react'
@@ -7,6 +8,52 @@ import type { FunctionArgs } from 'convex/server'
 import './index.css'
 import App from './App'
 import { api } from '../convex/_generated/api'
+
+class AppErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[AppErrorBoundary]', error, info.componentStack)
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0F141A] px-6 text-white">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-[12%] top-[14%] h-56 w-56 rounded-full bg-[#F37E20]/10 blur-[120px]" />
+            <div className="absolute right-[8%] top-[16%] h-72 w-72 rounded-full bg-white/4 blur-[140px]" />
+          </div>
+          <div className="relative z-10 max-w-lg rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(13,18,24,0.92)_0%,rgba(10,14,20,0.96)_100%)] p-8 text-center shadow-[0_30px_120px_rgba(0,0,0,0.25)]">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h1 className="mt-5 font-display text-2xl font-bold text-white">Erro inesperado</h1>
+            <p className="mt-3 text-sm leading-7 text-white/56">
+              Ocorreu um erro ao carregar a plataforma. Recarregue a página para tentar novamente.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 rounded-2xl bg-[#F37E20] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#E06A10]"
+            >
+              Recarregar página
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL
@@ -143,16 +190,18 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {hasClerk && hasConvex && convex ? (
-      <ClerkProvider publishableKey={CLERK_KEY}>
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          <AuthSyncGate>
-            <App />
-          </AuthSyncGate>
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-    ) : (
-      <MissingConfigScreen />
-    )}
+    <AppErrorBoundary>
+      {hasClerk && hasConvex && convex ? (
+        <ClerkProvider publishableKey={CLERK_KEY}>
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <AuthSyncGate>
+              <App />
+            </AuthSyncGate>
+          </ConvexProviderWithClerk>
+        </ClerkProvider>
+      ) : (
+        <MissingConfigScreen />
+      )}
+    </AppErrorBoundary>
   </StrictMode>
 )

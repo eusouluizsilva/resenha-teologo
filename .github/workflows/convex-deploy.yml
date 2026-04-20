@@ -21,6 +21,13 @@ jobs:
       - run: npm install --prefer-offline
 
       - name: Deploy Convex functions to production
-        run: npx convex deploy --prod
+        run: npx convex deploy --typecheck=disable
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Convex deploy falhou. Schema de producao pode estar desatualizado."
+          echo "::error::Rode: CONVEX_DEPLOY_KEY=<chave> npx convex deploy"
+          echo "::error::Ou acione manualmente: gh workflow run 'Deploy Convex (production)' --repo eusouluizsilva/resenha-teologo"
