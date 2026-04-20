@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { brandEyebrowClass, brandPanelSoftClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
-import { perfilLabel, type Perfil } from '@/lib/perfil'
+import { type Perfil } from '@/lib/perfil'
 
 type NavItem = { label: string; href: string; exact?: boolean; icon: React.ReactNode }
 
@@ -74,14 +75,27 @@ export function DashboardSidebar() {
   const { pathname } = useLocation()
   const { clerkUser, perfil } = useCurrentAppUser()
   const { signOut } = useClerk()
+  const [switchingPerfil, setSwitchingPerfil] = useState(false)
 
   const nav = navByPerfil[perfil]
 
   const displayName = clerkUser?.firstName ?? clerkUser?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ?? 'Usuário'
-  const initials = displayName.slice(0, 2).toUpperCase()
+  const initials = ((clerkUser?.firstName?.[0] ?? '') + (clerkUser?.lastName?.[0] ?? '')) || displayName.slice(0, 2).toUpperCase()
 
   async function handleSignOut() {
     await signOut({ redirectUrl: '/' })
+  }
+
+  async function handlePerfilSwitch(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newPerfil = e.target.value as Perfil
+    if (!clerkUser || newPerfil === perfil) return
+    setSwitchingPerfil(true)
+    try {
+      await clerkUser.update({ unsafeMetadata: { ...clerkUser.unsafeMetadata, perfil: newPerfil } })
+      window.location.href = '/dashboard'
+    } catch {
+      setSwitchingPerfil(false)
+    }
   }
 
   return (
@@ -99,15 +113,29 @@ export function DashboardSidebar() {
         <div className={cn('mt-6 p-4', brandPanelSoftClass)}>
         <div className="flex items-center gap-3">
           {clerkUser?.imageUrl ? (
-            <img src={clerkUser.imageUrl} alt={displayName} className="h-12 w-12 rounded-2xl object-cover" />
+            <img src={clerkUser.imageUrl} alt={displayName} className="h-12 w-12 rounded-2xl object-cover flex-shrink-0" />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/10">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/10">
               <span className="text-sm font-semibold text-[#F2BD8A]">{initials}</span>
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-white">{displayName}</p>
-            <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/28">{perfilLabel[perfil]}</p>
+            <div className="mt-1.5">
+              {switchingPerfil ? (
+                <p className="text-xs text-white/40">Alterando perfil...</p>
+              ) : (
+                <select
+                  value={perfil}
+                  onChange={handlePerfilSwitch}
+                  className="w-full bg-transparent text-xs uppercase tracking-[0.16em] text-white/40 outline-none cursor-pointer hover:text-white/70 transition-colors"
+                >
+                  <option value="criador" className="bg-[#151B23] normal-case tracking-normal">Criador de conteúdo</option>
+                  <option value="aluno" className="bg-[#151B23] normal-case tracking-normal">Aluno</option>
+                  <option value="instituicao" className="bg-[#151B23] normal-case tracking-normal">Igreja ou instituição</option>
+                </select>
+              )}
+            </div>
           </div>
         </div>
       </div>
