@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as catalog from "../catalog.js";
 import type * as courses from "../courses.js";
+import type * as enrollments from "../enrollments.js";
 import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -23,7 +25,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  catalog: typeof catalog;
   courses: typeof courses;
+  enrollments: typeof enrollments;
   http: typeof http;
   lessons: typeof lessons;
   "lib/auth": typeof lib_auth;

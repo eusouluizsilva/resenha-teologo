@@ -22,6 +22,9 @@ import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/
 import { useCurrentAppUser } from '@/lib/currentUser'
 import type { Perfil } from '@/lib/perfil'
 import { PrivacidadePage, TermosPage } from '@/pages/legal/LegalPages'
+import { MeusCursosPage } from '@/pages/dashboard/aluno/MeusCursosPage'
+import { CertificadosPage } from '@/pages/dashboard/aluno/CertificadosPage'
+import { CatalogPage } from '@/pages/public/CatalogPage'
 
 function DashboardRouteLoader() {
   return (
@@ -153,6 +156,7 @@ export default function App() {
         <Routes>
           {/* Público */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/cursos" element={<CatalogPage />} />
 
           {/* Autenticação */}
           <Route path="/entrar" element={<SignInPage />} />
@@ -177,8 +181,8 @@ export default function App() {
             <Route path="financeiro" element={<RequirePerfil allowed={['criador']}><FinanceiroPage /></RequirePerfil>} />
 
             {/* Aluno */}
-            <Route path="meus-cursos" element={<RequirePerfil allowed={['aluno']}><EmConstrucao title="Meus cursos em preparação" description="O painel do aluno já foi separado do criador. Agora vamos conectar matrícula, progresso e continuidade de estudo." /></RequirePerfil>} />
-            <Route path="certificados" element={<RequirePerfil allowed={['aluno']}><EmConstrucao title="Certificados em preparação" description="A emissão e a listagem dos certificados serão liberadas junto com o ciclo completo de progresso, quiz e conclusão." /></RequirePerfil>} />
+            <Route path="meus-cursos" element={<RequirePerfil allowed={['aluno']}><MeusCursosPage /></RequirePerfil>} />
+            <Route path="certificados" element={<RequirePerfil allowed={['aluno']}><CertificadosPage /></RequirePerfil>} />
 
             {/* Instituição */}
             <Route path="membros" element={<RequirePerfil allowed={['instituicao']}><EmConstrucao title="Membros em preparação" description="A estrutura institucional já está reservada no dashboard. A próxima entrega conecta gestão de membros e acompanhamento coletivo." /></RequirePerfil>} />

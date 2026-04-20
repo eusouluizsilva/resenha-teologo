@@ -1,0 +1,111 @@
+import { Link } from 'react-router-dom'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
+import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
+
+function formatDate(ts: number) {
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(ts))
+}
+
+function levelLabel(level: string) {
+  if (level === 'iniciante') return 'Iniciante'
+  if (level === 'intermediario') return 'Intermediario'
+  return 'Avancado'
+}
+
+export function CertificadosPage() {
+  const data = useQuery(api.enrollments.listCertificates)
+
+  const isLoading = data === undefined
+
+  return (
+    <DashboardPageShell
+      eyebrow="Aluno"
+      title="Certificados"
+      description="Seus certificados de conclusao emitidos pela plataforma. Media minima de 70% para emissao."
+      maxWidthClass="max-w-5xl"
+    >
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className={cn('animate-pulse p-6', brandPanelClass)}>
+              <div className="flex items-center gap-5">
+                <div className="h-14 w-14 rounded-2xl bg-white/8" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-1/2 rounded-lg bg-white/8" />
+                  <div className="h-4 w-1/3 rounded-lg bg-white/6" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : data.length === 0 ? (
+        <DashboardEmptyState
+          icon={
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+            </svg>
+          }
+          title="Nenhum certificado ainda"
+          description="Conclua um curso com media igual ou superior a 70% para receber seu certificado de conclusao automaticamente."
+          action={
+            <Link
+              to="/dashboard/meus-cursos"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#F37E20] px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#e06e10]"
+            >
+              Ver meus cursos
+            </Link>
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          {data.map(({ enrollment, course }: { enrollment: NonNullable<typeof data>[number]['enrollment']; course: NonNullable<typeof data>[number]['course'] }) => {
+            if (!course) return null
+            return (
+              <div
+                key={enrollment._id}
+                className={cn(
+                  'flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between',
+                  brandPanelClass,
+                )}
+              >
+                <div className="flex items-center gap-5">
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-emerald-400/18 bg-emerald-400/8 text-emerald-300">
+                    <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-.58 3.737 3.745 3.745 0 01-3.596 1.436 3.745 3.745 0 01-2.807 1.324 3.745 3.745 0 01-2.807-1.324 3.745 3.745 0 01-3.597-1.436 3.745 3.745 0 01-.58-3.737A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 01.58-3.737 3.745 3.745 0 013.597-1.436 3.745 3.745 0 012.807-1.324 3.745 3.745 0 012.807 1.324 3.745 3.745 0 013.596 1.436 3.745 3.745 0 01.58 3.737A3.745 3.745 0 0121 12z" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="truncate font-display text-lg font-semibold text-white">{course.title}</h3>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span className={brandStatusPillClass('success')}>Concluido</span>
+                      <span className={brandStatusPillClass('neutral')}>{levelLabel(course.level)}</span>
+                      {enrollment.finalScore !== undefined && (
+                        <span className={brandStatusPillClass('accent')}>Nota: {enrollment.finalScore.toFixed(0)}%</span>
+                      )}
+                      {enrollment.completedAt && (
+                        <span className="text-xs text-white/36">{formatDate(enrollment.completedAt)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-400/8 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition-all duration-200 hover:border-emerald-400/35 hover:bg-emerald-400/14"
+                  onClick={() => window.print()}
+                  title="Imprimir certificado"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Baixar certificado
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </DashboardPageShell>
+  )
+}
