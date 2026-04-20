@@ -219,15 +219,13 @@ export function LandingPage() {
 
               <motion.h1
                 variants={fadeUp}
-                className="mt-8 font-display text-[clamp(3rem,7vw,5rem)] font-extrabold leading-[0.95] tracking-[-0.05em] text-white"
+                className="mt-8 font-display text-[clamp(2.6rem,6vw,4.5rem)] font-extrabold leading-[1.05] tracking-[-0.04em] text-white"
               >
-                A plataforma de
-                {' '}
+                A plataforma para estudar{' '}
                 <span style={{ fontFamily: 'Source Serif 4, serif' }} className="font-normal italic text-[#F3D7BE]">
-                  estudo teológico
-                </span>
-                {' '}
-                que parece biblioteca, não template.
+                  teologia
+                </span>{' '}
+                com profundidade.
               </motion.h1>
 
               <motion.p variants={fadeUp} className="mt-6 max-w-xl text-base leading-8 text-white/68 md:text-lg">
