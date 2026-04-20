@@ -78,7 +78,7 @@ type FormState = {
 }
 
 export function PerfilPage() {
-  const { clerkUser, currentUser, perfil, isLoading } = useCurrentAppUser()
+  const { clerkUser, currentUser, hasFunction, isLoading } = useCurrentAppUser()
   const updateProfile = useMutation(api.users.updateProfile)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
@@ -216,8 +216,8 @@ export function PerfilPage() {
     clerkUser.emailAddresses[0]?.emailAddress ||
     ''
 
-  const isInstitution = perfil === 'instituicao'
-  const isCriador = perfil === 'criador'
+  const isInstitution = hasFunction('instituicao')
+  const isCriador = hasFunction('criador')
 
   return (
     <DashboardPageShell

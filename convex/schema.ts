@@ -6,14 +6,11 @@ export default defineSchema({
     clerkId: v.string(),
     name: v.string(),
     email: v.string(),
-    perfil: v.union(v.literal('aluno'), v.literal('criador'), v.literal('instituicao')),
+    perfil: v.optional(v.union(v.literal('aluno'), v.literal('criador'), v.literal('instituicao'))),
     avatarUrl: v.optional(v.string()),
     bio: v.optional(v.string()),
-    youtubeChannel: v.optional(v.string()),
-    institution: v.optional(v.string()),
-    cnpj: v.optional(v.string()),
-    city: v.optional(v.string()),
-    state: v.optional(v.string()),
+    country: v.optional(v.string()),
+    website: v.optional(v.string()),
     phone: v.optional(v.string()),
     phoneCountry: v.optional(v.string()),
     instagram: v.optional(v.string()),
@@ -24,12 +21,102 @@ export default defineSchema({
     addressNumber: v.optional(v.string()),
     neighborhood: v.optional(v.string()),
     cep: v.optional(v.string()),
+    youtubeChannel: v.optional(v.string()),
+    institution: v.optional(v.string()),
+    cnpj: v.optional(v.string()),
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
     denomination: v.optional(v.string()),
     churchRole: v.optional(v.string()),
     churchName: v.optional(v.string()),
     churchInstagram: v.optional(v.string()),
     totalDonationsReceived: v.optional(v.number()),
   }).index('by_clerkId', ['clerkId']),
+
+  userFunctions: defineTable({
+    userId: v.string(),
+    function: v.union(v.literal('aluno'), v.literal('criador'), v.literal('instituicao')),
+    enabledAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_userId_function', ['userId', 'function']),
+
+  consents: defineTable({
+    userId: v.string(),
+    type: v.union(
+      v.literal('geral'),
+      v.literal('aluno'),
+      v.literal('criador'),
+      v.literal('instituicao')
+    ),
+    documentVersion: v.string(),
+    acceptedAt: v.number(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  }).index('by_userId', ['userId']),
+
+  institutions: defineTable({
+    name: v.string(),
+    type: v.union(v.literal('igreja'), v.literal('ensino'), v.literal('empresa')),
+    createdByUserId: v.string(),
+    cnpj: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    website: v.optional(v.string()),
+    instagramUrl: v.optional(v.string()),
+    facebookUrl: v.optional(v.string()),
+    youtubeUrl: v.optional(v.string()),
+    denomination: v.optional(v.string()),
+    denominationName: v.optional(v.string()),
+    responsibleRole: v.optional(v.string()),
+    address: v.optional(v.object({
+      street: v.optional(v.string()),
+      number: v.optional(v.string()),
+      complement: v.optional(v.string()),
+      neighborhood: v.optional(v.string()),
+      postalCode: v.optional(v.string()),
+      city: v.optional(v.string()),
+      state: v.optional(v.string()),
+      country: v.optional(v.string()),
+    })),
+  })
+    .index('by_createdByUserId', ['createdByUserId']),
+
+  institutionMembers: defineTable({
+    institutionId: v.id('institutions'),
+    userId: v.string(),
+    role: v.union(v.literal('dono'), v.literal('admin'), v.literal('membro')),
+    addedAt: v.number(),
+    addedByUserId: v.string(),
+    status: v.union(v.literal('pendente'), v.literal('ativo'), v.literal('removido')),
+  })
+    .index('by_institutionId', ['institutionId'])
+    .index('by_userId', ['userId'])
+    .index('by_institution_user', ['institutionId', 'userId']),
+
+  institutionInvites: defineTable({
+    institutionId: v.id('institutions'),
+    email: v.string(),
+    token: v.string(),
+    sentAt: v.number(),
+    expiresAt: v.number(),
+    status: v.union(v.literal('pendente'), v.literal('aceito'), v.literal('expirado')),
+    sentByUserId: v.string(),
+  })
+    .index('by_institutionId', ['institutionId'])
+    .index('by_token', ['token']),
+
+  creatorProfiles: defineTable({
+    userId: v.string(),
+    channelName: v.optional(v.string()),
+    youtubeUrl: v.optional(v.string()),
+    bioProfessional: v.optional(v.string()),
+    instagramUrl: v.optional(v.string()),
+    facebookUrl: v.optional(v.string()),
+    twitterUrl: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+    pixKey: v.optional(v.string()),
+  }).index('by_userId', ['userId']),
 
   courses: defineTable({
     creatorId: v.string(),

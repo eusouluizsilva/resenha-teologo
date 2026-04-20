@@ -33,13 +33,10 @@ export const upsert = mutation({
     clerkId: v.string(),
     name: v.string(),
     email: v.string(),
-    perfil: v.union(v.literal('aluno'), v.literal('criador'), v.literal('instituicao')),
     avatarUrl: v.optional(v.string()),
-    youtubeChannel: v.optional(v.string()),
-    institution: v.optional(v.string()),
-    cnpj: v.optional(v.string()),
-    city: v.optional(v.string()),
-    state: v.optional(v.string()),
+    country: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    phoneCountry: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx)
@@ -60,7 +57,13 @@ export const upsert = mutation({
     }
 
     return await ctx.db.insert('users', {
-      ...args,
+      clerkId: args.clerkId,
+      name: args.name,
+      email: args.email,
+      avatarUrl: args.avatarUrl,
+      country: args.country,
+      phone: args.phone,
+      phoneCountry: args.phoneCountry,
       totalDonationsReceived: 0,
     })
   },
@@ -70,11 +73,8 @@ export const updateProfile = mutation({
   args: {
     clerkId: v.string(),
     bio: v.optional(v.string()),
-    youtubeChannel: v.optional(v.string()),
-    institution: v.optional(v.string()),
-    cnpj: v.optional(v.string()),
-    city: v.optional(v.string()),
-    state: v.optional(v.string()),
+    country: v.optional(v.string()),
+    website: v.optional(v.string()),
     phone: v.optional(v.string()),
     phoneCountry: v.optional(v.string()),
     instagram: v.optional(v.string()),
@@ -85,6 +85,11 @@ export const updateProfile = mutation({
     addressNumber: v.optional(v.string()),
     neighborhood: v.optional(v.string()),
     cep: v.optional(v.string()),
+    youtubeChannel: v.optional(v.string()),
+    institution: v.optional(v.string()),
+    cnpj: v.optional(v.string()),
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
     denomination: v.optional(v.string()),
     churchRole: v.optional(v.string()),
     churchName: v.optional(v.string()),

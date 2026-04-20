@@ -1,13 +1,10 @@
 import type { ReactNode } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { AnimatePresence } from 'framer-motion'
 import { LandingPage } from '@/pages/LandingPage'
 import { SignInPage } from '@/pages/SignInPage'
-import { SignUpPage } from '@/pages/SignUpPage'
-import { RegisterAlunoPage } from '@/pages/auth/RegisterAlunoPage'
-import { RegisterCriadorPage } from '@/pages/auth/RegisterCriadorPage'
-import { RegisterInstituicaoPage } from '@/pages/auth/RegisterInstituicaoPage'
+import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { SSOCallbackPage } from '@/pages/auth/SSOCallbackPage'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { VisaoGeralPage } from '@/pages/dashboard/criador/VisaoGeralPage'
@@ -20,12 +17,13 @@ import { FinanceiroPage } from '@/pages/dashboard/criador/FinanceiroPage'
 import { PerfilPage } from '@/pages/dashboard/criador/PerfilPage'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { useCurrentAppUser } from '@/lib/currentUser'
-import type { Perfil } from '@/lib/perfil'
+import type { UserFunction } from '@/lib/functions'
 import { PrivacidadePage, TermosPage } from '@/pages/legal/LegalPages'
 import { MeusCursosPage } from '@/pages/dashboard/aluno/MeusCursosPage'
 import { CertificadosPage } from '@/pages/dashboard/aluno/CertificadosPage'
 import { CatalogPage } from '@/pages/public/CatalogPage'
 import { PlanosPage } from '@/pages/dashboard/PlanosPage'
+import { FuncoesPage } from '@/pages/dashboard/FuncoesPage'
 
 function DashboardRouteLoader() {
   return (
@@ -37,7 +35,7 @@ function DashboardRouteLoader() {
 
 function EmConstrucao({
   title = 'Área em construção',
-  description = 'Esta seção ainda está sendo refinada para seguir a mesma direção editorial e institucional do restante da plataforma.',
+  description = 'Esta seção ainda está sendo refinada.',
 }: {
   title?: string
   description?: string
@@ -59,22 +57,26 @@ function EmConstrucao({
   )
 }
 
-function RequirePerfil({
+function RequireFunction({
   allowed,
   children,
 }: {
-  allowed: Perfil[]
+  allowed: UserFunction[]
   children: ReactNode
 }) {
   const { user } = useUser()
-  const { perfil, isLoading } = useCurrentAppUser()
+  const { hasFunction, isLoading } = useCurrentAppUser()
 
-  if (!user || isLoading) {
-    return <DashboardRouteLoader />
-  }
+  if (!user || isLoading) return <DashboardRouteLoader />
 
-  if (!allowed.includes(perfil)) {
-    return <EmConstrucao title="Acesso não disponível neste perfil" description="Seu perfil atual entrou corretamente no dashboard, mas esta área pertence a outra camada do produto." />
+  const permitted = allowed.some((fn) => hasFunction(fn))
+  if (!permitted) {
+    return (
+      <EmConstrucao
+        title="Acesso não disponível"
+        description="Esta área requer uma função que você ainda não ativou. Acesse Minhas funções para configurar."
+      />
+    )
   }
 
   return <>{children}</>
@@ -82,27 +84,39 @@ function RequirePerfil({
 
 function DashboardIndexPage() {
   const { user } = useUser()
-  const { perfil, isLoading } = useCurrentAppUser()
+  const { hasFunction, isLoading } = useCurrentAppUser()
 
-  if (!user || isLoading) {
-    return <DashboardRouteLoader />
+  if (!user || isLoading) return <DashboardRouteLoader />
+
+  if (hasFunction('criador')) return <VisaoGeralPage />
+
+  if (hasFunction('aluno')) {
+    return (
+      <DashboardPageShell
+        eyebrow="Painel do aluno"
+        title="Bem-vindo de volta"
+        description="Acesse seus cursos, acompanhe o progresso e resgate seus certificados."
+        maxWidthClass="max-w-4xl"
+      >
+        <EmConstrucao
+          title="Área do aluno em ativação"
+          description="Seus cursos em andamento e progresso serão exibidos aqui em breve."
+        />
+      </DashboardPageShell>
+    )
   }
 
-  if (perfil === 'criador') {
-    return <VisaoGeralPage />
-  }
-
-  if (perfil === 'instituicao') {
+  if (hasFunction('instituicao')) {
     return (
       <DashboardPageShell
         eyebrow="Painel institucional"
         title="Visão geral"
-        description="O shell do dashboard já respeita seu perfil. Agora a próxima etapa é liberar gestão de membros, relatórios e acompanhamento coletivo dentro da mesma base."
+        description="Gestão de membros, cursos vinculados e relatórios da sua instituição."
         maxWidthClass="max-w-4xl"
       >
         <EmConstrucao
-          title="Base institucional pronta para crescer"
-          description="Seu acesso institucional já cai no contexto correto. Os módulos operacionais, membros e relatórios serão conectados sobre esta mesma estrutura."
+          title="Ambiente institucional em preparação"
+          description="Configure os dados da sua instituição e comece a adicionar membros."
         />
       </DashboardPageShell>
     )
@@ -110,41 +124,14 @@ function DashboardIndexPage() {
 
   return (
     <DashboardPageShell
-      eyebrow="Painel do aluno"
-      title="Visão geral"
-      description="O dashboard já diferencia aluno, criador e instituição. A próxima entrega conecta cursos em andamento, progresso e certificados com a mesma linguagem editorial."
+      eyebrow="Bem-vindo"
+      title="Configure suas funções"
+      description="Ative as funções que fazem sentido para você: aluno, criador de conteúdo ou gestão institucional."
       maxWidthClass="max-w-4xl"
     >
       <EmConstrucao
-        title="Área do aluno em ativação"
-        description="O acesso do aluno já está separado corretamente. Agora vamos conectar matrícula, continuidade de estudo, progresso e certificados sem misturar sua experiência com o painel do criador."
-      />
-    </DashboardPageShell>
-  )
-}
-
-function DashboardPerfilPage() {
-  const { user } = useUser()
-  const { perfil, isLoading } = useCurrentAppUser()
-
-  if (!user || isLoading) {
-    return <DashboardRouteLoader />
-  }
-
-  if (perfil === 'criador' || perfil === 'instituicao') {
-    return <PerfilPage />
-  }
-
-  return (
-    <DashboardPageShell
-      eyebrow="Conta"
-      title="Meu perfil"
-      description="A edição completa do perfil do aluno entra em uma etapa seguinte. Por enquanto, a plataforma já reconhece seu perfil corretamente e protege o acesso dentro do dashboard único."
-      maxWidthClass="max-w-4xl"
-    >
-      <EmConstrucao
-        title="Perfil do aluno em preparação"
-        description="A próxima camada vai exibir identidade, dados de estudo e preferências do aluno com a mesma clareza visual do restante da plataforma."
+        title="Nenhuma função ativa ainda"
+        description="Acesse Minhas funções no menu lateral para configurar como você quer usar a plataforma."
       />
     </DashboardPageShell>
   )
@@ -161,10 +148,10 @@ export default function App() {
 
           {/* Autenticação */}
           <Route path="/entrar" element={<SignInPage />} />
-          <Route path="/cadastro" element={<SignUpPage />} />
-          <Route path="/cadastro/aluno" element={<RegisterAlunoPage />} />
-          <Route path="/cadastro/criador" element={<RegisterCriadorPage />} />
-          <Route path="/cadastro/instituicao" element={<RegisterInstituicaoPage />} />
+          <Route path="/cadastro" element={<RegisterPage />} />
+          <Route path="/cadastro/aluno" element={<Navigate to="/cadastro" replace />} />
+          <Route path="/cadastro/criador" element={<Navigate to="/cadastro" replace />} />
+          <Route path="/cadastro/instituicao" element={<Navigate to="/cadastro" replace />} />
           <Route path="/sso-callback" element={<SSOCallbackPage />} />
           <Route path="/termos" element={<TermosPage />} />
           <Route path="/privacidade" element={<PrivacidadePage />} />
@@ -174,23 +161,25 @@ export default function App() {
             <Route index element={<DashboardIndexPage />} />
 
             {/* Criador */}
-            <Route path="cursos" element={<RequirePerfil allowed={['criador']}><CursosPage /></RequirePerfil>} />
-            <Route path="cursos/novo" element={<RequirePerfil allowed={['criador']}><NovoCursoPage /></RequirePerfil>} />
-            <Route path="cursos/:id" element={<RequirePerfil allowed={['criador']}><EditarInfoCursoPage /></RequirePerfil>} />
-            <Route path="cursos/:id/modulos" element={<RequirePerfil allowed={['criador']}><EditarCursoPage /></RequirePerfil>} />
-            <Route path="cursos/:courseId/aula/:lessonId" element={<RequirePerfil allowed={['criador']}><EditarAulaPage /></RequirePerfil>} />
-            <Route path="financeiro" element={<RequirePerfil allowed={['criador']}><FinanceiroPage /></RequirePerfil>} />
+            <Route path="cursos" element={<RequireFunction allowed={['criador']}><CursosPage /></RequireFunction>} />
+            <Route path="cursos/novo" element={<RequireFunction allowed={['criador']}><NovoCursoPage /></RequireFunction>} />
+            <Route path="cursos/:id" element={<RequireFunction allowed={['criador']}><EditarInfoCursoPage /></RequireFunction>} />
+            <Route path="cursos/:id/modulos" element={<RequireFunction allowed={['criador']}><EditarCursoPage /></RequireFunction>} />
+            <Route path="cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['criador']}><EditarAulaPage /></RequireFunction>} />
+            <Route path="financeiro" element={<RequireFunction allowed={['criador']}><FinanceiroPage /></RequireFunction>} />
 
             {/* Aluno */}
-            <Route path="meus-cursos" element={<RequirePerfil allowed={['aluno']}><MeusCursosPage /></RequirePerfil>} />
-            <Route path="certificados" element={<RequirePerfil allowed={['aluno']}><CertificadosPage /></RequirePerfil>} />
+            <Route path="meus-cursos" element={<RequireFunction allowed={['aluno']}><MeusCursosPage /></RequireFunction>} />
+            <Route path="certificados" element={<RequireFunction allowed={['aluno']}><CertificadosPage /></RequireFunction>} />
 
             {/* Instituição */}
-            <Route path="membros" element={<RequirePerfil allowed={['instituicao']}><EmConstrucao title="Membros em preparação" description="A estrutura institucional já está reservada no dashboard. A próxima entrega conecta gestão de membros e acompanhamento coletivo." /></RequirePerfil>} />
-            <Route path="relatorios" element={<RequirePerfil allowed={['instituicao']}><EmConstrucao title="Relatórios em preparação" description="Os relatórios institucionais serão liberados sobre o mesmo dashboard, com permissões e visão próprias para igrejas e instituições." /></RequirePerfil>} />
+            <Route path="membros" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Membros em preparação" description="A gestão de membros será liberada em breve." /></RequireFunction>} />
+            <Route path="cursos-instituicao" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Cursos vinculados em preparação" description="A vinculação de cursos a membros será liberada em breve." /></RequireFunction>} />
+            <Route path="relatorios" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Relatórios em preparação" description="Os relatórios institucionais serão liberados em breve." /></RequireFunction>} />
 
             {/* Compartilhado */}
-            <Route path="perfil" element={<DashboardPerfilPage />} />
+            <Route path="perfil" element={<PerfilPage />} />
+            <Route path="funcoes" element={<FuncoesPage />} />
             <Route path="planos" element={<PlanosPage />} />
           </Route>
         </Routes>

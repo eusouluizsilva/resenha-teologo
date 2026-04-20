@@ -9,13 +9,16 @@
  */
 
 import type * as catalog from "../catalog.js";
+import type * as consents from "../consents.js";
 import type * as courses from "../courses.js";
 import type * as enrollments from "../enrollments.js";
 import type * as http from "../http.js";
+import type * as institutions from "../institutions.js";
 import type * as lessons from "../lessons.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as modules from "../modules.js";
 import type * as quizzes from "../quizzes.js";
+import type * as userFunctions from "../userFunctions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -26,13 +29,16 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   catalog: typeof catalog;
+  consents: typeof consents;
   courses: typeof courses;
   enrollments: typeof enrollments;
   http: typeof http;
+  institutions: typeof institutions;
   lessons: typeof lessons;
   "lib/auth": typeof lib_auth;
   modules: typeof modules;
   quizzes: typeof quizzes;
+  userFunctions: typeof userFunctions;
   users: typeof users;
 }>;
 

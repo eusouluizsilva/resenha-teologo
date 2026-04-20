@@ -1,18 +1,36 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { DashboardSidebar } from './DashboardSidebar'
+import { OnboardingModal } from './OnboardingModal'
 import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
+import { useCurrentAppUser } from '@/lib/currentUser'
+import { normalizePerfil } from '@/lib/perfil'
 
 export function DashboardLayout() {
   const { user, isLoaded } = useUser()
   const [timedOut, setTimedOut] = useState(false)
+  const [onboardingDone, setOnboardingDone] = useState(false)
+  const { functions, isLoading } = useCurrentAppUser()
+  const migrateFromPerfil = useMutation(api.userFunctions.migrateFromPerfil)
 
   useEffect(() => {
     if (isLoaded) return
     const t = setTimeout(() => setTimedOut(true), 10000)
     return () => clearTimeout(t)
   }, [isLoaded])
+
+  useEffect(() => {
+    if (isLoading || functions.length > 0) return
+
+    const metadata = user?.unsafeMetadata as Record<string, unknown> | undefined
+    if (metadata?.perfil) {
+      const legacyPerfil = normalizePerfil(metadata.perfil)
+      migrateFromPerfil({ perfil: legacyPerfil }).catch(() => {})
+    }
+  }, [isLoading, functions.length, user, migrateFromPerfil])
 
   if (!isLoaded) {
     if (timedOut) {
@@ -22,7 +40,6 @@ export function DashboardLayout() {
             <div className="absolute left-[12%] top-[14%] h-56 w-56 rounded-full bg-[#F37E20]/10 blur-[120px]" />
             <div className="absolute right-[8%] top-[16%] h-72 w-72 rounded-full bg-white/4 blur-[140px]" />
           </div>
-
           <div className={cn('relative z-10 max-w-lg p-8 text-center', brandPanelClass)}>
             <div className={cn('mx-auto mb-5', brandIconBadgeClass)}>
               <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -52,6 +69,8 @@ export function DashboardLayout() {
 
   if (!user) return <Navigate to="/entrar" replace />
 
+  const showOnboarding = !isLoading && functions.length === 0 && !onboardingDone
+
   return (
     <div className="min-h-screen bg-[#0B1016] text-white">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -69,6 +88,10 @@ export function DashboardLayout() {
           </div>
         </div>
       </main>
+
+      {showOnboarding && (
+        <OnboardingModal onComplete={() => setOnboardingDone(true)} />
+      )}
     </div>
   )
 }

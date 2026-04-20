@@ -1,11 +1,11 @@
-import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { brandEyebrowClass, brandPanelSoftClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
-import { type Perfil } from '@/lib/perfil'
+import type { UserFunction } from '@/lib/functions'
 
 type NavItem = { label: string; href: string; exact?: boolean; icon: React.ReactNode }
+type NavGroup = { label: string; fn: UserFunction; items: NavItem[] }
 
 const iconBook = (
   <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -49,53 +49,92 @@ const iconPlans = (
   </svg>
 )
 
-const navByPerfil: Record<Perfil, NavItem[]> = {
-  criador: [
-    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
-    { label: 'Meus cursos', href: '/dashboard/cursos', icon: iconBook },
-    { label: 'Financeiro', href: '/dashboard/financeiro', icon: iconMoney },
-    { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
-  ],
-  aluno: [
-    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
-    { label: 'Meus cursos', href: '/dashboard/meus-cursos', icon: iconBook },
-    { label: 'Certificados', href: '/dashboard/certificados', icon: iconCert },
-    { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
-  ],
-  instituicao: [
-    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
-    { label: 'Membros', href: '/dashboard/membros', icon: iconMembers },
-    { label: 'Cursos', href: '/dashboard/cursos', icon: iconBook },
-    { label: 'Relatórios', href: '/dashboard/relatorios', icon: iconChart },
-    { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
-  ],
+const iconFunctions = (
+  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+  </svg>
+)
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Aluno',
+    fn: 'aluno',
+    items: [
+      { label: 'Meus estudos', href: '/dashboard/meus-cursos', icon: iconBook },
+      { label: 'Certificados', href: '/dashboard/certificados', icon: iconCert },
+    ],
+  },
+  {
+    label: 'Criador',
+    fn: 'criador',
+    items: [
+      { label: 'Meus cursos', href: '/dashboard/cursos', icon: iconBook },
+      { label: 'Financeiro', href: '/dashboard/financeiro', icon: iconMoney },
+    ],
+  },
+  {
+    label: 'Instituição',
+    fn: 'instituicao',
+    items: [
+      { label: 'Membros', href: '/dashboard/membros', icon: iconMembers },
+      { label: 'Cursos', href: '/dashboard/cursos-instituicao', icon: iconBook },
+      { label: 'Relatórios', href: '/dashboard/relatorios', icon: iconChart },
+    ],
+  },
+]
+
+const ALWAYS_NAV: NavItem[] = [
+  { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
+  { label: 'Minhas funções', href: '/dashboard/funcoes', icon: iconFunctions },
+  { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
+]
+
+function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+
+  return (
+    <Link
+      to={item.href}
+      className={cn(
+        'group flex items-center gap-3 rounded-[1.2rem] border px-4 py-3 text-sm font-medium transition-all duration-200',
+        active
+          ? 'border-[#F37E20]/18 bg-[#F37E20]/10 text-white shadow-[0_12px_30px_rgba(243,126,32,0.08)]'
+          : 'border-transparent text-white/56 hover:border-white/8 hover:bg-white/[0.03] hover:text-white',
+      )}
+    >
+      <span
+        className={cn(
+          'flex h-10 w-10 items-center justify-center rounded-2xl border text-current transition-all duration-200',
+          active
+            ? 'border-[#F37E20]/14 bg-[#F37E20]/10 text-[#F2BD8A]'
+            : 'border-white/8 bg-white/[0.03] text-white/42 group-hover:text-[#F2BD8A]',
+        )}
+      >
+        {item.icon}
+      </span>
+      <span className="truncate">{item.label}</span>
+    </Link>
+  )
 }
 
 export function DashboardSidebar() {
   const { pathname } = useLocation()
-  const { clerkUser, perfil } = useCurrentAppUser()
+  const { clerkUser, functions, isLoading } = useCurrentAppUser()
   const { signOut } = useClerk()
-  const [switchingPerfil, setSwitchingPerfil] = useState(false)
 
-  const nav = navByPerfil[perfil]
+  const displayName =
+    clerkUser?.firstName ??
+    clerkUser?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ??
+    'Usuário'
+  const initials =
+    ((clerkUser?.firstName?.[0] ?? '') + (clerkUser?.lastName?.[0] ?? '')) ||
+    displayName.slice(0, 2).toUpperCase()
 
-  const displayName = clerkUser?.firstName ?? clerkUser?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ?? 'Usuário'
-  const initials = ((clerkUser?.firstName?.[0] ?? '') + (clerkUser?.lastName?.[0] ?? '')) || displayName.slice(0, 2).toUpperCase()
+  const hasFunctions = functions.length > 0
+  const activeGroups = NAV_GROUPS.filter((g) => functions.includes(g.fn))
 
   async function handleSignOut() {
     await signOut({ redirectUrl: '/' })
-  }
-
-  async function handlePerfilSwitch(e: React.ChangeEvent<HTMLSelectElement>) {
-    const newPerfil = e.target.value as Perfil
-    if (!clerkUser || newPerfil === perfil) return
-    setSwitchingPerfil(true)
-    try {
-      await clerkUser.update({ unsafeMetadata: { ...clerkUser.unsafeMetadata, perfil: newPerfil } })
-      window.location.href = '/dashboard'
-    } catch {
-      setSwitchingPerfil(false)
-    }
   }
 
   return (
@@ -110,10 +149,14 @@ export function DashboardSidebar() {
         </p>
       </div>
 
-        <div className={cn('mt-6 p-4', brandPanelSoftClass)}>
+      <div className={cn('mt-6 p-4', brandPanelSoftClass)}>
         <div className="flex items-center gap-3">
           {clerkUser?.imageUrl ? (
-            <img src={clerkUser.imageUrl} alt={displayName} className="h-12 w-12 rounded-2xl object-cover flex-shrink-0" />
+            <img
+              src={clerkUser.imageUrl}
+              alt={displayName}
+              className="h-12 w-12 rounded-2xl object-cover flex-shrink-0"
+            />
           ) : (
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/10">
               <span className="text-sm font-semibold text-[#F2BD8A]">{initials}</span>
@@ -121,54 +164,50 @@ export function DashboardSidebar() {
           )}
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-white">{displayName}</p>
-            <div className="mt-1.5">
-              {switchingPerfil ? (
-                <p className="text-xs text-white/40">Alterando perfil...</p>
-              ) : (
-                <select
-                  value={perfil}
-                  onChange={handlePerfilSwitch}
-                  className="w-full bg-transparent text-xs uppercase tracking-[0.16em] text-white/40 outline-none cursor-pointer hover:text-white/70 transition-colors"
-                >
-                  <option value="criador" className="bg-[#151B23] normal-case tracking-normal">Criador de conteúdo</option>
-                  <option value="aluno" className="bg-[#151B23] normal-case tracking-normal">Aluno</option>
-                  <option value="instituicao" className="bg-[#151B23] normal-case tracking-normal">Igreja ou instituição</option>
-                </select>
-              )}
-            </div>
+            {isLoading ? (
+              <p className="mt-1 text-xs text-white/30">Carregando...</p>
+            ) : hasFunctions ? (
+              <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/36">
+                {functions.length === 1
+                  ? functions[0] === 'aluno'
+                    ? 'Aluno'
+                    : functions[0] === 'criador'
+                    ? 'Criador'
+                    : 'Instituição'
+                  : `${functions.length} funções ativas`}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-[#F2BD8A]/70">Configurar funções</p>
+            )}
           </div>
         </div>
       </div>
 
-      <nav className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:flex-1 lg:flex-col lg:overflow-y-auto lg:pr-1">
-        {nav.map((item) => {
-          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+      <nav className="mt-6 flex flex-1 flex-col gap-1 overflow-y-auto lg:pr-1">
+        {activeGroups.length > 1 ? (
+          activeGroups.map((group) => (
+            <div key={group.fn} className="mb-2">
+              <p className="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/28">
+                {group.label}
+              </p>
+              {group.items.map((item) => (
+                <NavLink key={item.href} item={item} pathname={pathname} />
+              ))}
+            </div>
+          ))
+        ) : activeGroups.length === 1 ? (
+          activeGroups[0].items.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
+          ))
+        ) : null}
 
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                'group flex items-center gap-3 rounded-[1.2rem] border px-4 py-3 text-sm font-medium transition-all duration-200',
-                active
-                  ? 'border-[#F37E20]/18 bg-[#F37E20]/10 text-white shadow-[0_12px_30px_rgba(243,126,32,0.08)]'
-                  : 'border-transparent text-white/56 hover:border-white/8 hover:bg-white/[0.03] hover:text-white',
-              )}
-            >
-              <span
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-2xl border text-current transition-all duration-200',
-                  active
-                    ? 'border-[#F37E20]/14 bg-[#F37E20]/10 text-[#F2BD8A]'
-                    : 'border-white/8 bg-white/[0.03] text-white/42 group-hover:text-[#F2BD8A]',
-                )}
-              >
-                {item.icon}
-              </span>
-              <span className="truncate">{item.label}</span>
-            </Link>
-          )
-        })}
+        {activeGroups.length > 0 && (
+          <div className="my-2 border-t border-white/6" />
+        )}
+
+        {ALWAYS_NAV.map((item) => (
+          <NavLink key={item.href} item={item} pathname={pathname} />
+        ))}
       </nav>
 
       <div className={cn('mt-6 p-4', brandPanelSoftClass)}>
