@@ -313,10 +313,10 @@ export function LandingPage() {
               </div>
 
               <div className="absolute right-0 top-10 w-48 rounded-[1.6rem] border border-[#F37E20]/20 bg-[#171D26]/95 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Criador</p>
-                <p className="mt-3 font-display text-3xl font-bold text-[#FFF1E4]">Criador</p>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Para criadores</p>
+                <p className="mt-3 font-display text-3xl font-bold text-[#FFF1E4]">R$ 0</p>
                 <p className="mt-2 text-sm leading-6 text-white/56">
-                  Publique cursos, acompanhe progresso e emita certificados em um só lugar.
+                  Publique cursos gratuitamente e construa sua audiência.
                 </p>
               </div>
 
@@ -332,7 +332,7 @@ export function LandingPage() {
                     <div className=”h-1.5 w-[68%] rounded-full bg-[#F37E20]” />
                   </div>
                 </div>
-                <p className=”mt-3 text-[11px] text-white/36”>Proxima: Aula 7</p>
+                <p className=”mt-3 text-[11px] text-white/36”>Próxima: Aula 7</p>
               </div>
 
               <div className="absolute bottom-0 right-10 w-48 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
@@ -680,6 +680,92 @@ export function LandingPage() {
                 ))}
               </div>
             </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
+      <section id="planos" className="bg-[#F7F5F2] px-6 py-24 text-[#111827]">
+        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+          <SectionIntro
+            eyebrow="Planos"
+            title="Acesso livre para todos. Upgrade para quem quer mais."
+            description="Todo conteúdo é gratuito. Os planos sem anúncios existem para quem quer uma experiência de estudo mais limpa."
+            light
+            centered
+          />
+
+          <div className="mt-14 grid gap-5 lg:grid-cols-3">
+            {[
+              {
+                name: 'Gratuito',
+                price: 'R$ 0',
+                period: '',
+                description: 'Acesso completo a todos os cursos, com anúncios.',
+                features: ['Todos os cursos disponíveis', 'Quizzes e avaliações', 'Certificados de conclusão', 'Bíblia integrada (em breve)'],
+                cta: 'Criar conta grátis',
+                href: '/cadastro?perfil=aluno',
+                highlight: false,
+              },
+              {
+                name: 'Premium',
+                price: 'R$ 9,99',
+                period: '/mês',
+                description: 'Estudo sem interrupções. Sem nenhum anúncio em toda a plataforma.',
+                features: ['Tudo do plano Gratuito', 'Sem anúncios em toda a plataforma', 'Acesso prioritário a novidades', 'Suporte por email'],
+                cta: 'Em breve',
+                href: '/cadastro?perfil=aluno',
+                highlight: true,
+              },
+              {
+                name: 'Plano Igreja',
+                price: 'R$ 99',
+                period: '/mês',
+                description: 'Para igrejas e instituições. Membros ilimitados, sem anúncios.',
+                features: ['Membros ilimitados', 'Matrícula em lote', 'Painel de progresso coletivo', 'Sem anúncios para membros'],
+                cta: 'Falar com a equipe',
+                href: 'mailto:hello@resenhadoteologo.com',
+                highlight: false,
+              },
+            ].map((plan) => (
+              <motion.div
+                key={plan.name}
+                variants={scaleSoft}
+                className={`flex flex-col rounded-[1.8rem] border px-7 py-7 ${
+                  plan.highlight
+                    ? 'border-[#F37E20]/30 bg-[#1B2430] text-white'
+                    : 'border-[#E5DDD4] bg-white text-[#111827]'
+                }`}
+              >
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${plan.highlight ? 'text-[#F1B783]' : 'text-[#A05F26]'}`}>
+                  {plan.name}
+                </p>
+                <div className="mt-4 flex items-end gap-1">
+                  <span className={`font-display text-4xl font-extrabold ${plan.highlight ? 'text-white' : 'text-[#111827]'}`}>{plan.price}</span>
+                  {plan.period && <span className={`mb-1 text-sm ${plan.highlight ? 'text-white/48' : 'text-[#7A8390]'}`}>{plan.period}</span>}
+                </div>
+                <p className={`mt-3 text-sm leading-7 ${plan.highlight ? 'text-white/58' : 'text-[#5A6472]'}`}>{plan.description}</p>
+                <ul className="mt-6 flex-1 space-y-3">
+                  {plan.features.map((f) => (
+                    <li key={f} className={`flex items-start gap-3 text-sm ${plan.highlight ? 'text-white/74' : 'text-[#495363]'}`}>
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#F37E20]" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={plan.cta === 'Em breve' ? '#' : plan.href}
+                  className={`mt-8 rounded-[1.1rem] border px-5 py-3 text-center text-sm font-semibold transition-all duration-200 ${
+                    plan.cta === 'Em breve'
+                      ? 'cursor-not-allowed border-white/10 bg-white/6 text-white/30'
+                      : plan.highlight
+                        ? 'border-[#F37E20]/30 bg-[#F37E20]/14 text-[#F2BD8A] hover:bg-[#F37E20]/24'
+                        : 'border-[#CDBEAF] bg-[#F7F2EC] text-[#111827] hover:border-[#BBA48E] hover:bg-[#EEE7DC]'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </section>

@@ -48,6 +48,9 @@ export function Navbar() {
             <a href="#para-igrejas" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
               Para igrejas
             </a>
+            <a href="#planos" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
+              Planos
+            </a>
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
@@ -99,6 +102,9 @@ export function Navbar() {
                 </a>
                 <a href="#para-igrejas" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
                   Para igrejas
+                </a>
+                <a href="#planos" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
+                  Planos
                 </a>
 
                 <div className="mt-2 flex flex-col gap-2 border-t border-white/8 pt-4">
