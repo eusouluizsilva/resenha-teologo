@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-react'
 import { ConvexReactClient, useMutation } from 'convex/react'
 import { ConvexProviderWithClerk } from 'convex/react-clerk'
+import type { FunctionArgs } from 'convex/server'
 import './index.css'
 import App from './App'
 import { api } from '../convex/_generated/api'
@@ -66,26 +67,28 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
 
     const email = user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? ''
 
+    const payload: FunctionArgs<typeof api.users.upsert> = {
+      clerkId: user.id,
+      name: user.fullName?.trim() || email || 'Usuário',
+      email,
+      avatarUrl: user.imageUrl ?? undefined,
+      country:
+        typeof user.unsafeMetadata?.country === 'string'
+          ? user.unsafeMetadata.country
+          : undefined,
+      phone:
+        typeof user.unsafeMetadata?.phone === 'string'
+          ? user.unsafeMetadata.phone
+          : undefined,
+      phoneCountry:
+        typeof user.unsafeMetadata?.phoneCountry === 'string'
+          ? user.unsafeMetadata.phoneCountry
+          : undefined,
+    }
+
     return {
       fingerprint: [user.id, user.fullName ?? '', email, user.imageUrl ?? ''].join('|'),
-      payload: {
-        clerkId: user.id,
-        name: user.fullName?.trim() || email || 'Usuário',
-        email,
-        avatarUrl: user.imageUrl,
-        country:
-          typeof user.unsafeMetadata?.country === 'string'
-            ? user.unsafeMetadata.country
-            : undefined,
-        phone:
-          typeof user.unsafeMetadata?.phone === 'string'
-            ? user.unsafeMetadata.phone
-            : undefined,
-        phoneCountry:
-          typeof user.unsafeMetadata?.phoneCountry === 'string'
-            ? user.unsafeMetadata.phoneCountry
-            : undefined,
-      },
+      payload,
     }
   }, [user])
 
