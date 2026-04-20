@@ -85,6 +85,10 @@ export const updateProfile = mutation({
     addressNumber: v.optional(v.string()),
     neighborhood: v.optional(v.string()),
     cep: v.optional(v.string()),
+    denomination: v.optional(v.string()),
+    churchRole: v.optional(v.string()),
+    churchName: v.optional(v.string()),
+    churchInstagram: v.optional(v.string()),
   },
   handler: async (ctx, { clerkId, ...fields }) => {
     const identity = await requireIdentity(ctx)

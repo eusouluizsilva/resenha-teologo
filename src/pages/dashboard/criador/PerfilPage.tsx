@@ -5,6 +5,37 @@ import { brandInputClass, brandPanelClass, brandPanelSoftClass, brandPrimaryButt
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { DashboardPageShell, DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
 
+const DENOMINATIONS = [
+  { value: '', label: 'Selecione a denominação' },
+  { value: 'assembleia-de-deus', label: 'Assembleia de Deus' },
+  { value: 'batista', label: 'Batista' },
+  { value: 'presbiteriana', label: 'Presbiteriana' },
+  { value: 'metodista', label: 'Metodista' },
+  { value: 'adventista', label: 'Adventista' },
+  { value: 'luterana', label: 'Luterana' },
+  { value: 'anglicana', label: 'Anglicana' },
+  { value: 'quadrangular', label: 'Quadrangular' },
+  { value: 'sara-nossa-terra', label: 'Sara Nossa Terra' },
+  { value: 'renovada', label: 'Igreja Renascer / Renovada' },
+  { value: 'catolica', label: 'Católica' },
+  { value: 'sem-denominacao', label: 'Sem denominação' },
+  { value: 'outra', label: 'Outra' },
+]
+
+const CHURCH_ROLES = [
+  { value: '', label: 'Selecione o cargo' },
+  { value: 'membro', label: 'Membro' },
+  { value: 'lider-celula', label: 'Líder de Célula' },
+  { value: 'diacono', label: 'Diácono' },
+  { value: 'presbitero', label: 'Presbítero' },
+  { value: 'pastor', label: 'Pastor' },
+  { value: 'bispo', label: 'Bispo' },
+  { value: 'missionario', label: 'Missionário' },
+  { value: 'seminarista', label: 'Seminarista' },
+  { value: 'professor', label: 'Professor de Teologia' },
+  { value: 'outro', label: 'Outro' },
+]
+
 const PHONE_COUNTRIES = [
   { code: '+55', label: '+55 Brasil' },
   { code: '+1', label: '+1 EUA / Canadá' },
@@ -40,6 +71,10 @@ type FormState = {
   state: string
   institution: string
   cnpj: string
+  denomination: string
+  churchRole: string
+  churchName: string
+  churchInstagram: string
 }
 
 export function PerfilPage() {
@@ -62,6 +97,10 @@ export function PerfilPage() {
     state: '',
     institution: '',
     cnpj: '',
+    denomination: '',
+    churchRole: '',
+    churchName: '',
+    churchInstagram: '',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -86,6 +125,10 @@ export function PerfilPage() {
       state: currentUser.state ?? '',
       institution: currentUser.institution ?? '',
       cnpj: currentUser.cnpj ?? '',
+      denomination: currentUser.denomination ?? '',
+      churchRole: currentUser.churchRole ?? '',
+      churchName: currentUser.churchName ?? '',
+      churchInstagram: currentUser.churchInstagram ?? '',
     })
   }, [currentUser])
 
@@ -123,6 +166,10 @@ export function PerfilPage() {
         state: form.state.trim() || undefined,
         institution: form.institution.trim() || undefined,
         cnpj: form.cnpj.trim() || undefined,
+        denomination: form.denomination || undefined,
+        churchRole: form.churchRole || undefined,
+        churchName: form.churchName.trim() || undefined,
+        churchInstagram: form.churchInstagram.trim() || undefined,
       })
       setSaved(true)
     } catch (err) {
@@ -228,12 +275,12 @@ export function PerfilPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-white/72">Telefone</label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[11rem_1fr] gap-2">
               <select
                 name="phoneCountry"
                 value={form.phoneCountry}
                 onChange={handleChange}
-                className={cn(brandInputClass, 'w-48 flex-shrink-0')}
+                className={brandInputClass}
               >
                 {PHONE_COUNTRIES.map((c) => (
                   <option key={c.code} value={c.code}>{c.label}</option>
@@ -244,7 +291,64 @@ export function PerfilPage() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="(11) 99999-9999"
-                className={cn(brandInputClass, 'flex-1')}
+                className={brandInputClass}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Igreja e comunidade */}
+        <div className={cn('space-y-5 p-6', brandPanelClass)}>
+          <DashboardSectionLabel>Igreja e comunidade</DashboardSectionLabel>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Denominação</label>
+              <select
+                name="denomination"
+                value={form.denomination}
+                onChange={handleChange}
+                className={brandInputClass}
+              >
+                {DENOMINATIONS.map((d) => (
+                  <option key={d.value} value={d.value}>{d.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Cargo na Igreja</label>
+              <select
+                name="churchRole"
+                value={form.churchRole}
+                onChange={handleChange}
+                className={brandInputClass}
+              >
+                {CHURCH_ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Nome da Igreja</label>
+              <input
+                name="churchName"
+                value={form.churchName}
+                onChange={handleChange}
+                placeholder="Nome da sua igreja local"
+                className={brandInputClass}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Instagram da Igreja</label>
+              <input
+                name="churchInstagram"
+                value={form.churchInstagram}
+                onChange={handleChange}
+                placeholder="https://instagram.com/suaigreja"
+                className={brandInputClass}
               />
             </div>
           </div>
