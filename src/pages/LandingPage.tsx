@@ -15,9 +15,9 @@ function useInView(threshold = 0.15) {
 
 const heroStats = [
   { value: '100%', label: 'gratuito para alunos' },
-  { value: '2.500+', label: 'traduções da Bíblia' },
-  { value: 'Dia 1', label: 'criadores monetizam' },
-  { value: 'PT primeiro', label: 'base pensada para o Brasil' },
+  { value: '70%', label: 'média mínima para certificar' },
+  { value: 'PT', label: 'base pensada para o Brasil' },
+  { value: 'Multi', label: 'perfis: aluno, criador e igreja' },
 ]
 
 const accessModel = [
@@ -33,9 +33,9 @@ const accessModel = [
     eyebrow: 'Criadores',
     title: 'Ensine com autoridade, sem parecer página de infoproduto.',
     description:
-      'Criadores encontram uma estrutura que valoriza o conteúdo, organiza a comunidade e permite monetização sem sacrificar a credibilidade.',
+      'Criadores publicam cursos com estrutura visual séria, acompanham o progresso dos alunos e recebem apoio da comunidade sem precisar transformar o ensino em funil de vendas.',
     dark: false,
-    items: ['Dashboard de cursos e aulas', 'Repasse por AdSense e doações', 'Espaço próprio dentro da plataforma'],
+    items: ['Dashboard de cursos e aulas', 'Doações e apoio da audiência', 'Espaço próprio dentro da plataforma'],
   },
   {
     eyebrow: 'Premium opcional',
@@ -89,9 +89,9 @@ const studentFeatures = [
 const creatorFeatures = [
   'Criação de cursos, módulos e aulas em um fluxo simples',
   'Questionários por aula com estrutura já integrada ao produto',
-  'Repasse proporcional de AdSense para o espaço do criador',
   'Doações e apoio voluntário da audiência dentro da plataforma',
-  'Estrutura pronta para loja e expansão futura sem retrabalho',
+  'Visibilidade para quem ainda não tem audiência consolidada',
+  'Estrutura preparada para crescer sem retrabalho técnico',
 ]
 
 const institutionFeatures = [
@@ -111,11 +111,11 @@ const institutionFeatures = [
 
 const comparisonRows = [
   { item: 'Todo conteúdo gratuito para alunos', platform: true, hotmart: false, youtube: true, generic: false },
-  { item: 'Bíblia integrada ao estudo', platform: true, hotmart: false, youtube: false, generic: false },
-  { item: 'Caderno digital vinculado à aula', platform: true, hotmart: false, youtube: false, generic: false },
-  { item: 'Monetização desde o primeiro momento', platform: true, hotmart: true, youtube: true, generic: false },
-  { item: 'Avaliação com certificado', platform: true, hotmart: true, youtube: false, generic: true },
   { item: 'Foco nativo em formação teológica', platform: true, hotmart: false, youtube: false, generic: false },
+  { item: 'Avaliação com certificado por aproveitamento', platform: true, hotmart: true, youtube: false, generic: true },
+  { item: 'Caderno digital vinculado à aula', platform: true, hotmart: false, youtube: false, generic: false },
+  { item: 'Doações diretas para o criador', platform: true, hotmart: false, youtube: true, generic: false },
+  { item: 'Sem venda obrigatória de cursos', platform: true, hotmart: false, youtube: true, generic: false },
 ]
 
 const libraryFeatures = [
@@ -298,9 +298,9 @@ export function LandingPage() {
                     </p>
                     <div className="mt-5 grid grid-cols-3 gap-3">
                       {[
-                        { value: '92%', label: 'progresso visível' },
-                        { value: '2.500+', label: 'traduções' },
-                        { value: '70%', label: 'média mínima' },
+                        { value: '100%', label: 'gratuito para alunos' },
+                        { value: '70%', label: 'média mínima certificada' },
+                        { value: 'Multi', label: 'perfis de acesso' },
                       ].map((item) => (
                         <div key={item.label} className="rounded-2xl border border-white/6 bg-white/4 px-4 py-3">
                           <strong className="block font-display text-lg font-bold text-white">{item.value}</strong>
@@ -314,9 +314,9 @@ export function LandingPage() {
 
               <div className="absolute right-0 top-10 w-48 rounded-[1.6rem] border border-[#F37E20]/20 bg-[#171D26]/95 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Criador</p>
-                <p className="mt-3 font-display text-3xl font-bold text-[#FFF1E4]">R$ 4,8k</p>
+                <p className="mt-3 font-display text-3xl font-bold text-[#FFF1E4]">Criador</p>
                 <p className="mt-2 text-sm leading-6 text-white/56">
-                  Painel financeiro mais sóbrio, sem perder clareza de resultado.
+                  Publique cursos, acompanhe progresso e emita certificados em um só lugar.
                 </p>
               </div>
 
@@ -358,12 +358,12 @@ export function LandingPage() {
               <SectionIntro
                 eyebrow="Modelo da plataforma"
                 title="Acesso amplo, credibilidade alta e monetização sem sacrificar a mensagem."
-                description="A homepage deixa de vender blocos e passa a vender uma visão de ecossistema. O produto parece mais autoridade contemporânea e menos ferramenta genérica."
+                description="O aluno nunca precisa pagar para estudar. O criador nunca precisa vender para monetizar. A plataforma sustenta os dois lados com a mesma estrutura."
                 light
               />
             </motion.div>
             <motion.p variants={fadeUp} className="max-w-xl text-sm leading-7 text-[#5A6472] md:text-base">
-              Visualmente, essa camada ajuda a explicar o modelo de negócio sem cair em grade de pricing padrão. Em vez de parecer oferta comercial no centro da página, a proposta surge como arquitetura de acesso.
+              A Resenha do Teólogo foi construída sobre uma premissa simples: conhecimento teológico de qualidade não deveria estar atrás de um paywall. Criadores ganham visibilidade e apoio, alunos ganham formação real, sem que um lado prejudique o outro.
             </motion.p>
           </div>
 
@@ -403,8 +403,8 @@ export function LandingPage() {
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Como funciona"
-            title="Do vídeo ao certificado, com uma jornada visualmente mais coerente."
-            description="A landing passa a mostrar o processo como experiência de estudo, não só como lista de funcionalidades. Isso ajuda o usuário a entender permanência, rigor e profundidade."
+            title="Do vídeo ao certificado, com uma jornada que sustenta aprendizagem real."
+            description="Cada etapa foi pensada para transformar consumo de conteúdo em formação. Você assiste, lê, anota, responde e recebe um certificado que reflete esforço real."
             centered
           />
 
@@ -473,8 +473,8 @@ export function LandingPage() {
             <motion.div variants={fadeUp} className="order-1 lg:order-2">
               <SectionIntro
                 eyebrow="Para alunos"
-                title="A área de estudo começa a parecer lugar de permanência, não só uma tela de consumo."
-                description="A aplicação precisa preparar desde a landing o contraste entre o dark institucional e o light de estudo. Essa mudança aumenta valor percebido e ajuda a contar o diferencial do produto."
+                title="Um lugar para estudar de verdade, não só para assistir vídeos."
+                description="Bíblia, caderno, progresso e certificado vivem no mesmo ambiente. Você não precisa sair da plataforma para consultar, anotar ou revisar o que aprendeu."
                 light
               />
 
@@ -506,8 +506,8 @@ export function LandingPage() {
             <motion.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Para criadores"
-                title="Publique com mais autoridade visual e mais confiança de produto."
-                description="O redesign não deixa o criador com cara de afiliado ou com cara de plataforma fria. A proposta é unir gestão, sobriedade e possibilidade real de crescimento."
+                title="Publique seu conteúdo com a estrutura que ele merece."
+                description="Você cria os cursos, organiza os módulos e acompanha o progresso dos seus alunos. A plataforma cuida do ambiente, da certificação e do relacionamento com a comunidade."
               />
 
               <div className="mt-8 space-y-3">
@@ -566,8 +566,8 @@ export function LandingPage() {
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Para igrejas e instituições"
-            title="Uma linguagem visual que também conversa com liderança, formação e estrutura coletiva."
-            description="Quando a homepage deixa de parecer genérica, o plano institucional passa a parecer mais plausível. A marca ganha estatura para falar com igrejas, seminários e comunidades de formação."
+            title="Formação coletiva com a seriedade que sua comunidade exige."
+            description="Igrejas, seminários e grupos de estudo encontram na plataforma uma estrutura para organizar o ensino, acompanhar o progresso e certificar os membros com credibilidade."
             light
             centered
           />
@@ -596,8 +596,8 @@ export function LandingPage() {
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Diferença real"
-            title="O produto ganha mais força quando a estética confirma o posicionamento."
-            description="Essa comparação continua comercial, mas agora vive dentro de uma página com mais autoridade visual. O argumento deixa de depender só da copy."
+            title="O que separa a Resenha do Teólogo de qualquer outra plataforma."
+            description="Não é só uma questão de design. É uma decisão sobre o que a formação teológica deve ser: gratuita, séria e construída para permanência."
             centered
           />
 
@@ -646,8 +646,8 @@ export function LandingPage() {
             <motion.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Biblioteca teológica"
-                title="Uma estética de biblioteca contemporânea ajuda a vender o ecossistema inteiro."
-                description="A landing precisa antecipar o que a plataforma quer ser na Fase 2 e além. Quando a marca já comunica estudo sério, recursos como Bíblia integrada, eBooks e caderno digital passam a parecer consequência natural."
+                title="Uma biblioteca teológica integrada ao ambiente de estudo."
+                description="Bíblia em múltiplas versões, eBooks e materiais de apoio disponíveis dentro da plataforma, sem sair da aula. O estudo sério começa quando tudo está no mesmo lugar."
               />
 
               <div className="mt-8 rounded-[1.8rem] border border-white/8 bg-[#151B23] p-6">
@@ -682,7 +682,7 @@ export function LandingPage() {
             Comece a estudar hoje, gratuitamente.
           </motion.h2>
           <motion.p variants={fadeUp} className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/56 md:text-base">
-            A nova direção visual prepara o produto para ser percebido como referência. O próximo passo é transformar essa promessa em experiência real, do primeiro acesso ao ambiente de estudo.
+            Formação teológica séria, gratuita e acessível. Crie sua conta, inscreva-se nos cursos e comece a aprender com professores que constroem com propósito.
           </motion.p>
           <motion.div variants={fadeUp} className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
