@@ -53,7 +53,7 @@ const alunoPlans: Plan[] = [
   {
     id: 'premium',
     name: 'Premium',
-    price: 'R$ 29',
+    price: 'R$ 9,99',
     period: '/mês',
     description: 'Experiência de estudo sem interrupções, sem nenhum anúncio.',
     features: [
@@ -124,10 +124,12 @@ const instituicaoPlans: Plan[] = [
   {
     id: 'plano-igreja',
     name: 'Plano Igreja',
-    price: 'A definir',
-    description: 'Matrícula em lote, acompanhamento coletivo e painel pastoral.',
+    price: 'R$ 99',
+    period: '/mês',
+    description: 'Membros ilimitados, matrícula em lote e painel pastoral de acompanhamento.',
     features: [
       { label: 'Tudo do plano Instituição', included: true },
+      { label: 'Membros ilimitados', included: true },
       { label: 'Matricular membros em lote', included: true },
       { label: 'Painel de progresso coletivo', included: true },
       { label: 'Sem anúncios para membros', included: true },

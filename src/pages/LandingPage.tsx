@@ -320,11 +320,19 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="absolute bottom-20 left-0 max-w-sm rounded-[1.7rem] border border-[#D7C5B2] bg-[#F4EEE6] px-6 py-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[#8B6D56]">Tom editorial</p>
-                <p className="mt-3 text-lg leading-8 text-[#1E232B]" style={{ fontFamily: 'Source Serif 4, serif' }}>
-                  “Uma marca que comunica reverência intelectual, estrutura digital e permanência de estudo.”
-                </p>
+              <div className=”absolute bottom-20 left-0 w-52 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)]”>
+                <p className=”text-[11px] uppercase tracking-[0.18em] text-white/34”>Em andamento</p>
+                <p className=”mt-2 text-sm font-semibold leading-5 text-white”>Hermenêutica Bíblica</p>
+                <div className=”mt-3”>
+                  <div className=”flex items-center justify-between mb-1.5”>
+                    <span className=”text-[10px] uppercase tracking-[0.14em] text-white/30”>Progresso</span>
+                    <span className=”text-[10px] font-semibold text-[#F2BD8A]”>68%</span>
+                  </div>
+                  <div className=”h-1.5 w-full rounded-full bg-white/8”>
+                    <div className=”h-1.5 w-[68%] rounded-full bg-[#F37E20]” />
+                  </div>
+                </div>
+                <p className=”mt-3 text-[11px] text-white/36”>Proxima: Aula 7</p>
               </div>
 
               <div className="absolute bottom-0 right-10 w-48 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
@@ -413,6 +421,7 @@ export function LandingPage() {
               <img
                 src="/fotos/bible-laptop-headphones.jpg"
                 alt="Bíblia e laptop sobre mesa de estudo"
+                loading="lazy"
                 className="h-full min-h-[28rem] w-full object-cover object-center"
               />
             </motion.div>
@@ -534,6 +543,7 @@ export function LandingPage() {
                 <img
                   src="/fotos/creator-recording.jpg"
                   alt="Criador gravando aula"
+                  loading="lazy"
                   className="h-64 w-full object-cover object-top"
                 />
               </div>
@@ -639,6 +649,7 @@ export function LandingPage() {
               <img
                 src="/fotos/library-hall.jpg"
                 alt="Biblioteca teológica"
+                loading="lazy"
                 className="h-full min-h-[30rem] w-full object-cover object-center"
               />
             </motion.div>
