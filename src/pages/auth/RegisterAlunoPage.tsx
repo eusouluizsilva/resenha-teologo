@@ -83,7 +83,7 @@ export function RegisterAlunoPage() {
     <AuthLayout
       asideEyebrow="Perfil do aluno"
       asideTitle="Entre para estudar com profundidade, conforto visual e acesso livre."
-      asideDescription="O cadastro do aluno agora continua a linguagem editorial da landing. A percepção é de ambiente de estudo sério, não de funil de venda."
+      asideDescription="Crie sua conta e comece a estudar em um ambiente pensado para leitura, continuidade e aproveitamento real."
       highlights={[
         'Todo o conteúdo continua gratuito para quem quer aprender',
         'Experiência preparada para permanência, leitura e progresso',
@@ -108,7 +108,7 @@ export function RegisterAlunoPage() {
         <p className="mt-3 max-w-xl text-sm leading-7 text-white/58">
           {step === 'verify'
             ? 'Falta só a verificação para você entrar no ambiente de estudo.'
-            : 'A nova linguagem visual reforça credibilidade e acolhimento sem transformar o fluxo em algo pesado.'}
+            : 'Crie sua conta para acessar cursos gratuitos, acompanhar seu progresso e estudar com mais organização.'}
         </p>
       </motion.div>
 

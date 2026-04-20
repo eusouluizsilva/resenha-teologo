@@ -7,8 +7,8 @@ import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
 const CATEGORIES = ['Teologia Sistematica', 'Historia Biblica', 'Hermeneutica', 'Apologetica', 'Etica Crista', 'Novo Testamento', 'Antigo Testamento']
 const LEVELS = [
   { value: 'iniciante' as const, label: 'Iniciante' },
-  { value: 'intermediario' as const, label: 'Intermediario' },
-  { value: 'avancado' as const, label: 'Avancado' },
+  { value: 'intermediario' as const, label: 'Intermediário' },
+  { value: 'avancado' as const, label: 'Avançado' },
 ]
 
 function levelTone(level: string): 'success' | 'info' | 'accent' {
@@ -103,7 +103,7 @@ export function CatalogPage() {
       <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <Link to="/">
-            <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teologo" className="h-9 w-auto" />
+            <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <Link
@@ -125,10 +125,10 @@ export function CatalogPage() {
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         {/* Cabecalho */}
         <div className="mb-10 max-w-2xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Catalogo</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Catálogo</p>
           <h1 className="mt-3 font-display text-3xl font-bold text-white md:text-4xl">Cursos de teologia</h1>
           <p className="mt-3 text-sm leading-7 text-white/54">
-            Todos os cursos sao gratuitos. Matricule-se, estude no seu ritmo e receba certificado ao concluir.
+            Todos os cursos são gratuitos. Escolha uma trilha, estude no seu ritmo e receba certificado ao concluir.
           </p>
         </div>
 
@@ -144,7 +144,7 @@ export function CatalogPage() {
                   : 'border-white/8 text-white/48 hover:border-white/16 hover:text-white/70',
               )}
             >
-              Todos os niveis
+              Todos os níveis
             </button>
             {LEVELS.map((l) => (
               <button
@@ -226,7 +226,7 @@ export function CatalogPage() {
       </main>
 
       <footer className="border-t border-white/6 py-8 text-center">
-        <p className="text-xs text-white/28">Resenha do Teologo. Todos os direitos reservados.</p>
+        <p className="text-xs text-white/28">Resenha do Teólogo. Todos os direitos reservados.</p>
       </footer>
     </div>
   )

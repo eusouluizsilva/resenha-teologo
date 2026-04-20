@@ -56,8 +56,8 @@ export function SignUpPage() {
     <AuthLayout
       maxWidth="max-w-2xl"
       asideEyebrow="Escolha de perfil"
-      asideTitle="A entrada também precisa refletir a estatura da marca."
-      asideDescription="Em vez de um seletor genérico, o cadastro agora apresenta cada perfil com mais clareza de intenção. A decisão fica mais editorial, mais institucional e mais confiável."
+      asideTitle="Escolha o perfil que melhor representa seu papel na plataforma."
+      asideDescription="Cada perfil libera uma experiência diferente para estudar, publicar ou organizar a formação da sua comunidade."
       highlights={[
         'Perfis com propósito claro desde o primeiro clique',
         'Menos aparência de fluxo SaaS padrão, mais linguagem de produto premium',
@@ -71,7 +71,7 @@ export function SignUpPage() {
         <p className={brandEyebrowClass}>Criar conta</p>
         <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-white">Selecione seu perfil</h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58">
-          Cada entrada foi desenhada para preservar a linguagem editorial da plataforma sem perder clareza de produto.
+          Escolha seu perfil para acessar a experiência certa desde o primeiro passo.
         </p>
       </motion.div>
 

@@ -104,7 +104,7 @@ export function RegisterInstituicaoPage() {
           Voltar
         </Link>
         <h1 className="font-display font-bold text-2xl mb-1">Cadastrar instituição</h1>
-        <p className="text-white/50 text-sm">Gerencie o aprendizado da sua comunidade gratuitamente</p>
+        <p className="text-white/50 text-sm">Organize a formação da sua comunidade com mais clareza e acompanhamento.</p>
       </motion.div>
 
       {step === 'verify' ? (

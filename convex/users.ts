@@ -75,6 +75,16 @@ export const updateProfile = mutation({
     cnpj: v.optional(v.string()),
     city: v.optional(v.string()),
     state: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    phoneCountry: v.optional(v.string()),
+    instagram: v.optional(v.string()),
+    facebook: v.optional(v.string()),
+    linkedin: v.optional(v.string()),
+    twitter: v.optional(v.string()),
+    address: v.optional(v.string()),
+    addressNumber: v.optional(v.string()),
+    neighborhood: v.optional(v.string()),
+    cep: v.optional(v.string()),
   },
   handler: async (ctx, { clerkId, ...fields }) => {
     const identity = await requireIdentity(ctx)

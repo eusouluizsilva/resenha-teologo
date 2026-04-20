@@ -17,31 +17,31 @@ const heroStats = [
   { value: '100%', label: 'gratuito para alunos' },
   { value: '70%', label: 'média mínima para certificar' },
   { value: 'PT', label: 'base pensada para o Brasil' },
-  { value: 'Multi', label: 'perfis: aluno, criador e igreja' },
+  { value: 'Multi', label: 'perfis: aluno, criador e instituição' },
 ]
 
 const accessModel = [
   {
     eyebrow: 'Acesso livre',
-    title: 'Todo conteúdo nasce gratuito para quem quer aprender.',
+    title: 'Todo conteúdo é gratuito para quem quer aprender.',
     description:
-      'A plataforma foi desenhada para remover barreiras de entrada. O aluno entra, estuda e cresce sem precisar comprar curso para começar.',
+      'A plataforma remove a barreira da compra. O aluno entra, estuda e avança sem precisar pagar para começar.',
     dark: true,
     items: ['Sem venda de cursos', 'Certificação com média mínima', 'Experiência pensada para permanência'],
   },
   {
     eyebrow: 'Criadores',
-    title: 'Ensine com autoridade, sem parecer página de infoproduto.',
+    title: 'Ensine com autoridade, sem transformar seu conteúdo em página de vendas.',
     description:
-      'Criadores publicam cursos com estrutura visual séria, acompanham o progresso dos alunos e recebem apoio da comunidade sem precisar transformar o ensino em funil de vendas.',
+      'Criadores publicam cursos em um ambiente sério, acompanham o progresso dos alunos e recebem apoio da comunidade sem depender de funis de venda.',
     dark: false,
     items: ['Dashboard de cursos e aulas', 'Doações e apoio da audiência', 'Espaço próprio dentro da plataforma'],
   },
   {
     eyebrow: 'Premium opcional',
-    title: 'Receita vem da experiência, não do bloqueio de acesso.',
+    title: 'A receita não depende de bloquear o estudo.',
     description:
-      'Planos sem anúncios existem para quem deseja um ambiente ainda mais limpo, mas o coração da proposta continua sendo acesso amplo e gratuito.',
+      'Os planos sem anúncios melhoram a experiência, mas o centro da proposta continua sendo acesso livre para estudar.',
     dark: false,
     items: ['Aluno sem anúncios', 'Criador sem anúncios no seu espaço', 'Camada premium sem travar o estudo'],
   },
@@ -58,13 +58,13 @@ const learningFlow = [
     step: '02',
     title: 'Leia, anote e consulte',
     description:
-      'Bíblia integrada, materiais de apoio e caderno digital vivem ao lado da aula, não escondidos em outra tela.',
+      'Bíblia integrada, materiais de apoio e caderno digital ficam ao lado da aula, não escondidos em outra tela.',
   },
   {
     step: '03',
     title: 'Consolide o aprendizado',
     description:
-      'Questionários por aula e média final transformam o curso em formação real, não só consumo de conteúdo.',
+      'Questionários por aula e média final transformam a aula em formação real, não só consumo de conteúdo.',
   },
 ]
 
@@ -72,7 +72,7 @@ const studentFeatures = [
   {
     title: 'Bíblia e aula no mesmo ambiente',
     description:
-      'Mais de 2.500 traduções, com horizonte futuro para grego, hebraico e interlinear, sem quebrar a concentração do aluno.',
+      'Múltiplas traduções em um só lugar, com expansão prevista para grego, hebraico e interlinear, sem interromper o estudo.',
   },
   {
     title: 'Caderno digital vinculado ao estudo',
@@ -82,7 +82,7 @@ const studentFeatures = [
   {
     title: 'Certificação baseada em aproveitamento',
     description:
-      'O certificado existe como consequência da aprendizagem. A régua de 70% protege seriedade e valor percebido.',
+      'O certificado é consequência da aprendizagem. A média mínima de 70% preserva sua credibilidade.',
   },
 ]
 
@@ -213,7 +213,7 @@ export function LandingPage() {
               <motion.div variants={fadeIn} className="inline-flex items-center gap-3 rounded-full border border-[#F37E20]/25 bg-[#F37E20]/8 px-4 py-2">
                 <span className="h-2 w-2 rounded-full bg-[#F37E20] shadow-[0_0_0_6px_rgba(243,126,32,0.12)]" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#F8D4B5]">
-                  Formação teológica com profundidade, clareza e escala
+                  Formação teológica séria, gratuita e bem estruturada
                 </span>
               </motion.div>
 
@@ -221,16 +221,16 @@ export function LandingPage() {
                 variants={fadeUp}
                 className="mt-8 font-display text-[clamp(2.6rem,6vw,4.5rem)] font-extrabold leading-[1.05] tracking-[-0.04em] text-white"
               >
-                A plataforma para estudar{' '}
+                A plataforma de estudo{' '}
                 <span style={{ fontFamily: 'Source Serif 4, serif' }} className="font-normal italic text-[#F3D7BE]">
-                  teologia
+                  teológico
                 </span>{' '}
-                com profundidade.
+                para quem leva formação a sério.
               </motion.h1>
 
               <motion.p variants={fadeUp} className="mt-6 max-w-xl text-base leading-8 text-white/68 md:text-lg">
-                Alunos encontram um ambiente de estudo mais sério e mais confortável. Criadores publicam com autoridade,
-                constroem comunidade e monetizam sem transformar o conteúdo em página de venda.
+                Alunos estudam com mais clareza e continuidade. Criadores publicam com autoridade, formam comunidade e monetizam
+                sem transformar o ensino em página de venda.
               </motion.p>
 
               <motion.div variants={fadeUp} className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -265,7 +265,7 @@ export function LandingPage() {
               </motion.div>
 
               <motion.p variants={fadeIn} className="mt-6 text-sm leading-6 text-white/42">
-                Sem venda de cursos, com acesso livre para estudar e camadas opcionais para experiência sem anúncios.
+                Sem venda de cursos. O estudo é livre para todos, com opção de experiência sem anúncios.
               </motion.p>
             </div>
 
@@ -290,9 +290,9 @@ export function LandingPage() {
                   </div>
 
                   <div className="mt-5 px-1 pb-6">
-                    <h3 className="font-display text-2xl font-bold text-white">Uma experiência de estudo que sustenta permanência.</h3>
+                    <h3 className="font-display text-2xl font-bold text-white">Uma experiência de estudo pensada para permanência.</h3>
                     <p className="mt-3 text-sm leading-7 text-white/58">
-                      O aluno não entra só para assistir. Ele lê, consulta, anota, responde e volta. O produto começa a parecer ambiente de formação.
+                      O aluno não entra só para assistir. Ele lê, consulta, anota, responde e continua a jornada. A plataforma funciona como ambiente de formação, não como vitrine de vídeos.
                     </p>
                     <div className="mt-5 grid grid-cols-3 gap-3">
                       {[
@@ -314,7 +314,7 @@ export function LandingPage() {
                 <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Para criadores</p>
                 <p className="mt-3 font-display text-3xl font-bold text-[#FFF1E4]">R$ 0</p>
                 <p className="mt-2 text-sm leading-6 text-white/56">
-                  Publique cursos gratuitamente e construa sua audiência.
+                  Publique seus cursos gratuitamente e construa sua comunidade.
                 </p>
               </div>
 
@@ -336,7 +336,7 @@ export function LandingPage() {
               <div className="absolute bottom-0 right-10 w-48 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-white/34">Nota de aula</p>
                 <p className="mt-3 text-sm leading-6 text-white/68">
-                  Versículos, materiais e anotações vivem ao lado do vídeo. O estudo deixa de ser disperso.
+                  Versículos, materiais e anotações ficam ao lado do vídeo. Tudo permanece dentro do mesmo fluxo de estudo.
                 </p>
               </div>
             </motion.div>
@@ -363,13 +363,13 @@ export function LandingPage() {
             <motion.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Modelo da plataforma"
-                title="Acesso amplo, credibilidade alta e monetização sem sacrificar a mensagem."
-                description="O aluno nunca precisa pagar para estudar. O criador nunca precisa vender para monetizar. A plataforma sustenta os dois lados com a mesma estrutura."
+                title="Acesso livre para o aluno, autoridade para o criador e sustentabilidade para a plataforma."
+                description="O aluno não precisa pagar para começar a estudar. O criador não precisa vender curso para gerar receita. A plataforma organiza os dois lados dentro da mesma lógica."
                 light
               />
             </motion.div>
             <motion.p variants={fadeUp} className="max-w-xl text-sm leading-7 text-[#5A6472] md:text-base">
-              A Resenha do Teólogo foi construída sobre uma premissa simples: conhecimento teológico de qualidade não deveria estar atrás de um paywall. Criadores ganham visibilidade e apoio, alunos ganham formação real, sem que um lado prejudique o outro.
+              A Resenha do Teólogo parte de uma convicção simples: formação teológica de qualidade deve ser acessível. Criadores ganham estrutura e apoio. Alunos ganham estudo sério, sem que o acesso dependa da venda do conteúdo.
             </motion.p>
           </div>
 
@@ -409,8 +409,8 @@ export function LandingPage() {
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Como funciona"
-            title="Do vídeo ao certificado, com uma jornada que sustenta aprendizagem real."
-            description="Cada etapa foi pensada para transformar consumo de conteúdo em formação. Você assiste, lê, anota, responde e recebe um certificado que reflete esforço real."
+            title="Do vídeo ao certificado, com uma jornada que transforma aula em formação."
+            description="Cada etapa foi pensada para transformar aula em formação. Você assiste, consulta, anota, responde e conclui com um certificado baseado em aproveitamento real."
             centered
           />
 
@@ -513,8 +513,8 @@ export function LandingPage() {
             <motion.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Para criadores"
-                title="Publique seu conteúdo com a estrutura que ele merece."
-                description="Você cria os cursos, organiza os módulos e acompanha o progresso dos seus alunos. A plataforma cuida do ambiente, da certificação e do relacionamento com a comunidade."
+                title="Publique cursos com a seriedade que seu conteúdo exige."
+                description="Você publica cursos, organiza módulos e acompanha o progresso dos alunos. A plataforma cuida da experiência, da certificação e da base para o crescimento da sua comunidade."
               />
 
               <div className="mt-8 space-y-3">
@@ -562,7 +562,7 @@ export function LandingPage() {
               <div className="rounded-[1.8rem] border border-white/8 bg-[#151B23] p-6">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-white/34">Percepção de marca</p>
                 <p className="mt-3 text-sm leading-7 text-white/60">
-                  O criador parece inserido em uma plataforma de conhecimento séria, com linguagem visual que protege autoridade e transmite maturidade.
+                  Seu conteúdo passa a ser percebido dentro de uma plataforma séria, com linguagem visual que reforça autoridade e maturidade.
                 </p>
               </div>
             </motion.div>
@@ -594,7 +594,7 @@ export function LandingPage() {
               to="/cadastro?perfil=instituicao"
               className="inline-flex items-center gap-2 rounded-2xl border border-[#CDBEAF] bg-white px-6 py-4 text-sm font-semibold text-[#111827] transition-colors duration-200 hover:border-[#BBA48E] hover:bg-[#F7F2EC]"
             >
-              Falar sobre plano institucional
+              Solicitar plano institucional
             </Link>
           </motion.div>
         </motion.div>
@@ -605,7 +605,7 @@ export function LandingPage() {
           <SectionIntro
             eyebrow="Diferença real"
             title="O que separa a Resenha do Teólogo de qualquer outra plataforma."
-            description="Não é só uma questão de design. É uma decisão sobre o que a formação teológica deve ser: gratuita, séria e construída para permanência."
+            description="Não é só uma questão de design. É uma decisão sobre o que a formação teológica deve ser: gratuita, séria e pensada para estudo contínuo."
             centered
           />
 
@@ -656,7 +656,7 @@ export function LandingPage() {
               <SectionIntro
                 eyebrow="Biblioteca teológica"
                 title="Uma biblioteca teológica integrada ao ambiente de estudo."
-                description="Bíblia em múltiplas versões, eBooks e materiais de apoio disponíveis dentro da plataforma, sem sair da aula. O estudo sério começa quando tudo está no mesmo lugar."
+                description="Bíblia, eBooks e materiais de apoio ficam dentro da plataforma, ao lado da aula. Quando tudo está no mesmo lugar, o estudo ganha continuidade."
               />
 
               <div className="mt-8 rounded-[1.8rem] border border-white/8 bg-[#151B23] p-6">
@@ -686,8 +686,8 @@ export function LandingPage() {
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Planos"
-            title="Acesso livre para todos. Upgrade para quem quer mais."
-            description="Todo conteúdo é gratuito. Os planos sem anúncios existem para quem quer uma experiência de estudo mais limpa."
+            title="Todo o conteúdo é livre. O plano premium apenas melhora a experiência."
+            description="Todo conteúdo permanece gratuito. Os planos sem anúncios existem para quem deseja estudar com menos distração."
             light
             centered
           />
@@ -708,7 +708,7 @@ export function LandingPage() {
                 name: 'Premium',
                 price: 'R$ 9,99',
                 period: '/mês',
-                description: 'Estudo sem interrupções. Sem nenhum anúncio em toda a plataforma.',
+                description: 'A mesma formação, sem anúncios e com experiência mais limpa.',
                 features: ['Tudo do plano Gratuito', 'Sem anúncios em toda a plataforma', 'Acesso prioritário a novidades', 'Suporte por email'],
                 cta: 'Em breve',
                 href: '/cadastro?perfil=aluno',
@@ -718,9 +718,9 @@ export function LandingPage() {
                 name: 'Plano Igreja',
                 price: 'R$ 99',
                 period: '/mês',
-                description: 'Para igrejas e instituições. Membros ilimitados, sem anúncios.',
+                description: 'Para igrejas e instituições que precisam organizar a formação de muitos membros, sem anúncios.',
                 features: ['Membros ilimitados', 'Matrícula em lote', 'Painel de progresso coletivo', 'Sem anúncios para membros'],
-                cta: 'Falar com a equipe',
+                cta: 'Solicitar plano institucional',
                 href: 'mailto:hello@resenhadoteologo.com',
                 highlight: false,
               },
@@ -774,10 +774,10 @@ export function LandingPage() {
             <img src="/logos/LOGO ICONE BRANCA.png" alt="" className="mx-auto mb-8 h-36 w-36" />
           </motion.div>
           <motion.h2 variants={fadeUp} className="font-display text-3xl font-bold leading-tight text-white md:text-4xl">
-            Comece a estudar hoje, gratuitamente.
+            Comece hoje sua formação teológica, gratuitamente.
           </motion.h2>
           <motion.p variants={fadeUp} className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/56 md:text-base">
-            Formação teológica séria, gratuita e acessível. Crie sua conta, inscreva-se nos cursos e comece a aprender com professores que constroem com propósito.
+            Formação teológica séria, gratuita e bem organizada. Crie sua conta, escolha seus cursos e comece a estudar com professores comprometidos com conteúdo sólido.
           </motion.p>
           <motion.div variants={fadeUp} className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link

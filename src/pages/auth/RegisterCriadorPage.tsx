@@ -95,7 +95,7 @@ export function RegisterCriadorPage() {
       maxWidth="max-w-2xl"
       asideEyebrow="Perfil do criador"
       asideTitle="Publique com uma presença visual à altura do seu conteúdo."
-      asideDescription="O cadastro do criador agora parece continuação de uma plataforma premium. A proposta transmite mais autoridade, mais organização e menos estética de ferramenta genérica."
+      asideDescription="Crie sua conta de criador para organizar cursos, acompanhar alunos e construir sua comunidade em um ambiente sério."
       highlights={[
         'Fluxo pensado para quem ensina com autoridade',
         'Tom visual mais institucional e menos promocional',
@@ -120,7 +120,7 @@ export function RegisterCriadorPage() {
         <p className="mt-3 max-w-xl text-sm leading-7 text-white/58">
           {step === 'verify'
             ? 'Seu acesso ficará pronto assim que o código de verificação for confirmado.'
-            : 'O novo shell valoriza melhor seu papel dentro da plataforma e prepara a transição para o painel de cursos.'}
+            : 'Crie sua conta para começar a publicar cursos, organizar módulos e acessar seu painel de criador.'}
         </p>
       </motion.div>
 

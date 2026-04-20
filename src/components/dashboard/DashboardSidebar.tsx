@@ -56,25 +56,25 @@ const iconPlans = (
 
 const navByPerfil: Record<Perfil, NavItem[]> = {
   criador: [
+    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
     { label: 'Visão geral', href: '/dashboard', exact: true, icon: iconGrid },
     { label: 'Meus cursos', href: '/dashboard/cursos', icon: iconBook },
     { label: 'Financeiro', href: '/dashboard/financeiro', icon: iconMoney },
-    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
     { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
   ],
   aluno: [
+    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
     { label: 'Visão geral', href: '/dashboard', exact: true, icon: iconGrid },
     { label: 'Meus cursos', href: '/dashboard/meus-cursos', icon: iconBook },
     { label: 'Certificados', href: '/dashboard/certificados', icon: iconCert },
-    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
     { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
   ],
   instituicao: [
+    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
     { label: 'Visão geral', href: '/dashboard', exact: true, icon: iconGrid },
     { label: 'Membros', href: '/dashboard/membros', icon: iconMembers },
     { label: 'Cursos', href: '/dashboard/cursos', icon: iconBook },
     { label: 'Relatórios', href: '/dashboard/relatorios', icon: iconChart },
-    { label: 'Perfil', href: '/dashboard/perfil', icon: iconUser },
     { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
   ],
 }

@@ -64,7 +64,7 @@ export function Navbar() {
               to="/cadastro"
               className="rounded-full bg-[#F37E20] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#e06e10]"
             >
-              Começar grátis
+              Criar conta grátis
             </Link>
           </div>
 
@@ -120,7 +120,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="rounded-full bg-[#F37E20] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#e06e10]"
                   >
-                    Começar grátis
+                    Criar conta grátis
                   </Link>
                 </div>
               </div>

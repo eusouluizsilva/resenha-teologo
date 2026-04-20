@@ -65,9 +65,9 @@ export function SignInPage() {
 
     return {
       eyebrow: 'Acesso institucional',
-      title: 'Entre para continuar uma experiência de estudo mais séria e mais elegante.',
+      title: 'Entre para retomar seus estudos, cursos ou gestão institucional.',
       description:
-        'A nova camada visual da plataforma também precisa aparecer no acesso. Menos aparência de formulário genérico, mais sensação de biblioteca digital e produto confiável.',
+        'Alunos continuam o aprendizado. Criadores administram seus cursos. Instituições acompanham sua comunidade em um só lugar.',
       highlights: [
         'Ambiente feito para estudo contínuo e leitura prolongada',
         'Identidade editorial premium sem perder clareza de uso',
@@ -174,7 +174,7 @@ export function SignInPage() {
           {step === 'forgot-verify' && 'Defina sua nova senha'}
         </h2>
         <p className="mt-3 max-w-lg text-sm leading-7 text-white/58">
-          {step === 'login' && 'Acesse sua conta e volte ao dashboard com a mesma continuidade visual da landing.'}
+          {step === 'login' && 'Acesse sua conta e volte ao seu ambiente de estudo.'}
           {step === 'forgot' && 'Digite seu email para continuar com um fluxo simples, claro e seguro.'}
           {step === 'forgot-verify' && `Digite o código enviado para ${email} e escolha a nova senha.`}
         </p>
