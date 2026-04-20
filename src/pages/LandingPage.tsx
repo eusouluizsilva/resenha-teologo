@@ -320,19 +320,19 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className=”absolute bottom-20 left-0 w-52 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)]”>
-                <p className=”text-[11px] uppercase tracking-[0.18em] text-white/34”>Em andamento</p>
-                <p className=”mt-2 text-sm font-semibold leading-5 text-white”>Hermenêutica Bíblica</p>
-                <div className=”mt-3”>
-                  <div className=”flex items-center justify-between mb-1.5”>
-                    <span className=”text-[10px] uppercase tracking-[0.14em] text-white/30”>Progresso</span>
-                    <span className=”text-[10px] font-semibold text-[#F2BD8A]”>68%</span>
+              <div className="absolute bottom-20 left-0 w-52 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/34">Em andamento</p>
+                <p className="mt-2 text-sm font-semibold leading-5 text-white">Hermenêutica Bíblica</p>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] uppercase tracking-[0.14em] text-white/30">Progresso</span>
+                    <span className="text-[10px] font-semibold text-[#F2BD8A]">68%</span>
                   </div>
-                  <div className=”h-1.5 w-full rounded-full bg-white/8”>
-                    <div className=”h-1.5 w-[68%] rounded-full bg-[#F37E20]” />
+                  <div className="h-1.5 w-full rounded-full bg-white/8">
+                    <div className="h-1.5 w-[68%] rounded-full bg-[#F37E20]" />
                   </div>
                 </div>
-                <p className=”mt-3 text-[11px] text-white/36”>Próxima: Aula 7</p>
+                <p className="mt-3 text-[11px] text-white/36">Próxima: Aula 7</p>
               </div>
 
               <div className="absolute bottom-0 right-10 w-48 rounded-[1.6rem] border border-white/10 bg-[#111721]/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
@@ -457,7 +457,7 @@ export function LandingPage() {
                 <div className="rounded-[1.4rem] border border-[#ECE5DD] bg-[#F8F4EE] p-5">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-[#9D7B5E]">Versículo em foco</p>
                   <p className="mt-3 text-lg leading-8 text-[#1C2430]" style={{ fontFamily: 'Source Serif 4, serif' }}>
-                    “E o Verbo se fez carne e habitou entre nós, e vimos a sua glória.”
+                    "E o Verbo se fez carne e habitou entre nós, e vimos a sua glória."
                   </p>
                   <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[#7A8390]">João 1:14</p>
                 </div>
@@ -665,7 +665,7 @@ export function LandingPage() {
                 <div className="border-l-2 border-[#F37E20]/45 pl-5">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-[#F2BD8A]">Versículo em destaque</p>
                   <p className="mt-3 text-lg leading-8 text-white/84" style={{ fontFamily: 'Source Serif 4, serif' }}>
-                    “No princípio era o Verbo, e o Verbo estava com Deus, e o Verbo era Deus.”
+                    "No princípio era o Verbo, e o Verbo estava com Deus, e o Verbo era Deus."
                   </p>
                   <p className="mt-2 text-xs uppercase tracking-[0.14em] text-white/30">João 1:1</p>
                 </div>
