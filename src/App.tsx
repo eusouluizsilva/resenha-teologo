@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { AnimatePresence } from 'framer-motion'
 import { LandingPage } from '@/pages/LandingPage'
@@ -124,15 +124,48 @@ function DashboardIndexPage() {
 
   return (
     <DashboardPageShell
-      eyebrow="Bem-vindo"
-      title="Configure suas funções"
-      description="Ative as funções que fazem sentido para você: aluno, criador de conteúdo ou gestão institucional."
-      maxWidthClass="max-w-4xl"
+      eyebrow="Primeiros passos"
+      title="Como você vai usar a plataforma?"
+      description="Ative pelo menos uma função para desbloquear o menu e acessar seus recursos."
+      maxWidthClass="max-w-2xl"
     >
-      <EmConstrucao
-        title="Nenhuma função ativa ainda"
-        description="Acesse Minhas funções no menu lateral para configurar como você quer usar a plataforma."
-      />
+      <div className="space-y-4">
+        {[
+          {
+            title: 'Aluno',
+            description: 'Acesse cursos, acompanhe progresso e receba certificados.',
+            href: '/dashboard/funcoes',
+          },
+          {
+            title: 'Criador de conteúdo',
+            description: 'Publique cursos, organize módulos e acompanhe sua audiência.',
+            href: '/dashboard/funcoes',
+          },
+          {
+            title: 'Igreja ou instituição',
+            description: 'Gerencie membros e acompanhe a formação da sua comunidade.',
+            href: '/dashboard/funcoes',
+          },
+        ].map((item) => (
+          <Link
+            key={item.title}
+            to={item.href}
+            className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/18 hover:bg-[#F37E20]/6"
+          >
+            <div>
+              <p className="font-semibold text-white">{item.title}</p>
+              <p className="mt-0.5 text-sm text-white/48">{item.description}</p>
+            </div>
+            <svg className="h-5 w-5 flex-shrink-0 text-white/28" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </Link>
+        ))}
+        <p className="pt-2 text-center text-xs text-white/36">
+          Você pode ativar mais de uma função e alterar isso a qualquer momento em{' '}
+          <Link to="/dashboard/funcoes" className="text-[#F2BD8A] hover:underline">Minhas funções</Link>.
+        </p>
+      </div>
     </DashboardPageShell>
   )
 }

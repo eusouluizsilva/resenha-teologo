@@ -4,7 +4,6 @@ import { useUser } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { DashboardSidebar } from './DashboardSidebar'
-import { OnboardingModal } from './OnboardingModal'
 import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { normalizePerfil } from '@/lib/perfil'
@@ -12,7 +11,6 @@ import { normalizePerfil } from '@/lib/perfil'
 export function DashboardLayout() {
   const { user, isLoaded } = useUser()
   const [timedOut, setTimedOut] = useState(false)
-  const [onboardingDone, setOnboardingDone] = useState(false)
   const { functions, isLoading } = useCurrentAppUser()
   const migrateFromPerfil = useMutation(api.userFunctions.migrateFromPerfil)
 
@@ -69,8 +67,6 @@ export function DashboardLayout() {
 
   if (!user) return <Navigate to="/entrar" replace />
 
-  const showOnboarding = !isLoading && functions.length === 0 && !onboardingDone
-
   return (
     <div className="min-h-screen bg-[#0B1016] text-white">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -88,10 +84,6 @@ export function DashboardLayout() {
           </div>
         </div>
       </main>
-
-      {showOnboarding && (
-        <OnboardingModal onComplete={() => setOnboardingDone(true)} />
-      )}
     </div>
   )
 }
