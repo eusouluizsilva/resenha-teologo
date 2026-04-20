@@ -896,62 +896,63 @@ export function PerfilPage() {
                   <input value={email} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
                 </div>
               </div>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/72">Bio</label>
+                <textarea
+                  name="bio"
+                  value={form.bio}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Apresente sua trajetória, foco de estudo ou contexto ministerial."
+                  className={cn(brandInputClass, 'resize-none')}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">Bio</label>
-                  <textarea
-                    name="bio"
-                    value={form.bio}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Apresente sua trajetória, foco de estudo ou contexto ministerial."
-                    className={cn(brandInputClass, 'resize-none')}
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/72">Website</label>
+                <input
+                  name="website"
+                  value={form.website}
+                  onChange={handleChange}
+                  placeholder="https://seusite.com"
+                  className={brandInputClass}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">Website</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/72">Telefone</label>
+                <div className="grid grid-cols-[11rem_1fr] gap-2">
+                  <select name="phoneCountry" value={form.phoneCountry} onChange={handleChange} className={brandInputClass}>
+                    {PHONE_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.label}</option>
+                    ))}
+                  </select>
                   <input
-                    name="website"
-                    value={form.website}
+                    name="phone"
+                    value={form.phone}
                     onChange={handleChange}
-                    placeholder="https://seusite.com"
+                    placeholder="(11) 99999-9999"
                     className={brandInputClass}
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">Telefone</label>
-                  <div className="grid grid-cols-[11rem_1fr] gap-2">
-                    <select name="phoneCountry" value={form.phoneCountry} onChange={handleChange} className={brandInputClass}>
-                      {PHONE_COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.label}</option>
-                      ))}
-                    </select>
-                    <input
-                      name="phone"
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="(11) 99999-9999"
-                      className={brandInputClass}
-                    />
+              {isInstitution && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/72">Nome da instituição</label>
+                    <input name="institution" value={form.institution} onChange={handleChange} placeholder="Nome da igreja ou instituição" className={brandInputClass} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/72">CNPJ</label>
+                    <input name="cnpj" value={form.cnpj} onChange={handleChange} placeholder="00.000.000/0000-00" className={brandInputClass} />
                   </div>
                 </div>
-
-                {isInstitution && (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-white/72">Nome da instituição</label>
-                      <input name="institution" value={form.institution} onChange={handleChange} placeholder="Nome da igreja ou instituição" className={brandInputClass} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-white/72">CNPJ</label>
-                      <input name="cnpj" value={form.cnpj} onChange={handleChange} placeholder="00.000.000/0000-00" className={brandInputClass} />
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
+          </div>
 
           {/* Redes sociais */}
           <div className={cn('space-y-5 p-6', brandPanelClass)}>
