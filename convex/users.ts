@@ -76,6 +76,7 @@ export const upsert = mutation({
 export const updateProfile = mutation({
   args: {
     clerkId: v.string(),
+    name: v.optional(v.string()),
     bio: v.optional(v.string()),
     country: v.optional(v.string()),
     website: v.optional(v.string()),

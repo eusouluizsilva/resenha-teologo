@@ -69,6 +69,8 @@ const PHONE_COUNTRIES = [
 type TabId = 'visao-geral' | 'dados-pessoais' | 'perfil-publico' | 'conquistas' | 'depoimentos'
 
 type FormState = {
+  firstName: string
+  lastName: string
   bio: string
   website: string
   youtubeChannel: string
@@ -93,6 +95,8 @@ type FormState = {
 }
 
 const EMPTY_FORM: FormState = {
+  firstName: '',
+  lastName: '',
   bio: '',
   website: '',
   youtubeChannel: '',
@@ -374,10 +378,12 @@ export function PerfilPage() {
   const rejectTestimonial = useMutation(api.testimonials.reject)
   const removeTestimonial = useMutation(api.testimonials.remove)
 
-  // Sync form from Convex user
+  // Sync form from Convex user + Clerk
   useEffect(() => {
-    if (!currentUser) return
+    if (!currentUser || !clerkUser) return
     setForm({
+      firstName: clerkUser.firstName ?? '',
+      lastName: clerkUser.lastName ?? '',
       bio: currentUser.bio ?? '',
       website: currentUser.website ?? '',
       youtubeChannel: currentUser.youtubeChannel ?? '',
@@ -402,7 +408,7 @@ export function PerfilPage() {
     })
     setVisibility(currentUser.profileVisibility ?? 'public')
     setShowProgress(currentUser.showProgressPublicly ?? true)
-  }, [currentUser])
+  }, [currentUser, clerkUser])
 
   // Handlers
   function handleChange(
@@ -435,8 +441,24 @@ export function PerfilPage() {
     setSaved(false)
     setFormError('')
     try {
+      // Atualiza nome no Clerk
+      const firstNameTrimmed = form.firstName.trim()
+      const lastNameTrimmed = form.lastName.trim()
+      if (
+        firstNameTrimmed !== (clerkUser.firstName ?? '') ||
+        lastNameTrimmed !== (clerkUser.lastName ?? '')
+      ) {
+        await clerkUser.update({
+          firstName: firstNameTrimmed || undefined,
+          lastName: lastNameTrimmed || undefined,
+        })
+      }
+
+      const fullName = [firstNameTrimmed, lastNameTrimmed].filter(Boolean).join(' ')
+
       await updateProfile({
         clerkId: clerkUser.id,
+        name: fullName || undefined,
         bio: form.bio.trim() || undefined,
         website: form.website.trim() || undefined,
         youtubeChannel: form.youtubeChannel.trim() || undefined,
@@ -761,7 +783,8 @@ export function PerfilPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="group relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl border border-white/10 transition-all hover:border-[#F37E20]/40"
+                  className="group relative h-24 w-24 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10 transition-all hover:border-[#F37E20]/40"
+                  title="Trocar foto de perfil"
                 >
                   {clerkUser.imageUrl ? (
                     <img src={clerkUser.imageUrl} alt={displayName} className="h-full w-full object-cover" />
@@ -770,18 +793,21 @@ export function PerfilPage() {
                       <span className="text-xl font-bold text-[#F2BD8A]">{initials}</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  {/* Overlay sempre visível com baixa opacidade, mais forte no hover */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 opacity-60 transition-opacity group-hover:opacity-100">
                     {uploadingAvatar ? (
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     ) : (
-                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                      </svg>
+                      <>
+                        <svg className="h-5 w-5 text-white drop-shadow" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                        </svg>
+                        <span className="text-[10px] font-semibold text-white drop-shadow">Trocar foto</span>
+                      </>
                     )}
                   </div>
                 </button>
-                <span className="text-[11px] text-white/36">Trocar foto</span>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
 
@@ -789,14 +815,87 @@ export function PerfilPage() {
               <div className="flex-1 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/72">Nome da conta</label>
-                    <input value={displayName} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
+                    <label className="text-sm font-medium text-white/72">Nome</label>
+                    <input
+                      name="firstName"
+                      value={form.firstName}
+                      onChange={handleChange}
+                      placeholder="Seu nome"
+                      className={brandInputClass}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/72">Email</label>
-                    <input value={email} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
+                    <label className="text-sm font-medium text-white/72">Sobrenome</label>
+                    <input
+                      name="lastName"
+                      value={form.lastName}
+                      onChange={handleChange}
+                      placeholder="Seu sobrenome"
+                      className={brandInputClass}
+                    />
                   </div>
                 </div>
+
+                {/* @usuário — estilo Instagram */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/72">Nome de usuário</label>
+                  <div className="space-y-1.5">
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none text-sm font-medium text-white/50">@</span>
+                      <input
+                        className={cn(brandInputClass, 'pl-8 pr-10')}
+                        placeholder={handle ?? 'seuusuario'}
+                        value={handleInput}
+                        onChange={(e) => setHandleInput(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
+                        autoComplete="username"
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        {handleStatus === 'checking' && (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
+                        )}
+                        {handleStatus === 'available' && (
+                          <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                        {handleStatus === 'taken' && (
+                          <svg className="h-4 w-4 text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    {handleStatus === 'available' && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-emerald-400">Disponível</p>
+                        <button
+                          type="button"
+                          onClick={handleClaimHandle}
+                          disabled={handleSaving}
+                          className="text-xs font-semibold text-[#F2BD8A] hover:underline disabled:opacity-50"
+                        >
+                          {handleSaving ? 'Salvando...' : handle ? 'Confirmar alteração' : 'Reservar este usuário'}
+                        </button>
+                      </div>
+                    )}
+                    {handleStatus === 'taken' && (
+                      <p className="text-xs text-red-400">Nome de usuário indisponível</p>
+                    )}
+                    {handleError && <p className="text-xs text-red-400">{handleError}</p>}
+                    {!handleInput && handle && (
+                      <p className="text-xs text-white/36">Atual: @{handle}</p>
+                    )}
+                    {!handleInput && !handle && (
+                      <p className="text-xs text-white/36">Digite para verificar disponibilidade</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/72">Email</label>
+                  <input value={email} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
+                </div>
+              </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white/72">Bio</label>
@@ -853,7 +952,6 @@ export function PerfilPage() {
                 )}
               </div>
             </div>
-          </div>
 
           {/* Redes sociais */}
           <div className={cn('space-y-5 p-6', brandPanelClass)}>
