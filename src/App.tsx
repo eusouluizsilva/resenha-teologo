@@ -25,7 +25,6 @@ import { CatalogPage } from '@/pages/public/CatalogPage'
 import { PlanosPage } from '@/pages/dashboard/PlanosPage'
 import { FuncoesPage } from '@/pages/dashboard/FuncoesPage'
 import { PublicProfilePage } from '@/pages/public/PublicProfilePage'
-import { MeuPerfilPublicoPage } from '@/pages/dashboard/MeuPerfilPublicoPage'
 
 function DashboardRouteLoader() {
   return (
@@ -215,7 +214,7 @@ export default function App() {
 
             {/* Compartilhado */}
             <Route path="perfil" element={<PerfilPage />} />
-            <Route path="meu-perfil-publico" element={<MeuPerfilPublicoPage />} />
+            <Route path="meu-perfil-publico" element={<Navigate to="/dashboard/perfil" replace />} />
             <Route path="funcoes" element={<FuncoesPage />} />
             <Route path="planos" element={<PlanosPage />} />
           </Route>
