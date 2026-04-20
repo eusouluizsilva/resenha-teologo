@@ -24,6 +24,8 @@ import { CertificadosPage } from '@/pages/dashboard/aluno/CertificadosPage'
 import { CatalogPage } from '@/pages/public/CatalogPage'
 import { PlanosPage } from '@/pages/dashboard/PlanosPage'
 import { FuncoesPage } from '@/pages/dashboard/FuncoesPage'
+import { PublicProfilePage } from '@/pages/public/PublicProfilePage'
+import { MeuPerfilPublicoPage } from '@/pages/dashboard/MeuPerfilPublicoPage'
 
 function DashboardRouteLoader() {
   return (
@@ -178,6 +180,7 @@ export default function App() {
           {/* Público */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
+          <Route path="/@:handle" element={<PublicProfilePage />} />
 
           {/* Autenticação */}
           <Route path="/entrar" element={<SignInPage />} />
@@ -212,6 +215,7 @@ export default function App() {
 
             {/* Compartilhado */}
             <Route path="perfil" element={<PerfilPage />} />
+            <Route path="meu-perfil-publico" element={<MeuPerfilPublicoPage />} />
             <Route path="funcoes" element={<FuncoesPage />} />
             <Route path="planos" element={<PlanosPage />} />
           </Route>

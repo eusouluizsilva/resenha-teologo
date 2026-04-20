@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation } from 'convex/react'
+import { Link } from 'react-router-dom'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { brandInputClass, brandPanelClass, brandPanelSoftClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
@@ -80,6 +81,36 @@ type FormState = {
 export function PerfilPage() {
   const { clerkUser, currentUser, hasFunction, isLoading } = useCurrentAppUser()
   const updateProfile = useMutation(api.users.updateProfile)
+  const claimHandle = useMutation(api.handles.claim)
+
+  const [handleInput, setHandleInput] = useState('')
+  const [handleError, setHandleError] = useState('')
+  const [handleSaving, setHandleSaving] = useState(false)
+
+  const isAvailable = useQuery(
+    api.handles.isAvailable,
+    handleInput.length >= 3 ? { handle: handleInput } : 'skip'
+  )
+
+  const handleStatus = (() => {
+    if (handleInput.length < 3) return null
+    if (isAvailable === undefined) return 'checking'
+    if (isAvailable) return 'available'
+    return 'taken'
+  })()
+
+  async function handleClaimHandle(e: React.FormEvent) {
+    e.preventDefault()
+    setHandleSaving(true)
+    setHandleError('')
+    try {
+      await claimHandle({ handle: handleInput })
+    } catch (err) {
+      setHandleError(err instanceof Error ? err.message : 'Erro ao salvar handle.')
+    } finally {
+      setHandleSaving(false)
+    }
+  }
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [form, setForm] = useState<FormState>({
@@ -228,6 +259,81 @@ export function PerfilPage() {
       actions={saved ? <DashboardStatusPill tone="success">Alterações salvas</DashboardStatusPill> : undefined}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* Handle público */}
+        <div className={cn('space-y-4 p-6', brandPanelSoftClass)}>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Perfil público</p>
+            <p className="mt-1 text-xs text-white/40">Defina um handle único para sua URL pública.</p>
+          </div>
+          {currentUser?.handle ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">@{currentUser.handle}</span>
+                <a
+                  href={`/@${currentUser.handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#F2BD8A] hover:underline"
+                >
+                  Ver perfil público
+                </a>
+                <Link to="/dashboard/meu-perfil-publico" className="ml-auto text-xs text-white/40 hover:text-white">
+                  Gerenciar
+                </Link>
+              </div>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-white/36">@</span>
+                  <input
+                    className={cn(brandInputClass, 'pl-8')}
+                    placeholder="novo handle"
+                    value={handleInput}
+                    onChange={(e) => setHandleInput(e.target.value.toLowerCase())}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClaimHandle}
+                  disabled={handleSaving || handleStatus !== 'available'}
+                  className="rounded-2xl border border-white/10 bg-white/4 px-4 py-2.5 text-sm font-semibold text-white/86 transition-all hover:border-white/20 hover:bg-white/8 disabled:opacity-50"
+                >
+                  {handleSaving ? '...' : 'Alterar'}
+                </button>
+              </div>
+              {handleStatus === 'available' && <p className="text-xs text-emerald-300">Disponível</p>}
+              {handleStatus === 'taken' && <p className="text-xs text-red-300">Indisponível ou inválido</p>}
+              {handleError && <p className="text-xs text-red-300">{handleError}</p>}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-white/52">Você ainda não tem um handle. Defina um para ativar seu perfil público.</p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-white/36">@</span>
+                  <input
+                    className={cn(brandInputClass, 'pl-8')}
+                    placeholder="seuhandle"
+                    value={handleInput}
+                    onChange={(e) => setHandleInput(e.target.value.toLowerCase())}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClaimHandle}
+                  disabled={handleSaving || handleStatus !== 'available'}
+                  className={cn(brandPrimaryButtonClass, 'px-4 py-2.5')}
+                >
+                  {handleSaving ? '...' : 'Reservar'}
+                </button>
+              </div>
+              {handleStatus === 'available' && <p className="text-xs text-emerald-300">Disponível</p>}
+              {handleStatus === 'taken' && <p className="text-xs text-red-300">Indisponível ou inválido</p>}
+              {handleStatus === 'checking' && <p className="text-xs text-white/36">Verificando...</p>}
+              {handleError && <p className="text-xs text-red-300">{handleError}</p>}
+            </div>
+          )}
+        </div>
 
         {/* Identidade + Telefone */}
         <div className={cn('space-y-5 p-6', brandPanelClass)}>

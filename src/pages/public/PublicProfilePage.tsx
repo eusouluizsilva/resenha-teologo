@@ -1,0 +1,563 @@
+import { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useQuery, useMutation } from 'convex/react'
+import { useAuth } from '@clerk/clerk-react'
+import { api } from '../../../convex/_generated/api'
+import { cn, brandPrimaryButtonClass, brandInputClass } from '@/lib/brand'
+
+function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
+  return (
+    <svg
+      className={cn('h-5 w-5', filled ? 'text-[#F37E20]' : 'text-white/20', className)}
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+    </svg>
+  )
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 text-center">
+      <p className="font-display text-2xl font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs text-white/48">{label}</p>
+    </div>
+  )
+}
+
+function SocialLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-2.5 text-sm text-white/70 transition-all hover:border-white/14 hover:text-white"
+    >
+      {icon}
+      <span>{label}</span>
+    </a>
+  )
+}
+
+function CourseProgressCard({
+  courseTitle,
+  percentage,
+  certificateIssued,
+}: {
+  courseTitle: string
+  percentage: number
+  certificateIssued: boolean
+}) {
+  return (
+    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-medium text-white leading-snug">{courseTitle}</p>
+        {certificateIssued && (
+          <span className="flex-shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300">
+            Concluído
+          </span>
+        )}
+      </div>
+      <div className="mt-3">
+        <div className="flex items-center justify-between text-xs text-white/40 mb-1.5">
+          <span>Progresso</span>
+          <span>{percentage}%</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+          <div
+            className="h-full rounded-full bg-[#F37E20] transition-all"
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TestimonialCard({
+  text,
+  authorName,
+  authorAvatarUrl,
+  authorHandle,
+  createdAt,
+}: {
+  text: string
+  authorName: string
+  authorAvatarUrl?: string
+  authorHandle?: string
+  createdAt: number
+}) {
+  const initials = authorName.slice(0, 2).toUpperCase()
+  const date = new Date(createdAt).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+
+  return (
+    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
+      <div className="flex items-center gap-3">
+        {authorAvatarUrl ? (
+          <img src={authorAvatarUrl} alt={authorName} className="h-9 w-9 rounded-xl object-cover" />
+        ) : (
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#F37E20]/16 bg-[#F37E20]/10">
+            <span className="text-xs font-semibold text-[#F2BD8A]">{initials}</span>
+          </div>
+        )}
+        <div>
+          {authorHandle ? (
+            <Link to={`/@${authorHandle}`} className="text-sm font-medium text-white hover:text-[#F2BD8A]">
+              {authorName}
+            </Link>
+          ) : (
+            <p className="text-sm font-medium text-white">{authorName}</p>
+          )}
+          <p className="text-xs text-white/36">{date}</p>
+        </div>
+      </div>
+      <p className="mt-3 text-sm leading-7 text-white/62">{text}</p>
+    </div>
+  )
+}
+
+function RatingSubmit({
+  profileHandle,
+  myRating,
+}: {
+  profileHandle: string
+  myRating: number | null
+}) {
+  const [hovered, setHovered] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const submitRating = useMutation(api.ratings.submit)
+
+  async function handleRate(stars: number) {
+    setLoading(true)
+    setError('')
+    try {
+      await submitRating({ profileHandle, stars })
+      setSuccess(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar avaliação.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success || myRating !== null) {
+    return (
+      <div className="flex items-center gap-1 pt-1">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <StarIcon key={s} filled={s <= (success ? hovered || myRating! : myRating!)} />
+        ))}
+        <span className="ml-2 text-xs text-white/40">Sua avaliação</span>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className="mb-2 text-sm text-white/52">Avaliar este perfil:</p>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <button
+            key={s}
+            disabled={loading}
+            onMouseEnter={() => setHovered(s)}
+            onMouseLeave={() => setHovered(0)}
+            onClick={() => handleRate(s)}
+            className="transition-transform hover:scale-110 disabled:opacity-50"
+          >
+            <StarIcon filled={s <= hovered} />
+          </button>
+        ))}
+      </div>
+      {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
+    </div>
+  )
+}
+
+function TestimonialSubmit({ profileHandle }: { profileHandle: string }) {
+  const [text, setText] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const submitTestimonial = useMutation(api.testimonials.submit)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      await submitTestimonial({ profileHandle, text })
+      setSuccess(true)
+      setText('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar depoimento.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="rounded-[1.4rem] border border-emerald-400/20 bg-emerald-400/10 p-5 text-center">
+        <p className="text-sm font-medium text-emerald-300">Depoimento enviado para aprovação.</p>
+        <p className="mt-1 text-xs text-white/42">O dono do perfil precisa aprovar antes de ser exibido.</p>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <textarea
+        className={cn(brandInputClass, 'min-h-[100px] resize-none')}
+        placeholder="Escreva um depoimento... (máx. 500 caracteres)"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        maxLength={500}
+        required
+      />
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-white/28">{text.length}/500</span>
+        <button type="submit" disabled={loading || text.trim().length === 0} className={cn(brandPrimaryButtonClass, 'px-5 py-2.5 text-xs')}>
+          {loading ? 'Enviando...' : 'Enviar depoimento'}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-300">{error}</p>}
+    </form>
+  )
+}
+
+export function PublicProfilePage() {
+  const { handle } = useParams<{ handle: string }>()
+  const { isSignedIn } = useAuth()
+
+  const profile = useQuery(api.publicProfiles.getByHandle, { handle: handle ?? '' })
+  const stats = useQuery(
+    api.publicProfiles.getPublicStats,
+    profile ? { userId: profile.clerkId } : 'skip'
+  )
+  const testimonials = useQuery(
+    api.testimonials.listApproved,
+    profile ? { profileUserId: profile.clerkId } : 'skip'
+  )
+  const ratingData = useQuery(
+    api.ratings.getAverage,
+    profile ? { profileUserId: profile.clerkId } : 'skip'
+  )
+  const myRating = useQuery(
+    api.ratings.getMyRating,
+    profile && isSignedIn ? { profileUserId: profile.clerkId } : 'skip'
+  )
+
+  if (profile === undefined) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0F141A]">
+        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+      </div>
+    )
+  }
+
+  if (profile === null) {
+    return (
+      <div className="relative flex min-h-screen flex-col bg-[#0F141A] text-white">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-[10%] top-[10%] h-64 w-64 rounded-full bg-[#F37E20]/8 blur-[140px]" />
+        </div>
+        <header className="relative z-10 border-b border-white/6 px-6 py-4">
+          <Link to="/">
+            <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
+          </Link>
+        </header>
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/28 mx-auto">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+          </div>
+          <h1 className="mt-5 font-display text-2xl font-bold text-white">Perfil não encontrado</h1>
+          <p className="mt-3 text-sm text-white/48">O handle <span className="text-white/70">@{handle}</span> não existe ou não está disponível publicamente.</p>
+          <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-white/10 px-5 py-2.5 text-sm text-white/62 transition-all hover:border-white/20 hover:text-white">
+            Voltar para o início
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const initials = profile.name.slice(0, 2).toUpperCase()
+  const isCreatorOrInstitution = profile.functions.includes('criador') || profile.functions.includes('instituicao')
+
+  const functionLabels: Record<string, string> = {
+    aluno: 'Aluno',
+    criador: 'Criador',
+    instituicao: 'Instituição',
+  }
+
+  const hasSocials = profile.youtubeChannel || profile.instagram || profile.facebook || profile.linkedin || profile.twitter
+  const hasChurch = profile.denomination || profile.churchName || profile.churchRole
+
+  return (
+    <div className="relative min-h-screen bg-[#0F141A] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[8%] top-[6%] h-72 w-72 rounded-full bg-[#F37E20]/6 blur-[160px]" />
+        <div className="absolute right-[6%] top-[20%] h-80 w-80 rounded-full bg-white/3 blur-[160px]" />
+      </div>
+
+      <header className="relative z-10 border-b border-white/6 px-6 py-4 flex items-center justify-between">
+        <Link to="/">
+          <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
+        </Link>
+        {!isSignedIn && (
+          <Link to="/entrar" className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/62 transition-all hover:border-white/20 hover:text-white">
+            Entrar
+          </Link>
+        )}
+      </header>
+
+      <main className="relative z-10 mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6">
+
+        {/* Hero */}
+        <div className="text-center">
+          {profile.avatarUrl ? (
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="mx-auto h-24 w-24 rounded-[1.6rem] object-cover shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
+            />
+          ) : (
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[1.6rem] border border-[#F37E20]/16 bg-[#F37E20]/10 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+              <span className="font-display text-2xl font-bold text-[#F2BD8A]">{initials}</span>
+            </div>
+          )}
+
+          <h1 className="mt-5 font-display text-3xl font-bold text-white">{profile.name}</h1>
+          {profile.handle && (
+            <p className="mt-1 text-sm text-white/42">@{profile.handle}</p>
+          )}
+
+          {profile.functions.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              {profile.functions.map((fn) => (
+                <span
+                  key={fn}
+                  className="rounded-full border border-[#F37E20]/20 bg-[#F37E20]/10 px-3 py-1 text-xs font-semibold text-[#F2BD8A]"
+                >
+                  {functionLabels[fn] ?? fn}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bio */}
+        {profile.bio && (
+          <div className="mt-8">
+            <p className="text-sm leading-7 text-white/62">{profile.bio}</p>
+          </div>
+        )}
+
+        {/* Rating (creators and institutions only) */}
+        {isCreatorOrInstitution && ratingData !== undefined && (
+          <div className="mt-8 rounded-[1.6rem] border border-white/7 bg-white/[0.025] p-6">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <StarIcon key={s} filled={s <= Math.round(ratingData.average)} />
+                ))}
+              </div>
+              <div>
+                <span className="text-lg font-bold text-white">
+                  {ratingData.count === 0 ? 'Sem avaliações' : ratingData.average.toFixed(1)}
+                </span>
+                {ratingData.count > 0 && (
+                  <span className="ml-2 text-sm text-white/42">({ratingData.count} {ratingData.count === 1 ? 'avaliação' : 'avaliações'})</span>
+                )}
+              </div>
+            </div>
+            {isSignedIn && handle && (
+              <div className="mt-4 border-t border-white/6 pt-4">
+                <RatingSubmit
+                  profileHandle={handle}
+                  myRating={myRating ?? null}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Stats */}
+        {stats !== undefined && stats !== null && (
+          <div className="mt-8">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Progresso na plataforma</p>
+            <div className="grid grid-cols-3 gap-3">
+              <StatCard
+                label="Horas assistidas"
+                value={`${Math.round(stats.totalWatchSeconds / 3600)}h`}
+              />
+              <StatCard
+                label="Cursos concluídos"
+                value={String(stats.totalCoursesCompleted)}
+              />
+              <StatCard
+                label="Certificados"
+                value={String(stats.certificateCount)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Course progress */}
+        {stats !== undefined && stats !== null && stats.courses.length > 0 && (
+          <div className="mt-8">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Cursos em andamento</p>
+            <div className="space-y-3">
+              {stats.courses.map((course) => (
+                <CourseProgressCard
+                  key={String(course.courseId)}
+                  courseTitle={course.courseTitle}
+                  percentage={course.percentage}
+                  certificateIssued={course.certificateIssued}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Social links */}
+        {hasSocials && (
+          <div className="mt-8">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Redes sociais</p>
+            <div className="flex flex-wrap gap-2">
+              {profile.youtubeChannel && (
+                <SocialLink
+                  href={profile.youtubeChannel}
+                  label="YouTube"
+                  icon={
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  }
+                />
+              )}
+              {profile.instagram && (
+                <SocialLink
+                  href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
+                  label="Instagram"
+                  icon={
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <circle cx="12" cy="12" r="4" />
+                      <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+                    </svg>
+                  }
+                />
+              )}
+              {profile.facebook && (
+                <SocialLink
+                  href={profile.facebook}
+                  label="Facebook"
+                  icon={
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  }
+                />
+              )}
+              {profile.linkedin && (
+                <SocialLink
+                  href={profile.linkedin}
+                  label="LinkedIn"
+                  icon={
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  }
+                />
+              )}
+              {profile.twitter && (
+                <SocialLink
+                  href={`https://x.com/${profile.twitter.replace('@', '')}`}
+                  label="X / Twitter"
+                  icon={
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.258 5.63 5.907-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  }
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Church / Community */}
+        {hasChurch && (
+          <div className="mt-8 rounded-[1.6rem] border border-white/7 bg-white/[0.025] p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Igreja e comunidade</p>
+            <div className="mt-4 space-y-2">
+              {profile.churchName && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/40">Igreja</span>
+                  <span className="text-sm text-white">{profile.churchName}</span>
+                </div>
+              )}
+              {profile.denomination && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/40">Denominação</span>
+                  <span className="text-sm text-white">{profile.denomination}</span>
+                </div>
+              )}
+              {profile.churchRole && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/40">Cargo</span>
+                  <span className="text-sm text-white">{profile.churchRole}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Testimonials */}
+        <div className="mt-8">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Depoimentos</p>
+
+          {testimonials === undefined ? (
+            <div className="text-center py-6">
+              <div className="h-5 w-5 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin mx-auto" />
+            </div>
+          ) : testimonials.length === 0 ? (
+            <p className="text-sm text-white/36">Nenhum depoimento aprovado ainda.</p>
+          ) : (
+            <div className="space-y-3">
+              {testimonials.map((t) => (
+                <TestimonialCard
+                  key={String(t._id)}
+                  text={t.text}
+                  authorName={t.authorName}
+                  authorAvatarUrl={t.authorAvatarUrl}
+                  authorHandle={t.authorHandle}
+                  createdAt={t.createdAt}
+                />
+              ))}
+            </div>
+          )}
+
+          {isSignedIn && handle && (
+            <div className="mt-6">
+              <p className="mb-3 text-sm font-medium text-white/62">Deixar um depoimento</p>
+              <TestimonialSubmit profileHandle={handle} />
+            </div>
+          )}
+
+          {!isSignedIn && (
+            <p className="mt-4 text-sm text-white/36">
+              <Link to="/entrar" className="text-[#F2BD8A] hover:underline">Entre na plataforma</Link> para deixar um depoimento.
+            </p>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}

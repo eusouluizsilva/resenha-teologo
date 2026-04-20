@@ -31,7 +31,12 @@ export default defineSchema({
     churchName: v.optional(v.string()),
     churchInstagram: v.optional(v.string()),
     totalDonationsReceived: v.optional(v.number()),
-  }).index('by_clerkId', ['clerkId']),
+    handle: v.optional(v.string()),
+    profileVisibility: v.optional(v.union(v.literal('public'), v.literal('unlisted'))),
+    showProgressPublicly: v.optional(v.boolean()),
+  })
+    .index('by_clerkId', ['clerkId'])
+    .index('by_handle', ['handle']),
 
   userFunctions: defineTable({
     userId: v.string(),
@@ -208,4 +213,26 @@ export default defineSchema({
     status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')),
     stripePaymentId: v.optional(v.string()),
   }).index('by_creatorId', ['creatorId']),
+
+  testimonials: defineTable({
+    authorId: v.string(),
+    profileUserId: v.string(),
+    text: v.string(),
+    status: v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
+    createdAt: v.number(),
+    approvedAt: v.optional(v.number()),
+  })
+    .index('by_profileUserId', ['profileUserId'])
+    .index('by_profileUserId_status', ['profileUserId', 'status'])
+    .index('by_author_profile', ['authorId', 'profileUserId']),
+
+  ratings: defineTable({
+    authorId: v.string(),
+    profileUserId: v.string(),
+    stars: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_profileUserId', ['profileUserId'])
+    .index('by_author_profile', ['authorId', 'profileUserId']),
 })
