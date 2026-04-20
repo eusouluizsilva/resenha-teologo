@@ -1,11 +1,15 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { ensureIdentityMatches, requirePerfil } from './lib/auth'
 
 export const listByCourse = query({
   args: { courseId: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { courseId, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const course = await ctx.db.get(courseId)
-    if (!course || course.creatorId !== creatorId) return []
+    if (!course || course.creatorId !== identity.subject) return []
 
     return await ctx.db
       .query('modules')
@@ -23,10 +27,16 @@ export const create = mutation({
     order: v.number(),
   },
   handler: async (ctx, args) => {
-    const course = await ctx.db.get(args.courseId)
-    if (!course || course.creatorId !== args.creatorId) throw new Error('Não autorizado')
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, args.creatorId)
 
-    const moduleId = await ctx.db.insert('modules', args)
+    const course = await ctx.db.get(args.courseId)
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+
+    const moduleId = await ctx.db.insert('modules', {
+      ...args,
+      creatorId: identity.subject,
+    })
     await ctx.db.patch(args.courseId, { totalModules: course.totalModules + 1 })
     return moduleId
   },
@@ -40,8 +50,11 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const mod = await ctx.db.get(id)
-    if (!mod || mod.creatorId !== creatorId) throw new Error('Não autorizado')
+    if (!mod || mod.creatorId !== identity.subject) throw new Error('Não autorizado')
     await ctx.db.patch(id, fields)
   },
 })
@@ -49,8 +62,11 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('modules'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const mod = await ctx.db.get(id)
-    if (!mod || mod.creatorId !== creatorId) throw new Error('Não autorizado')
+    if (!mod || mod.creatorId !== identity.subject) throw new Error('Não autorizado')
 
     const lessons = await ctx.db
       .query('lessons')

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
+import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
+import { DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,7 +66,7 @@ function emptyQuestion(): QuizQuestion {
   }
 }
 
-const inputCls = 'w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200'
+const inputCls = brandInputClass
 const LETTERS = ['A', 'B', 'C', 'D']
 const MIN_QUIZ = 5
 const MAX_QUIZ = 20
@@ -321,7 +323,7 @@ function QuestionCard({ q, index, onChange, onDelete }: {
               />
               <div>
                 <p className="text-xs font-medium text-white/40 mb-2">
-                  Alternativas — clique no círculo para marcar a correta
+                  Alternativas, clique no círculo para marcar a correta
                 </p>
                 <div className="space-y-2">
                   {q.options.map((opt, i) => (
@@ -418,6 +420,10 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
 
   async function handleSave() {
     if (!canSave || !moduleId || !creatorId) return
+    if (materials.length > 0) {
+      setError('Materiais de apoio ainda não podem ser salvos nesta versão. Remova os arquivos para continuar.')
+      return
+    }
     setSaving(true)
     setError('')
     try {
@@ -473,29 +479,23 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            className="fixed right-0 top-0 h-full w-full max-w-2xl bg-[#0F141A] border-l border-[#2A313B] z-50 flex flex-col shadow-2xl"
+            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-2xl flex-col border-l border-white/8 bg-[linear-gradient(180deg,rgba(13,18,24,0.98)_0%,rgba(10,14,20,0.98)_100%)] shadow-[0_30px_100px_rgba(0,0,0,0.32)]"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2A313B] flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-white/8 px-6 py-4">
               <div className="flex-1 mr-4">
                 <input
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Título da aula..."
-                  className="text-lg font-bold bg-transparent text-white font-display focus:outline-none placeholder-white/20 w-full"
+                  className="w-full bg-transparent font-display text-xl font-bold text-white placeholder-white/20 focus:outline-none"
                 />
-                <p className="text-xs text-white/30 mt-0.5">Nova aula</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/24">Nova aula</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsPublished(p => !p)}
-                  className={`text-sm font-medium px-3 py-1.5 rounded-lg border transition-all ${
-                    isPublished
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                      : 'border-[#2A313B] text-white/40 hover:text-white'
-                  }`}
-                >
-                  {isPublished ? 'Publicada' : 'Rascunho'}
+                <button type="button" onClick={() => setIsPublished(p => !p)}>
+                  <DashboardStatusPill tone={isPublished ? 'success' : 'neutral'}>
+                    {isPublished ? 'Publicada' : 'Rascunho'}
+                  </DashboardStatusPill>
                 </button>
                 <button
                   type="button"
@@ -510,7 +510,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
                       ? `Adicione pelo menos ${MIN_QUIZ} perguntas ao quiz`
                       : ''
                   }
-                  className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
+                  className={brandPrimaryButtonClass}
                 >
                   {saving ? (
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -527,7 +527,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                  className={brandSecondaryButtonClass}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -537,17 +537,17 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
             </div>
 
             {error && (
-              <div className="mx-6 mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+              <div className="mx-6 mt-4 rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
                 {error}
               </div>
             )}
 
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-5">
-                <div className="bg-[#151B23] border border-[#2A313B] rounded-xl overflow-hidden">
-                  <div className="px-5 py-3.5 border-b border-[#2A313B]">
-                    <p className="text-sm font-semibold text-white">Vídeo da aula</p>
-                    <p className="text-xs text-white/40 mt-0.5">Cole a URL de qualquer plataforma compatível</p>
+                <div className={cn('overflow-hidden', brandPanelClass)}>
+                  <div className="border-b border-white/8 px-5 py-4">
+                    <DashboardSectionLabel>Vídeo da aula</DashboardSectionLabel>
+                    <p className="mt-2 text-sm leading-7 text-white/54">Cole a URL de qualquer plataforma compatível.</p>
                   </div>
                   <div className="p-5">
                     <VideoSection
@@ -559,20 +559,20 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
                   </div>
                 </div>
 
-                <div className="bg-[#151B23] border border-[#2A313B] rounded-xl overflow-hidden">
-                  <div className="px-5 py-3.5 border-b border-[#2A313B]">
-                    <p className="text-sm font-semibold text-white">Materiais de apoio</p>
-                    <p className="text-xs text-white/40 mt-0.5">PDF, Word, PowerPoint — qualquer formato</p>
+                <div className={cn('overflow-hidden', brandPanelClass)}>
+                  <div className="border-b border-white/8 px-5 py-4">
+                    <DashboardSectionLabel>Materiais de apoio</DashboardSectionLabel>
+                    <p className="mt-2 text-sm leading-7 text-white/54">Storage em preparação. Esta etapa será liberada junto com a persistência real dos arquivos.</p>
                   </div>
                   <div className="p-5">
                     <MaterialsSection materials={materials} setMaterials={setMaterials} />
                   </div>
                 </div>
 
-                <div className="bg-[#151B23] border border-[#2A313B] rounded-xl overflow-hidden">
-                  <div className="px-5 py-3.5 border-b border-[#2A313B]">
-                    <p className="text-sm font-semibold text-white">Perguntas do quiz</p>
-                    <p className="text-xs text-white/40 mt-0.5">
+                <div className={cn('overflow-hidden', brandPanelClass)}>
+                  <div className="border-b border-white/8 px-5 py-4">
+                    <DashboardSectionLabel>Perguntas do quiz</DashboardSectionLabel>
+                    <p className="mt-2 text-sm leading-7 text-white/54">
                       Mínimo {MIN_QUIZ}, máximo {MAX_QUIZ} perguntas. ({questions.length}/{MAX_QUIZ})
                     </p>
                   </div>

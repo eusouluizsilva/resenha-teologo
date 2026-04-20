@@ -4,7 +4,9 @@ import { motion } from 'framer-motion'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
+import { DashboardPageShell, DashboardSectionLabel } from '@/components/dashboard/PageShell'
 
 const categories = [
   'Teologia Sistemática', 'Hermenêutica', 'Antigo Testamento', 'Novo Testamento',
@@ -49,6 +51,7 @@ export function NovoCursoPage() {
 
     if (!creatorId) return setError('Sessão expirada. Faça login novamente.')
     setLoading(true)
+
     try {
       const id = await createCourse({
         creatorId,
@@ -56,7 +59,7 @@ export function NovoCursoPage() {
         description: form.description.trim(),
         category: form.category,
         level: form.level,
-        tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
         language: form.language,
       })
       navigate(`/dashboard/cursos/${id}`)
@@ -68,151 +71,117 @@ export function NovoCursoPage() {
   }
 
   return (
-    <div className="p-8">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="max-w-2xl mx-auto"
-      >
-        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-8">
-          <Link
-            to="/dashboard/cursos"
-            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-white font-display">Novo curso</h1>
-            <p className="text-white/50 mt-0.5 text-sm">Preencha as informações básicas do curso</p>
-          </div>
-        </motion.div>
-
-        <motion.form variants={fadeUp} onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-[#151B23] border border-[#2A313B] rounded-xl p-6 space-y-5">
-            <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider">
-              Informações principais
-            </h2>
-
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1.5">
-                Título do curso <span className="text-[#F37E20]">*</span>
-              </label>
+    <DashboardPageShell
+      eyebrow="Criação de curso"
+      title="Novo curso"
+      description="A estrutura continua objetiva, mas agora com mais hierarquia, contraste e sensação de produto premium."
+      maxWidthClass="max-w-3xl"
+      actions={
+        <Link to="/dashboard/cursos" className={brandSecondaryButtonClass}>
+          Voltar para cursos
+        </Link>
+      }
+    >
+      <motion.form variants={staggerContainer} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-6">
+        <motion.div variants={fadeUp} className={cn('space-y-6 p-6 sm:p-7', brandPanelClass)}>
+          <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Título do curso</label>
               <input
                 type="text"
                 name="title"
                 value={form.title}
                 onChange={handleChange}
                 placeholder="Ex: Introdução à Hermenêutica Bíblica"
-                className="w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200"
+                className={brandInputClass}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1.5">
-                Descrição <span className="text-[#F37E20]">*</span>
-              </label>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                rows={4}
-                placeholder="Descreva o que o aluno vai aprender neste curso..."
-                className="w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200 resize-none"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Categoria</label>
+              <select name="category" value={form.category} onChange={handleChange} className={brandInputClass}>
+                <option value="">Selecione</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1.2fr]">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Nível</label>
+              <select name="level" value={form.level} onChange={handleChange} className={brandInputClass}>
+                <option value="iniciante">Iniciante</option>
+                <option value="intermediario">Intermediário</option>
+                <option value="avancado">Avançado</option>
+              </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">
-                  Categoria <span className="text-[#F37E20]">*</span>
-                </label>
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200"
-                >
-                  <option value="">Selecione...</option>
-                  {categories.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Nível</label>
-                <select
-                  name="level"
-                  value={form.level}
-                  onChange={handleChange}
-                  className="w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200"
-                >
-                  <option value="iniciante">Iniciante</option>
-                  <option value="intermediario">Intermediário</option>
-                  <option value="avancado">Avançado</option>
-                </select>
-              </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Idioma</label>
+              <input name="language" value={form.language} onChange={handleChange} className={brandInputClass} />
             </div>
 
-            <div className="rounded-xl border border-dashed border-[#2A313B] bg-[#0F141A] px-5 py-4">
-              <p className="text-sm font-medium text-white/60">Capa do curso</p>
-              <p className="mt-1 text-xs text-white/35">Definida automaticamente a partir do thumbnail do primeiro vídeo adicionado.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1.5">
-                Tags (separadas por vírgula)
-              </label>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Tags</label>
               <input
                 type="text"
                 name="tags"
                 value={form.tags}
                 onChange={handleChange}
                 placeholder="Ex: Bíblia, Teologia, Interpretação"
-                className="w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200"
+                className={brandInputClass}
               />
             </div>
           </div>
 
-          {error && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-              {error}
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 justify-end">
-            <Link
-              to="/dashboard/cursos"
-              className="px-5 py-2.5 rounded-lg border border-[#2A313B] text-white/60 hover:text-white text-sm font-medium transition-all duration-200"
-            >
-              Cancelar
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200"
-            >
-              {loading ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Criando...
-                </>
-              ) : (
-                'Criar curso e adicionar aulas'
-              )}
-            </button>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white/72">Descrição</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={5}
+              placeholder="Descreva o que o aluno vai aprender e por que esse curso merece atenção."
+              className={cn(brandInputClass, 'resize-none')}
+            />
           </div>
-        </motion.form>
-      </motion.div>
-    </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} className={cn('p-6', brandPanelClass)}>
+          <DashboardSectionLabel>Direção visual</DashboardSectionLabel>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-5">
+              <p className="font-display text-xl font-bold text-white">Capa do curso</p>
+              <p className="mt-2 text-sm leading-7 text-white/54">
+                Será definida quando você começar a estruturar módulos, aulas e thumbnail do conteúdo.
+              </p>
+            </div>
+            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-5">
+              <p className="font-display text-xl font-bold text-white">Próxima etapa</p>
+              <p className="mt-2 text-sm leading-7 text-white/54">
+                Depois de salvar, você entra direto no fluxo de edição para construir módulos, aulas e avaliação.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {error && (
+          <motion.div variants={fadeUp} className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
+            {error}
+          </motion.div>
+        )}
+
+        <motion.div variants={fadeUp} className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Link to="/dashboard/cursos" className={brandSecondaryButtonClass}>
+            Cancelar
+          </Link>
+          <button type="submit" disabled={loading} className={brandPrimaryButtonClass}>
+            {loading ? 'Criando...' : 'Criar curso e adicionar aulas'}
+          </button>
+        </motion.div>
+      </motion.form>
+    </DashboardPageShell>
   )
 }

@@ -1,7 +1,7 @@
-import { useUser } from '@clerk/clerk-react'
+import { useCurrentAppUser } from './currentUser'
 
 export function useCreatorId(): string | null {
-  const { user, isLoaded } = useUser()
-  if (!isLoaded || !user) return null
-  return user.id
+  const { clerkUser, perfil, isLoading } = useCurrentAppUser()
+  if (isLoading || !clerkUser || perfil !== 'criador') return null
+  return clerkUser.id
 }

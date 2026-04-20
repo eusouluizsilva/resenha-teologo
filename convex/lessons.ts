@@ -1,11 +1,15 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { ensureIdentityMatches, requirePerfil } from './lib/auth'
 
 export const getById = query({
   args: { id: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const lesson = await ctx.db.get(id)
-    if (!lesson || lesson.creatorId !== creatorId) return null
+    if (!lesson || lesson.creatorId !== identity.subject) return null
     return lesson
   },
 })
@@ -13,8 +17,11 @@ export const getById = query({
 export const listByCourse = query({
   args: { courseId: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { courseId, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const course = await ctx.db.get(courseId)
-    if (!course || course.creatorId !== creatorId) return []
+    if (!course || course.creatorId !== identity.subject) return []
 
     return await ctx.db
       .query('lessons')
@@ -27,8 +34,11 @@ export const listByCourse = query({
 export const listByModule = query({
   args: { moduleId: v.id('modules'), creatorId: v.string() },
   handler: async (ctx, { moduleId, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const mod = await ctx.db.get(moduleId)
-    if (!mod || mod.creatorId !== creatorId) return []
+    if (!mod || mod.creatorId !== identity.subject) return []
 
     return await ctx.db
       .query('lessons')
@@ -63,10 +73,21 @@ export const create = mutation({
     hasMandatoryQuiz: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const course = await ctx.db.get(args.courseId)
-    if (!course || course.creatorId !== args.creatorId) throw new Error('Não autorizado')
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, args.creatorId)
 
-    const lessonId = await ctx.db.insert('lessons', { ...args, isPublished: false })
+    const course = await ctx.db.get(args.courseId)
+    const mod = await ctx.db.get(args.moduleId)
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+    if (!mod || mod.creatorId !== identity.subject || mod.courseId !== args.courseId) {
+      throw new Error('Módulo inválido')
+    }
+
+    const lessonId = await ctx.db.insert('lessons', {
+      ...args,
+      creatorId: identity.subject,
+      isPublished: false,
+    })
 
     const newTotal = course.totalLessons + 1
     if (!course.thumbnail) {
@@ -96,8 +117,11 @@ export const update = mutation({
     hasMandatoryQuiz: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const lesson = await ctx.db.get(id)
-    if (!lesson || lesson.creatorId !== creatorId) throw new Error('Não autorizado')
+    if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
     await ctx.db.patch(id, fields)
   },
 })
@@ -105,8 +129,11 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const lesson = await ctx.db.get(id)
-    if (!lesson || lesson.creatorId !== creatorId) throw new Error('Não autorizado')
+    if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
 
     const course = await ctx.db.get(lesson.courseId)
     if (course) {

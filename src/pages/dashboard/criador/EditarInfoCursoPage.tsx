@@ -5,7 +5,9 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
+import { DashboardPageShell, DashboardSectionLabel } from '@/components/dashboard/PageShell'
 
 const categories = [
   'Teologia Sistemática', 'Hermenêutica', 'Antigo Testamento', 'Novo Testamento',
@@ -24,27 +26,36 @@ function compressImage(file: File): Promise<string> {
       const canvas = document.createElement('canvas')
       let { width, height } = img
       const maxDim = 1280
+
       if (width > maxDim || height > maxDim) {
         const ratio = Math.min(maxDim / width, maxDim / height)
         width = Math.round(width * ratio)
         height = Math.round(height * ratio)
       }
+
       canvas.width = width
       canvas.height = height
       canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
       let quality = 0.85
       let result = canvas.toDataURL('image/jpeg', quality)
+
       while (result.length > MAX_BASE64_BYTES && quality > 0.3) {
         quality -= 0.1
         result = canvas.toDataURL('image/jpeg', quality)
       }
+
       if (result.length > MAX_BASE64_BYTES) {
         reject(new Error('Imagem muito grande mesmo após compressão. Use uma imagem menor.'))
       } else {
         resolve(result)
       }
     }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Erro ao carregar imagem.')) }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Erro ao carregar imagem.'))
+    }
+
     img.src = url
   })
 }
@@ -57,72 +68,109 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
-    if (file.size > 5_000_000) { setUploadError('Arquivo muito grande. Máximo 5 MB.'); return }
+    if (file.size > 5_000_000) {
+      setUploadError('Arquivo muito grande. Máximo 5 MB.')
+      return
+    }
+
     setUploadError('')
     setCompressing(true)
+
     try {
       onChange(await compressImage(file))
-    } catch (e) {
-      setUploadError(e instanceof Error ? e.message : 'Erro ao processar imagem.')
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Erro ao processar imagem.')
     } finally {
       setCompressing(false)
     }
   }, [onChange])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault(); setDragging(false)
-    const file = e.dataTransfer.files[0]
+  const handleDrop = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    setDragging(false)
+    const file = event.dataTransfer.files[0]
     if (file) handleFile(file)
   }, [handleFile])
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-white/80 mb-1.5">Thumbnail do curso</label>
-      {value ? (
-        <div className="relative rounded-xl overflow-hidden aspect-video bg-[#0F141A] border border-[#2A313B]">
-          <img src={value} alt="Thumbnail" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
-            <button type="button" onClick={() => inputRef.current?.click()} className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 backdrop-blur text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
-              Trocar
-            </button>
-            <button type="button" onClick={() => onChange('')} className="flex items-center gap-1.5 bg-red-500/20 hover:bg-red-500/40 backdrop-blur text-red-400 text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              Remover
-            </button>
+    <div className={cn('p-5', brandPanelClass)}>
+      <DashboardSectionLabel>Thumbnail do curso</DashboardSectionLabel>
+      <div className="mt-5">
+        {value ? (
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#10161E]">
+            <div className="aspect-video">
+              <img src={value} alt="Thumbnail" className="h-full w-full object-cover" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/45 opacity-0 transition-opacity duration-200 hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/16"
+              >
+                Trocar
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange('')}
+                className="rounded-2xl border border-red-400/18 bg-red-400/10 px-4 py-3 text-sm font-semibold text-red-100 transition-colors duration-200 hover:bg-red-400/16"
+              >
+                Remover
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={handleDrop}
-          onClick={() => !compressing && inputRef.current?.click()}
-          className={`cursor-pointer aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-all duration-200 ${dragging ? 'border-[#F37E20] bg-[#F37E20]/5' : 'border-[#2A313B] bg-[#0F141A] hover:border-[#F37E20]/40'}`}
-        >
-          <div className="p-3 rounded-xl bg-[#F37E20]/10">
-            {compressing ? (
-              <svg className="w-6 h-6 text-[#F37E20] animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6 text-[#F37E20]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+        ) : (
+          <div
+            onDragOver={(event) => {
+              event.preventDefault()
+              setDragging(true)
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => !compressing && inputRef.current?.click()}
+            className={cn(
+              'flex aspect-video cursor-pointer flex-col items-center justify-center gap-3 rounded-[1.5rem] border-2 border-dashed transition-all duration-200',
+              dragging
+                ? 'border-[#F37E20]/45 bg-[#F37E20]/10'
+                : 'border-white/10 bg-[#10161E] hover:border-[#F37E20]/24',
             )}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
+              {compressing ? (
+                <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-white/72">
+                {compressing ? 'Comprimindo...' : dragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}
+              </p>
+              <p className="mt-1 text-xs leading-6 text-white/32">PNG, JPG ou WEBP. Máximo 5 MB. Proporção 16:9 recomendada.</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm font-medium text-white/70">{compressing ? 'Comprimindo...' : dragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}</p>
-            <p className="text-xs text-white/30 mt-0.5">PNG, JPG ou WEBP. Máximo 5 MB. Proporção 16:9 recomendada.</p>
-          </div>
-        </div>
-      )}
-      {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+        )}
+
+        {uploadError ? <p className="mt-3 text-xs text-red-300">{uploadError}</p> : null}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          if (file) handleFile(file)
+        }}
+      />
     </div>
   )
 }
-
-const inputCls = 'w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200'
 
 export function EditarInfoCursoPage() {
   const { id } = useParams<{ id: string }>()
@@ -131,12 +179,11 @@ export function EditarInfoCursoPage() {
 
   const course = useQuery(
     api.courses.getById,
-    id && creatorId ? { id: id as Id<'courses'>, creatorId } : 'skip'
+    id && creatorId ? { id: id as Id<'courses'>, creatorId } : 'skip',
   )
   const updateCourse = useMutation(api.courses.update)
 
   const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [thumbnail, setThumbnail] = useState<string | null>(null)
   const [form, setForm] = useState<{
@@ -160,41 +207,42 @@ export function EditarInfoCursoPage() {
       })
       setThumbnail(course.thumbnail ?? '')
     }
-  }, [course]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [course, form])
 
   if (course === undefined) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#F37E20] border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center px-6 py-20">
+        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
       </div>
     )
   }
 
   if (course === null || !form) {
     return (
-      <div className="p-8 text-center text-white/40">
+      <div className="px-6 py-20 text-center text-white/40">
         Curso não encontrado.{' '}
-        <Link to="/dashboard/cursos" className="text-[#F37E20] underline">Voltar</Link>
+        <Link to="/dashboard/cursos" className="text-[#F2BD8A] underline underline-offset-2">Voltar</Link>
       </div>
     )
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    setForm((p) => p ? { ...p, [e.target.name]: e.target.value } : p)
-    setSaved(false)
+  function handleChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    setForm((current) => (current ? { ...current, [event.target.name]: event.target.value } : current))
     setError('')
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
     if (!form) return
     if (!form.title.trim()) return setError('O título do curso é obrigatório.')
     if (!form.description.trim()) return setError('A descrição é obrigatória.')
     if (!form.category) return setError('Selecione uma categoria.')
 
     setLoading(true)
+
     try {
       if (!creatorId) return setError('Sessão expirada. Faça login novamente.')
+
       await updateCourse({
         id: id as Id<'courses'>,
         creatorId,
@@ -203,9 +251,10 @@ export function EditarInfoCursoPage() {
         category: form.category,
         level: form.level,
         thumbnail: thumbnail || undefined,
-        tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
         language: form.language,
       })
+
       navigate('/dashboard/cursos')
     } catch {
       setError('Erro ao salvar. Tente novamente.')
@@ -215,103 +264,92 @@ export function EditarInfoCursoPage() {
   }
 
   return (
-    <div className="p-8">
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-2xl mx-auto">
-
-        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-8">
-          <Link to="/dashboard/cursos" className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-white font-display">Editar curso</h1>
-            <p className="text-white/50 mt-0.5 text-sm">Altere as informações do curso</p>
+    <DashboardPageShell
+      eyebrow="Configuração do curso"
+      title="Editar curso"
+      description="Ajuste identidade, contexto e apresentação do curso com uma camada visual mais consistente com a nova direção da plataforma."
+      maxWidthClass="max-w-3xl"
+      actions={
+        <Link to={`/dashboard/cursos/${id}/modulos`} className={brandSecondaryButtonClass}>
+          Módulos e aulas
+        </Link>
+      }
+    >
+      <motion.form variants={staggerContainer} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-6">
+        <motion.div variants={fadeUp} className={cn('space-y-6 p-6 sm:p-7', brandPanelClass)}>
+          <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Título do curso</label>
+              <input name="title" value={form.title} onChange={handleChange} placeholder="Ex: Introdução à Hermenêutica Bíblica" className={brandInputClass} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Categoria</label>
+              <select name="category" value={form.category} onChange={handleChange} className={brandInputClass}>
+                <option value="">Selecione</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <Link
-            to={`/dashboard/cursos/${id}/modulos`}
-            className="flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white border border-[#2A313B] hover:border-[#F37E20]/30 px-4 py-2 rounded-lg transition-all duration-200"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
-            </svg>
-            Módulos e aulas
-          </Link>
+
+          <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1.2fr]">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Nível</label>
+              <select name="level" value={form.level} onChange={handleChange} className={brandInputClass}>
+                <option value="iniciante">Iniciante</option>
+                <option value="intermediario">Intermediário</option>
+                <option value="avancado">Avançado</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Idioma</label>
+              <input name="language" value={form.language} onChange={handleChange} className={brandInputClass} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Tags</label>
+              <input name="tags" value={form.tags} onChange={handleChange} placeholder="Ex: Bíblia, Teologia, Interpretação" className={brandInputClass} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white/72">Descrição</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={5}
+              placeholder="Descreva o que o aluno vai aprender e o contexto do curso."
+              className={cn(brandInputClass, 'resize-none')}
+            />
+          </div>
         </motion.div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <motion.div variants={fadeUp} className="bg-[#151B23] border border-[#2A313B] rounded-xl p-6 space-y-5">
-            <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider">Informações principais</h2>
+        <motion.div variants={fadeUp}>
+          <ThumbnailUpload value={thumbnail ?? ''} onChange={setThumbnail} />
+        </motion.div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1.5">Título do curso <span className="text-[#F37E20]">*</span></label>
-              <input name="title" value={form.title} onChange={handleChange} placeholder="Ex: Introdução à Hermenêutica Bíblica" className={inputCls} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1.5">Descrição <span className="text-[#F37E20]">*</span></label>
-              <textarea name="description" value={form.description} onChange={handleChange} rows={4} placeholder="Descreva o que o aluno vai aprender..." className={`${inputCls} resize-none`} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Categoria <span className="text-[#F37E20]">*</span></label>
-                <select name="category" value={form.category} onChange={handleChange} className={inputCls}>
-                  <option value="">Selecione...</option>
-                  {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Nível</label>
-                <select name="level" value={form.level} onChange={handleChange} className={inputCls}>
-                  <option value="iniciante">Iniciante</option>
-                  <option value="intermediario">Intermediário</option>
-                  <option value="avancado">Avançado</option>
-                </select>
-              </div>
-            </div>
-
-            <ThumbnailUpload value={thumbnail ?? ''} onChange={setThumbnail} />
-
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1.5">Tags (separadas por vírgula)</label>
-              <input name="tags" value={form.tags} onChange={handleChange} placeholder="Ex: Bíblia, Teologia, Interpretação" className={inputCls} />
-            </div>
+        {error ? (
+          <motion.div variants={fadeUp} className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
+            {error}
           </motion.div>
+        ) : null}
 
-          {error && (
-            <motion.div variants={fadeUp} className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-              {error}
-            </motion.div>
-          )}
+        <motion.div variants={fadeUp} className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+          <Link to={`/dashboard/cursos/${id}/modulos`} className={brandSecondaryButtonClass}>
+            Ir para módulos e aulas
+          </Link>
 
-          <motion.div variants={fadeUp} className="flex items-center justify-between">
-            <Link to={`/dashboard/cursos/${id}/modulos`} className="flex items-center gap-2 text-sm text-[#F37E20] hover:text-white transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
-              Ir para módulos e aulas
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link to="/dashboard/cursos" className={brandSecondaryButtonClass}>
+              Cancelar
             </Link>
-            <div className="flex items-center gap-3">
-              {saved && (
-                <span className="flex items-center gap-1.5 text-sm text-emerald-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  Salvo
-                </span>
-              )}
-              <Link to="/dashboard/cursos" className="px-5 py-2.5 rounded-lg border border-[#2A313B] text-white/60 hover:text-white text-sm font-medium transition-all duration-200">
-                Cancelar
-              </Link>
-              <button type="submit" disabled={loading} className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200">
-                {loading
-                  ? <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                  : <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                }
-                {loading ? 'Salvando...' : 'Salvar alterações'}
-              </button>
-            </div>
-          </motion.div>
-        </form>
-      </motion.div>
-    </div>
+            <button type="submit" disabled={loading} className={brandPrimaryButtonClass}>
+              {loading ? 'Salvando...' : 'Salvar alterações'}
+            </button>
+          </div>
+        </motion.div>
+      </motion.form>
+    </DashboardPageShell>
   )
 }

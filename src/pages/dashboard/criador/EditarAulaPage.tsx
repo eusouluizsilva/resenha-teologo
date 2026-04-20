@@ -5,7 +5,9 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
+import { DashboardPageShell, DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -105,17 +107,17 @@ function emptyQuestion(): QuizQuestion {
 
 function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div className="bg-[#151B23] border border-[#2A313B] rounded-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-[#2A313B]">
-        <h2 className="text-sm font-semibold text-white">{title}</h2>
-        {subtitle && <p className="text-xs text-white/40 mt-0.5">{subtitle}</p>}
+    <div className={cn('overflow-hidden', brandPanelClass)}>
+      <div className="border-b border-white/8 px-6 py-4">
+        <DashboardSectionLabel>{title}</DashboardSectionLabel>
+        {subtitle && <p className="mt-2 text-sm leading-7 text-white/54">{subtitle}</p>}
       </div>
       <div className="p-6">{children}</div>
     </div>
   )
 }
 
-const inputCls = 'w-full bg-[#0F141A] border border-[#2A313B] rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F37E20]/50 transition-colors duration-200'
+const inputCls = brandInputClass
 
 // ─── Video Section ─────────────────────────────────────────────────────────────
 
@@ -248,7 +250,7 @@ function MaterialsSection({ materials, setMaterials }: {
   }, [setMaterials])
 
   return (
-    <SectionCard title="Materiais de apoio" subtitle="PDF, Word, PowerPoint, planilhas — qualquer formato">
+    <SectionCard title="Materiais de apoio" subtitle="Storage em preparação. Esta etapa será liberada junto com a persistência real dos arquivos.">
       <div className="space-y-3">
         {materials.map((m) => (
           <div key={m.id} className="flex items-center gap-3 p-3 bg-[#0F141A] border border-[#2A313B] rounded-lg group">
@@ -509,6 +511,10 @@ export function EditarAulaPage() {
 
   async function handleSave() {
     if (!canSave || !creatorId || !lessonId) return
+    if (materials.length > 0) {
+      setError('Materiais de apoio ainda não podem ser salvos nesta versão. Remova os arquivos para continuar.')
+      return
+    }
     setSaving(true)
     setError('')
     try {
@@ -548,104 +554,79 @@ export function EditarAulaPage() {
 
   if (!creatorId || lesson === undefined) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-2 border-[#F37E20]/30 border-t-[#F37E20] rounded-full animate-spin" />
+      <div className="flex min-h-[60vh] items-center justify-center px-6 py-20">
+        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
       </div>
     )
   }
 
   if (lesson === null) {
     return (
-      <div className="p-8 text-center text-white/40 mt-20">
+      <div className="px-6 py-20 text-center text-white/40">
         Aula nao encontrada.{' '}
-        <Link to={`/dashboard/cursos/${courseId}`} className="text-[#F37E20] underline">Voltar</Link>
+        <Link to={`/dashboard/cursos/${courseId}`} className="text-[#F2BD8A] underline underline-offset-2">Voltar</Link>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-3xl mx-auto">
-        <motion.div variants={fadeUp} className="flex items-start justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <Link
-              to={`/dashboard/cursos/${courseId}/modulos`}
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-            </Link>
-            <div className="flex-1">
-              <input
-                value={title}
-                onChange={(e) => { setTitle(e.target.value); setSaved(false) }}
-                placeholder="Titulo da aula..."
-                className="text-2xl font-bold bg-transparent text-white font-display focus:outline-none placeholder-white/20 w-full"
-              />
-              <p className="text-white/40 text-sm mt-0.5">Editor de aula</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsPublished((p) => !p)}
-              className={`text-sm font-medium px-3 py-2 rounded-lg border transition-all duration-200 ${
-                isPublished
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                  : 'border-[#2A313B] text-white/50 hover:text-white'
-              }`}
-            >
+    <DashboardPageShell
+      eyebrow="Editor de aula"
+      title={title || 'Nova aula'}
+      description="Vídeo, materiais e quiz agora vivem dentro de uma hierarquia visual mais clara, com foco em leitura, ritmo e continuidade de edição."
+      maxWidthClass="max-w-4xl"
+      actions={
+        <>
+          <Link to={`/dashboard/cursos/${courseId}/modulos`} className={brandSecondaryButtonClass}>
+            Voltar para módulos
+          </Link>
+          <button type="button" onClick={() => setIsPublished((p) => !p)}>
+            <DashboardStatusPill tone={isPublished ? 'success' : 'neutral'}>
               {isPublished ? 'Publicada' : 'Rascunho'}
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || !canSave}
-              title={!title.trim() ? 'Adicione um titulo' : !videoUrl.trim() ? 'Adicione a URL do video' : belowMin ? `Adicione pelo menos ${MIN_QUIZ} perguntas ao quiz` : ''}
-              className="flex items-center gap-2 bg-[#F37E20] hover:bg-[#e06e10] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              {saving ? (
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : saved ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-              )}
-              {saving ? 'Salvando...' : saved ? 'Salvo' : 'Salvar aula'}
-            </button>
-          </div>
-        </motion.div>
-
+            </DashboardStatusPill>
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !canSave}
+            title={!title.trim() ? 'Adicione um titulo' : !videoUrl.trim() ? 'Adicione a URL do video' : belowMin ? `Adicione pelo menos ${MIN_QUIZ} perguntas ao quiz` : ''}
+            className={brandPrimaryButtonClass}
+          >
+            {saving ? 'Salvando...' : saved ? 'Salvo' : 'Salvar aula'}
+          </button>
+        </>
+      }
+    >
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
         {error && (
-          <motion.div variants={fadeUp} className="mb-5 flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
+          <motion.div variants={fadeUp} className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
             {error}
           </motion.div>
         )}
 
-        <div className="space-y-5">
-          <motion.div variants={fadeUp}>
-            <VideoSection url={videoUrl} setUrl={setVideoUrl} description={description} setDescription={setDescription} />
-          </motion.div>
-          <motion.div variants={fadeUp}>
-            <MaterialsSection materials={materials} setMaterials={setMaterials} />
-          </motion.div>
-          <motion.div variants={fadeUp}>
-            <QuizSection questions={questions} setQuestions={setQuestions} />
-          </motion.div>
-        </div>
+        <motion.div variants={fadeUp} className={cn('p-6', brandPanelClass)}>
+          <DashboardSectionLabel>Título da aula</DashboardSectionLabel>
+          <input
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              setSaved(false)
+            }}
+            placeholder="Título da aula"
+            className={cn(brandInputClass, 'mt-4 font-display text-2xl font-bold')}
+          />
+        </motion.div>
+
+        <motion.div variants={fadeUp}>
+          <VideoSection url={videoUrl} setUrl={setVideoUrl} description={description} setDescription={setDescription} />
+        </motion.div>
+        <motion.div variants={fadeUp}>
+          <MaterialsSection materials={materials} setMaterials={setMaterials} />
+        </motion.div>
+        <motion.div variants={fadeUp}>
+          <QuizSection questions={questions} setQuestions={setQuestions} />
+        </motion.div>
       </motion.div>
-    </div>
+    </DashboardPageShell>
   )
 }

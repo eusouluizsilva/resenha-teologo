@@ -11,6 +11,7 @@
 import type * as courses from "../courses.js";
 import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
+import type * as lib_auth from "../lib/auth.js";
 import type * as modules from "../modules.js";
 import type * as quizzes from "../quizzes.js";
 import type * as users from "../users.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   courses: typeof courses;
   http: typeof http;
   lessons: typeof lessons;
+  "lib/auth": typeof lib_auth;
   modules: typeof modules;
   quizzes: typeof quizzes;
   users: typeof users;

@@ -1,12 +1,16 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { ensureIdentityMatches, requirePerfil } from './lib/auth'
 
 export const listByCreator = query({
   args: { creatorId: v.string() },
   handler: async (ctx, { creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     return await ctx.db
       .query('courses')
-      .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', identity.subject))
       .order('desc')
       .collect()
   },
@@ -15,8 +19,11 @@ export const listByCreator = query({
 export const getById = query({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const course = await ctx.db.get(id)
-    if (!course || course.creatorId !== creatorId) return null
+    if (!course || course.creatorId !== identity.subject) return null
     return course
   },
 })
@@ -33,8 +40,12 @@ export const create = mutation({
     language: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, args.creatorId)
+
     return await ctx.db.insert('courses', {
       ...args,
+      creatorId: identity.subject,
       isPublished: false,
       totalLessons: 0,
       totalStudents: 0,
@@ -57,8 +68,11 @@ export const update = mutation({
     language: v.optional(v.string()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const course = await ctx.db.get(id)
-    if (!course || course.creatorId !== creatorId) throw new Error('Não autorizado')
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
     await ctx.db.patch(id, fields)
   },
 })
@@ -66,8 +80,11 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const course = await ctx.db.get(id)
-    if (!course || course.creatorId !== creatorId) throw new Error('Não autorizado')
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
 
     const lessons = await ctx.db
       .query('lessons')
@@ -98,9 +115,12 @@ export const remove = mutation({
 export const getStats = query({
   args: { creatorId: v.string() },
   handler: async (ctx, { creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
     const courses = await ctx.db
       .query('courses')
-      .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', identity.subject))
       .collect()
 
     const totalCourses = courses.length
@@ -110,7 +130,7 @@ export const getStats = query({
 
     const donations = await ctx.db
       .query('donations')
-      .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', identity.subject))
       .collect()
 
     const totalDonationsCents = donations

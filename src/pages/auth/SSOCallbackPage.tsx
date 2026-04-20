@@ -8,12 +8,7 @@ function PostAuthRedirect() {
 
   useEffect(() => {
     if (!isLoaded || !user) return
-    const perfil = user.unsafeMetadata?.perfil as string | undefined
-    if (perfil === 'criador' || perfil === 'aluno' || perfil === 'instituicao') {
-      navigate('/dashboard', { replace: true })
-    } else {
-      navigate('/cadastro', { replace: true })
-    }
+    navigate('/dashboard', { replace: true })
   }, [isLoaded, user, navigate])
 
   return null

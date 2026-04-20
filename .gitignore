@@ -28,3 +28,5 @@ credenciais.md
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.superpowers

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { DashboardSidebar } from './DashboardSidebar'
+import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 
 export function DashboardLayout() {
   const { user, isLoaded } = useUser()
@@ -16,28 +17,35 @@ export function DashboardLayout() {
   if (!isLoaded) {
     if (timedOut) {
       return (
-        <div className="min-h-screen bg-[#0F141A] flex flex-col items-center justify-center gap-4 px-6 text-center">
-          <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-2">
-            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0F141A] px-6 text-white">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-[12%] top-[14%] h-56 w-56 rounded-full bg-[#F37E20]/10 blur-[120px]" />
+            <div className="absolute right-[8%] top-[16%] h-72 w-72 rounded-full bg-white/4 blur-[140px]" />
           </div>
-          <p className="text-white font-semibold">Falha ao carregar autenticacao</p>
-          <p className="text-white/50 text-sm max-w-sm">
-            Tente recarregar a pagina. Se o problema persistir, faca login novamente.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 px-5 py-2.5 bg-[#F37E20] hover:bg-[#e06e10] text-white text-sm font-semibold rounded-lg transition-colors"
-          >
-            Tentar novamente
-          </button>
+
+          <div className={cn('relative z-10 max-w-lg p-8 text-center', brandPanelClass)}>
+            <div className={cn('mx-auto mb-5', brandIconBadgeClass)}>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h1 className="font-display text-2xl font-bold text-white">Falha ao carregar autenticação</h1>
+            <p className="mt-3 text-sm leading-7 text-white/56">
+              Recarregue a página para restabelecer a sessão. Se o problema persistir, faça login novamente.
+            </p>
+            <button onClick={() => window.location.reload()} className={cn('mt-6', brandPrimaryButtonClass)}>
+              Tentar novamente
+            </button>
+          </div>
         </div>
       )
     }
+
     return (
-      <div className="min-h-screen bg-[#0F141A] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#F37E20]/30 border-t-[#F37E20] rounded-full animate-spin" />
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0F141A]">
+        <div className="absolute left-[12%] top-[14%] h-56 w-56 rounded-full bg-[#F37E20]/10 blur-[120px]" />
+        <div className="absolute right-[8%] top-[16%] h-72 w-72 rounded-full bg-white/4 blur-[140px]" />
+        <div className="relative h-10 w-10 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
       </div>
     )
   }
@@ -45,10 +53,21 @@ export function DashboardLayout() {
   if (!user) return <Navigate to="/entrar" replace />
 
   return (
-    <div className="min-h-screen bg-[#0F141A] text-white flex">
+    <div className="min-h-screen bg-[#0B1016] text-white">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-8rem] top-[-6rem] h-80 w-80 rounded-full bg-[#F37E20]/8 blur-[140px]" />
+        <div className="absolute right-[-10rem] top-20 h-[28rem] w-[28rem] rounded-full bg-[#1E2430] blur-[170px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,19,0.28)_0%,rgba(11,16,22,0)_26%,rgba(11,16,22,0.72)_100%)]" />
+      </div>
+
       <DashboardSidebar />
-      <main className="flex-1 ml-64 min-h-screen">
-        <Outlet />
+
+      <main className="relative min-h-screen lg:pl-72">
+        <div className="relative min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="relative min-h-[calc(100vh-4rem)] rounded-[2rem] border border-white/7 bg-[linear-gradient(180deg,rgba(13,18,24,0.92)_0%,rgba(10,14,20,0.96)_100%)] shadow-[0_30px_120px_rgba(0,0,0,0.25)]">
+            <Outlet />
+          </div>
+        </div>
       </main>
     </div>
   )

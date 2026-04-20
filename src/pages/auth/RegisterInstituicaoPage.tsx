@@ -69,7 +69,7 @@ export function RegisterInstituicaoPage() {
       const result = await signUp.attemptEmailAddressVerification({ code })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        navigate('/dashboard/instituicao')
+        navigate('/dashboard')
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
