@@ -99,7 +99,7 @@ export function RegisterPage() {
         unsafeMetadata: {
           country: form.country,
           phone: form.phone || null,
-          phoneCountry: form.country,
+          phoneCountry: selectedCountry.ddi || null,
           termsVersion: DOCUMENT_VERSION,
           termsAcceptedAt: new Date().toISOString(),
         },

@@ -52,6 +52,10 @@ export const upsert = mutation({
         name: args.name,
         email: args.email,
         avatarUrl: args.avatarUrl,
+        // Sync from Clerk metadata only if profile field is still empty
+        ...(args.phone && !existing.phone ? { phone: args.phone } : {}),
+        ...(args.phoneCountry && !existing.phoneCountry ? { phoneCountry: args.phoneCountry } : {}),
+        ...(args.country && !existing.country ? { country: args.country } : {}),
       })
       return existing._id
     }
