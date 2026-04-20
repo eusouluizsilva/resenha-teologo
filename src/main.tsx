@@ -6,7 +6,6 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk'
 import './index.css'
 import App from './App'
 import { api } from '../convex/_generated/api'
-import { normalizePerfil } from '@/lib/perfil'
 
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL
@@ -66,41 +65,25 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
     if (!user) return null
 
     const email = user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? ''
-    const perfil = normalizePerfil(user.unsafeMetadata?.perfil)
 
     return {
-      fingerprint: [
-        user.id,
-        user.fullName ?? '',
-        email,
-        user.imageUrl ?? '',
-        perfil,
-      ].join('|'),
+      fingerprint: [user.id, user.fullName ?? '', email, user.imageUrl ?? ''].join('|'),
       payload: {
         clerkId: user.id,
         name: user.fullName?.trim() || email || 'Usuário',
         email,
-        perfil,
         avatarUrl: user.imageUrl,
-        youtubeChannel:
-          typeof user.unsafeMetadata?.youtubeUrl === 'string'
-            ? user.unsafeMetadata.youtubeUrl
+        country:
+          typeof user.unsafeMetadata?.country === 'string'
+            ? user.unsafeMetadata.country
             : undefined,
-        institution:
-          typeof user.unsafeMetadata?.nomeInstituicao === 'string'
-            ? user.unsafeMetadata.nomeInstituicao
+        phone:
+          typeof user.unsafeMetadata?.phone === 'string'
+            ? user.unsafeMetadata.phone
             : undefined,
-        cnpj:
-          typeof user.unsafeMetadata?.cnpj === 'string'
-            ? user.unsafeMetadata.cnpj
-            : undefined,
-        city:
-          typeof user.unsafeMetadata?.cidade === 'string'
-            ? user.unsafeMetadata.cidade
-            : undefined,
-        state:
-          typeof user.unsafeMetadata?.estado === 'string'
-            ? user.unsafeMetadata.estado
+        phoneCountry:
+          typeof user.unsafeMetadata?.phoneCountry === 'string'
+            ? user.unsafeMetadata.phoneCountry
             : undefined,
       },
     }
