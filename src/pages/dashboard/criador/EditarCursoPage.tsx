@@ -152,6 +152,7 @@ export function EditarCursoPage() {
 
   const createModule = useMutation(api.modules.create)
   const updateCourse = useMutation(api.courses.update)
+  const publishWithLessons = useMutation(api.courses.publishWithLessons)
 
   const [drawerModuleId, setDrawerModuleId] = useState<Id<'modules'> | null>(null)
   const [drawerLessonOrder, setDrawerLessonOrder] = useState(0)
@@ -181,11 +182,13 @@ export function EditarCursoPage() {
     if (!creatorId || !course) return
     setSaving(true)
     try {
-      await updateCourse({
-        id: courseId as Id<'courses'>,
-        creatorId,
-        isPublished: !course.isPublished,
-      })
+      if (!course.isPublished) {
+        // Ao publicar: publica o curso e todas as aulas de uma vez
+        await publishWithLessons({ id: courseId as Id<'courses'>, creatorId })
+      } else {
+        // Ao despublicar: só atualiza o curso
+        await updateCourse({ id: courseId as Id<'courses'>, creatorId, isPublished: false })
+      }
     } finally {
       setSaving(false)
     }

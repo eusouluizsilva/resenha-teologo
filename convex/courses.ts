@@ -77,6 +77,33 @@ export const update = mutation({
   },
 })
 
+// Publica o curso e todas as suas aulas de uma vez (evita o passo manual de publicar cada aula)
+export const publishWithLessons = mutation({
+  args: { id: v.id('courses'), creatorId: v.string() },
+  handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requirePerfil(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
+    const course = await ctx.db.get(id)
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+
+    // Publica o curso
+    await ctx.db.patch(id, { isPublished: true })
+
+    // Publica todas as aulas ainda em rascunho
+    const lessons = await ctx.db
+      .query('lessons')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+
+    for (const lesson of lessons) {
+      if (!lesson.isPublished) {
+        await ctx.db.patch(lesson._id, { isPublished: true })
+      }
+    }
+  },
+})
+
 export const remove = mutation({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
