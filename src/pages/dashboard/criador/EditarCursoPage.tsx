@@ -34,20 +34,20 @@ function LessonRow({
   }
 
   return (
-    <div className="group flex flex-col gap-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] px-4 py-4 transition-all duration-200 hover:border-white/14 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
+    <div className="group flex flex-col gap-3 rounded-[1.35rem] border border-white/8 bg-white/[0.03] px-4 py-4 transition-all duration-200 hover:border-white/14 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
           </svg>
         </div>
         <div className="min-w-0">
           <p className="truncate font-medium text-white">{lesson.title}</p>
-          <p className="mt-1 truncate text-sm text-white/38">{lesson.youtubeUrl}</p>
+          <p className="mt-0.5 truncate text-xs text-white/38">{lesson.youtubeUrl}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-shrink-0 items-center gap-2">
         <button type="button" onClick={togglePublish}>
           <DashboardStatusPill tone={lesson.isPublished ? 'success' : 'neutral'}>
             {lesson.isPublished ? 'Publicada' : 'Rascunho'}
@@ -92,12 +92,12 @@ function ModuleCard({
   return (
     <div className={cn('p-6', brandPanelClass)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <DashboardSectionLabel>{mod.title}</DashboardSectionLabel>
           <p className="mt-2 text-sm leading-7 text-white/54">{lessons.length} aula(s) organizadas neste módulo.</p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-shrink-0 flex-wrap gap-3">
           <button onClick={() => onAddLesson(mod._id, lessons.length)} className={brandPrimaryButtonClass}>
             Adicionar aula
           </button>
