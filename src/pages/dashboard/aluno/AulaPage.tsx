@@ -117,8 +117,10 @@ function VideoPlayer({
       const current = playerRef.current.getCurrentTime()
       const duration = playerRef.current.getDuration() || totalSeconds
 
-      // Anti-skip: se o aluno tentar avançar além do max assistido, volta
-      if (current > maxWatchedRef.current + 3) {
+      // Anti-skip: só reverte se o avanço for maior que 10s acima do max assistido.
+      // Tolerância de 10s evita falsos positivos causados pelo intervalo de 3s vs
+      // progressão natural do vídeo (current ≈ maxWatched + 3 em cada tick).
+      if (current > maxWatchedRef.current + 10) {
         playerRef.current.seekTo(maxWatchedRef.current, true)
         return
       }
