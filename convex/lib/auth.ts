@@ -38,6 +38,27 @@ export async function requirePerfil(ctx: Ctx, perfis: Perfil[]) {
   return result
 }
 
+// Verifica função ativa via tabela userFunctions (sistema atual)
+// Aceita também o campo legado user.perfil como fallback
+export async function requireUserFunction(ctx: Ctx, functions: string[]) {
+  const { identity, user } = await requireCurrentUser(ctx)
+
+  const records = await ctx.db
+    .query('userFunctions')
+    .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+    .collect()
+
+  const active = records.map((r) => r.function as string)
+  const hasViaTable = functions.some((fn) => active.includes(fn))
+  const hasViaLegacy = functions.includes(user.perfil as string)
+
+  if (!hasViaTable && !hasViaLegacy) {
+    throw new Error('Função não ativa')
+  }
+
+  return { identity, user }
+}
+
 export function ensureIdentityMatches(identitySubject: string, expectedSubject: string) {
   if (identitySubject !== expectedSubject) {
     throw new Error('Não autorizado')

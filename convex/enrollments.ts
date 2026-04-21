@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { requirePerfil, requireIdentity } from './lib/auth'
+import { requireUserFunction, requireIdentity } from './lib/auth'
 
 export const listByStudent = query({
   args: {},
@@ -45,7 +45,7 @@ export const listByStudent = query({
 export const enroll = mutation({
   args: { courseId: v.id('courses') },
   handler: async (ctx, { courseId }) => {
-    const { user } = await requirePerfil(ctx, ['aluno'])
+    const { user } = await requireUserFunction(ctx, ['aluno'])
 
     const existing = await ctx.db
       .query('enrollments')

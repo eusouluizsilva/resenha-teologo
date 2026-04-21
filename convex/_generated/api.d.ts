@@ -21,6 +21,7 @@ import type * as modules from "../modules.js";
 import type * as publicProfiles from "../publicProfiles.js";
 import type * as quizzes from "../quizzes.js";
 import type * as ratings from "../ratings.js";
+import type * as student from "../student.js";
 import type * as testimonials from "../testimonials.js";
 import type * as userFunctions from "../userFunctions.js";
 import type * as users from "../users.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   publicProfiles: typeof publicProfiles;
   quizzes: typeof quizzes;
   ratings: typeof ratings;
+  student: typeof student;
   testimonials: typeof testimonials;
   userFunctions: typeof userFunctions;
   users: typeof users;

@@ -21,7 +21,10 @@ import type { UserFunction } from '@/lib/functions'
 import { PrivacidadePage, TermosPage } from '@/pages/legal/LegalPages'
 import { MeusCursosPage } from '@/pages/dashboard/aluno/MeusCursosPage'
 import { CertificadosPage } from '@/pages/dashboard/aluno/CertificadosPage'
+import { CursoInternoPage } from '@/pages/dashboard/aluno/CursoInternoPage'
+import { AulaPage } from '@/pages/dashboard/aluno/AulaPage'
 import { CatalogPage } from '@/pages/public/CatalogPage'
+import { CourseDetailPage } from '@/pages/public/CourseDetailPage'
 import { PlanosPage } from '@/pages/dashboard/PlanosPage'
 import { FuncoesPage } from '@/pages/dashboard/FuncoesPage'
 import { PublicProfilePage } from '@/pages/public/PublicProfilePage'
@@ -179,6 +182,7 @@ export default function App() {
           {/* Público */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
+          <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
           <Route path="/:handle" element={<PublicProfilePage />} />
 
           {/* Autenticação */}
@@ -205,6 +209,8 @@ export default function App() {
 
             {/* Aluno */}
             <Route path="meus-cursos" element={<RequireFunction allowed={['aluno']}><MeusCursosPage /></RequireFunction>} />
+            <Route path="meus-cursos/:courseId" element={<RequireFunction allowed={['aluno']}><CursoInternoPage /></RequireFunction>} />
+            <Route path="meus-cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['aluno']}><AulaPage /></RequireFunction>} />
             <Route path="certificados" element={<RequireFunction allowed={['aluno']}><CertificadosPage /></RequireFunction>} />
 
             {/* Instituição */}
