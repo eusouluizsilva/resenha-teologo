@@ -370,3 +370,66 @@ async function checkAndIssueCertificate(
     })
   }
 }
+
+// ─── rateCourse ───────────────────────────────────────────────────────────────
+// Aluno avalia o curso com 1-5 estrelas. Só permite quem está matriculado.
+
+export const rateCourse = mutation({
+  args: {
+    courseId: v.id('courses'),
+    stars: v.number(),
+  },
+  handler: async (ctx, { courseId, stars }) => {
+    const identity = await requireIdentity(ctx)
+
+    if (stars < 1 || stars > 5) throw new Error('Avaliação deve ser entre 1 e 5 estrelas')
+
+    const enrollment = await ctx.db
+      .query('enrollments')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', identity.subject).eq('courseId', courseId)
+      )
+      .unique()
+
+    if (!enrollment) throw new Error('Você precisa estar matriculado para avaliar este curso')
+
+    const existing = await ctx.db
+      .query('courseRatings')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', identity.subject).eq('courseId', courseId)
+      )
+      .unique()
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { stars, updatedAt: Date.now() })
+    } else {
+      await ctx.db.insert('courseRatings', {
+        studentId: identity.subject,
+        courseId,
+        stars,
+        createdAt: Date.now(),
+      })
+    }
+
+    return { stars }
+  },
+})
+
+// ─── getCourseRating ──────────────────────────────────────────────────────────
+// Retorna a avaliação do aluno para um curso específico.
+
+export const getCourseRating = query({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, { courseId }) => {
+    const identity = await requireIdentity(ctx)
+
+    const rating = await ctx.db
+      .query('courseRatings')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', identity.subject).eq('courseId', courseId)
+      )
+      .unique()
+
+    return rating ?? null
+  },
+})

@@ -26,7 +26,23 @@ export const listPublished = query({
           .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
           .unique()
 
-        return { ...course, creatorName: creator?.name ?? 'Criador' }
+        const courseRatings = await ctx.db
+          .query('courseRatings')
+          .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
+          .collect()
+
+        const ratingsCount = courseRatings.length
+        const avgRating =
+          ratingsCount > 0
+            ? Math.round((courseRatings.reduce((sum, r) => sum + r.stars, 0) / ratingsCount) * 10) / 10
+            : null
+
+        return {
+          ...course,
+          creatorName: creator?.name ?? 'Criador',
+          ratingsCount,
+          avgRating,
+        }
       })
     )
 

@@ -235,4 +235,14 @@ export default defineSchema({
   })
     .index('by_profileUserId', ['profileUserId'])
     .index('by_author_profile', ['authorId', 'profileUserId']),
+
+  courseRatings: defineTable({
+    studentId: v.string(),
+    courseId: v.id('courses'),
+    stars: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_courseId', ['courseId'])
+    .index('by_student_course', ['studentId', 'courseId']),
 })
