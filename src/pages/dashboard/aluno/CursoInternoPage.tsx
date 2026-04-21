@@ -5,6 +5,15 @@ import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 
+type LessonWithSlug = {
+  _id: string
+  slug?: string
+  title: string
+  durationSeconds?: number
+  isPublished: boolean
+  progress: { completed: boolean; watchedSeconds: number; totalSeconds: number } | null
+}
+
 function ProgressBar({ value, size = 'md' }: { value: number; size?: 'sm' | 'md' | 'lg' }) {
   const h = size === 'sm' ? 'h-1' : size === 'lg' ? 'h-2.5' : 'h-1.5'
   return (
@@ -54,13 +63,7 @@ function ModuleSection({
   mod: {
     _id: string
     title: string
-    lessons: {
-      _id: string
-      title: string
-      durationSeconds?: number
-      isPublished: boolean
-      progress: { completed: boolean; watchedSeconds: number; totalSeconds: number } | null
-    }[]
+    lessons: LessonWithSlug[]
   }
   courseId: string
   nextLessonId: string | undefined
@@ -97,7 +100,7 @@ function ModuleSection({
             return (
               <Link
                 key={lesson._id}
-                to={`/dashboard/meus-cursos/${courseId}/aula/${lesson._id}`}
+                to={`/dashboard/meus-cursos/${courseId}/aula/${lesson.slug ?? lesson._id}`}
                 className={cn(
                   'flex items-center gap-3 px-6 py-3 transition-all duration-150',
                   isCurrent ? 'bg-orange-50 hover:bg-orange-100' : 'hover:bg-gray-50',
@@ -128,7 +131,7 @@ function ModuleSection({
 }
 
 export function CursoInternoPage() {
-  const { courseId } = useParams<{ courseId: string }>()
+  const { courseId: rawCourseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [showSuccess, setShowSuccess] = useState(false)
@@ -141,12 +144,21 @@ export function CursoInternoPage() {
     }
   }, [searchParams])
 
+  // Resolve slug to real ID if the param contains hyphens
+  const slugLookup = useQuery(
+    api.catalog.getBySlug,
+    rawCourseId && rawCourseId.includes('-') ? { slug: rawCourseId } : 'skip'
+  )
+  const resolvedCourseId = rawCourseId?.includes('-')
+    ? (slugLookup?._id ?? null)
+    : rawCourseId
+
   const data = useQuery(
     api.student.getEnrolledCourse,
-    courseId ? { courseId: courseId as Id<'courses'> } : 'skip'
+    resolvedCourseId ? { courseId: resolvedCourseId as Id<'courses'> } : 'skip'
   )
 
-  if (data === undefined) {
+  if (data === undefined || (rawCourseId?.includes('-') && slugLookup === undefined)) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center bg-[#F7F5F2]">
         <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
@@ -155,14 +167,16 @@ export function CursoInternoPage() {
   }
 
   if (!data) {
-    navigate(`/cursos/${courseId}`, { replace: true })
+    navigate(`/cursos/${rawCourseId}`, { replace: true })
     return null
   }
 
   const { course, creator, modules, completedLessons, totalLessons, percentage, avgScore, nextLesson, enrollment } = data
 
+  const courseId = rawCourseId ?? ''
+
   const nextLessonHref = nextLesson
-    ? `/dashboard/meus-cursos/${courseId}/aula/${nextLesson._id}`
+    ? `/dashboard/meus-cursos/${courseId}/aula/${(nextLesson as any).slug ?? nextLesson._id}`
     : null
 
   const certificateStatus = enrollment.certificateIssued

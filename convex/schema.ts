@@ -136,7 +136,8 @@ export default defineSchema({
     totalModules: v.number(),
     tags: v.optional(v.array(v.string())),
     language: v.optional(v.string()),
-  }).index('by_creatorId', ['creatorId']).index('by_published', ['isPublished']),
+    slug: v.optional(v.string()),
+  }).index('by_creatorId', ['creatorId']).index('by_published', ['isPublished']).index('by_slug', ['slug']),
 
   modules: defineTable({
     courseId: v.id('courses'),
@@ -156,10 +157,12 @@ export default defineSchema({
     order: v.number(),
     isPublished: v.boolean(),
     hasMandatoryQuiz: v.boolean(),
+    slug: v.optional(v.string()),
   })
     .index('by_courseId', ['courseId'])
     .index('by_moduleId', ['moduleId'])
-    .index('by_creatorId', ['creatorId']),
+    .index('by_creatorId', ['creatorId'])
+    .index('by_courseId_slug', ['courseId', 'slug']),
 
   quizzes: defineTable({
     lessonId: v.id('lessons'),

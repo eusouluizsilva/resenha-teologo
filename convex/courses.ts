@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { ensureIdentityMatches, requirePerfil } from './lib/auth'
+import { toSlug } from './lib/slug'
 
 export const listByCreator = query({
   args: { creatorId: v.string() },
@@ -50,6 +51,7 @@ export const create = mutation({
       totalLessons: 0,
       totalStudents: 0,
       totalModules: 0,
+      slug: toSlug(args.title),
     })
   },
 })
@@ -73,7 +75,32 @@ export const update = mutation({
 
     const course = await ctx.db.get(id)
     if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
-    await ctx.db.patch(id, fields)
+    const updates: typeof fields & { slug?: string } = { ...fields }
+    if (fields.title) updates.slug = toSlug(fields.title)
+    await ctx.db.patch(id, updates)
+  },
+})
+
+export const getBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const course = await ctx.db
+      .query('courses')
+      .withIndex('by_slug', (q) => q.eq('slug', slug))
+      .unique()
+    return course ?? null
+  },
+})
+
+export const generateSlugs = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const courses = await ctx.db.query('courses').collect()
+    for (const course of courses) {
+      if (!course.slug) {
+        await ctx.db.patch(course._id, { slug: toSlug(course.title) })
+      }
+    }
   },
 })
 

@@ -200,6 +200,43 @@ export const getLessonForPlayer = query({
   },
 })
 
+// ─── resolveLesson ────────────────────────────────────────────────────────────
+// Resolve slug ou ID para os IDs reais de curso e aula.
+
+export const resolveLesson = query({
+  args: { courseRef: v.string(), lessonRef: v.string() },
+  handler: async (ctx, { courseRef, lessonRef }) => {
+    // Resolve course
+    let course
+    if (courseRef.includes('-')) {
+      course = await ctx.db
+        .query('courses')
+        .withIndex('by_slug', (q) => q.eq('slug', courseRef))
+        .unique()
+    } else {
+      course = await ctx.db.get(courseRef as Id<'courses'>)
+    }
+    if (!course) return null
+
+    // Resolve lesson
+    let lesson
+    if (lessonRef.includes('-')) {
+      const lessons = await ctx.db
+        .query('lessons')
+        .withIndex('by_courseId_slug', (q) =>
+          q.eq('courseId', course!._id).eq('slug', lessonRef)
+        )
+        .collect()
+      lesson = lessons[0] ?? null
+    } else {
+      lesson = await ctx.db.get(lessonRef as Id<'lessons'>)
+    }
+    if (!lesson) return null
+
+    return { courseId: course._id, lessonId: lesson._id }
+  },
+})
+
 // ─── updateProgress ───────────────────────────────────────────────────────────
 // Atualiza o progresso de uma aula (chamado periodicamente pelo player).
 // Marca como concluída automaticamente quando >=90% assistido.

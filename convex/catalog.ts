@@ -1,6 +1,17 @@
 import { v } from 'convex/values'
 import { query } from './_generated/server'
 
+export const getBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const course = await ctx.db
+      .query('courses')
+      .withIndex('by_slug', (q) => q.eq('slug', slug))
+      .unique()
+    return course ?? null
+  },
+})
+
 export const listPublished = query({
   args: {
     category: v.optional(v.string()),

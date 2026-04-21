@@ -64,6 +64,7 @@ function VideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YTPlayer | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const initialWatchedRef = useRef(initialWatched)
   const maxWatchedRef = useRef(initialWatched)
   const completedRef = useRef(false)
 
@@ -89,7 +90,7 @@ function VideoPlayer({
         rel: 0,
         modestbranding: 1,
         iv_load_policy: 3,
-        start: Math.floor(initialWatched),
+        start: Math.floor(initialWatchedRef.current),
       },
       events: {
         onReady: () => {
@@ -107,7 +108,7 @@ function VideoPlayer({
         },
       },
     })
-  }, [videoId, initialWatched])
+  }, [videoId])
 
   function startTracking() {
     if (intervalRef.current) return
@@ -435,10 +436,22 @@ function SidebarContent({
 // ─── AulaPage ─────────────────────────────────────────────────────────────────
 
 export function AulaPage() {
-  const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>()
+  const { courseId: rawCourseRef, lessonId: rawLessonRef } = useParams<{ courseId: string; lessonId: string }>()
   const navigate = useNavigate()
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('visao-geral')
   const [lessonCompleted, setLessonCompleted] = useState(false)
+
+  const isSlugBased = rawCourseRef?.includes('-') || rawLessonRef?.includes('-')
+
+  const resolved = useQuery(
+    api.student.resolveLesson,
+    isSlugBased && rawCourseRef && rawLessonRef
+      ? { courseRef: rawCourseRef, lessonRef: rawLessonRef }
+      : 'skip'
+  )
+
+  const courseId = isSlugBased ? resolved?.courseId : rawCourseRef
+  const lessonId = isSlugBased ? resolved?.lessonId : rawLessonRef
 
   const data = useQuery(
     api.student.getLessonForPlayer,
@@ -488,7 +501,7 @@ export function AulaPage() {
     }
   }, [courseId, lessonId, submitProgress, data?.lesson.durationSeconds])
 
-  if (data === undefined) {
+  if (data === undefined || (isSlugBased && resolved === undefined)) {
     return (
       <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
         <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
@@ -497,7 +510,7 @@ export function AulaPage() {
   }
 
   if (!data) {
-    navigate(`/dashboard/meus-cursos/${courseId}`, { replace: true })
+    navigate(`/dashboard/meus-cursos/${rawCourseRef}`, { replace: true })
     return null
   }
 
@@ -515,7 +528,7 @@ export function AulaPage() {
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
           <Link
-            to={`/dashboard/meus-cursos/${courseId}`}
+            to={`/dashboard/meus-cursos/${rawCourseRef}`}
             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors flex-shrink-0"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -577,17 +590,6 @@ export function AulaPage() {
               </div>
             </div>
 
-            {/* Info da aula */}
-            <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">
-                {mod?.title}
-              </p>
-              <h1 className="font-display text-2xl font-bold text-gray-900">{lesson.title}</h1>
-              {lesson.description && (
-                <p className="mt-3 text-sm leading-7 text-gray-600">{lesson.description}</p>
-              )}
-            </div>
-
             {/* Quiz */}
             {lesson.hasMandatoryQuiz && quiz && (
               <div className="mt-8">
@@ -607,7 +609,7 @@ export function AulaPage() {
             <div className="mt-8 flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
               {prevLesson ? (
                 <Link
-                  to={`/dashboard/meus-cursos/${courseId}/aula/${prevLesson._id}`}
+                  to={`/dashboard/meus-cursos/${rawCourseRef}/aula/${(prevLesson as any).slug ?? prevLesson._id}`}
                   className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -619,7 +621,7 @@ export function AulaPage() {
 
               {nextLesson ? (
                 <Link
-                  to={`/dashboard/meus-cursos/${courseId}/aula/${nextLesson._id}`}
+                  to={`/dashboard/meus-cursos/${rawCourseRef}/aula/${(nextLesson as any).slug ?? nextLesson._id}`}
                   className="flex items-center gap-2 rounded-xl bg-[#F37E20] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#e06e10]"
                 >
                   <span>Próxima aula</span>
@@ -629,7 +631,7 @@ export function AulaPage() {
                 </Link>
               ) : (
                 <Link
-                  to={`/dashboard/meus-cursos/${courseId}`}
+                  to={`/dashboard/meus-cursos/${rawCourseRef}`}
                   className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-600"
                 >
                   Ver progresso do curso

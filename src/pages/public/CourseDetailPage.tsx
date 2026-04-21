@@ -76,6 +76,7 @@ function ModuleAccordion({ mod, index }: { mod: { title: string; lessons: { _id:
 
 function CTAButton({
   courseId,
+  courseSlug,
   isAuthenticated,
   isAluno,
   isEnrolled,
@@ -83,6 +84,7 @@ function CTAButton({
   onEnroll,
 }: {
   courseId: string
+  courseSlug?: string
   isAuthenticated: boolean
   isAluno: boolean
   isEnrolled: boolean
@@ -90,6 +92,7 @@ function CTAButton({
   onEnroll: () => void
 }) {
   const navigate = useNavigate()
+  const courseRef = courseSlug ?? courseId
 
   if (!isAuthenticated) {
     return (
@@ -129,7 +132,7 @@ function CTAButton({
     return (
       <button
         type="button"
-        onClick={() => navigate(`/dashboard/meus-cursos/${courseId}`)}
+        onClick={() => navigate(`/dashboard/meus-cursos/${courseRef}`)}
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 text-sm font-bold text-white transition-all duration-200 hover:bg-emerald-600"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -185,7 +188,7 @@ export function CourseDetailPage() {
     setEnrollError(null)
     try {
       await enroll({ courseId: courseId as Id<'courses'> })
-      navigate(`/dashboard/meus-cursos/${courseId}?matriculado=1`)
+      navigate(`/dashboard/meus-cursos/${course?.slug ?? courseId}?matriculado=1`)
     } catch (e) {
       setEnrollError(e instanceof Error ? e.message : 'Erro ao matricular')
     } finally {
@@ -406,6 +409,7 @@ export function CourseDetailPage() {
 
               <CTAButton
                 courseId={courseId ?? ''}
+                courseSlug={course?.slug}
                 isAuthenticated={isAuthenticated}
                 isAluno={isAluno}
                 isEnrolled={isEnrolled}
