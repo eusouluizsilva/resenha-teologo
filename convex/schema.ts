@@ -158,6 +158,7 @@ export default defineSchema({
     isPublished: v.boolean(),
     hasMandatoryQuiz: v.boolean(),
     slug: v.optional(v.string()),
+    verses: v.optional(v.array(v.string())),
   })
     .index('by_courseId', ['courseId'])
     .index('by_moduleId', ['moduleId'])

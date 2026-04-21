@@ -72,6 +72,7 @@ export const create = mutation({
     durationSeconds: v.optional(v.number()),
     order: v.number(),
     hasMandatoryQuiz: v.boolean(),
+    verses: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { identity } = await requirePerfil(ctx, ['criador'])
@@ -117,6 +118,7 @@ export const update = mutation({
     order: v.optional(v.number()),
     isPublished: v.optional(v.boolean()),
     hasMandatoryQuiz: v.optional(v.boolean()),
+    verses: v.optional(v.array(v.string())),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requirePerfil(ctx, ['criador'])

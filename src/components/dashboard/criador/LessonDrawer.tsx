@@ -394,6 +394,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
   const [title, setTitle] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [description, setDescription] = useState('')
+  const [versesText, setVersesText] = useState('')
   const [isPublished, setIsPublished] = useState(false)
   const [materials, setMaterials] = useState<Material[]>([])
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
@@ -404,6 +405,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
     setTitle('')
     setVideoUrl('')
     setDescription('')
+    setVersesText('')
     setIsPublished(false)
     setMaterials([])
     setQuestions([])
@@ -427,6 +429,11 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
     setSaving(true)
     setError('')
     try {
+      const parsedVerses = versesText
+        .split('\n')
+        .map((v) => v.trim())
+        .filter(Boolean)
+
       const lessonId = await createLesson({
         moduleId,
         courseId,
@@ -436,6 +443,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
         youtubeUrl: videoUrl.trim(),
         order: lessonOrder,
         hasMandatoryQuiz: questions.length >= MIN_QUIZ,
+        verses: parsedVerses.length > 0 ? parsedVerses : undefined,
       })
 
       if (questions.length >= MIN_QUIZ) {
@@ -556,6 +564,33 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
                       description={description}
                       setDescription={setDescription}
                     />
+                  </div>
+                </div>
+
+                <div className={cn('overflow-hidden', brandPanelClass)}>
+                  <div className="border-b border-white/8 px-5 py-4">
+                    <DashboardSectionLabel>Versiculos citados na aula</DashboardSectionLabel>
+                    <p className="mt-2 text-sm leading-7 text-white/54">
+                      Um por linha. Ex: Joao 3:16 | Filipenses 4:13 | 2 Timoteo 2:15
+                    </p>
+                  </div>
+                  <div className="p-5">
+                    <textarea
+                      value={versesText}
+                      onChange={(e) => setVersesText(e.target.value)}
+                      rows={4}
+                      placeholder={"Joao 3:16\nFilipenses 4:13\n2 Timoteo 2:15"}
+                      className={`${inputCls} resize-none font-mono text-xs`}
+                    />
+                    {versesText.trim() && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {versesText.split('\n').filter(Boolean).map((v, i) => (
+                          <span key={i} className="inline-flex items-center rounded-full border border-[#F37E20]/20 bg-[#F37E20]/8 px-2.5 py-1 text-xs font-medium text-[#F37E20]">
+                            {v.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

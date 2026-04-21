@@ -130,6 +130,11 @@ export const getLessonForPlayer = query({
 
     const mod = await ctx.db.get(lesson.moduleId)
 
+    const creatorProfile = await ctx.db
+      .query('creatorProfiles')
+      .withIndex('by_userId', (q) => q.eq('userId', course.creatorId))
+      .unique()
+
     const progress = await ctx.db
       .query('progress')
       .withIndex('by_student_lesson', (q) =>
@@ -196,6 +201,7 @@ export const getLessonForPlayer = query({
       enrollment,
       lessonIndex: currentIndex + 1,
       totalLessons: orderedLessons.length,
+      creatorYoutubeUrl: creatorProfile?.youtubeUrl ?? null,
     }
   },
 })
