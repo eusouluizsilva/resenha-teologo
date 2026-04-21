@@ -262,7 +262,17 @@ export function CursoInternoPage() {
 
             {/* CTA próxima aula */}
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              {nextLessonHref ? (
+              {totalLessons === 0 ? (
+                <>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-400">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="font-semibold text-gray-700">Aulas em breve</p>
+                  <p className="mt-1 text-sm text-gray-400">O criador ainda está preparando o conteúdo. Volte em breve.</p>
+                </>
+              ) : nextLessonHref ? (
                 <>
                   <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Próxima aula</p>
                   <p className="mb-4 text-sm font-semibold text-gray-800 leading-snug">{nextLesson?.title}</p>

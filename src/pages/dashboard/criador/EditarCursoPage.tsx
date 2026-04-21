@@ -111,6 +111,17 @@ function ModuleCard({
         </div>
       </div>
 
+      {lessons.some((l) => !l.isPublished) && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-yellow-400/18 bg-yellow-400/8 px-4 py-3">
+          <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <p className="text-xs leading-5 text-yellow-200">
+            Aulas em <strong>Rascunho</strong> ficam ocultas para os alunos. Clique em <strong>Rascunho</strong> ao lado de cada aula para publicá-la.
+          </p>
+        </div>
+      )}
+
       <div className="mt-5 space-y-3">
         {lessons.length === 0 ? (
           <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] px-5 py-5 text-sm leading-7 text-white/44">
