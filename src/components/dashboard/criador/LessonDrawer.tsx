@@ -1,10 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
+
+// Drawer para CRIAR uma nova aula. Campos avançados (versículos estruturados,
+// materiais PDF/TXT, toggle de retry) ficam na EditarAulaPage, acessada após
+// a criação. Aqui só pedimos o mínimo para inserir a aula no módulo.
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,25 +20,10 @@ export type QuizQuestion = {
   correctId: string
   explanation: string
 }
-export type Material = { id: string; name: string; size: number; type: string; url: string }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function uid() { return crypto.randomUUID() }
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1048576).toFixed(1)} MB`
-}
-
-function fileIcon(type: string) {
-  if (type.includes('pdf')) return 'PDF'
-  if (type.includes('word') || type.includes('document')) return 'DOC'
-  if (type.includes('presentation') || type.includes('powerpoint')) return 'PPT'
-  if (type.includes('sheet') || type.includes('excel')) return 'XLS'
-  return 'ARQ'
-}
 
 function detectVideo(url: string) {
   if (!url) return { embedUrl: null, label: '', color: '' }
@@ -175,92 +164,6 @@ function VideoSection({ url, setUrl, description, setDescription }: {
   )
 }
 
-// ─── Materials ────────────────────────────────────────────────────────────────
-
-function MaterialsSection({ materials, setMaterials }: {
-  materials: Material[]
-  setMaterials: React.Dispatch<React.SetStateAction<Material[]>>
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [dragging, setDragging] = useState(false)
-  const urlsRef = useRef<string[]>([])
-
-  const handleFiles = useCallback((files: FileList) => {
-    const newItems = Array.from(files).map(f => {
-      const url = URL.createObjectURL(f)
-      urlsRef.current.push(url)
-      return { id: uid(), name: f.name, size: f.size, type: f.type, url }
-    })
-    setMaterials(p => [...p, ...newItems])
-  }, [setMaterials])
-
-  function removeMaterial(id: string) {
-    setMaterials(p => {
-      const item = p.find(m => m.id === id)
-      if (item?.url.startsWith('blob:')) {
-        URL.revokeObjectURL(item.url)
-        urlsRef.current = urlsRef.current.filter(u => u !== item.url)
-      }
-      return p.filter(m => m.id !== id)
-    })
-  }
-
-  useEffect(() => {
-    return () => {
-      urlsRef.current.forEach(url => URL.revokeObjectURL(url))
-    }
-  }, [])
-
-  return (
-    <div className="space-y-3">
-      {materials.map(m => (
-        <div key={m.id} className="flex items-center gap-3 p-3 bg-[#0F141A] border border-[#2A313B] rounded-lg group">
-          <div className="w-9 h-9 rounded-lg bg-[#F37E20]/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-[#F37E20] text-xs font-bold">{fileIcon(m.type)}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{m.name}</p>
-            <p className="text-xs text-white/30">{formatBytes(m.size)}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => removeMaterial(m.id)}
-            className="p-1.5 rounded text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      ))}
-      <div
-        onDragOver={e => { e.preventDefault(); setDragging(true) }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
-        onClick={() => inputRef.current?.click()}
-        className={`cursor-pointer border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 py-6 transition-all duration-200 ${
-          dragging ? 'border-[#F37E20] bg-[#F37E20]/5' : 'border-[#2A313B] hover:border-[#F37E20]/40'
-        }`}
-      >
-        <div className="p-2 rounded-xl bg-[#F37E20]/10">
-          <svg className="w-5 h-5 text-[#F37E20]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-        </div>
-        <p className="text-sm text-white/50">{dragging ? 'Solte os arquivos aqui' : 'Clique ou arraste arquivos'}</p>
-        <p className="text-xs text-white/25">PDF, DOC, DOCX, PPT, PPTX, XLS e outros</p>
-      </div>
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={e => { if (e.target.files) handleFiles(e.target.files) }}
-      />
-    </div>
-  )
-}
-
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
 function QuestionCard({ q, index, onChange, onDelete }: {
@@ -394,9 +297,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
   const [title, setTitle] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [description, setDescription] = useState('')
-  const [versesText, setVersesText] = useState('')
   const [isPublished, setIsPublished] = useState(false)
-  const [materials, setMaterials] = useState<Material[]>([])
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -405,9 +306,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
     setTitle('')
     setVideoUrl('')
     setDescription('')
-    setVersesText('')
     setIsPublished(false)
-    setMaterials([])
     setQuestions([])
     setError('')
   }
@@ -422,18 +321,9 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
 
   async function handleSave() {
     if (!canSave || !moduleId || !creatorId) return
-    if (materials.length > 0) {
-      setError('Materiais de apoio ainda não podem ser salvos nesta versão. Remova os arquivos para continuar.')
-      return
-    }
     setSaving(true)
     setError('')
     try {
-      const parsedVerses = versesText
-        .split('\n')
-        .map((v) => v.trim())
-        .filter(Boolean)
-
       const lessonId = await createLesson({
         moduleId,
         courseId,
@@ -443,7 +333,6 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
         youtubeUrl: videoUrl.trim(),
         order: lessonOrder,
         hasMandatoryQuiz: questions.length >= MIN_QUIZ,
-        verses: parsedVerses.length > 0 ? parsedVerses : undefined,
       })
 
       if (questions.length >= MIN_QUIZ) {
@@ -550,6 +439,11 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
               </div>
             )}
 
+            <div className="mx-6 mt-4 rounded-[1.1rem] border border-[#F37E20]/20 bg-[#F37E20]/6 px-4 py-3 text-xs text-[#F2BD8A]">
+              Após criar, use o editor completo da aula para adicionar versículos bíblicos estruturados,
+              materiais em PDF/TXT e permitir refazer o quiz.
+            </div>
+
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-5">
                 <div className={cn('overflow-hidden', brandPanelClass)}>
@@ -564,43 +458,6 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
                       description={description}
                       setDescription={setDescription}
                     />
-                  </div>
-                </div>
-
-                <div className={cn('overflow-hidden', brandPanelClass)}>
-                  <div className="border-b border-white/8 px-5 py-4">
-                    <DashboardSectionLabel>Versiculos citados na aula</DashboardSectionLabel>
-                    <p className="mt-2 text-sm leading-7 text-white/54">
-                      Um por linha. Ex: Joao 3:16 | Filipenses 4:13 | 2 Timoteo 2:15
-                    </p>
-                  </div>
-                  <div className="p-5">
-                    <textarea
-                      value={versesText}
-                      onChange={(e) => setVersesText(e.target.value)}
-                      rows={4}
-                      placeholder={"Joao 3:16\nFilipenses 4:13\n2 Timoteo 2:15"}
-                      className={`${inputCls} resize-none font-mono text-xs`}
-                    />
-                    {versesText.trim() && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {versesText.split('\n').filter(Boolean).map((v, i) => (
-                          <span key={i} className="inline-flex items-center rounded-full border border-[#F37E20]/20 bg-[#F37E20]/8 px-2.5 py-1 text-xs font-medium text-[#F37E20]">
-                            {v.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={cn('overflow-hidden', brandPanelClass)}>
-                  <div className="border-b border-white/8 px-5 py-4">
-                    <DashboardSectionLabel>Materiais de apoio</DashboardSectionLabel>
-                    <p className="mt-2 text-sm leading-7 text-white/54">Storage em preparação. Esta etapa será liberada junto com a persistência real dos arquivos.</p>
-                  </div>
-                  <div className="p-5">
-                    <MaterialsSection materials={materials} setMaterials={setMaterials} />
                   </div>
                 </div>
 

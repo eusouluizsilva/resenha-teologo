@@ -158,7 +158,23 @@ export default defineSchema({
     isPublished: v.boolean(),
     hasMandatoryQuiz: v.boolean(),
     slug: v.optional(v.string()),
+    // Legado: lista livre de referências em texto (ex. "João 3:16"). Campo
+    // preservado para não quebrar documentos pré-migração, nunca mais escrito
+    // pelo criador. A UI prioriza versesRefs quando presente.
     verses: v.optional(v.array(v.string())),
+    // Formato estruturado: cada referência tem livro (slug), capítulo, verso
+    // inicial/final e testamento. Permite filtrar por tradução (grego/hebraico
+    // só aparecem no testamento compatível) e buscar versículos via API.
+    versesRefs: v.optional(v.array(v.object({
+      bookSlug: v.string(),
+      chapter: v.number(),
+      verseStart: v.number(),
+      verseEnd: v.number(),
+      testament: v.union(v.literal('old'), v.literal('new')),
+    }))),
+    // Quando true, o aluno pode zerar a nota do quiz e refazer mediante nova
+    // visualização integral da aula. Quando false/undefined, a nota é final.
+    allowQuizRetry: v.optional(v.boolean()),
   })
     .index('by_courseId', ['courseId'])
     .index('by_moduleId', ['moduleId'])
@@ -203,10 +219,83 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     quizScore: v.optional(v.number()),
     quizPassed: v.optional(v.boolean()),
+    // Número de tentativas de quiz já concluídas por este aluno nesta aula.
+    // Usado apenas para registro/telemetria; não é limite.
+    quizAttempts: v.optional(v.number()),
+    // Quando true, o aluno pediu para refazer o quiz e ainda não reassistiu a
+    // aula. Enquanto pendente: quizScore fica undefined, watchedSeconds foi
+    // zerado, completed permanece true (aluno já concluiu esta aula antes),
+    // e o quiz fica bloqueado até reatingir 95%. A média do curso ignora
+    // aulas com esta flag. Certificado exige que não haja pendências.
+    quizRetryPending: v.optional(v.boolean()),
+    // Timestamp do último reset de watchedSeconds decorrente de retry. Permite
+    // depuração e ordenação por "tentativa em andamento".
+    watchResetAt: v.optional(v.number()),
   })
     .index('by_studentId', ['studentId'])
     .index('by_student_lesson', ['studentId', 'lessonId'])
     .index('by_student_course', ['studentId', 'courseId']),
+
+  // Materiais complementares (apenas .pdf e .txt) anexados a uma aula.
+  // Armazenados no Convex File Storage via storageId. Multi-tenant: creatorId
+  // replica courseId para filtro direto sem join.
+  lessonMaterials: defineTable({
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    creatorId: v.string(),
+    name: v.string(),
+    size: v.number(),
+    mimeType: v.string(),
+    storageId: v.id('_storage'),
+    order: v.number(),
+    createdAt: v.number(),
+  })
+    .index('by_lessonId', ['lessonId'])
+    .index('by_courseId', ['courseId'])
+    .index('by_creatorId', ['creatorId']),
+
+  // Cadernos do aluno. Cada aluno pode ter múltiplos cadernos (ex. "Estudos
+  // Paulinos", "Hermenêutica"). Entradas (notebookEntries) vinculam conteúdo
+  // a uma aula específica dentro de um caderno escolhido.
+  notebooks: defineTable({
+    studentId: v.string(),
+    title: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  }).index('by_studentId', ['studentId']),
+
+  notebookEntries: defineTable({
+    studentId: v.string(),
+    notebookId: v.id('notebooks'),
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    content: v.string(),
+    updatedAt: v.number(),
+  })
+    .index('by_student_lesson', ['studentId', 'lessonId'])
+    .index('by_notebook', ['notebookId'])
+    .index('by_student_notebook_lesson', ['studentId', 'notebookId', 'lessonId']),
+
+  // Comentários em aulas. Estrutura de thread de um nível: comentários com
+  // parentId=undefined e respostas com parentId apontando ao comentário-pai.
+  // isOfficial marca respostas do criador do curso (destacadas na UI).
+  lessonComments: defineTable({
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    authorId: v.string(),
+    authorName: v.string(),
+    authorAvatarUrl: v.optional(v.string()),
+    authorRole: v.union(v.literal('aluno'), v.literal('criador')),
+    text: v.string(),
+    parentId: v.optional(v.id('lessonComments')),
+    isOfficial: v.optional(v.boolean()),
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+  })
+    .index('by_lessonId', ['lessonId'])
+    .index('by_parentId', ['parentId'])
+    .index('by_authorId', ['authorId']),
 
   donations: defineTable({
     creatorId: v.string(),

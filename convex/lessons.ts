@@ -3,6 +3,15 @@ import { mutation, query } from './_generated/server'
 import { ensureIdentityMatches, requirePerfil } from './lib/auth'
 import { toSlug } from './lib/slug'
 
+// Validador do formato estruturado de versículos (espelha schema.ts).
+const verseRefValidator = v.object({
+  bookSlug: v.string(),
+  chapter: v.number(),
+  verseStart: v.number(),
+  verseEnd: v.number(),
+  testament: v.union(v.literal('old'), v.literal('new')),
+})
+
 export const getById = query({
   args: { id: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
@@ -72,7 +81,8 @@ export const create = mutation({
     durationSeconds: v.optional(v.number()),
     order: v.number(),
     hasMandatoryQuiz: v.boolean(),
-    verses: v.optional(v.array(v.string())),
+    versesRefs: v.optional(v.array(verseRefValidator)),
+    allowQuizRetry: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { identity } = await requirePerfil(ctx, ['criador'])
@@ -118,7 +128,8 @@ export const update = mutation({
     order: v.optional(v.number()),
     isPublished: v.optional(v.boolean()),
     hasMandatoryQuiz: v.optional(v.boolean()),
-    verses: v.optional(v.array(v.string())),
+    versesRefs: v.optional(v.array(verseRefValidator)),
+    allowQuizRetry: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requirePerfil(ctx, ['criador'])
@@ -163,6 +174,37 @@ export const remove = mutation({
       .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
       .first()
     if (quiz) await ctx.db.delete(quiz._id)
+
+    // Cascata: materiais (com storage), anotações de caderno e comentários
+    // da aula. Removidos para não deixar dados órfãos após exclusão da aula.
+    const materials = await ctx.db
+      .query('lessonMaterials')
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
+      .collect()
+    for (const mat of materials) {
+      await ctx.storage.delete(mat.storageId)
+      await ctx.db.delete(mat._id)
+    }
+
+    // Remoção em cascata de notebookEntries desta aula. O índice
+    // by_student_lesson começa por studentId; como aqui varremos por lessonId
+    // e esta mutation é rara (apenas quando criador exclui aula), usamos
+    // filter() simples.
+    const notebookEntries = await ctx.db
+      .query('notebookEntries')
+      .filter((q) => q.eq(q.field('lessonId'), id))
+      .collect()
+    for (const entry of notebookEntries) {
+      await ctx.db.delete(entry._id)
+    }
+
+    const comments = await ctx.db
+      .query('lessonComments')
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
+      .collect()
+    for (const c of comments) {
+      await ctx.db.delete(c._id)
+    }
 
     await ctx.db.delete(id)
   },

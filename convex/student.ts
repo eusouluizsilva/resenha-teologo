@@ -65,8 +65,11 @@ export const getEnrolledCourse = query({
     const totalLessons = publishedLessons.length
     const percentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
 
+    // Média só considera quizzes com nota atual válida. Aulas com
+    // quizRetryPending (aluno pediu retry e ainda não reassistiu) ficam de fora
+    // para não inflar ou rebaixar a nota enquanto a tentativa está aberta.
     const quizScores = progressRecords
-      .filter((p) => p.quizScore !== undefined)
+      .filter((p) => p.quizScore !== undefined && !p.quizRetryPending)
       .map((p) => p.quizScore as number)
     const avgScore =
       quizScores.length > 0
@@ -142,7 +145,10 @@ export const getLessonForPlayer = query({
       )
       .unique()
 
-    // Quiz: só retorna gabarito se a aula foi concluída
+    // Quiz: só retorna gabarito se a aula foi concluída e não está pendente de
+    // retry. Se o aluno pediu retry e ainda não reassistiu (quizRetryPending),
+    // o quiz volta a ficar bloqueado como se fosse a primeira vez.
+    const quizUnlocked = Boolean(progress?.completed) && !progress?.quizRetryPending
     let quiz = null
     if (lesson.hasMandatoryQuiz) {
       const rawQuiz = await ctx.db
@@ -151,10 +157,10 @@ export const getLessonForPlayer = query({
         .first()
 
       if (rawQuiz) {
-        if (progress?.completed) {
+        if (quizUnlocked) {
           quiz = rawQuiz
         } else {
-          // Esconde gabarito até concluir a aula
+          // Esconde gabarito até concluir a aula (ou reconcluir, em caso de retry)
           quiz = {
             ...rawQuiz,
             questions: rawQuiz.questions.map((q) => ({
@@ -245,7 +251,10 @@ export const resolveLesson = query({
 
 // ─── updateProgress ───────────────────────────────────────────────────────────
 // Atualiza o progresso de uma aula (chamado periodicamente pelo player).
-// Marca como concluída automaticamente quando >=90% assistido.
+// Marca como concluída automaticamente quando >=95% assistido. Se existir uma
+// tentativa de retry de quiz pendente, também limpa o flag ao reatingir 95%.
+
+const COMPLETION_RATIO = 0.95
 
 export const updateProgress = mutation({
   args: {
@@ -275,15 +284,22 @@ export const updateProgress = mutation({
 
     const alreadyCompleted = existing?.completed ?? false
     const ratio = totalSeconds > 0 ? watchedSeconds / totalSeconds : 0
-    const completed = alreadyCompleted || ratio >= 0.9
+    const reachedThreshold = ratio >= COMPLETION_RATIO
+    const completed = alreadyCompleted || reachedThreshold
 
     if (existing) {
+      // Em modo retry, existing.watchedSeconds foi zerado em requestQuizRetry,
+      // então o max() preserva o avanço desta nova tentativa sem recuperar o
+      // valor antigo.
       const newWatched = Math.max(watchedSeconds, existing.watchedSeconds)
+      const clearRetry = existing.quizRetryPending && reachedThreshold
+
       await ctx.db.patch(existing._id, {
         watchedSeconds: newWatched,
         totalSeconds,
         completed,
         ...(completed && !existing.completed ? { completedAt: Date.now() } : {}),
+        ...(clearRetry ? { quizRetryPending: undefined } : {}),
       })
     } else {
       await ctx.db.insert('progress', {
@@ -298,6 +314,54 @@ export const updateProgress = mutation({
     }
 
     return completed
+  },
+})
+
+// ─── requestQuizRetry ─────────────────────────────────────────────────────────
+// Aluno solicita refazer o quiz. Requer que o criador tenha autorizado retry
+// (allowQuizRetry=true). Zera watchedSeconds e nota, mantém completed=true
+// (histórico de já ter concluído a aula uma vez), marca quizRetryPending=true.
+// O aluno precisa reassistir até 95% para destravar o quiz novamente.
+
+export const requestQuizRetry = mutation({
+  args: {
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+  },
+  handler: async (ctx, { lessonId, courseId }) => {
+    const identity = await requireIdentity(ctx)
+
+    const enrollment = await ctx.db
+      .query('enrollments')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', identity.subject).eq('courseId', courseId)
+      )
+      .unique()
+    if (!enrollment) throw new Error('Não matriculado')
+
+    const lesson = await ctx.db.get(lessonId)
+    if (!lesson || lesson.courseId !== courseId) throw new Error('Aula inválida')
+    if (!lesson.hasMandatoryQuiz) throw new Error('Aula não tem quiz')
+    if (!lesson.allowQuizRetry) throw new Error('Criador não autorizou refazer este quiz')
+
+    const progress = await ctx.db
+      .query('progress')
+      .withIndex('by_student_lesson', (q) =>
+        q.eq('studentId', identity.subject).eq('lessonId', lessonId)
+      )
+      .unique()
+    if (!progress) throw new Error('Conclua a aula antes de refazer o quiz')
+    if (progress.quizScore === undefined) throw new Error('Responda o quiz antes de tentar refazer')
+    if (progress.quizRetryPending) throw new Error('Já existe um retry em andamento')
+
+    const now = Date.now()
+    await ctx.db.patch(progress._id, {
+      watchedSeconds: 0,
+      quizScore: undefined,
+      quizPassed: undefined,
+      quizRetryPending: true,
+      watchResetAt: now,
+    })
   },
 })
 
@@ -331,7 +395,15 @@ export const submitQuiz = mutation({
 
     if (!progress?.completed) throw new Error('Conclua a aula antes de fazer o quiz')
 
-    // Quiz já respondido: retorna nota existente
+    // Se há um retry em andamento, o aluno precisa reassistir a aula até 95%
+    // (o que limpa quizRetryPending automaticamente em updateProgress) antes
+    // de poder submeter de novo.
+    if (progress.quizRetryPending) {
+      throw new Error('Reassista a aula até o fim antes de refazer o quiz')
+    }
+
+    // Quiz já respondido e sem retry pendente: retorna nota existente. O
+    // aluno precisa solicitar um retry explícito para poder submeter de novo.
     if (progress.quizScore !== undefined) {
       return { score: progress.quizScore, passed: progress.quizPassed ?? false, alreadySubmitted: true }
     }
@@ -352,7 +424,11 @@ export const submitQuiz = mutation({
     const score = quiz.questions.length > 0 ? Math.round((correct / quiz.questions.length) * 100) : 100
     const passed = score >= 70
 
-    await ctx.db.patch(progress._id, { quizScore: score, quizPassed: passed })
+    await ctx.db.patch(progress._id, {
+      quizScore: score,
+      quizPassed: passed,
+      quizAttempts: (progress.quizAttempts ?? 0) + 1,
+    })
 
     // Verificar emissão de certificado
     await checkAndIssueCertificate(ctx, identity.subject, courseId, enrollment._id)
@@ -392,13 +468,23 @@ async function checkAndIssueCertificate(
   const lessonsWithQuiz = published.filter((l) => l.hasMandatoryQuiz)
 
   if (lessonsWithQuiz.length > 0) {
-    const quizScores = progressRecords
-      .filter((p) => p.quizScore !== undefined)
-      .map((p) => p.quizScore as number)
+    // Para emitir certificado: cada aula com quiz obrigatório precisa ter
+    // progress com quizScore definido e sem retry pendente. Se houver qualquer
+    // pendência, adia a emissão até o aluno concluir o retry.
+    const quizProgressByLesson = new Map(
+      progressRecords
+        .filter((p) => p.quizScore !== undefined && !p.quizRetryPending)
+        .map((p) => [p.lessonId as Id<'lessons'>, p.quizScore as number])
+    )
 
-    if (quizScores.length < lessonsWithQuiz.length) return
+    const scoresForCert: number[] = []
+    for (const lesson of lessonsWithQuiz) {
+      const score = quizProgressByLesson.get(lesson._id)
+      if (score === undefined) return
+      scoresForCert.push(score)
+    }
 
-    const avg = Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length)
+    const avg = Math.round(scoresForCert.reduce((a, b) => a + b, 0) / scoresForCert.length)
     if (avg < 70) return
 
     await ctx.db.patch(enrollmentId, {
