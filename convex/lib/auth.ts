@@ -1,4 +1,4 @@
-import type { Doc } from '../_generated/dataModel'
+import type { Doc, Id } from '../_generated/dataModel'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
 
 type Ctx = QueryCtx | MutationCtx
@@ -63,4 +63,31 @@ export function ensureIdentityMatches(identitySubject: string, expectedSubject: 
   if (identitySubject !== expectedSubject) {
     throw new Error('Não autorizado')
   }
+}
+
+// Autorização por aula: permite o criador dono do curso OU aluno com matrícula
+// ativa. Usado em queries/mutations que devem vazar dados apenas para quem
+// pertence à turma.
+export async function requireLessonAccess(
+  ctx: Ctx,
+  lessonId: Id<'lessons'>
+) {
+  const identity = await requireIdentity(ctx)
+  const lesson = await ctx.db.get(lessonId)
+  if (!lesson) throw new Error('Aula não encontrada')
+
+  if (lesson.creatorId === identity.subject) {
+    return { identity, lesson, role: 'criador' as const }
+  }
+
+  const enrollment = await ctx.db
+    .query('enrollments')
+    .withIndex('by_student_course', (q) =>
+      q.eq('studentId', identity.subject).eq('courseId', lesson.courseId)
+    )
+    .unique()
+
+  if (!enrollment) throw new Error('Não autorizado')
+
+  return { identity, lesson, role: 'aluno' as const, enrollment }
 }

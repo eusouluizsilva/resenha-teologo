@@ -176,7 +176,7 @@ export function CursoInternoPage() {
   const courseId = rawCourseId ?? ''
 
   const nextLessonHref = nextLesson
-    ? `/dashboard/meus-cursos/${courseId}/aula/${(nextLesson as any).slug ?? nextLesson._id}`
+    ? `/dashboard/meus-cursos/${courseId}/aula/${(nextLesson as { slug?: string })?.slug ?? nextLesson._id}`
     : null
 
   const certificateStatus = enrollment.certificateIssued

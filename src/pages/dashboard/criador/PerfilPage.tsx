@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
+import { useClerk } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../../../convex/_generated/api'
 import {
   brandInputClass,
@@ -66,7 +68,7 @@ const PHONE_COUNTRIES = [
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
-type TabId = 'visao-geral' | 'dados-pessoais' | 'perfil-publico' | 'conquistas' | 'depoimentos'
+type TabId = 'visao-geral' | 'dados-pessoais' | 'perfil-publico' | 'conquistas' | 'depoimentos' | 'privacidade'
 
 type FormState = {
   firstName: string
@@ -118,6 +120,64 @@ const EMPTY_FORM: FormState = {
   churchRole: '',
   churchName: '',
   churchInstagram: '',
+}
+
+// ─── Normalização de URLs sociais ──────────────────────────────────────────────
+// Usuários colam URL completa, @handle, ou só o handle. Guardamos o formato
+// mais compacto (handle puro para Instagram/Twitter/LinkedIn/Facebook/YouTube,
+// URL completa para website). Isso permite renderizar consistentemente depois.
+
+function normalizeSocialHandle(
+  raw: string,
+  platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin' | 'youtube',
+): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+
+  // Remove protocolo e domínio conhecido, pegando só o caminho/handle.
+  let value = trimmed
+  try {
+    if (value.includes('://')) {
+      const u = new URL(value)
+      value = u.pathname.replace(/^\/+/, '').replace(/\/+$/, '')
+      // YouTube aceita /@handle, /c/nome, /channel/ID, /user/nome
+      if (platform === 'youtube') {
+        const segments = value.split('/').filter(Boolean)
+        // Se primeiro segmento é c/user/channel/@handle, pegar o segundo
+        if (['c', 'user', 'channel'].includes(segments[0])) {
+          return segments[1] ?? ''
+        }
+        return segments[0] ?? ''
+      }
+      // Facebook: profile.php?id=XXX tem o id na query
+      if (platform === 'facebook' && u.search.includes('id=')) {
+        const id = new URLSearchParams(u.search).get('id')
+        return id ?? value.split('/')[0] ?? ''
+      }
+      // LinkedIn: /in/nome ou /company/nome
+      if (platform === 'linkedin') {
+        const segments = value.split('/').filter(Boolean)
+        if (['in', 'company'].includes(segments[0])) return segments[1] ?? ''
+        return segments[0] ?? ''
+      }
+      // Instagram/Twitter: primeiro segmento do path
+      return value.split('/')[0] ?? ''
+    }
+  } catch {
+    // URL inválida: cai na normalização básica abaixo.
+  }
+
+  // @handle ou handle puro
+  return value.replace(/^@/, '').replace(/\/+$/, '')
+}
+
+function normalizeWebsite(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  // Sem protocolo: prefixa https:// se tiver ponto (parece domínio)
+  if (/\./.test(trimmed)) return `https://${trimmed}`
+  return trimmed
 }
 
 // ─── TabBar ────────────────────────────────────────────────────────────────────
@@ -377,6 +437,26 @@ export function PerfilPage() {
   const approveTestimonial = useMutation(api.testimonials.approve)
   const rejectTestimonial = useMutation(api.testimonials.reject)
   const removeTestimonial = useMutation(api.testimonials.remove)
+  const deleteAccount = useMutation(api.account.deleteAccount)
+  const revokeAllConsents = useMutation(api.consents.revokeAll)
+
+  // Privacidade / LGPD
+  const exportData = useQuery(
+    api.account.exportMyData,
+    activeTab === 'privacidade' && currentUser ? {} : 'skip',
+  )
+  const myConsents = useQuery(
+    api.consents.listByUser,
+    activeTab === 'privacidade' && currentUser ? {} : 'skip',
+  )
+  const { signOut } = useClerk()
+  const navigate = useNavigate()
+  const [exporting, setExporting] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [revoking, setRevoking] = useState(false)
+  const [revokeMessage, setRevokeMessage] = useState('')
 
   // Sync form from Convex user + Clerk
   useEffect(() => {
@@ -460,12 +540,12 @@ export function PerfilPage() {
         clerkId: clerkUser.id,
         name: fullName || undefined,
         bio: form.bio.trim() || undefined,
-        website: form.website.trim() || undefined,
-        youtubeChannel: form.youtubeChannel.trim() || undefined,
-        instagram: form.instagram.trim() || undefined,
-        facebook: form.facebook.trim() || undefined,
-        linkedin: form.linkedin.trim() || undefined,
-        twitter: form.twitter.trim() || undefined,
+        website: normalizeWebsite(form.website) || undefined,
+        youtubeChannel: normalizeSocialHandle(form.youtubeChannel, 'youtube') || undefined,
+        instagram: normalizeSocialHandle(form.instagram, 'instagram') || undefined,
+        facebook: normalizeSocialHandle(form.facebook, 'facebook') || undefined,
+        linkedin: normalizeSocialHandle(form.linkedin, 'linkedin') || undefined,
+        twitter: normalizeSocialHandle(form.twitter, 'twitter') || undefined,
         phone: form.phone.trim() || undefined,
         phoneCountry: form.phone.trim() ? form.phoneCountry : undefined,
         address: form.address.trim() || undefined,
@@ -479,7 +559,7 @@ export function PerfilPage() {
         denomination: form.denomination || undefined,
         churchRole: form.churchRole || undefined,
         churchName: form.churchName.trim() || undefined,
-        churchInstagram: form.churchInstagram.trim() || undefined,
+        churchInstagram: normalizeSocialHandle(form.churchInstagram, 'instagram') || undefined,
       })
       setSaved(true)
     } catch (err) {
@@ -526,6 +606,60 @@ export function PerfilPage() {
     try { await removeTestimonial({ testimonialId: id }) } catch { /* noop */ }
   }
 
+  async function handleExportData() {
+    if (!exportData) return
+    setExporting(true)
+    try {
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `meus-dados-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function handleRevokeConsent() {
+    setRevoking(true)
+    setRevokeMessage('')
+    try {
+      const { revoked } = await revokeAllConsents({})
+      setRevokeMessage(
+        revoked > 0
+          ? `${revoked} consentimento(s) revogado(s). Para voltar a usar funcionalidades que exigem aceite, será necessário consentir novamente.`
+          : 'Nenhum consentimento ativo para revogar.',
+      )
+    } catch (err) {
+      setRevokeMessage(err instanceof Error ? err.message : 'Falha ao revogar consentimento.')
+    } finally {
+      setRevoking(false)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirm.trim().toUpperCase() !== 'EXCLUIR') {
+      setDeleteError('Digite EXCLUIR para confirmar.')
+      return
+    }
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await deleteAccount({})
+      await signOut()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Falha ao excluir conta.')
+      setDeleting(false)
+    }
+  }
+
   // Computed
   if (isLoading || !clerkUser) {
     return (
@@ -563,7 +697,7 @@ export function PerfilPage() {
   const isCriador = hasFunction('criador')
   const isAluno = hasFunction('aluno')
 
-  const addressProfile = useMemo(() => {
+  const addressProfile = (() => {
     switch (form.phoneCountry) {
       case '+55': return {
         address:     { label: 'Logradouro',        placeholder: 'Rua, Avenida, Travessa...' },
@@ -694,7 +828,7 @@ export function PerfilPage() {
         state:       { label: 'State / Region',     placeholder: 'Region' },
       }
     }
-  }, [form.phoneCountry])
+  })()
 
   const hasStats = myStats && myStats.totalCoursesEnrolled > 0
 
@@ -710,6 +844,7 @@ export function PerfilPage() {
     { id: 'perfil-publico', label: 'Perfil público', show: true },
     { id: 'conquistas', label: 'Conquistas', show: isAluno || !!hasStats },
     { id: 'depoimentos', label: 'Depoimentos', show: !!handle },
+    { id: 'privacidade', label: 'Privacidade', show: true },
   ]
   const visibleTabs = allTabs.filter((t) => t.show) as { id: TabId; label: string }[]
 
@@ -1463,6 +1598,122 @@ export function PerfilPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Privacidade (LGPD) ──────────────────────────────────────────────── */}
+      {effectiveTab === 'privacidade' && (
+        <div className="space-y-6">
+          <div className={cn('p-6', brandPanelClass)}>
+            <p className={cn('mb-2', brandEyebrowClass)}>Exportar meus dados</p>
+            <h3 className="font-display text-lg font-bold text-white">Baixe uma cópia completa</h3>
+            <p className="mt-2 text-sm leading-6 text-white/52">
+              Gera um arquivo JSON com todos os seus dados pessoais: perfil, funções, consentimentos,
+              matrículas, progresso, cadernos, comentários, avaliações e cursos criados. É seu direito
+              pela LGPD e você pode usar esse arquivo para consulta ou portabilidade.
+            </p>
+            <button
+              type="button"
+              onClick={handleExportData}
+              disabled={exporting || exportData === undefined}
+              className={cn(brandPrimaryButtonClass, 'mt-5 px-5 py-2.5 text-sm')}
+            >
+              {exportData === undefined
+                ? 'Preparando dados...'
+                : exporting
+                  ? 'Gerando arquivo...'
+                  : 'Baixar meus dados (JSON)'}
+            </button>
+          </div>
+
+          <div className={cn('p-6', brandPanelClass)}>
+            <p className={cn('mb-2', brandEyebrowClass)}>Retirar consentimento</p>
+            <h3 className="font-display text-lg font-bold text-white">Revogar aceite dos termos</h3>
+            <p className="mt-2 text-sm leading-6 text-white/52">
+              A LGPD garante o direito de revogar o consentimento a qualquer momento. Ao revogar,
+              registramos a data da retirada e funcionalidades que exigem aceite ficam indisponíveis
+              até você consentir novamente. O histórico de aceites anteriores é preservado como prova
+              legal.
+            </p>
+            {myConsents !== undefined && myConsents.length > 0 && (
+              <div className="mt-4 rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/62">
+                <p className="mb-1 font-semibold text-white/82">Seus consentimentos</p>
+                <ul className="space-y-1">
+                  {myConsents.map((c) => (
+                    <li key={c._id} className="flex items-center justify-between gap-3">
+                      <span>
+                        {c.type === 'geral' ? 'Termos gerais' : c.type === 'aluno' ? 'Termos de aluno' : c.type === 'criador' ? 'Termos de criador' : 'Termos de instituição'}
+                        <span className="ml-2 text-white/32">v{c.documentVersion}</span>
+                      </span>
+                      <span className={c.revokedAt ? 'text-red-300' : 'text-emerald-300'}>
+                        {c.revokedAt ? 'Revogado' : 'Ativo'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {revokeMessage && (
+              <p className="mt-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-xs text-white/72">
+                {revokeMessage}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={handleRevokeConsent}
+              disabled={revoking || (myConsents !== undefined && myConsents.every((c) => c.revokedAt !== undefined))}
+              className="mt-5 rounded-[1.1rem] border border-white/14 bg-white/4 px-5 py-2.5 text-sm font-semibold text-white/86 transition-all duration-200 hover:border-white/24 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {revoking ? 'Revogando...' : 'Retirar consentimento'}
+            </button>
+          </div>
+
+          <div className={cn('p-6', brandPanelSoftClass, 'border-red-500/20')}>
+            <p className={cn('mb-2', brandEyebrowClass)} style={{ color: '#fca5a5' }}>
+              Excluir minha conta
+            </p>
+            <h3 className="font-display text-lg font-bold text-white">Remover conta permanentemente</h3>
+            <p className="mt-2 text-sm leading-6 text-white/52">
+              Esta ação remove seu perfil, matrículas, progresso, cadernos, avaliações e depoimentos.
+              Comentários em aulas ficam anônimos. Doações já concluídas são preservadas de forma
+              anônima por obrigação fiscal. <strong className="text-white/72">A ação é irreversível.</strong>
+            </p>
+            {hasFunction('criador') && (
+              <p className="mt-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs text-amber-200">
+                Se você é criador, despublique todos os seus cursos antes de excluir a conta.
+                Alunos matriculados perderiam acesso.
+              </p>
+            )}
+            <div className="mt-5">
+              <label className="mb-1.5 block text-xs font-medium text-white/52">
+                Digite <span className="font-bold text-red-300">EXCLUIR</span> para confirmar
+              </label>
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={(e) => {
+                  setDeleteConfirm(e.target.value)
+                  setDeleteError('')
+                }}
+                placeholder="EXCLUIR"
+                className={brandInputClass}
+                disabled={deleting}
+              />
+            </div>
+            {deleteError && (
+              <p className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+                {deleteError}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={deleting || deleteConfirm.trim().toUpperCase() !== 'EXCLUIR'}
+              className="mt-5 rounded-[1.1rem] border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition-all duration-200 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {deleting ? 'Excluindo conta...' : 'Excluir minha conta'}
+            </button>
           </div>
         </div>
       )}

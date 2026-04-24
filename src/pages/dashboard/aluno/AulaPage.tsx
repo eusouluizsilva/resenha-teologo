@@ -223,8 +223,7 @@ function VerseCard({ refData, source }: { refData: VerseRef; source: BibleSource
   const book = getBibleBook(refData.bookSlug)
   const label = formatVerseReference(refData)
   const compatible = source.testaments.includes(refData.testament)
-  const bibleGatewayVersion =
-    source.kind === 'translation' ? source.label : 'ARA'
+  const bibleGatewayVersion = source.bibleGatewayVersion
   const searchRef = book
     ? `${book.name} ${refData.chapter}:${refData.verseStart}${
         refData.verseEnd !== refData.verseStart ? `-${refData.verseEnd}` : ''

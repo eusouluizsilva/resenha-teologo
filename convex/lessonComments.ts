@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { requireCurrentUser, requireIdentity } from './lib/auth'
+import { requireCurrentUser, requireLessonAccess } from './lib/auth'
+import { internal } from './_generated/api'
 
 // Comentários em aulas. Thread de um nível: um comentário raiz (parentId
 // ausente) pode receber respostas com parentId apontando para ele. Respostas
@@ -21,8 +22,8 @@ export const create = mutation({
     if (!trimmed) throw new Error('Comentário vazio')
     const safeText = trimmed.slice(0, MAX_COMMENT_LEN)
 
-    const lesson = await ctx.db.get(lessonId)
-    if (!lesson) throw new Error('Aula não encontrada')
+    // Acesso: criador dono OU aluno matriculado. Bloqueia poster externo.
+    const { lesson } = await requireLessonAccess(ctx, lessonId)
 
     // Se está respondendo, validar que o parent pertence à mesma aula e que o
     // parent não é já uma resposta (bloqueia threads de 2+ níveis).
@@ -39,7 +40,7 @@ export const create = mutation({
     const isCourseCreator = lesson.creatorId === identity.subject
     const authorRole: 'aluno' | 'criador' = isCourseCreator ? 'criador' : 'aluno'
 
-    return await ctx.db.insert('lessonComments', {
+    const commentId = await ctx.db.insert('lessonComments', {
       lessonId,
       courseId: lesson.courseId,
       authorId: identity.subject,
@@ -52,13 +53,34 @@ export const create = mutation({
       isOfficial: isCourseCreator && parentId !== undefined ? true : undefined,
       createdAt: Date.now(),
     })
+
+    // Se é uma resposta, notifica o autor do comentário pai (desde que não
+    // esteja respondendo a si mesmo e que o pai não tenha sido removido).
+    if (parentId) {
+      const parent = await ctx.db.get(parentId)
+      if (parent && !parent.deletedAt && parent.authorId !== identity.subject) {
+        const course = await ctx.db.get(lesson.courseId)
+        const excerpt = safeText.length > 90 ? `${safeText.slice(0, 87)}...` : safeText
+        await ctx.runMutation(internal.notifications.pushInternal, {
+          userId: parent.authorId,
+          kind: 'comment_reply',
+          title: isCourseCreator
+            ? `${user.name} (criador) respondeu seu comentário`
+            : `${user.name} respondeu seu comentário`,
+          body: course ? `Em "${course.title}" · ${lesson.title}: ${excerpt}` : excerpt,
+          link: `/dashboard/meus-cursos/${lesson.courseId}/aula/${lessonId}`,
+        })
+      }
+    }
+
+    return commentId
   },
 })
 
 export const edit = mutation({
   args: { id: v.id('lessonComments'), text: v.string() },
   handler: async (ctx, { id, text }) => {
-    const identity = await requireIdentity(ctx)
+    const { identity } = await requireCurrentUser(ctx)
     const comment = await ctx.db.get(id)
     if (!comment || comment.authorId !== identity.subject) throw new Error('Não autorizado')
     if (comment.deletedAt) throw new Error('Comentário removido')
@@ -78,7 +100,7 @@ export const edit = mutation({
 export const softDelete = mutation({
   args: { id: v.id('lessonComments') },
   handler: async (ctx, { id }) => {
-    const identity = await requireIdentity(ctx)
+    const { identity } = await requireCurrentUser(ctx)
     const comment = await ctx.db.get(id)
     if (!comment) throw new Error('Não encontrado')
 
@@ -97,7 +119,7 @@ export const softDelete = mutation({
 export const setOfficial = mutation({
   args: { id: v.id('lessonComments'), isOfficial: v.boolean() },
   handler: async (ctx, { id, isOfficial }) => {
-    const identity = await requireIdentity(ctx)
+    const { identity } = await requireCurrentUser(ctx)
     const comment = await ctx.db.get(id)
     if (!comment) throw new Error('Não encontrado')
 
@@ -116,7 +138,9 @@ export const setOfficial = mutation({
 export const listByLesson = query({
   args: { lessonId: v.id('lessons') },
   handler: async (ctx, { lessonId }) => {
-    await requireIdentity(ctx)
+    // Acesso: criador dono OU aluno matriculado. Evita leitura de threads por
+    // terceiros que apenas estejam autenticados.
+    await requireLessonAccess(ctx, lessonId)
     const all = await ctx.db
       .query('lessonComments')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', lessonId))

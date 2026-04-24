@@ -55,6 +55,11 @@ const iconFunctions = (
   </svg>
 )
 
+// Flag para reexibir rotas de Instituição quando elas saírem de placeholder.
+// Hoje esconde Membros/Cursos institucionais/Relatórios da sidebar, mas as
+// rotas continuam registradas em App.tsx para quem tem a função ativa.
+const SHOW_INSTITUTION_NAV = false
+
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Aluno',
@@ -72,15 +77,19 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Financeiro', href: '/dashboard/financeiro', icon: iconMoney },
     ],
   },
-  {
-    label: 'Instituição',
-    fn: 'instituicao',
-    items: [
-      { label: 'Membros', href: '/dashboard/membros', icon: iconMembers },
-      { label: 'Cursos', href: '/dashboard/cursos-instituicao', icon: iconBook },
-      { label: 'Relatórios', href: '/dashboard/relatorios', icon: iconChart },
-    ],
-  },
+  ...(SHOW_INSTITUTION_NAV
+    ? [
+        {
+          label: 'Instituição',
+          fn: 'instituicao' as UserFunction,
+          items: [
+            { label: 'Membros', href: '/dashboard/membros', icon: iconMembers },
+            { label: 'Cursos', href: '/dashboard/cursos-instituicao', icon: iconBook },
+            { label: 'Relatórios', href: '/dashboard/relatorios', icon: iconChart },
+          ],
+        },
+      ]
+    : []),
 ]
 
 const ALWAYS_NAV: NavItem[] = [

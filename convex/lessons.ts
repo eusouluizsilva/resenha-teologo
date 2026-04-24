@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { ensureIdentityMatches, requirePerfil } from './lib/auth'
+import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
 
 // Validador do formato estruturado de versículos (espelha schema.ts).
@@ -15,7 +15,7 @@ const verseRefValidator = v.object({
 export const getById = query({
   args: { id: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const lesson = await ctx.db.get(id)
@@ -27,7 +27,7 @@ export const getById = query({
 export const listByCourse = query({
   args: { courseId: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { courseId, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const course = await ctx.db.get(courseId)
@@ -44,7 +44,7 @@ export const listByCourse = query({
 export const listByModule = query({
   args: { moduleId: v.id('modules'), creatorId: v.string() },
   handler: async (ctx, { moduleId, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const mod = await ctx.db.get(moduleId)
@@ -85,7 +85,7 @@ export const create = mutation({
     allowQuizRetry: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, args.creatorId)
 
     const course = await ctx.db.get(args.courseId)
@@ -132,7 +132,7 @@ export const update = mutation({
     allowQuizRetry: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const lesson = await ctx.db.get(id)
@@ -158,7 +158,7 @@ export const generateLessonSlugs = mutation({
 export const remove = mutation({
   args: { id: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const lesson = await ctx.db.get(id)

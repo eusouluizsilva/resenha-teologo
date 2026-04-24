@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireIdentity } from './lib/auth'
+import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 
@@ -287,6 +288,8 @@ export const updateProgress = mutation({
     const reachedThreshold = ratio >= COMPLETION_RATIO
     const completed = alreadyCompleted || reachedThreshold
 
+    const justCompleted = completed && !alreadyCompleted
+
     if (existing) {
       // Em modo retry, existing.watchedSeconds foi zerado em requestQuizRetry,
       // então o max() preserva o avanço desta nova tentativa sem recuperar o
@@ -298,7 +301,7 @@ export const updateProgress = mutation({
         watchedSeconds: newWatched,
         totalSeconds,
         completed,
-        ...(completed && !existing.completed ? { completedAt: Date.now() } : {}),
+        ...(justCompleted ? { completedAt: Date.now() } : {}),
         ...(clearRetry ? { quizRetryPending: undefined } : {}),
       })
     } else {
@@ -311,6 +314,13 @@ export const updateProgress = mutation({
         completed,
         ...(completed ? { completedAt: Date.now() } : {}),
       })
+    }
+
+    // Se o aluno acabou de concluir esta aula, reavalia certificado. Cobre
+    // cursos sem quiz obrigatório, que antes nunca passavam pela avaliação
+    // (submitQuiz nunca era chamado).
+    if (justCompleted) {
+      await checkAndIssueCertificate(ctx, identity.subject, courseId, enrollment._id)
     }
 
     return completed
@@ -362,6 +372,17 @@ export const requestQuizRetry = mutation({
       quizRetryPending: true,
       watchResetAt: now,
     })
+
+    // Se o aluno já estava certificado, revoga o certificado enquanto a
+    // tentativa está aberta. O certificado será reemitido quando o aluno
+    // reassistir, refizer o quiz e passar novamente na média mínima.
+    if (enrollment.certificateIssued) {
+      await ctx.db.patch(enrollment._id, {
+        certificateIssued: false,
+        completedAt: undefined,
+        finalScore: undefined,
+      })
+    }
   },
 })
 
@@ -492,10 +513,43 @@ async function checkAndIssueCertificate(
       completedAt: Date.now(),
       finalScore: avg,
     })
+    await notifyCertificateIssued(ctx, studentId, courseId)
   } else {
     await ctx.db.patch(enrollmentId, {
       certificateIssued: true,
       completedAt: Date.now(),
+    })
+    await notifyCertificateIssued(ctx, studentId, courseId)
+  }
+}
+
+async function notifyCertificateIssued(
+  ctx: MutationCtx,
+  studentId: string,
+  courseId: Id<'courses'>,
+) {
+  const course = await ctx.db.get(courseId)
+  if (!course) return
+
+  await ctx.runMutation(internal.notifications.pushInternal, {
+    userId: studentId,
+    kind: 'certificate_issued',
+    title: 'Certificado emitido',
+    body: `Parabéns por concluir "${course.title}". Seu certificado já está disponível.`,
+    link: '/dashboard/certificados',
+  })
+
+  // Envia email (ação assíncrona; se RESEND_API_KEY não estiver setado a action
+  // só loga e retorna skipped=true, sem lançar).
+  const student = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', studentId))
+    .unique()
+  if (student?.email) {
+    await ctx.scheduler.runAfter(0, internal.email.sendCertificateIssued, {
+      to: student.email,
+      name: student.name || 'aluno',
+      courseTitle: course.title,
     })
   }
 }
@@ -541,6 +595,109 @@ export const rateCourse = mutation({
     }
 
     return { stars }
+  },
+})
+
+// ─── getStudentDashboard ──────────────────────────────────────────────────────
+// Retorna resumo da tela inicial do aluno: cursos em andamento com progresso,
+// próxima aula sugerida, certificados conquistados e total de tempo estudado.
+// Usado pelo DashboardIndexPage para substituir o placeholder "área em ativação".
+
+export const getStudentDashboard = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
+      .collect()
+
+    const progressRecords = await ctx.db
+      .query('progress')
+      .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
+      .collect()
+
+    const totalWatchSeconds = progressRecords.reduce((s, p) => s + (p.watchedSeconds ?? 0), 0)
+
+    // Para cada matrícula, calcula progresso e busca a próxima aula pendente.
+    const courses = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const course = await ctx.db.get(enrollment.courseId)
+        if (!course) return null
+
+        const courseProgress = progressRecords.filter((p) => p.courseId === enrollment.courseId)
+        const completedLessons = courseProgress.filter((p) => p.completed).length
+        const totalLessons = course.totalLessons || 1
+        const percentage = Math.round((completedLessons / totalLessons) * 100)
+
+        // Próxima aula: busca a primeira aula do curso (por módulo order, aula order)
+        // onde progress.completed é false ou não existe.
+        const lessons = await ctx.db
+          .query('lessons')
+          .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
+          .collect()
+
+        const modules = await ctx.db
+          .query('modules')
+          .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
+          .collect()
+        const moduleOrder = new Map(modules.map((m) => [String(m._id), m.order]))
+
+        const ordered = [...lessons].sort((a, b) => {
+          const ma = moduleOrder.get(String(a.moduleId)) ?? 9999
+          const mb = moduleOrder.get(String(b.moduleId)) ?? 9999
+          if (ma !== mb) return ma - mb
+          return (a.order ?? 0) - (b.order ?? 0)
+        })
+
+        const progressByLesson = new Map(courseProgress.map((p) => [String(p.lessonId), p]))
+        const nextLesson = ordered.find((l) => {
+          const p = progressByLesson.get(String(l._id))
+          return !p || !p.completed
+        })
+
+        // Última interação: data do progress mais recente (para ordenação "continue")
+        const mostRecent = courseProgress.reduce(
+          (acc, p) => Math.max(acc, p._creationTime ?? 0),
+          0,
+        )
+
+        return {
+          courseId: enrollment.courseId,
+          courseTitle: course.title,
+          courseThumbnail: course.thumbnail,
+          completedLessons,
+          totalLessons,
+          percentage,
+          certificateIssued: !!enrollment.certificateIssued,
+          completedAt: enrollment.completedAt,
+          nextLessonId: nextLesson?._id,
+          nextLessonTitle: nextLesson?.title,
+          lastActivityAt: mostRecent,
+        }
+      }),
+    )
+
+    const valid = courses.filter(
+      (c): c is NonNullable<typeof c> => c !== null,
+    )
+
+    // "Continue de onde parou": curso mais recentemente interagido que ainda
+    // não foi concluído.
+    const inProgress = valid
+      .filter((c) => !c.certificateIssued && c.nextLessonId)
+      .sort((a, b) => b.lastActivityAt - a.lastActivityAt)
+
+    return {
+      totalCoursesEnrolled: valid.length,
+      totalCoursesCompleted: valid.filter((c) => c.certificateIssued).length,
+      totalWatchSeconds,
+      continueCourse: inProgress[0] ?? null,
+      inProgress: inProgress.slice(0, 6),
+      completed: valid.filter((c) => c.certificateIssued).slice(0, 6),
+    }
   },
 })
 

@@ -14,16 +14,21 @@ export type BibleSource = {
   kind: BibleSourceKind
   language: 'grc' | 'hbo' | 'pt-BR'
   testaments: BibleTestament[]
+  // Código que o BibleGateway aceita no parâmetro `version` da URL. Para
+  // originais, usamos SBLGNT (grego) e WLC (hebraico). Para traduções
+  // portuguesas, o próprio label funciona (NVI, NAA, NVT, ARA).
+  bibleGatewayVersion: string
 }
 
 export const BIBLE_SOURCES: BibleSource[] = [
   {
     id: 'grego',
     label: 'Grego',
-    name: 'Grego original (Textus Receptus)',
+    name: 'Grego original (SBL Greek New Testament)',
     kind: 'original',
     language: 'grc',
     testaments: ['new'],
+    bibleGatewayVersion: 'SBLGNT',
   },
   {
     id: 'hebraico',
@@ -32,6 +37,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     kind: 'original',
     language: 'hbo',
     testaments: ['old'],
+    bibleGatewayVersion: 'WLC',
   },
   {
     id: 'nvi',
@@ -40,6 +46,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     kind: 'translation',
     language: 'pt-BR',
     testaments: ['old', 'new'],
+    bibleGatewayVersion: 'NVI-PT',
   },
   {
     id: 'naa',
@@ -48,6 +55,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     kind: 'translation',
     language: 'pt-BR',
     testaments: ['old', 'new'],
+    bibleGatewayVersion: 'NAA',
   },
   {
     id: 'nvt',
@@ -56,6 +64,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     kind: 'translation',
     language: 'pt-BR',
     testaments: ['old', 'new'],
+    bibleGatewayVersion: 'NVT',
   },
   {
     id: 'ara',
@@ -64,6 +73,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     kind: 'translation',
     language: 'pt-BR',
     testaments: ['old', 'new'],
+    bibleGatewayVersion: 'ARA',
   },
 ]
 

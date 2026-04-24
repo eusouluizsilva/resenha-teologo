@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { requireIdentity, requirePerfil } from './lib/auth'
+import { requireIdentity, requireUserFunction } from './lib/auth'
 
 // Cadernos do aluno. Cada aluno pode manter múltiplos cadernos para organizar
 // estudos por assunto/curso. Entradas (notebookEntries) são vinculadas a uma
@@ -25,7 +25,7 @@ export const listMine = query({
 export const create = mutation({
   args: { title: v.string() },
   handler: async (ctx, { title }) => {
-    const { identity } = await requirePerfil(ctx, ['aluno'])
+    const { identity } = await requireUserFunction(ctx, ['aluno'])
     const trimmed = title.trim()
     if (!trimmed) throw new Error('Título obrigatório')
     const safeTitle = trimmed.slice(0, MAX_TITLE_LEN)
@@ -41,7 +41,7 @@ export const create = mutation({
 export const rename = mutation({
   args: { id: v.id('notebooks'), title: v.string() },
   handler: async (ctx, { id, title }) => {
-    const { identity } = await requirePerfil(ctx, ['aluno'])
+    const { identity } = await requireUserFunction(ctx, ['aluno'])
     const notebook = await ctx.db.get(id)
     if (!notebook || notebook.studentId !== identity.subject) throw new Error('Não autorizado')
     const trimmed = title.trim()
@@ -53,7 +53,7 @@ export const rename = mutation({
 export const remove = mutation({
   args: { id: v.id('notebooks') },
   handler: async (ctx, { id }) => {
-    const { identity } = await requirePerfil(ctx, ['aluno'])
+    const { identity } = await requireUserFunction(ctx, ['aluno'])
     const notebook = await ctx.db.get(id)
     if (!notebook || notebook.studentId !== identity.subject) throw new Error('Não autorizado')
 
@@ -107,7 +107,7 @@ export const upsertEntry = mutation({
     content: v.string(),
   },
   handler: async (ctx, { notebookId, lessonId, content }) => {
-    const { identity } = await requirePerfil(ctx, ['aluno'])
+    const { identity } = await requireUserFunction(ctx, ['aluno'])
 
     const notebook = await ctx.db.get(notebookId)
     if (!notebook || notebook.studentId !== identity.subject) throw new Error('Caderno inválido')

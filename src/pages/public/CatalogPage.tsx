@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
+
+function normalizeSearch(s: string) {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+}
 
 const CATEGORIES = ['Teologia Sistematica', 'Historia Biblica', 'Hermeneutica', 'Apologetica', 'Etica Crista', 'Novo Testamento', 'Antigo Testamento']
 const LEVELS = [
@@ -22,7 +30,21 @@ function levelLabel(level: string) {
   return found?.label ?? level
 }
 
-function CourseCard({ course }: { course: any }) {
+type CatalogCourse = {
+  _id: string
+  title: string
+  description: string
+  thumbnail?: string | null
+  category: string
+  level: string
+  creatorName: string
+  totalLessons: number
+  totalStudents?: number
+  avgRating: number | null
+  ratingsCount: number
+}
+
+function CourseCard({ course }: { course: CatalogCourse }) {
   const thumb = course.thumbnail ?? null
 
   return (
@@ -119,6 +141,7 @@ function CourseCard({ course }: { course: any }) {
 export function CatalogPage() {
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined)
   const [activeLevel, setActiveLevel] = useState<'iniciante' | 'intermediario' | 'avancado' | undefined>(undefined)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const courses = useQuery(api.catalog.listPublished, {
     category: activeCategory,
@@ -126,6 +149,18 @@ export function CatalogPage() {
   })
 
   const isLoading = courses === undefined
+
+  const filteredCourses = useMemo(() => {
+    if (!courses) return courses
+    const q = normalizeSearch(searchTerm)
+    if (!q) return courses
+    return courses.filter((c) => {
+      const haystack = normalizeSearch(
+        `${c.title ?? ''} ${c.description ?? ''} ${c.creatorName ?? ''} ${c.category ?? ''}`,
+      )
+      return haystack.includes(q)
+    })
+  }, [courses, searchTerm])
 
   return (
     <div className="min-h-screen bg-[#0F141A]">
@@ -160,6 +195,35 @@ export function CatalogPage() {
           <p className="mt-3 text-sm leading-7 text-white/54">
             Todos os cursos são gratuitos. Escolha uma trilha, estude no seu ritmo e receba certificado ao concluir.
           </p>
+        </div>
+
+        {/* Busca */}
+        <div className="mb-6">
+          <div className="relative">
+            <svg className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/32" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.3-4.3m1.8-5.2a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por título, criador, categoria"
+              className="w-full rounded-2xl border border-white/8 bg-white/[0.03] py-3 pl-11 pr-4 text-sm text-white placeholder:text-white/32 outline-none transition-colors focus:border-[#F37E20]/40 focus:bg-white/[0.05]"
+              aria-label="Buscar cursos"
+            />
+            {searchTerm ? (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/5 hover:text-white/70"
+                aria-label="Limpar busca"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {/* Filtros */}
@@ -236,11 +300,15 @@ export function CatalogPage() {
               </div>
             ))}
           </div>
-        ) : courses.length === 0 ? (
+        ) : !filteredCourses || filteredCourses.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-base text-white/42">Nenhum curso encontrado para os filtros selecionados.</p>
+            <p className="text-base text-white/42">
+              {searchTerm
+                ? `Nenhum curso encontrado para "${searchTerm}".`
+                : 'Nenhum curso encontrado para os filtros selecionados.'}
+            </p>
             <button
-              onClick={() => { setActiveCategory(undefined); setActiveLevel(undefined) }}
+              onClick={() => { setActiveCategory(undefined); setActiveLevel(undefined); setSearchTerm('') }}
               className="mt-4 text-sm font-medium text-[#F2BD8A] underline underline-offset-4 hover:text-[#F37E20]"
             >
               Limpar filtros
@@ -248,7 +316,7 @@ export function CatalogPage() {
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {courses.map((course: NonNullable<typeof courses>[number]) => (
+            {filteredCourses.map((course) => (
               <CourseCard key={course._id} course={course} />
             ))}
           </div>

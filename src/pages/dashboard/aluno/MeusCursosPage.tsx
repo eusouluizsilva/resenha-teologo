@@ -35,6 +35,7 @@ type CourseRowProps = {
     level: string
     totalLessons: number
     thumbnail?: string
+    slug?: string
   }
   completedLessons: number
   totalLessons: number
@@ -47,7 +48,7 @@ function CourseCard({ course, completedLessons, totalLessons, percentage, certif
 
   return (
     <Link
-      to={`/dashboard/meus-cursos/${(course as any).slug ?? course._id}`}
+      to={`/dashboard/meus-cursos/${course.slug ?? course._id}`}
       className={cn(
         'group flex flex-col overflow-hidden transition-all duration-200 hover:border-white/14 hover:shadow-[0_32px_80px_rgba(0,0,0,0.35)]',
         brandPanelClass,
@@ -172,7 +173,7 @@ export function MeusCursosPage() {
               return (
                 <CourseCard
                   key={item.enrollment._id}
-                  course={item.course as any}
+                  course={item.course}
                   completedLessons={item.completedLessons}
                   totalLessons={item.totalLessons}
                   percentage={item.percentage}

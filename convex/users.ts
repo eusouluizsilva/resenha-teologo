@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 import { ensureIdentityMatches, requireIdentity } from './lib/auth'
 
 export const getByClerkId = query({
@@ -110,5 +110,53 @@ export const updateProfile = mutation({
       .unique()
     if (!user) throw new Error('Usuário não encontrado')
     await ctx.db.patch(user._id, fields)
+  },
+})
+
+// Chamado pelo webhook do Clerk quando o perfil é atualizado fora do frontend
+// (ex.: admin muda email no dashboard do Clerk). Mantém name/email/avatar em dia.
+export const syncFromWebhook = internalMutation({
+  args: {
+    clerkId: v.string(),
+    name: v.string(),
+    email: v.string(),
+    avatarUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', args.clerkId))
+      .unique()
+    if (!existing) {
+      // Usuário ainda não existe no Convex: cria para manter consistência.
+      await ctx.db.insert('users', {
+        clerkId: args.clerkId,
+        name: args.name,
+        email: args.email,
+        avatarUrl: args.avatarUrl,
+        totalDonationsReceived: 0,
+      })
+      return
+    }
+    await ctx.db.patch(existing._id, {
+      name: args.name,
+      email: args.email,
+      avatarUrl: args.avatarUrl,
+    })
+  },
+})
+
+// Chamado pelo webhook do Clerk quando a conta é deletada fora do app.
+// Remove apenas o registro do usuário; dados vinculados (cursos, doações, etc.)
+// ficam órfãos mas preservados — a deleção LGPD completa deve ser feita via
+// account.deleteAccount (pelo próprio usuário no app).
+export const deleteFromWebhook = internalMutation({
+  args: { clerkId: v.string() },
+  handler: async (ctx, { clerkId }) => {
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
+      .unique()
+    if (existing) await ctx.db.delete(existing._id)
   },
 })

@@ -56,6 +56,7 @@ export default defineSchema({
     ),
     documentVersion: v.string(),
     acceptedAt: v.number(),
+    revokedAt: v.optional(v.number()),
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
   }).index('by_userId', ['userId']),
@@ -338,4 +339,27 @@ export default defineSchema({
   })
     .index('by_courseId', ['courseId'])
     .index('by_student_course', ['studentId', 'courseId']),
+
+  // Notificações direcionadas a um usuário. `kind` identifica o tipo (curso
+  // concluído, nova resposta em comentário, certificado emitido, etc.), `link`
+  // aponta para o destino dentro do painel, `readAt` marca leitura. O sino do
+  // header lista as 20 mais recentes, badge conta as não lidas.
+  notifications: defineTable({
+    userId: v.string(),
+    kind: v.union(
+      v.literal('course_completed'),
+      v.literal('certificate_issued'),
+      v.literal('comment_reply'),
+      v.literal('course_published'),
+      v.literal('welcome'),
+      v.literal('generic'),
+    ),
+    title: v.string(),
+    body: v.optional(v.string()),
+    link: v.optional(v.string()),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_unread', ['userId', 'readAt']),
 })

@@ -1,7 +1,9 @@
+type ClerkLikeError = { errors?: Array<{ code?: string; message?: string }> }
+
 export function clerkErrorMessage(err: unknown): string {
-  const errors = (err as any)?.errors
+  const errors = (err as ClerkLikeError | null | undefined)?.errors
   if (!errors?.length) return 'Ocorreu um erro. Tente novamente.'
-  const code = errors[0]?.code
+  const code = errors[0]?.code ?? ''
   const map: Record<string, string> = {
     form_password_pwned: 'Esta senha foi comprometida em vazamentos. Use outra senha.',
     form_identifier_exists: 'Este email já está cadastrado.',

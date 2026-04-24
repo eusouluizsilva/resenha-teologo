@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /entrar
+Disallow: /criar-conta
+Disallow: /aula/
+Disallow: /api/
+
+Sitemap: https://resenhadoteologo.com/sitemap.xml

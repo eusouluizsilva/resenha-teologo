@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
+import { deriveVerificationCode, downloadCertificatePdf } from '@/lib/certificate'
 
 function formatDate(ts: number) {
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(ts))
@@ -16,8 +18,31 @@ function levelLabel(level: string) {
 
 export function CertificadosPage() {
   const data = useQuery(api.enrollments.listCertificates)
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const isLoading = data === undefined
+
+  async function handleShare(courseTitle: string, code: string) {
+    const url = `https://resenhadoteologo.com/verificar/${code}`
+    const shareText = `Concluí o curso "${courseTitle}" na Resenha do Teólogo. Verifique meu certificado:`
+    const shareData = { title: 'Meu certificado', text: shareText, url }
+
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share(shareData)
+        return
+      } catch {
+        // usuário cancelou ou API falhou: caímos no fallback de copiar
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText} ${url}`)
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode((c) => (c === code ? null : c)), 2400)
+    } catch {
+      // noop
+    }
+  }
 
   return (
     <DashboardPageShell
@@ -60,8 +85,22 @@ export function CertificadosPage() {
         />
       ) : (
         <div className="space-y-4">
-          {data.map(({ enrollment, course }: { enrollment: NonNullable<typeof data>[number]['enrollment']; course: NonNullable<typeof data>[number]['course'] }) => {
+          {data.map((row) => {
+            const { enrollment, course, studentName, creatorName } = row
             if (!course) return null
+
+            const verificationCode = deriveVerificationCode(enrollment._id)
+            const handleDownload = () => {
+              downloadCertificatePdf({
+                studentName,
+                courseTitle: course.title,
+                creatorName,
+                completedAt: enrollment.completedAt ?? Date.now(),
+                finalScore: enrollment.finalScore,
+                verificationCode,
+              })
+            }
+
             return (
               <div
                 key={enrollment._id}
@@ -91,16 +130,30 @@ export function CertificadosPage() {
                   </div>
                 </div>
 
-                <button
-                  className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-400/8 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition-all duration-200 hover:border-emerald-400/35 hover:bg-emerald-400/14"
-                  onClick={() => window.print()}
-                  title="Imprimir certificado"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                  </svg>
-                  Baixar certificado
-                </button>
+                <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/4 px-4 py-2.5 text-sm font-semibold text-white/82 transition-all duration-200 hover:border-white/22 hover:bg-white/8"
+                    onClick={() => handleShare(course.title, verificationCode)}
+                    title="Compartilhar certificado"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                    </svg>
+                    {copiedCode === verificationCode ? 'Link copiado' : 'Compartilhar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-400/8 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition-all duration-200 hover:border-emerald-400/35 hover:bg-emerald-400/14"
+                    onClick={handleDownload}
+                    title="Baixar certificado em PDF"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Baixar PDF
+                  </button>
+                </div>
               </div>
             )
           })}

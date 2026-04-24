@@ -1,33 +1,109 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { AnimatePresence } from 'framer-motion'
 import { LandingPage } from '@/pages/LandingPage'
-import { SignInPage } from '@/pages/SignInPage'
-import { RegisterPage } from '@/pages/auth/RegisterPage'
-import { SSOCallbackPage } from '@/pages/auth/SSOCallbackPage'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
-import { VisaoGeralPage } from '@/pages/dashboard/criador/VisaoGeralPage'
-import { CursosPage } from '@/pages/dashboard/criador/CursosPage'
-import { NovoCursoPage } from '@/pages/dashboard/criador/NovoCursoPage'
-import { EditarCursoPage } from '@/pages/dashboard/criador/EditarCursoPage'
-import { EditarInfoCursoPage } from '@/pages/dashboard/criador/EditarInfoCursoPage'
-import { EditarAulaPage } from '@/pages/dashboard/criador/EditarAulaPage'
-import { FinanceiroPage } from '@/pages/dashboard/criador/FinanceiroPage'
-import { PerfilPage } from '@/pages/dashboard/criador/PerfilPage'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
+import { CookieBanner } from '@/components/CookieBanner'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import type { UserFunction } from '@/lib/functions'
-import { PrivacidadePage, TermosPage } from '@/pages/legal/LegalPages'
-import { MeusCursosPage } from '@/pages/dashboard/aluno/MeusCursosPage'
-import { CertificadosPage } from '@/pages/dashboard/aluno/CertificadosPage'
-import { CursoInternoPage } from '@/pages/dashboard/aluno/CursoInternoPage'
-import { AulaPage } from '@/pages/dashboard/aluno/AulaPage'
-import { CatalogPage } from '@/pages/public/CatalogPage'
-import { CourseDetailPage } from '@/pages/public/CourseDetailPage'
-import { PlanosPage } from '@/pages/dashboard/PlanosPage'
-import { FuncoesPage } from '@/pages/dashboard/FuncoesPage'
-import { PublicProfilePage } from '@/pages/public/PublicProfilePage'
+
+// Code-splitting: rotas secundárias viram chunks sob demanda para manter o
+// JS inicial enxuto. A LandingPage fica no bundle principal porque é o primeiro
+// impacto de quem cai no domínio.
+const SignInPage = lazy(() =>
+  import('@/pages/SignInPage').then((m) => ({ default: m.SignInPage })),
+)
+const RegisterPage = lazy(() =>
+  import('@/pages/auth/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+)
+const SSOCallbackPage = lazy(() =>
+  import('@/pages/auth/SSOCallbackPage').then((m) => ({ default: m.SSOCallbackPage })),
+)
+const VisaoGeralPage = lazy(() =>
+  import('@/pages/dashboard/criador/VisaoGeralPage').then((m) => ({ default: m.VisaoGeralPage })),
+)
+const CursosPage = lazy(() =>
+  import('@/pages/dashboard/criador/CursosPage').then((m) => ({ default: m.CursosPage })),
+)
+const NovoCursoPage = lazy(() =>
+  import('@/pages/dashboard/criador/NovoCursoPage').then((m) => ({ default: m.NovoCursoPage })),
+)
+const EditarCursoPage = lazy(() =>
+  import('@/pages/dashboard/criador/EditarCursoPage').then((m) => ({ default: m.EditarCursoPage })),
+)
+const EditarInfoCursoPage = lazy(() =>
+  import('@/pages/dashboard/criador/EditarInfoCursoPage').then((m) => ({
+    default: m.EditarInfoCursoPage,
+  })),
+)
+const EditarAulaPage = lazy(() =>
+  import('@/pages/dashboard/criador/EditarAulaPage').then((m) => ({ default: m.EditarAulaPage })),
+)
+const FinanceiroPage = lazy(() =>
+  import('@/pages/dashboard/criador/FinanceiroPage').then((m) => ({ default: m.FinanceiroPage })),
+)
+const PerfilPage = lazy(() =>
+  import('@/pages/dashboard/criador/PerfilPage').then((m) => ({ default: m.PerfilPage })),
+)
+const PrivacidadePage = lazy(() =>
+  import('@/pages/legal/LegalPages').then((m) => ({ default: m.PrivacidadePage })),
+)
+const TermosPage = lazy(() =>
+  import('@/pages/legal/LegalPages').then((m) => ({ default: m.TermosPage })),
+)
+const MeusCursosPage = lazy(() =>
+  import('@/pages/dashboard/aluno/MeusCursosPage').then((m) => ({ default: m.MeusCursosPage })),
+)
+const CertificadosPage = lazy(() =>
+  import('@/pages/dashboard/aluno/CertificadosPage').then((m) => ({
+    default: m.CertificadosPage,
+  })),
+)
+const CursoInternoPage = lazy(() =>
+  import('@/pages/dashboard/aluno/CursoInternoPage').then((m) => ({
+    default: m.CursoInternoPage,
+  })),
+)
+const AulaPage = lazy(() =>
+  import('@/pages/dashboard/aluno/AulaPage').then((m) => ({ default: m.AulaPage })),
+)
+const CatalogPage = lazy(() =>
+  import('@/pages/public/CatalogPage').then((m) => ({ default: m.CatalogPage })),
+)
+const AlunoDashboardPage = lazy(() =>
+  import('@/pages/dashboard/aluno/AlunoDashboardPage').then((m) => ({
+    default: m.AlunoDashboardPage,
+  })),
+)
+const CourseDetailPage = lazy(() =>
+  import('@/pages/public/CourseDetailPage').then((m) => ({ default: m.CourseDetailPage })),
+)
+const PlanosPage = lazy(() =>
+  import('@/pages/dashboard/PlanosPage').then((m) => ({ default: m.PlanosPage })),
+)
+const FuncoesPage = lazy(() =>
+  import('@/pages/dashboard/FuncoesPage').then((m) => ({ default: m.FuncoesPage })),
+)
+const PublicProfilePage = lazy(() =>
+  import('@/pages/public/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
+)
+const VerifyCertificatePage = lazy(() =>
+  import('@/pages/public/VerifyCertificatePage').then((m) => ({
+    default: m.VerifyCertificatePage,
+  })),
+)
+const AcceptInvitePage = lazy(() =>
+  import('@/pages/public/AcceptInvitePage').then((m) => ({
+    default: m.AcceptInvitePage,
+  })),
+)
+const MembrosPage = lazy(() =>
+  import('@/pages/dashboard/instituicao/MembrosPage').then((m) => ({
+    default: m.MembrosPage,
+  })),
+)
 
 function DashboardRouteLoader() {
   return (
@@ -94,37 +170,9 @@ function DashboardIndexPage() {
 
   if (hasFunction('criador')) return <VisaoGeralPage />
 
-  if (hasFunction('aluno')) {
-    return (
-      <DashboardPageShell
-        eyebrow="Painel do aluno"
-        title="Bem-vindo de volta"
-        description="Acesse seus cursos, acompanhe o progresso e resgate seus certificados."
-        maxWidthClass="max-w-4xl"
-      >
-        <EmConstrucao
-          title="Área do aluno em ativação"
-          description="Seus cursos em andamento e progresso serão exibidos aqui em breve."
-        />
-      </DashboardPageShell>
-    )
-  }
+  if (hasFunction('aluno')) return <AlunoDashboardPage />
 
-  if (hasFunction('instituicao')) {
-    return (
-      <DashboardPageShell
-        eyebrow="Painel institucional"
-        title="Visão geral"
-        description="Gestão de membros, cursos vinculados e relatórios da sua instituição."
-        maxWidthClass="max-w-4xl"
-      >
-        <EmConstrucao
-          title="Ambiente institucional em preparação"
-          description="Configure os dados da sua instituição e comece a adicionar membros."
-        />
-      </DashboardPageShell>
-    )
-  }
+  if (hasFunction('instituicao')) return <MembrosPage />
 
   return (
     <DashboardPageShell
@@ -174,15 +222,27 @@ function DashboardIndexPage() {
   )
 }
 
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0F141A]">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <CookieBanner />
       <AnimatePresence mode="wait">
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* Público */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
+          <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
+          <Route path="/convite/:token" element={<AcceptInvitePage />} />
           <Route path="/:handle" element={<PublicProfilePage />} />
 
           {/* Autenticação */}
@@ -214,7 +274,7 @@ export default function App() {
             <Route path="certificados" element={<RequireFunction allowed={['aluno']}><CertificadosPage /></RequireFunction>} />
 
             {/* Instituição */}
-            <Route path="membros" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Membros em preparação" description="A gestão de membros será liberada em breve." /></RequireFunction>} />
+            <Route path="membros" element={<RequireFunction allowed={['instituicao']}><MembrosPage /></RequireFunction>} />
             <Route path="cursos-instituicao" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Cursos vinculados em preparação" description="A vinculação de cursos a membros será liberada em breve." /></RequireFunction>} />
             <Route path="relatorios" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Relatórios em preparação" description="Os relatórios institucionais serão liberados em breve." /></RequireFunction>} />
 
@@ -225,6 +285,7 @@ export default function App() {
             <Route path="planos" element={<PlanosPage />} />
           </Route>
         </Routes>
+        </Suspense>
       </AnimatePresence>
     </BrowserRouter>
   )

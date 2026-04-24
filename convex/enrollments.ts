@@ -90,6 +90,11 @@ export const listCertificates = query({
   handler: async (ctx) => {
     const identity = await requireIdentity(ctx)
 
+    const student = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+      .unique()
+
     const enrollments = await ctx.db
       .query('enrollments')
       .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
@@ -100,7 +105,18 @@ export const listCertificates = query({
     return await Promise.all(
       certs.map(async (enrollment) => {
         const course = await ctx.db.get(enrollment.courseId)
-        return { enrollment, course }
+        const creator = course
+          ? await ctx.db
+              .query('users')
+              .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
+              .unique()
+          : null
+        return {
+          enrollment,
+          course,
+          studentName: student?.name ?? '',
+          creatorName: creator?.name ?? '',
+        }
       })
     )
   },

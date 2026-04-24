@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSignUp } from '@clerk/clerk-react'
+import { useMutation } from 'convex/react'
 import { motion } from 'framer-motion'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { VerifyStep } from '@/components/auth/VerifyStep'
@@ -14,6 +15,7 @@ import {
 } from '@/lib/brand'
 import { clerkErrorMessage } from '@/lib/auth'
 import { DOCUMENT_VERSION } from '@/lib/functions'
+import { api } from '../../../convex/_generated/api'
 
 const COUNTRIES = [
   { code: 'BR', label: 'Brasil', ddi: '+55' },
@@ -46,6 +48,7 @@ type FormState = {
 export function RegisterPage() {
   const { signUp, setActive, isLoaded } = useSignUp()
   const navigate = useNavigate()
+  const recordConsent = useMutation(api.consents.record)
 
   const [step, setStep] = useState<'form' | 'verify'>('form')
   const [loading, setLoading] = useState(false)
@@ -122,6 +125,18 @@ export function RegisterPage() {
       const result = await signUp.attemptEmailAddressVerification({ code })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
+        // Registra o aceite dos Termos no banco próprio (além do Clerk metadata).
+        // Falha silenciosa porque a auth já está concluída: o registro pode ser
+        // reconciliado depois via ação administrativa se necessário.
+        try {
+          await recordConsent({
+            type: 'geral',
+            documentVersion: DOCUMENT_VERSION,
+            userAgent: navigator.userAgent,
+          })
+        } catch {
+          // noop
+        }
         navigate('/dashboard')
       }
     } catch (err) {

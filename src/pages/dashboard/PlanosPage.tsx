@@ -202,17 +202,29 @@ function PlanCard({ plan, current }: { plan: Plan; current: boolean }) {
 }
 
 export function PlanosPage() {
-  const { perfil } = useCurrentAppUser()
+  const { hasFunction } = useCurrentAppUser()
+
+  // Prioriza criador sobre instituição sobre aluno quando o usuário tem
+  // múltiplas funções ativas (planos do criador são os mais completos).
+  const primary: 'criador' | 'instituicao' | 'aluno' = hasFunction('criador')
+    ? 'criador'
+    : hasFunction('instituicao')
+      ? 'instituicao'
+      : 'aluno'
 
   const plans =
-    perfil === 'criador'
+    primary === 'criador'
       ? criadorPlans
-      : perfil === 'instituicao'
+      : primary === 'instituicao'
         ? instituicaoPlans
         : alunoPlans
 
   const currentPlanId =
-    perfil === 'criador' ? 'criador-free' : perfil === 'instituicao' ? 'instituicao-free' : 'gratuito'
+    primary === 'criador'
+      ? 'criador-free'
+      : primary === 'instituicao'
+        ? 'instituicao-free'
+        : 'gratuito'
 
   return (
     <DashboardPageShell

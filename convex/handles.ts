@@ -5,6 +5,8 @@ import { requireIdentity } from './lib/auth'
 const RESERVED = new Set([
   'cursos', 'entrar', 'cadastro', 'dashboard', 'termos', 'privacidade',
   'admin', 'api', 'sobre', 'ajuda', 'suporte', 'contato', 'perfil', 'login',
+  'verificar', 'sso-callback', 'webhook', 'blog', 'app', 'planos', 'funcoes',
+  'convite', 'convites', 'instituicao', 'membros',
 ])
 
 const HANDLE_REGEX = /^[a-z0-9_]{3,30}$/

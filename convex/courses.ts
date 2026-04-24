@@ -1,12 +1,12 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { ensureIdentityMatches, requirePerfil } from './lib/auth'
+import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
 
 export const listByCreator = query({
   args: { creatorId: v.string() },
   handler: async (ctx, { creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     return await ctx.db
@@ -20,7 +20,7 @@ export const listByCreator = query({
 export const getById = query({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const course = await ctx.db.get(id)
@@ -41,7 +41,7 @@ export const create = mutation({
     language: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, args.creatorId)
 
     return await ctx.db.insert('courses', {
@@ -70,7 +70,7 @@ export const update = mutation({
     language: v.optional(v.string()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const course = await ctx.db.get(id)
@@ -108,7 +108,7 @@ export const generateSlugs = mutation({
 export const publishWithLessons = mutation({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const course = await ctx.db.get(id)
@@ -134,7 +134,7 @@ export const publishWithLessons = mutation({
 export const remove = mutation({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const course = await ctx.db.get(id)
@@ -169,7 +169,7 @@ export const remove = mutation({
 export const getStats = query({
   args: { creatorId: v.string() },
   handler: async (ctx, { creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const courses = await ctx.db

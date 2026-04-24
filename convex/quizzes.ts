@@ -1,11 +1,11 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { ensureIdentityMatches, requirePerfil } from './lib/auth'
+import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 
 export const getByLesson = query({
   args: { lessonId: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { lessonId, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const quiz = await ctx.db
@@ -33,7 +33,7 @@ export const upsert = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, args.creatorId)
 
     const lesson = await ctx.db.get(args.lessonId)
@@ -59,7 +59,7 @@ export const upsert = mutation({
 export const remove = mutation({
   args: { lessonId: v.id('lessons'), creatorId: v.string() },
   handler: async (ctx, { lessonId, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const quiz = await ctx.db

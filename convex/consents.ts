@@ -38,3 +38,30 @@ export const record = mutation({
     })
   },
 })
+
+// LGPD: o titular pode revogar a qualquer momento. Não apagamos o registro para
+// manter a prova de aceite histórico; apenas marcamos revokedAt. A revogação
+// abrange todos os consentimentos ativos do usuário de uma só vez, simplificando
+// a UX (um botão só). Após revogar, o sistema deve bloquear funcionalidades que
+// exigem consentimento até que o usuário aceite novamente.
+export const revokeAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireIdentity(ctx)
+
+    const active = await ctx.db
+      .query('consents')
+      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .collect()
+
+    const now = Date.now()
+    let count = 0
+    for (const c of active) {
+      if (c.revokedAt === undefined) {
+        await ctx.db.patch(c._id, { revokedAt: now })
+        count++
+      }
+    }
+    return { revoked: count }
+  },
+})

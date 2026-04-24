@@ -8,9 +8,12 @@
  * @module
  */
 
+import type * as account from "../account.js";
 import type * as catalog from "../catalog.js";
+import type * as certificates from "../certificates.js";
 import type * as consents from "../consents.js";
 import type * as courses from "../courses.js";
+import type * as email from "../email.js";
 import type * as enrollments from "../enrollments.js";
 import type * as handles from "../handles.js";
 import type * as http from "../http.js";
@@ -22,6 +25,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_slug from "../lib/slug.js";
 import type * as modules from "../modules.js";
 import type * as notebooks from "../notebooks.js";
+import type * as notifications from "../notifications.js";
 import type * as publicProfiles from "../publicProfiles.js";
 import type * as quizzes from "../quizzes.js";
 import type * as ratings from "../ratings.js";
@@ -37,9 +41,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  account: typeof account;
   catalog: typeof catalog;
+  certificates: typeof certificates;
   consents: typeof consents;
   courses: typeof courses;
+  email: typeof email;
   enrollments: typeof enrollments;
   handles: typeof handles;
   http: typeof http;
@@ -51,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "lib/slug": typeof lib_slug;
   modules: typeof modules;
   notebooks: typeof notebooks;
+  notifications: typeof notifications;
   publicProfiles: typeof publicProfiles;
   quizzes: typeof quizzes;
   ratings: typeof ratings;

@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { ensureIdentityMatches, requireIdentity, requirePerfil } from './lib/auth'
+import { ensureIdentityMatches, requireLessonAccess, requireUserFunction } from './lib/auth'
 
 // Materiais aceitos: apenas PDF e TXT. Limite individual 10MB. Nomes de arquivo
 // limitados a 140 caracteres para não quebrar layout de listagem no player.
@@ -11,7 +11,7 @@ const MAX_NAME_LEN = 140
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requirePerfil(ctx, ['criador'])
+    await requireUserFunction(ctx, ['criador'])
     return await ctx.storage.generateUploadUrl()
   },
 })
@@ -26,7 +26,7 @@ export const create = mutation({
     storageId: v.id('_storage'),
   },
   handler: async (ctx, args) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, args.creatorId)
 
     const lesson = await ctx.db.get(args.lessonId)
@@ -71,7 +71,7 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id('lessonMaterials'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
-    const { identity } = await requirePerfil(ctx, ['criador'])
+    const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
     const material = await ctx.db.get(id)
@@ -82,14 +82,13 @@ export const remove = mutation({
   },
 })
 
-// Listagem para o criador (pode ver qualquer material dos seus cursos) e para
-// o aluno (só aulas de cursos em que está matriculado, verificado via query
-// do player — aqui só garantimos que é um usuário autenticado; o gating real
-// fica no student.ts).
+// Listagem para o criador (dono da aula) ou aluno matriculado no curso. A
+// verificação de acesso é feita via requireLessonAccess para evitar vazamento
+// de materiais para qualquer usuário autenticado.
 export const listByLesson = query({
   args: { lessonId: v.id('lessons') },
   handler: async (ctx, { lessonId }) => {
-    await requireIdentity(ctx)
+    await requireLessonAccess(ctx, lessonId)
     const materials = await ctx.db
       .query('lessonMaterials')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', lessonId))

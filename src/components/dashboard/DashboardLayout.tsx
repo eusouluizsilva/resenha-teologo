@@ -4,6 +4,7 @@ import { useUser } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { DashboardSidebar } from './DashboardSidebar'
+import { NotificationsBell } from './NotificationsBell'
 import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { normalizePerfil } from '@/lib/perfil'
@@ -79,6 +80,11 @@ export function DashboardLayout() {
 
       <main className="relative min-h-screen lg:pl-72">
         <div className="relative min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="pointer-events-none absolute right-6 top-6 z-30 sm:right-8 sm:top-8 lg:right-12 lg:top-12">
+            <div className="pointer-events-auto">
+              <NotificationsBell />
+            </div>
+          </div>
           <div className="relative min-h-[calc(100vh-4rem)] rounded-[2rem] border border-white/7 bg-[linear-gradient(180deg,rgba(13,18,24,0.92)_0%,rgba(10,14,20,0.96)_100%)] shadow-[0_30px_120px_rgba(0,0,0,0.25)]">
             <Outlet />
           </div>
