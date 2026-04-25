@@ -84,6 +84,65 @@ export const listPublished = query({
   },
 })
 
+export const getPublicByIdOrSlug = query({
+  args: { idOrSlug: v.string() },
+  handler: async (ctx, { idOrSlug }) => {
+    const normalized = ctx.db.normalizeId('courses', idOrSlug)
+    const course = normalized
+      ? await ctx.db.get(normalized)
+      : await ctx.db
+          .query('courses')
+          .withIndex('by_slug', (q) => q.eq('slug', idOrSlug))
+          .unique()
+    if (!course || !course.isPublished) return null
+
+    if (course.visibility === 'institution' && course.institutionId) {
+      const identity = await ctx.auth.getUserIdentity()
+      if (!identity) return null
+      const isCreator = identity.subject === course.creatorId
+      if (!isCreator) {
+        const membership = await ctx.db
+          .query('institutionMembers')
+          .withIndex('by_institution_user', (q) =>
+            q.eq('institutionId', course.institutionId!).eq('userId', identity.subject)
+          )
+          .unique()
+        if (!membership || membership.status === 'removido') return null
+      }
+    }
+
+    const creator = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
+      .unique()
+
+    const modules = await ctx.db
+      .query('modules')
+      .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
+      .order('asc')
+      .collect()
+
+    const modulesWithLessons = await Promise.all(
+      modules.map(async (mod) => {
+        const lessons = await ctx.db
+          .query('lessons')
+          .withIndex('by_moduleId', (q) => q.eq('moduleId', mod._id))
+          .order('asc')
+          .collect()
+        return { ...mod, lessons: lessons.filter((l) => l.isPublished) }
+      })
+    )
+
+    return {
+      ...course,
+      creatorName: creator?.name ?? 'Criador',
+      creatorBio: creator?.bio,
+      creatorAvatarUrl: creator?.avatarUrl,
+      modules: modulesWithLessons,
+    }
+  },
+})
+
 export const getPublicById = query({
   args: { id: v.id('courses') },
   handler: async (ctx, { id }) => {

@@ -3,7 +3,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
 import { AdSlot } from '@/components/AdSlot'
@@ -201,13 +200,13 @@ function CTAButton({
     return (
       <div className="space-y-3">
         <Link
-          to={`/cadastro?redirect=/cursos/${courseId}`}
+          to={`/cadastro?redirect=/cursos/${courseRef}`}
           className="flex w-full items-center justify-center rounded-2xl bg-[#F37E20] px-6 py-4 text-sm font-bold text-white transition-all duration-200 hover:bg-[#e06e10]"
         >
           Criar conta para se matricular
         </Link>
         <Link
-          to={`/entrar?redirect=/cursos/${courseId}`}
+          to={`/entrar?redirect=/cursos/${courseRef}`}
           className="flex w-full items-center justify-center rounded-2xl border border-white/14 px-6 py-3 text-sm font-semibold text-white/72 transition-all duration-200 hover:border-white/24 hover:text-white"
         >
           Já tenho conta. Entrar
@@ -262,19 +261,19 @@ function CTAButton({
 }
 
 export function CourseDetailPage() {
-  const { courseId } = useParams<{ courseId: string }>()
+  const { courseId: courseIdOrSlug } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const { user } = useUser()
   const { hasFunction, isLoading: userLoading } = useCurrentAppUser()
 
   const course = useQuery(
-    api.catalog.getPublicById,
-    courseId ? { id: courseId as Id<'courses'> } : 'skip'
+    api.catalog.getPublicByIdOrSlug,
+    courseIdOrSlug ? { idOrSlug: courseIdOrSlug } : 'skip'
   )
 
   const enrollment = useQuery(
     api.enrollments.isEnrolled,
-    user && courseId ? { courseId: courseId as Id<'courses'> } : 'skip'
+    user && course ? { courseId: course._id } : 'skip'
   )
 
   const enroll = useMutation(api.enrollments.enroll)
@@ -301,12 +300,12 @@ export function CourseDetailPage() {
   const isEnrolled = Boolean(enrollment)
 
   async function handleEnroll() {
-    if (!courseId) return
+    if (!course) return
     setEnrolling(true)
     setEnrollError(null)
     try {
-      await enroll({ courseId: courseId as Id<'courses'> })
-      navigate(`/dashboard/meus-cursos/${course?.slug ?? courseId}?matriculado=1`)
+      await enroll({ courseId: course._id })
+      navigate(`/dashboard/meus-cursos/${course.slug ?? course._id}?matriculado=1`)
     } catch (e) {
       setEnrollError(e instanceof Error ? e.message : 'Erro ao matricular')
     } finally {
@@ -526,8 +525,8 @@ export function CourseDetailPage() {
               )}
 
               <CTAButton
-                courseId={courseId ?? ''}
-                courseSlug={course?.slug}
+                courseId={course._id}
+                courseSlug={course.slug}
                 isAuthenticated={isAuthenticated}
                 isAluno={isAluno}
                 isEnrolled={isEnrolled}
