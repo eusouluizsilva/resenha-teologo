@@ -105,7 +105,15 @@ function formatSeconds(s: number) {
   return `${m}min`
 }
 
-function ModuleAccordion({ mod, index }: { mod: { title: string; lessons: { _id: string; title: string; durationSeconds?: number; isPublished: boolean }[] }; index: number }) {
+function ModuleAccordion({
+  mod,
+  index,
+  courseSlug,
+}: {
+  mod: { title: string; lessons: { _id: string; title: string; slug?: string; durationSeconds?: number; isPublished: boolean }[] }
+  index: number
+  courseSlug?: string
+}) {
   const [open, setOpen] = useState(index === 0)
   const published = mod.lessons.filter((l) => l.isPublished)
 
@@ -135,18 +143,34 @@ function ModuleAccordion({ mod, index }: { mod: { title: string; lessons: { _id:
 
       {open && (
         <div className="pb-3">
-          {published.map((lesson, li) => (
-            <div key={lesson._id} className="flex items-center gap-3 px-6 py-2.5">
-              <svg className="h-4 w-4 flex-shrink-0 text-white/28" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-              </svg>
-              <span className="flex-1 text-sm text-white/58">{li + 1}. {lesson.title}</span>
-              {lesson.durationSeconds && (
-                <span className="text-xs text-white/32">{formatSeconds(lesson.durationSeconds)}</span>
-              )}
-            </div>
-          ))}
+          {published.map((lesson, li) => {
+            const canPreview = courseSlug && lesson.slug
+            const content = (
+              <>
+                <svg className="h-4 w-4 flex-shrink-0 text-white/28 group-hover:text-[#F2BD8A]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+                </svg>
+                <span className="flex-1 text-sm text-white/58 group-hover:text-white">{li + 1}. {lesson.title}</span>
+                {lesson.durationSeconds && (
+                  <span className="text-xs text-white/32">{formatSeconds(lesson.durationSeconds)}</span>
+                )}
+              </>
+            )
+            return canPreview ? (
+              <Link
+                key={lesson._id}
+                to={`/cursos/${courseSlug}/${lesson.slug}`}
+                className="group flex items-center gap-3 px-6 py-2.5 transition-colors hover:bg-white/[0.03]"
+              >
+                {content}
+              </Link>
+            ) : (
+              <div key={lesson._id} className="group flex items-center gap-3 px-6 py-2.5">
+                {content}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
@@ -439,7 +463,7 @@ export function CourseDetailPage() {
               <h2 className="mb-4 font-display text-xl font-bold text-white">Estrutura do curso</h2>
               <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#151B23]">
                 {course.modules.map((mod, i) => (
-                  <ModuleAccordion key={mod._id} mod={mod} index={i} />
+                  <ModuleAccordion key={mod._id} mod={mod} index={i} courseSlug={course.slug} />
                 ))}
               </div>
             </div>

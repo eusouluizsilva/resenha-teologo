@@ -248,3 +248,84 @@ export const remove = mutation({
     await ctx.db.delete(id)
   },
 })
+
+// Preview público de aula. Anon-safe. NUNCA retorna youtubeUrl (apenas o ID
+// do vídeo para gerar thumbnail) nem materiais. Se o curso for institucional
+// (visibility='institution'), retorna null para não vazar para fora do tenant.
+//
+// Usado pela rota pública /cursos/:courseSlug/:lessonSlug que mostra um
+// overlay "Entrar para assistir" sobre a thumbnail.
+export const getPublicPreview = query({
+  args: {
+    courseSlug: v.string(),
+    lessonSlug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const course = await ctx.db
+      .query('courses')
+      .withIndex('by_slug', (q) => q.eq('slug', args.courseSlug))
+      .unique()
+    if (!course || !course.isPublished) return null
+    if (course.visibility === 'institution') return null
+
+    const lesson = await ctx.db
+      .query('lessons')
+      .withIndex('by_courseId_slug', (q) =>
+        q.eq('courseId', course._id).eq('slug', args.lessonSlug),
+      )
+      .unique()
+    if (!lesson || !lesson.isPublished) return null
+
+    const ytId = extractYouTubeId(lesson.youtubeUrl)
+
+    const creator = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
+      .unique()
+
+    const allLessons = await ctx.db
+      .query('lessons')
+      .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
+      .order('asc')
+      .collect()
+    const publishedLessons = allLessons
+      .filter((l) => l.isPublished)
+      .map((l) => ({
+        _id: l._id,
+        slug: l.slug ?? null,
+        title: l.title,
+        durationSeconds: l.durationSeconds ?? null,
+        isCurrent: l._id === lesson._id,
+      }))
+
+    return {
+      lesson: {
+        _id: lesson._id,
+        title: lesson.title,
+        description: lesson.description ?? null,
+        durationSeconds: lesson.durationSeconds ?? null,
+        slug: lesson.slug ?? null,
+        order: lesson.order,
+        // Thumbnail do YouTube derivada do ID. NUNCA expomos youtubeUrl.
+        youtubeVideoId: ytId,
+        verses: lesson.verses ?? [],
+        versesRefs: lesson.versesRefs ?? [],
+      },
+      course: {
+        _id: course._id,
+        title: course.title,
+        slug: course.slug ?? null,
+        thumbnail: course.thumbnail ?? null,
+        category: course.category,
+        level: course.level,
+        creatorId: course.creatorId,
+        creatorName: creator?.name ?? 'Criador',
+        creatorAvatarUrl: creator?.avatarUrl ?? null,
+        creatorHandle: creator?.handle ?? null,
+        totalLessons: course.totalLessons,
+        totalModules: course.totalModules,
+      },
+      siblingLessons: publishedLessons,
+    }
+  },
+})

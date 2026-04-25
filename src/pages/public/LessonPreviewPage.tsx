@@ -1,0 +1,228 @@
+// Preview público da aula. Usuário anônimo (ou logado-mas-não-matriculado)
+// vê título, descrição, lista de aulas do curso, mas o player é substituído
+// por um overlay LessonGate.
+
+import { useParams, Link, Navigate } from 'react-router-dom'
+import { useQuery } from 'convex/react'
+import { useUser } from '@clerk/clerk-react'
+import { api } from '../../../convex/_generated/api'
+import { Navbar } from '@/components/layout/Navbar'
+import { LessonGate } from '@/components/public/LessonGate'
+import { useSeo } from '@/lib/seo'
+
+function formatSeconds(s: number | null) {
+  if (!s) return ''
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  if (h > 0) return `${h}h ${m}min`
+  return `${m}min`
+}
+
+export function LessonPreviewPage() {
+  const { courseSlug, lessonSlug } = useParams<{ courseSlug: string; lessonSlug: string }>()
+  const { isSignedIn } = useUser()
+
+  const data = useQuery(
+    api.lessons.getPublicPreview,
+    courseSlug && lessonSlug ? { courseSlug, lessonSlug } : 'skip',
+  )
+
+  useSeo({
+    title: data ? `${data.lesson.title} | ${data.course.title}` : 'Carregando…',
+    description: data?.lesson.description ?? data?.course.title ?? '',
+    url: `https://resenhadoteologo.com/cursos/${courseSlug}/${lessonSlug}`,
+    image: data?.lesson.youtubeVideoId
+      ? `https://i.ytimg.com/vi/${data.lesson.youtubeVideoId}/hqdefault.jpg`
+      : data?.course.thumbnail ?? null,
+    type: 'website',
+  })
+
+  if (!courseSlug || !lessonSlug) return <Navigate to="/catalogo" replace />
+
+  if (data === undefined) {
+    return (
+      <div className="min-h-screen bg-[#0F141A]">
+        <Navbar />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
+        </div>
+      </div>
+    )
+  }
+
+  if (data === null) {
+    return (
+      <div className="min-h-screen bg-[#0F141A] text-white">
+        <Navbar />
+        <main className="pt-32 pb-24">
+          <div className="mx-auto max-w-2xl px-5 text-center">
+            <h1 className="font-display text-3xl font-bold">Aula não encontrada</h1>
+            <p className="mt-3 text-sm text-white/56">
+              Esta aula não existe ou o curso não está disponível publicamente.
+            </p>
+            <Link
+              to="/catalogo"
+              className="mt-6 inline-flex rounded-2xl bg-[#F37E20] px-5 py-3 text-sm font-semibold text-white hover:bg-[#e06e10]"
+            >
+              Ver catálogo de cursos
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  const { lesson, course, siblingLessons } = data
+  const thumbnailUrl = lesson.youtubeVideoId
+    ? `https://i.ytimg.com/vi/${lesson.youtubeVideoId}/hqdefault.jpg`
+    : course.thumbnail ?? null
+  const courseHref = `/cursos/${course.slug ?? course._id}`
+
+  return (
+    <div className="min-h-screen bg-[#0F141A] text-white">
+      <Navbar />
+
+      <main className="pt-28 pb-24">
+        <div className="mx-auto max-w-6xl px-5 md:px-8">
+          <div className="mb-6">
+            <Link
+              to={courseHref}
+              className="inline-flex items-center gap-2 text-sm text-white/56 transition-colors hover:text-white"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              {course.title}
+            </Link>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div>
+              <LessonGate
+                thumbnailUrl={thumbnailUrl}
+                courseId={course._id}
+                courseSlug={course.slug}
+                isAuthenticated={!!isSignedIn}
+              />
+
+              <div className="mt-8">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
+                  {course.category}
+                </p>
+                <h1 className="mt-2 font-display text-3xl font-bold leading-tight md:text-4xl">
+                  {lesson.title}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-white/48">
+                  {lesson.durationSeconds && <span>{formatSeconds(lesson.durationSeconds)}</span>}
+                  <span>· Aula {lesson.order + 1} de {course.totalLessons}</span>
+                </div>
+
+                {lesson.description && (
+                  <p className="mt-6 text-sm leading-7 text-white/72">{lesson.description}</p>
+                )}
+
+                {(lesson.versesRefs.length > 0 || lesson.verses.length > 0) && (
+                  <div className="mt-6 rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
+                      Versículos referenciados
+                    </p>
+                    <ul className="mt-3 space-y-1.5 text-sm text-white/72">
+                      {lesson.versesRefs.length > 0
+                        ? lesson.versesRefs.map((v, i) => (
+                            <li key={i}>
+                              {v.bookSlug.replace(/-/g, ' ')} {v.chapter}:{v.verseStart}
+                              {v.verseEnd > v.verseStart ? `-${v.verseEnd}` : ''}
+                            </li>
+                          ))
+                        : lesson.verses.map((v, i) => <li key={i}>{v}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-8 rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/8 p-5">
+                  <div className="flex items-center gap-3">
+                    {course.creatorAvatarUrl ? (
+                      <img
+                        src={course.creatorAvatarUrl}
+                        alt={course.creatorName}
+                        className="h-10 w-10 rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F37E20]/16 text-sm font-semibold text-[#F2BD8A]">
+                        {course.creatorName.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs uppercase tracking-[0.18em] text-white/40">Professor</p>
+                      {course.creatorHandle ? (
+                        <Link
+                          to={`/${course.creatorHandle}`}
+                          className="font-medium text-white hover:text-[#F2BD8A]"
+                        >
+                          {course.creatorName}
+                        </Link>
+                      ) : (
+                        <p className="font-medium text-white">{course.creatorName}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <aside className="lg:sticky lg:top-28 self-start">
+              <div className="rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
+                  Aulas do curso
+                </p>
+                <ul className="mt-4 space-y-1">
+                  {siblingLessons.map((l, i) => {
+                    const href = l.slug
+                      ? `/cursos/${courseSlug}/${l.slug}`
+                      : `/cursos/${courseSlug}`
+                    return (
+                      <li key={String(l._id)}>
+                        <Link
+                          to={href}
+                          className={
+                            l.isCurrent
+                              ? 'flex items-center gap-3 rounded-xl border border-[#F37E20]/24 bg-[#F37E20]/10 px-3 py-2.5'
+                              : 'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]'
+                          }
+                        >
+                          <span
+                            className={
+                              l.isCurrent
+                                ? 'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#F37E20] text-[10px] font-bold text-white'
+                                : 'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-white/14 text-[10px] font-bold text-white/50'
+                            }
+                          >
+                            {i + 1}
+                          </span>
+                          <span
+                            className={
+                              l.isCurrent
+                                ? 'flex-1 truncate text-sm font-semibold text-[#F2BD8A]'
+                                : 'flex-1 truncate text-sm text-white/68'
+                            }
+                          >
+                            {l.title}
+                          </span>
+                          {l.durationSeconds && (
+                            <span className="text-xs text-white/32">
+                              {formatSeconds(l.durationSeconds)}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
