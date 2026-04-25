@@ -1,12 +1,10 @@
-// Seed unico (idempotente) dos artigos do blog gerados a partir dos roteiros
-// em canal do youtube/artigos/. Disparado via:
+// Seed unico (idempotente) dos artigos do blog editorial atribuidos ao admin
+// (perfil oficial @resenhadoteologo). Disparado via:
 //   npx convex run --prod seedBlog:seedFromCanal '{"adminEmail":"hello@resenhadoteologo.com"}'
 //
-// Cria os posts como DRAFT atribuidos ao usuario admin. Para publicar,
-// abrir /dashboard/blog e clicar Publicar em cada um.
-//
-// Idempotente: se ja existe um post do mesmo author com o mesmo slug, ele
-// e' patcheado em vez de duplicado.
+// Cria os posts ja como PUBLISHED. Em re-execucoes, atualiza titulo/excerpt/
+// bodyMarkdown e garante status='published' (preservando o publishedAt
+// original quando ja existir).
 
 import { v } from 'convex/values'
 import { internalMutation } from './_generated/server'
@@ -202,13 +200,13 @@ E Apocalipse 21:4 promete o fim de todo sofrimento. "Deus enxugará dos seus olh
 
 ## O que fazer com a tua dor
 
-Não despreze. A pior coisa que você pode fazer com o sofrimento é fingir que não existe. Davi clamou. Jeremias chorou. Jesus gemeu. A fé bíblica não é estoicismo cristão. É lamento honesto diante de um Deus que ouve.
+A primeira tentação diante do sofrimento é desprezar a própria dor, fingir que ela não existe e seguir a vida como se nada tivesse acontecido. A Escritura aponta o caminho contrário. Davi clamou. Jeremias chorou. Jesus gemeu diante do túmulo de Lázaro. A fé bíblica não é estoicismo cristão. É lamento honesto diante de um Deus que ouve.
 
-Não acuse. A segunda pior coisa é acusar Deus de injustiça. Porque na hora que você levanta a sua justiça contra a dele, você esqueceu quem você é e quem ele é.
+A segunda tentação é o oposto: acusar Deus de injustiça, levantar a própria régua contra a dele, exigir explicação. Mas no momento em que você coloca a sua justiça acima da dele, você esqueceu quem você é e quem ele é. O lamento bíblico nunca se transforma em acusação contra o caráter de Deus.
 
-Confie. Não no sentido de que você entende, mas no sentido de que você conhece o caráter dele. O Deus que enviou seu Filho para morrer por você não vai te abandonar agora. O Deus que ressuscitou Cristo dos mortos é capaz de redimir qualquer dor.
+O caminho que sobra é a confiança. Não a confiança de quem entende, mas a de quem conhece o caráter dele. O Deus que enviou o próprio Filho para morrer por você não vai te abandonar agora. O Deus que ressuscitou Cristo dos mortos é capaz de redimir qualquer dor que ainda parece sem sentido.
 
-Espere. A redenção é certa. O fim do sofrimento é certo. A glória vai superar todo o peso da dor. Não é frase de motivação. É promessa do Deus que cumpre o que diz.`,
+E é nessa confiança que se aprende a esperar. A redenção é certa. O fim do sofrimento é certo. A glória vindoura vai superar todo o peso da dor presente. Isso não é frase de motivação. É promessa do Deus que cumpre o que diz.`,
     categorySlug: `vida-crista`,
     tags: ["sofrimento", "providência", "fé"],
     source: `GPF_01_Por_que_Deus_permite_o_sofrimento.docx`,
@@ -281,7 +279,7 @@ Ela impulsiona missões. Os reformados foram alguns dos maiores missionários da
 
 ## A mensagem direta
 
-Se você ainda não creu, a doutrina da eleição não é uma desculpa para esperar. É um chamado para vir agora. Você não sabe se é eleito. Mas sabe que Cristo disse: "todo aquele que vem a mim, de modo nenhum o lançarei fora" (João 6:37). Vem.
+Se você ainda não creu, a doutrina da eleição não é desculpa para esperar a vida toda por uma certeza que ela não promete. É chamado para vir agora. Você não sabe se foi eleito. Mas sabe que Cristo prometeu: "todo aquele que vem a mim, de modo nenhum o lançarei fora" (João 6:37). Quem vem, descobre que sempre foi conhecido por ele.
 
 Se você já creu, a doutrina da eleição é o teu chão mais firme. Você não foi escolhido por causa de você. Você foi escolhido apesar de você. Por amor. Por graça. Para sempre.
 
@@ -324,7 +322,7 @@ Romanos 8:7-8 diz: "A inclinação da carne é inimizade contra Deus, pois não 
 
 1 Coríntios 2:14 diz: "Ora, o homem natural não compreende as coisas do Espírito de Deus, porque lhe parecem loucura; e não pode entendê-las, porque elas se discernem espiritualmente". Não pode.
 
-Efésios 2:1 diz que os incrédulos estão "mortos em ofensas e pecados". Mortos. Não doentes. Não fracos. Mortos.
+Efésios 2:1 diz que os incrédulos estão "mortos em ofensas e pecados". A linguagem é deliberada. Não se trata de uma humanidade espiritualmente doente que ainda tem força para reagir, nem de pessoas fracas que precisam apenas de incentivo. Trata-se de mortos, e mortos não cooperam com a própria ressurreição.
 
 A vontade humana, depois da queda, é livre para escolher conforme a sua natureza. Mas a sua natureza está corrompida. Então ela escolhe livremente o pecado. Não porque é forçada, mas porque é o que ela quer.
 
@@ -445,7 +443,7 @@ Os grandes missionários, William Carey, David Livingstone, Hudson Taylor, Adoni
 
 Hoje, quanto mais a Igreja relativiza o inferno, mais ela desmotiva missões. Para que pregar com urgência, se ninguém está em perigo? Para que ir longe, se todos vão se encontrar com Deus de qualquer jeito?
 
-A teologia clara produz vidas claras. Quem entende o que está em jogo, vai. Reza. Dá. Sustenta. Vai.
+A teologia clara produz vidas claras. Quem entende o que está em jogo deixa de tratar missões como hobby pastoral e começa a orar com peso, dar com sacrifício, sustentar com constância e, quando é chamado, ir.
 
 ## Como falar disso com amor
 
@@ -459,9 +457,9 @@ Não com sadismo. Não com superioridade. Com amor que urge, com seriedade que e
 
 A doutrina do inferno só faz sentido completo na presença do evangelho. Cristo veio porque o inferno é real. E a obra dele resolve o problema que você não pode resolver.
 
-Se você ainda não creu em Cristo, a mensagem é direta: o que está em jogo é eterno. E há uma porta. Cristo morreu para abrir essa porta. Vem.
+Se você ainda não creu em Cristo, a mensagem é direta: o que está em jogo é eterno, e há uma porta aberta. Cristo morreu para abri-la. Não há motivo para adiar.
 
-Se você já creu, a mensagem é: você foi resgatado. Não por causa de você. Por causa dele. E há gente perto de você que ainda não foi. Pregue o evangelho. Sustente missões. Ore. Vai. Porque o tempo é curto, e o que está em jogo é maior do que tudo.`,
+Se você já creu, a mensagem é outra: você foi resgatado, não por causa de algo em você, mas pela vontade dele. E há gente próxima que ainda não foi alcançada. A resposta da Igreja a essa realidade é a velha combinação que sempre produziu fruto: pregar o evangelho com clareza, sustentar missões com constância e orar com a urgência de quem entende que o tempo é curto e o que está em jogo é maior do que tudo.`,
     categorySlug: `escatologia`,
     tags: ["inferno", "juízo", "eternidade"],
     source: `GPF_04_O_inferno_existe_de_verdade.docx`,
@@ -809,9 +807,7 @@ Você não foi resgatado por uma boa motivação. Foi resgatado porque estava pe
 
 O Natal de fato celebrado é o Natal entendido. E entendê-lo é deixar a doutrina te levar à adoração. Porque diante de uma verdade tão grande, a única resposta possível é cair de joelhos.
 
-Como caíram os pastores. Como caíram os magos. Como vai cair toda língua um dia.
-
-E confessar que Jesus Cristo é o Senhor. Para a glória do Pai.`,
+Como caíram os pastores naquela noite, como caíram os magos diante da criança, como vai cair toda língua um dia, confessando que Jesus Cristo é o Senhor, para a glória do Pai.`,
     categorySlug: `cristologia`,
     tags: ["natal", "encarnação", "Cristo"],
     source: `NATAL_2026_ROTEIRO.docx`,
@@ -819,12 +815,12 @@ E confessar que Jesus Cristo é o Senhor. Para a glória do Pai.`,
   {
     title: `A ressurreição que ninguém te contou`,
     slug: `a-ressurreicao-que-ninguem-te-contou`,
-    excerpt: `A ressurreição não é um final feliz. É o evento que valida toda a fé cristã, e que a maioria dos cristãos só conhece pela superfície. Vai com calma neste artigo.`,
+    excerpt: `A ressurreição não é um final feliz. É o evento que valida toda a fé cristã, e que a maioria dos cristãos só conhece pela superfície. Vale a pena examinar com calma o que de fato aconteceu naquele domingo.`,
     bodyMarkdown: `A maioria dos cristãos sabe que Jesus ressuscitou. Mas a maioria dos cristãos nunca pensou seriamente nas implicações dessa ressurreição. Trata o evento como um final feliz para uma história que ia mal. Como um detalhe de fé. Como um item da lista de doutrinas.
 
 Mas a ressurreição não é detalhe. É a base de tudo. Sem ela, a fé cristã não tem chão. Sem ela, a cruz não tem sentido. Sem ela, o evangelho é frase bonita sem fundamento.
 
-Paulo foi categórico em 1 Coríntios 15:14: "Se Cristo não ressuscitou, é vã a nossa pregação, e também é vã a vossa fé". Vã. Vazia. Sem conteúdo. Inútil.
+Paulo foi categórico em 1 Coríntios 15:14: "Se Cristo não ressuscitou, é vã a nossa pregação, e também é vã a vossa fé". A palavra grega que ele usa, kenos, carrega o peso de algo vazio, sem conteúdo, sem efeito. Sem ressurreição, a fé cristã não é apenas frágil, é literalmente sem objeto.
 
 A ressurreição não é a parte opcional da fé. É a fé inteira sustentada num único evento histórico.
 
@@ -995,9 +991,7 @@ Pentecostes não é evento do passado. É realidade contínua. O Espírito conti
 
 Toda vez que você crê pela primeira vez, é Pentecostes pessoal. Toda vez que uma igreja é plantada, é Pentecostes em outro lugar. Toda vez que um pecador se arrepende, o Espírito continua a obra que começou em Atos 2.
 
-A festa não acabou. Ela continua. Em você. Por você. Através de você.
-
-Para a glória do Pai. Pelo nome do Filho. Pelo poder do Espírito.`,
+A festa não acabou. Ela continua em cada crente, por meio de cada crente, dentro da Igreja que segue testemunhando ao mundo, para a glória do Pai, pelo nome do Filho, no poder do mesmo Espírito que desceu naquela manhã.`,
     categorySlug: `pneumatologia`,
     tags: ["pentecostes", "Espírito Santo", "igreja"],
     source: `PENTECOSTES_2026_ROTEIRO.docx`,
@@ -1125,9 +1119,7 @@ Os romanos crucificavam para humilhar. Para aterrorizar. Para maximizar o sofrim
 
 Crucificar um romano era proibido por lei. A pena era reservada para os piores criminosos, os escravos rebeldes, os inimigos do Estado. Era considerada tão vergonhosa que Cícero escreveu que "a própria palavra cruz deve estar longe não apenas dos corpos dos cidadãos romanos, mas até de seus pensamentos, seus olhos, seus ouvidos".
 
-Foi nesse instrumento que Jesus morreu. Não em circunstâncias dignas. Não com o respeito que se dá a um líder religioso. Como um criminoso. Como um terrorista da época. Como o lixo da humanidade.
-
-E ele aceitou aquilo. Por você.
+Foi nesse instrumento que Jesus morreu. Não em circunstâncias dignas, nem com o respeito reservado a um líder religioso, mas como criminoso comum, ao lado de bandidos, na mais profunda humilhação que o império conhecia. E ele aceitou esse caminho de livre vontade, sabendo exatamente o que carregaria ali.
 
 ## A intensidade física da paixão
 
@@ -1139,9 +1131,9 @@ Foi coroado de espinhos. Não foi coroa simbólica. Foi um ramo de espinhos pres
 
 Foi obrigado a carregar a trave horizontal da cruz, com as costas em carne viva, pelas ruas de Jerusalém. Caiu no caminho. Outro homem foi obrigado a carregar por ele.
 
-Foi pregado. Cravos de quinze centímetros atravessando os pulsos e os tornozelos. E ele ficou ali, durante seis horas, lutando para respirar, sangrando, agonizando.
+Foi pregado. Cravos de quinze centímetros atravessando os pulsos e os tornozelos. E ali permaneceu durante seis horas, lutando para respirar, sangrando, agonizando.
 
-Tudo isso. Por você. Mas tudo isso é só a parte visível.
+A intensidade física daquela tarde já seria suficiente para tornar o evento inesquecível. E ainda assim, esse é apenas o lado visível do que aconteceu na cruz.
 
 ## O abandono que ninguém mais carregou
 
@@ -1217,7 +1209,7 @@ Se você já creu, a mensagem é: pare de tratar a cruz como decoração emocion
 
 Deixa a cruz te fazer humilde e grato ao mesmo tempo. Humilde porque você sabe o que custou a sua salvação. Grato porque você sabe que ela foi paga por alguém que te amou antes de você merecer.
 
-A cruz é o lugar onde a justiça e a misericórdia de Deus se abraçaram. E foi por amor a você.`,
+A cruz é o lugar onde a justiça e a misericórdia de Deus se abraçaram, e o motivo desse abraço foi o amor com que ele decidiu, antes da fundação do mundo, resgatar o seu povo.`,
     categorySlug: `cristologia`,
     tags: ["sexta-feira santa", "cruz", "Cristo"],
     source: `SEXTAFEIRASANTA_2026_ROTEIRO.docx`,
@@ -1272,6 +1264,8 @@ export const seedFromCanal = internalMutation({
           bodyMarkdown: seed.bodyMarkdown,
           categorySlug: seed.categorySlug,
           tagSlugs,
+          status: 'published',
+          publishedAt: existing.publishedAt ?? now,
           updatedAt: now,
         })
         updated += 1
@@ -1287,7 +1281,8 @@ export const seedFromCanal = internalMutation({
         bodyMarkdown: seed.bodyMarkdown,
         categorySlug: seed.categorySlug,
         tagSlugs,
-        status: 'draft',
+        status: 'published',
+        publishedAt: now,
         updatedAt: now,
         likeCount: 0,
         commentCount: 0,
