@@ -40,15 +40,15 @@ export function AuthLayout({
         animate="visible"
         className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col gap-6 lg:grid lg:grid-cols-[1.05fr_0.95fr]"
       >
-        <aside className={cn('relative hidden overflow-hidden p-8 lg:flex lg:flex-col lg:justify-between', brandPanelClass)}>
+        <aside className={cn('relative hidden overflow-hidden p-8 lg:flex lg:flex-col lg:justify-center lg:gap-12', brandPanelClass)}>
           <div className="absolute inset-0">
             <img src={imageSrc} alt="" className="h-full w-full object-cover opacity-[0.16]" />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,18,0.62)_0%,rgba(15,20,26,0.92)_54%,rgba(15,20,26,0.98)_100%)]" />
           </div>
 
-          <div className="relative z-10">
-            <Link to="/" className="inline-flex items-center gap-3">
-              <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-12 w-auto" />
+          <div className="relative z-10 flex justify-center">
+            <Link to="/" className="inline-flex items-center">
+              <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-24 w-auto" />
             </Link>
           </div>
 
