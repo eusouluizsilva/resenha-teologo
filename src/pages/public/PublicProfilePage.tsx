@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
 import { cn, brandPrimaryButtonClass, brandInputClass } from '@/lib/brand'
 import { FollowButton } from '@/components/blog/FollowButton'
+import { DonateButton } from '@/components/donate/DonateButton'
 
 function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
   return (
@@ -367,8 +368,9 @@ export function PublicProfilePage() {
             </div>
           )}
 
-          <div className="mt-5 flex items-center justify-center">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <FollowButton authorUserId={profile.clerkId} authorName={profile.name} tone="dark" />
+            <DonateButton tone="dark" variant="inline" />
           </div>
         </div>
 

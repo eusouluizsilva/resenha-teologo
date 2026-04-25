@@ -6,7 +6,7 @@ const RESERVED = new Set([
   'cursos', 'entrar', 'cadastro', 'dashboard', 'termos', 'privacidade',
   'admin', 'api', 'sobre', 'ajuda', 'suporte', 'contato', 'perfil', 'login',
   'verificar', 'sso-callback', 'webhook', 'blog', 'app', 'planos', 'funcoes',
-  'convite', 'convites', 'instituicao', 'membros',
+  'convite', 'convites', 'instituicao', 'membros', 'apoie', 'apoiar', 'doacao', 'doar',
 ])
 
 const HANDLE_REGEX = /^[a-z0-9_]{3,30}$/

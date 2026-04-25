@@ -100,6 +100,9 @@ const CourseDetailPage = lazy(() =>
 const LessonPreviewPage = lazy(() =>
   import('@/pages/public/LessonPreviewPage').then((m) => ({ default: m.LessonPreviewPage })),
 )
+const SupportPage = lazy(() =>
+  import('@/pages/public/SupportPage').then((m) => ({ default: m.SupportPage })),
+)
 const PlanosPage = lazy(() =>
   import('@/pages/dashboard/PlanosPage').then((m) => ({ default: m.PlanosPage })),
 )
@@ -298,6 +301,7 @@ export default function App() {
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
           <Route path="/cursos/:courseSlug/:lessonSlug" element={<LessonPreviewPage />} />
+          <Route path="/apoie" element={<SupportPage />} />
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
           <Route path="/convite/:token" element={<AcceptInvitePage />} />
           <Route path="/sobre" element={<SobrePage />} />

@@ -19,6 +19,8 @@ import {
 } from '@/lib/bible/translations'
 import { BiblePanel, type BiblePanelInitialRef } from '@/components/BiblePanel'
 import { fetchChapter, type BibleVerse } from '@/lib/bible/api'
+import { DonateButton } from '@/components/donate/DonateButton'
+import { FlashcardsLessonSection } from '@/components/aula/FlashcardsLessonSection'
 
 // ─── YouTube Player ───────────────────────────────────────────────────────────
 
@@ -1212,6 +1214,7 @@ function NotebookSection({
   const [editingNotebookId, setEditingNotebookId] = useState<Id<'notebooks'> | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
   const [notebookActionError, setNotebookActionError] = useState<string | null>(null)
+  const [view, setView] = useState<'lesson' | 'all'>('lesson')
 
   // Seleciona caderno padrão quando carrega lista.
   useEffect(() => {
@@ -1226,6 +1229,11 @@ function NotebookSection({
     activeNotebookId
       ? { notebookId: activeNotebookId, lessonId }
       : 'skip'
+  )
+
+  const allEntries = useQuery(
+    api.notebooks.listNotebookEntries,
+    activeNotebookId && view === 'all' ? { notebookId: activeNotebookId } : 'skip'
   )
 
   // Sincroniza conteúdo quando troca de caderno ou quando entrada carrega do servidor.
@@ -1499,6 +1507,35 @@ function NotebookSection({
           )}
 
           {activeNotebookId && (
+            <div className="border-b border-gray-100 px-4 py-2 flex items-center gap-1.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setView('lesson')}
+                className={cn(
+                  'rounded-full px-3 py-1 font-semibold transition-all',
+                  view === 'lesson'
+                    ? 'bg-[#F37E20]/10 text-[#F37E20]'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+              >
+                Esta aula
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('all')}
+                className={cn(
+                  'rounded-full px-3 py-1 font-semibold transition-all',
+                  view === 'all'
+                    ? 'bg-[#F37E20]/10 text-[#F37E20]'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+              >
+                Caderno completo
+              </button>
+            </div>
+          )}
+
+          {activeNotebookId && view === 'lesson' && (
             <div className="p-4">
               <textarea
                 value={content}
@@ -1525,6 +1562,67 @@ function NotebookSection({
                     : 'Atualizado'}
                 </span>
               </div>
+            </div>
+          )}
+
+          {activeNotebookId && view === 'all' && (
+            <div className="p-4">
+              {allEntries === undefined ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-300 border-t-[#F37E20] animate-spin" />
+                  Carregando anotações...
+                </div>
+              ) : allEntries.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  Nenhuma anotação neste caderno ainda. Use a aba "Esta aula" para começar.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {allEntries.map((e) => {
+                    const isCurrent = e.lessonId === lessonId
+                    return (
+                      <li
+                        key={e._id}
+                        className={cn(
+                          'rounded-xl border p-3 transition-all',
+                          isCurrent
+                            ? 'border-[#F37E20]/40 bg-[#F37E20]/5'
+                            : 'border-gray-200 bg-white'
+                        )}
+                      >
+                        <div className="flex items-baseline justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-semibold text-gray-700">
+                              {e.lessonTitle}
+                            </p>
+                            <p className="truncate text-[11px] text-gray-400">
+                              {e.courseTitle}
+                            </p>
+                          </div>
+                          {!isCurrent && e.courseSlug && e.lessonSlug && (
+                            <Link
+                              to={`/dashboard/meus-cursos/${e.courseId}/aula/${e.lessonId}`}
+                              className="shrink-0 text-[11px] font-semibold text-[#F37E20] hover:underline"
+                            >
+                              Abrir aula
+                            </Link>
+                          )}
+                          {isCurrent && (
+                            <span className="shrink-0 rounded-full bg-[#F37E20]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#F37E20]">
+                              Aula atual
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                          {e.content || (
+                            <span className="text-gray-400 italic">Sem conteúdo</span>
+                          )}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -2678,6 +2776,8 @@ export function AulaPage() {
                   </span>
                 )}
               </button>
+
+              <DonateButton tone="light" variant="inline" />
             </div>
           </div>
 
@@ -2704,7 +2804,10 @@ export function AulaPage() {
           {/* 6. Caderno digital */}
           <NotebookSection lessonId={lesson._id as Id<'lessons'>} />
 
-          {/* 6. Materiais */}
+          {/* 6b. Flashcards desta aula */}
+          <FlashcardsLessonSection courseId={courseId as Id<'courses'>} />
+
+          {/* 6c. Materiais */}
           <MaterialsSection lessonId={lesson._id as Id<'lessons'>} />
 
           {/* 7. Fórum de comentários */}

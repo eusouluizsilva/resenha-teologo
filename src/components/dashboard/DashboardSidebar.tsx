@@ -7,7 +7,6 @@ import { useCurrentAppUser } from '@/lib/currentUser'
 import type { UserFunction } from '@/lib/functions'
 
 type NavItem = { label: string; href: string; exact?: boolean; icon: React.ReactNode }
-type NavGroup = { label: string; fn: UserFunction; items: NavItem[] }
 
 const iconBook = (
   <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -92,7 +91,10 @@ const iconNewspaper = (
 // rotas continuam registradas em App.tsx para quem tem a função ativa.
 const SHOW_INSTITUTION_NAV = false
 
-const NAV_GROUPS: NavGroup[] = [
+type NavItemMaybeAdmin = NavItem & { adminOnly?: boolean }
+type NavGroupExt = { label: string; fn: UserFunction; items: NavItemMaybeAdmin[] }
+
+const NAV_GROUPS: NavGroupExt[] = [
   {
     label: 'Aluno',
     fn: 'aluno',
@@ -110,7 +112,10 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Meus cursos', href: '/dashboard/cursos', icon: iconBook },
       { label: 'Alunos', href: '/dashboard/alunos', icon: iconMembers },
       { label: 'Perguntas', href: '/dashboard/perguntas', icon: iconChat },
-      { label: 'Financeiro', href: '/dashboard/financeiro', icon: iconMoney },
+      // Financeiro fica oculto para criadores comuns enquanto Stripe e AdSense
+      // ainda nao estao em producao. Reabrir quando o ciclo de pagamento estiver
+      // completo (ver feedback_visibilidade_admin na memoria).
+      { label: 'Financeiro', href: '/dashboard/financeiro', icon: iconMoney, adminOnly: true },
     ],
   },
   ...(SHOW_INSTITUTION_NAV
@@ -128,12 +133,14 @@ const NAV_GROUPS: NavGroup[] = [
     : []),
 ]
 
-const ALWAYS_NAV: NavItem[] = [
+const ALWAYS_NAV: NavItemMaybeAdmin[] = [
   { label: 'Bíblia', href: '/dashboard/biblia', icon: iconBook },
-  { label: 'Artigos', href: '/dashboard/blog', icon: iconNewspaper },
+  { label: 'Blog', href: '/dashboard/blog', icon: iconNewspaper },
   { label: 'Meu perfil', href: '/dashboard/perfil', icon: iconUser },
   { label: 'Configurações', href: '/dashboard/funcoes', icon: iconFunctions },
-  { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
+  // Planos fica oculto para usuarios comuns enquanto Stripe nao esta ativo.
+  // Reabrir quando os pagamentos estiverem em producao.
+  { label: 'Planos', href: '/dashboard/planos', icon: iconPlans, adminOnly: true },
 ]
 
 function NavLink({
@@ -193,7 +200,11 @@ export function DashboardSidebar({ isMobileOpen = false, onClose }: DashboardSid
     displayName.slice(0, 2).toUpperCase()
 
   const hasFunctions = functions.length > 0
-  const activeGroups = NAV_GROUPS.filter((g) => functions.includes(g.fn))
+  const activeGroups = NAV_GROUPS.filter((g) => functions.includes(g.fn)).map((g) => ({
+    ...g,
+    items: g.items.filter((i) => !i.adminOnly || isAdmin),
+  }))
+  const alwaysItems = ALWAYS_NAV.filter((i) => !i.adminOnly || isAdmin)
 
   async function handleSignOut() {
     await signOut({ redirectUrl: '/' })
@@ -291,7 +302,7 @@ export function DashboardSidebar({ isMobileOpen = false, onClose }: DashboardSid
           <div className="my-2 border-t border-white/6" />
         )}
 
-        {ALWAYS_NAV.map((item) => (
+        {alwaysItems.map((item) => (
           <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onClose} />
         ))}
 

@@ -46,6 +46,7 @@ import type * as publicProfiles from "../publicProfiles.js";
 import type * as quizzes from "../quizzes.js";
 import type * as ratings from "../ratings.js";
 import type * as reengagement from "../reengagement.js";
+import type * as seedBlog from "../seedBlog.js";
 import type * as seedCourses from "../seedCourses.js";
 import type * as student from "../student.js";
 import type * as testimonials from "../testimonials.js";
@@ -97,6 +98,7 @@ declare const fullApi: ApiFromModules<{
   quizzes: typeof quizzes;
   ratings: typeof ratings;
   reengagement: typeof reengagement;
+  seedBlog: typeof seedBlog;
   seedCourses: typeof seedCourses;
   student: typeof student;
   testimonials: typeof testimonials;
