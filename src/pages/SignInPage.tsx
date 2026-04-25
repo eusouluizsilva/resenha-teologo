@@ -20,7 +20,7 @@ function safeRedirectTarget(value: string | null): string {
   return value
 }
 
-type Step = 'login' | 'forgot' | 'forgot-verify'
+type Step = 'login' | 'forgot' | 'forgot-verify' | 'verify-2fa'
 
 export function SignInPage() {
   const { signIn, setActive, isLoaded } = useSignIn()
@@ -37,6 +37,7 @@ export function SignInPage() {
   const [password, setPassword] = useState('')
   const [resetCode, setResetCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  const [twoFactorCode, setTwoFactorCode] = useState('')
 
   const aside = useMemo(() => {
     if (step === 'forgot') {
@@ -51,6 +52,21 @@ export function SignInPage() {
           'Continuidade de estudo sem ruído visual desnecessário',
         ],
         imageSrc: '/fotos/bible-laptop-headphones.jpg',
+      }
+    }
+
+    if (step === 'verify-2fa') {
+      return {
+        eyebrow: 'Verificação de acesso',
+        title: 'Confirme o código enviado para o seu email.',
+        description:
+          'Por segurança, enviamos um código para confirmar que é você quem está acessando a partir deste dispositivo.',
+        highlights: [
+          'Verificação rápida em duas etapas',
+          'Proteção contra acessos não reconhecidos',
+          'Continuidade segura no ambiente institucional',
+        ],
+        imageSrc: '/fotos/library-hall.jpg',
       }
     }
 
@@ -91,6 +107,47 @@ export function SignInPage() {
 
     try {
       const result = await signIn.create({ identifier: email, password })
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        navigate(redirectTo)
+        return
+      }
+
+      if (result.status === 'needs_second_factor') {
+        const emailFactor = result.supportedSecondFactors?.find(
+          (f) => f.strategy === 'email_code',
+        )
+        if (emailFactor && 'emailAddressId' in emailFactor) {
+          await signIn.prepareSecondFactor({
+            strategy: 'email_code',
+            emailAddressId: emailFactor.emailAddressId,
+          })
+          setStep('verify-2fa')
+          return
+        }
+        setError('Verificação de segundo fator necessária, mas não há método disponível.')
+        return
+      }
+
+      setError('Não foi possível concluir o login. Tente novamente.')
+    } catch (err) {
+      setError(clerkErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleVerifyTwoFactor(e: React.FormEvent) {
+    e.preventDefault()
+    if (!isLoaded) return
+    setLoading(true)
+    setError('')
+
+    try {
+      const result = await signIn.attemptSecondFactor({
+        strategy: 'email_code',
+        code: twoFactorCode,
+      })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
         navigate(redirectTo)
@@ -168,17 +225,22 @@ export function SignInPage() {
         )}
 
         <p className={brandEyebrowClass}>
-          {step === 'login' ? 'Entrar' : step === 'forgot' ? 'Recuperar senha' : 'Confirmar código'}
+          {step === 'login' && 'Entrar'}
+          {step === 'forgot' && 'Recuperar senha'}
+          {step === 'forgot-verify' && 'Confirmar código'}
+          {step === 'verify-2fa' && 'Verificação por email'}
         </p>
         <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-white">
           {step === 'login' && 'Bem-vindo de volta'}
           {step === 'forgot' && 'Receba seu código de recuperação'}
           {step === 'forgot-verify' && 'Defina sua nova senha'}
+          {step === 'verify-2fa' && 'Confirme sua identidade'}
         </h2>
         <p className="mt-3 max-w-lg text-sm leading-7 text-white/58">
           {step === 'login' && 'Acesse sua conta e volte ao seu ambiente de estudo.'}
           {step === 'forgot' && 'Digite seu email para continuar com um fluxo simples, claro e seguro.'}
           {step === 'forgot-verify' && `Digite o código enviado para ${email} e escolha a nova senha.`}
+          {step === 'verify-2fa' && `Enviamos um código para ${email}. Use-o para concluir o acesso.`}
         </p>
       </motion.div>
 
@@ -288,6 +350,32 @@ export function SignInPage() {
 
             <button type="submit" disabled={loading} className={cn('mt-2 w-full', brandPrimaryButtonClass)}>
               {loading ? 'Salvando...' : 'Redefinir senha'}
+            </button>
+          </form>
+        </motion.div>
+      )}
+
+      {step === 'verify-2fa' && (
+        <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
+          <form onSubmit={handleVerifyTwoFactor} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Código de verificação</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="000000"
+                required
+                maxLength={6}
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className={cn('text-center font-display text-3xl font-bold tracking-[0.45em]', brandInputClass)}
+              />
+            </div>
+
+            {error && <p className="text-xs text-red-300">{error}</p>}
+
+            <button type="submit" disabled={loading} className={cn('mt-2 w-full', brandPrimaryButtonClass)}>
+              {loading ? 'Verificando...' : 'Confirmar e entrar'}
             </button>
           </form>
         </motion.div>
