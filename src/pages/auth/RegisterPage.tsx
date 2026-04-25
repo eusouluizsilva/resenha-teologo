@@ -4,13 +4,11 @@ import { useSignUp } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
 import { motion } from 'framer-motion'
 import { AuthLayout } from '@/components/auth/AuthLayout'
-import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { VerifyStep } from '@/components/auth/VerifyStep'
 import { fadeUp } from '@/lib/motion'
 import {
   brandEyebrowClass,
   brandInputClass,
-  brandPanelSoftClass,
   brandPrimaryButtonClass,
   brandGhostButtonClass,
   cn,
@@ -47,6 +45,44 @@ const COUNTRIES = [
   { code: 'OT', label: 'Outro', ddi: '' },
 ]
 
+const FUNCTION_OPTIONS: {
+  id: UserFunction
+  title: string
+  description: string
+  icon: React.ReactNode
+}[] = [
+  {
+    id: 'aluno',
+    title: 'Aluno',
+    description: 'Acesse cursos, acompanhe progresso e receba certificados.',
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    ),
+  },
+  {
+    id: 'criador',
+    title: 'Professor',
+    description: 'Publique cursos, organize módulos e acompanhe sua audiência.',
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'instituicao',
+    title: 'Igreja ou instituição',
+    description: 'Gerencie membros e acompanhe a formação coletiva.',
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+      </svg>
+    ),
+  },
+]
+
 type FormState = {
   firstName: string
   lastName: string
@@ -67,26 +103,15 @@ export function RegisterPage() {
   )
   const perfilHint = parsePerfilHint(searchParams.get('perfil'))
   const recordConsent = useMutation(api.consents.record)
+  const enableFunction = useMutation(api.userFunctions.enable)
 
   const [step, setStep] = useState<'form' | 'verify'>('form')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [selectedFunction, setSelectedFunction] = useState<UserFunction>(
+    perfilHint ?? 'aluno',
+  )
 
-  async function handleOAuth(strategy: 'oauth_google' | 'oauth_facebook') {
-    if (!isLoaded) return
-    setLoading(true)
-    setError('')
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: redirectTo,
-      })
-    } catch (err) {
-      setError(clerkErrorMessage(err))
-      setLoading(false)
-    }
-  }
   const [form, setForm] = useState<FormState>({
     firstName: '',
     lastName: '',
@@ -139,7 +164,7 @@ export function RegisterPage() {
           phoneCountry: selectedCountry.ddi || null,
           termsVersion: DOCUMENT_VERSION,
           termsAcceptedAt: new Date().toISOString(),
-          perfilHint: perfilHint ?? null,
+          perfilHint: selectedFunction,
         },
       })
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
@@ -160,12 +185,22 @@ export function RegisterPage() {
       const result = await signUp.attemptEmailAddressVerification({ code })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        // Registra o aceite dos Termos no banco próprio (além do Clerk metadata).
-        // Falha silenciosa porque a auth já está concluída: o registro pode ser
-        // reconciliado depois via ação administrativa se necessário.
+        // Registra aceite dos Termos e ativa a função escolhida no cadastro.
+        // Falhas aqui são silenciosas: a auth já está concluída e a função
+        // pode ser ativada depois em /dashboard/funcoes.
         try {
           await recordConsent({
             type: 'geral',
+            documentVersion: DOCUMENT_VERSION,
+            userAgent: navigator.userAgent,
+          })
+        } catch {
+          // noop
+        }
+        try {
+          await enableFunction({ function: selectedFunction })
+          await recordConsent({
+            type: selectedFunction,
             documentVersion: DOCUMENT_VERSION,
             userAgent: navigator.userAgent,
           })
@@ -198,8 +233,8 @@ export function RegisterPage() {
         asideDescription="Enviamos um código de 6 dígitos para seu email. Verifique a caixa de entrada e o spam."
         highlights={[
           'Cadastro único para todas as funções da plataforma',
-          'Você define como usar a plataforma depois do primeiro acesso',
-          'Aluno, criador ou instituição: tudo no mesmo ambiente',
+          'Você pode alterar sua função depois em Configurações',
+          'Aluno, professor ou instituição: tudo no mesmo ambiente',
         ]}
         imageSrc="/fotos/bible-laptop-headphones.jpg"
       >
@@ -218,7 +253,7 @@ export function RegisterPage() {
     <AuthLayout
       asideEyebrow="Criar conta"
       asideTitle="Uma conta para estudar, publicar e organizar sua comunidade."
-      asideDescription="Você decide como usar a plataforma depois do primeiro acesso. Sem compromisso de perfil agora."
+      asideDescription="Escolha como vai usar a plataforma. Você pode alterar isso depois em Configurações."
       highlights={[
         'Cursos gratuitos para todos os alunos',
         'Professores publicam e acompanham sua audiência',
@@ -232,29 +267,58 @@ export function RegisterPage() {
           Seus dados de acesso
         </h2>
         <p className="mt-3 text-sm leading-7 text-white/58">
-          Crie sua conta para acessar a plataforma. Você vai definir suas funções depois do primeiro acesso.
+          Crie sua conta para acessar a plataforma. Escolha como vai usar a partir do primeiro acesso.
         </p>
-      </motion.div>
-
-      <motion.div variants={fadeUp} className={cn('mt-8 space-y-3 p-5 sm:p-6', brandPanelSoftClass)}>
-        <OAuthButtons
-          onGoogle={() => handleOAuth('oauth_google')}
-          onFacebook={() => handleOAuth('oauth_facebook')}
-          loading={loading}
-        />
-        <div className="relative my-1 flex items-center gap-3">
-          <span className="h-px flex-1 bg-white/8" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/36">ou cadastro com email</span>
-          <span className="h-px flex-1 bg-white/8" />
-        </div>
       </motion.div>
 
       <motion.form
         variants={fadeUp}
         onSubmit={handleSubmit}
-        className="mt-6 space-y-4"
+        className="mt-8 space-y-4"
         autoComplete="off"
       >
+        <div>
+          <label className="mb-2 block text-xs font-medium text-white/52">
+            Como você vai usar a plataforma
+          </label>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {FUNCTION_OPTIONS.map((opt) => {
+              const active = selectedFunction === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSelectedFunction(opt.id)}
+                  className={cn(
+                    'flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all duration-200',
+                    active
+                      ? 'border-[#F37E20]/28 bg-[#F37E20]/8'
+                      : 'border-white/8 bg-white/[0.02] hover:border-white/14 hover:bg-white/[0.04]',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-9 w-9 items-center justify-center rounded-xl border transition-all',
+                      active
+                        ? 'border-[#F37E20]/22 bg-[#F37E20]/10 text-[#F2BD8A]'
+                        : 'border-white/8 bg-white/[0.03] text-white/40',
+                    )}
+                  >
+                    {opt.icon}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{opt.title}</p>
+                    <p className="mt-0.5 text-[11px] leading-4 text-white/44">{opt.description}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-[11px] leading-5 text-white/36">
+            Você pode alterar ou ativar funções adicionais depois em Configurações.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-white/52">Nome</label>

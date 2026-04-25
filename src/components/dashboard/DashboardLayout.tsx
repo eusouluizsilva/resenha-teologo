@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -12,6 +12,8 @@ import { normalizePerfil } from '@/lib/perfil'
 export function DashboardLayout() {
   const { user, isLoaded } = useUser()
   const [timedOut, setTimedOut] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const { pathname } = useLocation()
   const { functions, isLoading } = useCurrentAppUser()
   const migrateFromPerfil = useMutation(api.userFunctions.migrateFromPerfil)
 
@@ -30,6 +32,21 @@ export function DashboardLayout() {
       migrateFromPerfil({ perfil: legacyPerfil }).catch(() => {})
     }
   }, [isLoading, functions.length, user, migrateFromPerfil])
+
+  // Fecha o drawer ao trocar de rota.
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Trava o scroll do body quando o drawer está aberto no mobile.
+  useEffect(() => {
+    if (!mobileOpen) return
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = original
+    }
+  }, [mobileOpen])
 
   if (!isLoaded) {
     if (timedOut) {
@@ -76,11 +93,38 @@ export function DashboardLayout() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,19,0.28)_0%,rgba(11,16,22,0)_26%,rgba(11,16,22,0.72)_100%)]" />
       </div>
 
-      <DashboardSidebar />
+      {/* Top bar mobile com hambúrguer + logo + sino. Some no desktop. */}
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-white/6 bg-[rgba(10,14,20,0.9)] px-4 py-3 backdrop-blur lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Abrir menu"
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 transition-all hover:border-white/14 hover:text-white"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+          </svg>
+        </button>
+        <Link to="/" className="inline-flex items-center">
+          <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-8 w-auto" />
+        </Link>
+        <NotificationsBell />
+      </header>
+
+      {/* Scrim do drawer mobile. */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
+      <DashboardSidebar isMobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <main className="relative min-h-screen lg:pl-72">
         <div className="relative min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="pointer-events-none absolute right-6 top-6 z-30 sm:right-8 sm:top-8 lg:right-12 lg:top-12">
+          <div className="pointer-events-none absolute right-6 top-6 z-30 hidden sm:right-8 sm:top-8 lg:right-12 lg:top-12 lg:block">
             <div className="pointer-events-auto">
               <NotificationsBell />
             </div>

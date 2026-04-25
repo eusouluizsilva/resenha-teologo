@@ -31,3 +31,6 @@ credenciais/
 *.sw?
 .vercel
 .superpowers
+
+# Pasta local de organização do criador (não versionada)
+canal do youtube/

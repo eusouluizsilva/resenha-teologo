@@ -97,7 +97,7 @@ export function FuncoesPage() {
   return (
     <DashboardPageShell
       eyebrow="Conta"
-      title="Minhas funções"
+      title="Configurações"
       description="Ative ou desative as funções da plataforma. Cada função desbloqueia áreas e recursos específicos."
       maxWidthClass="max-w-2xl"
     >

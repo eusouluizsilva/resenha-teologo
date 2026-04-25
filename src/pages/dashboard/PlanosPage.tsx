@@ -103,6 +103,25 @@ const criadorPlans: Plan[] = [
     ctaLabel: 'Assinar',
     available: false,
   },
+  {
+    id: 'igreja-sem-ads',
+    name: 'Igreja ou instituição',
+    price: 'R$ 199,90',
+    period: '/mês',
+    description: 'Plano dedicado para igrejas e instituições. Espaço sem anúncios para todos os membros.',
+    features: [
+      { label: 'Tudo do plano Professor', included: true },
+      { label: 'Sem anúncios para todos os membros', included: true },
+      { label: 'Membros ilimitados', included: true },
+      { label: 'Matrícula em lote', included: true },
+      { label: 'Painel de progresso coletivo', included: true },
+      { label: 'Suporte dedicado', included: true },
+    ],
+    badge: 'Em breve',
+    highlight: true,
+    ctaLabel: 'Entrar em contato',
+    available: false,
+  },
 ]
 
 const instituicaoPlans: Plan[] = [
@@ -232,7 +251,7 @@ export function PlanosPage() {
       eyebrow="Assinatura"
       title="Planos disponíveis"
       description="Seu plano atual e as opções de upgrade. O pagamento online estará disponível em breve."
-      maxWidthClass="max-w-4xl"
+      maxWidthClass="max-w-6xl"
     >
       <div className="mb-6 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/8 p-4 text-sm leading-6">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
@@ -243,7 +262,7 @@ export function PlanosPage() {
         </p>
       </div>
 
-      <div className="mt-2 grid gap-5 sm:grid-cols-2">
+      <div className="mt-2 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
           <PlanCard key={plan.id} plan={plan} current={plan.id === currentPlanId} />
         ))}

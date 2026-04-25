@@ -194,9 +194,11 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
       setReady(false)
       setSyncFailed(false)
 
-      // Retry com backoff: 3 tentativas (0, 1.2s, 3s). Não liberamos o app com
-      // estado inconsistente, queries dependem do upsert ter rodado primeiro.
-      const delays = [0, 1200, 3000]
+      // Retry com backoff: 3 tentativas (0, 350ms, 900ms). Não liberamos o app
+      // com estado inconsistente, queries dependem do upsert ter rodado antes.
+      // Atrasos curtos porque o cenário de falha mais comum é a propagação do
+      // JWT do Clerk no Convex logo após login, que estabiliza em milissegundos.
+      const delays = [0, 350, 900]
       let lastError: unknown = null
       for (let i = 0; i < delays.length; i++) {
         if (cancelled) return
