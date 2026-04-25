@@ -6,6 +6,8 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
+import { AdSlot } from '@/components/AdSlot'
+import { getSessionId } from '@/lib/analytics'
 
 function useCourseSeo(course: {
   title: string
@@ -252,10 +254,23 @@ export function CourseDetailPage() {
   )
 
   const enroll = useMutation(api.enrollments.enroll)
+  const logPageView = useMutation(api.analytics.logPageView)
   const [enrolling, setEnrolling] = useState(false)
   const [enrollError, setEnrollError] = useState<string | null>(null)
 
   useCourseSeo(course)
+
+  // Atribui a pageview ao criador (revenue share). Roda uma vez por carga
+  // do curso. Falha em silêncio se Convex estiver offline.
+  useEffect(() => {
+    if (!course) return
+    logPageView({
+      page: window.location.pathname,
+      sessionId: getSessionId(),
+      creatorId: course.creatorId,
+      courseId: course._id,
+    }).catch(() => { /* silencioso */ })
+  }, [course, logPageView])
 
   const isAuthenticated = Boolean(user)
   const isAluno = hasFunction('aluno')
@@ -497,6 +512,15 @@ export function CourseDetailPage() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="mx-auto my-10 max-w-3xl px-6">
+          <AdSlot
+            slotId="course-detail-footer"
+            creatorId={course.creatorId}
+            courseId={course._id}
+            responsive
+          />
         </div>
       </main>
     </div>

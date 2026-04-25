@@ -1,5 +1,5 @@
-import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { lazy, Suspense, useEffect, type ReactNode } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { AnimatePresence } from 'framer-motion'
 import { LandingPage } from '@/pages/LandingPage'
@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { CookieBanner } from '@/components/CookieBanner'
 import { useCurrentAppUser } from '@/lib/currentUser'
+import { trackPageView } from '@/lib/analytics'
 import type { UserFunction } from '@/lib/functions'
 
 // Code-splitting: rotas secundárias viram chunks sob demanda para manter o
@@ -244,6 +245,17 @@ function DashboardIndexPage() {
   )
 }
 
+// Dispara pageview no GA4 a cada navegação SPA. A atribuição por criador
+// (CourseDetailPage, AulaPage) é feita dentro dessas páginas via mutation
+// logPageView, porque só elas conhecem o creatorId após carregar os dados.
+function RouteTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    trackPageView({ path: location.pathname + location.search })
+  }, [location.pathname, location.search])
+  return null
+}
+
 function RouteFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0F141A]">
@@ -255,6 +267,7 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteTracker />
       <CookieBanner />
       <AnimatePresence mode="wait">
         <Suspense fallback={<RouteFallback />}>

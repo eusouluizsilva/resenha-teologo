@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
+import { AdSlot } from '@/components/AdSlot'
 
 function normalizeSearch(s: string) {
   return s
@@ -365,6 +366,10 @@ export function CatalogPage() {
           </div>
         )}
       </main>
+
+      <div className="mx-auto my-8 max-w-3xl px-6">
+        <AdSlot slotId="catalog-footer" responsive />
+      </div>
 
       <footer className="border-t border-white/6 py-8 text-center">
         <p className="text-xs text-white/28">Resenha do Teólogo. Todos os direitos reservados.</p>

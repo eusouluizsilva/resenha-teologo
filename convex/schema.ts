@@ -34,6 +34,10 @@ export default defineSchema({
     handle: v.optional(v.string()),
     profileVisibility: v.optional(v.union(v.literal('public'), v.literal('unlisted'))),
     showProgressPublicly: v.optional(v.boolean()),
+    // Quando true, AdSense não é renderizado para este usuário. Default false
+    // (ausente). Será ligado pelo webhook do Stripe quando a Fase 4 implementar
+    // assinaturas. Manualmente patcheável via Convex Dashboard pra testes.
+    isPremium: v.optional(v.boolean()),
   })
     .index('by_clerkId', ['clerkId'])
     .index('by_handle', ['handle']),
@@ -487,4 +491,37 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_user_unread', ['userId', 'readAt']),
+
+  // Impressões de anúncio AdSense atribuídas a um criador. Cada vez que um
+  // <AdSlot> entra na viewport pela primeira vez na sessão, registramos uma
+  // linha aqui. Base para revenue share: o criador com X% das impressões do
+  // mês recebe X% da receita líquida do AdSense daquele mês. sessionId vem
+  // do sessionStorage do navegador (UUID por aba). Index by_session_slot
+  // permite deduplicar impressões repetidas.
+  adImpressions: defineTable({
+    creatorId: v.string(),
+    courseId: v.optional(v.id('courses')),
+    lessonId: v.optional(v.id('lessons')),
+    slotId: v.string(),
+    page: v.string(),
+    userId: v.optional(v.string()),
+    sessionId: v.string(),
+    at: v.number(),
+  })
+    .index('by_creator_at', ['creatorId', 'at'])
+    .index('by_session_slot', ['sessionId', 'slotId']),
+
+  // Pageviews em páginas atribuídas a criador (catálogo do criador, detalhe
+  // do curso, AulaPage). Backup interno do GA4 para reconciliar atribuição
+  // sem depender de sampling do Google. Páginas genéricas da plataforma
+  // (landing, /cursos) não geram linhas aqui.
+  pageViews: defineTable({
+    creatorId: v.optional(v.string()),
+    courseId: v.optional(v.id('courses')),
+    lessonId: v.optional(v.id('lessons')),
+    page: v.string(),
+    userId: v.optional(v.string()),
+    sessionId: v.string(),
+    at: v.number(),
+  }).index('by_creator_at', ['creatorId', 'at']),
 })

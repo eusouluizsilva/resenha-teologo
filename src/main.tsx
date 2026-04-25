@@ -6,9 +6,13 @@ import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-react'
 import { ConvexReactClient, useMutation } from 'convex/react'
 import { ConvexProviderWithClerk } from 'convex/react-clerk'
 import type { FunctionArgs } from 'convex/server'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import './index.css'
 import App from './App'
 import { api } from '../convex/_generated/api'
+import { initGA4 } from './lib/analytics'
+import { initAdSense } from './lib/ads'
 
 class AppErrorBoundary extends Component<
   { children: ReactNode },
@@ -246,6 +250,16 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   })
 }
 
+// Inicializa GA4 e AdSense. Cada init é no-op se a env var não estiver
+// presente OU se o usuário ainda não aceitou cookies não-essenciais. O listener
+// abaixo reage à mudança de consent na mesma sessão, sem refresh.
+initGA4()
+initAdSense()
+window.addEventListener('rdt:consent-change', () => {
+  initGA4()
+  initAdSense()
+})
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppErrorBoundary>
@@ -254,6 +268,8 @@ createRoot(document.getElementById('root')!).render(
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <AuthSyncGate>
               <App />
+              <Analytics />
+              <SpeedInsights />
             </AuthSyncGate>
           </ConvexProviderWithClerk>
         </ClerkProvider>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { Navbar } from '@/components/layout/Navbar'
+import { AdSlot } from '@/components/AdSlot'
 import { fadeUp, fadeIn, staggerContainer, scaleSoft } from '@/lib/motion'
 
 function useInView(threshold = 0.15) {
@@ -813,6 +814,10 @@ export function LandingPage() {
           </motion.div>
         </motion.div>
       </section>
+
+      <div className="mx-auto my-8 max-w-3xl px-6">
+        <AdSlot slotId="landing-footer" responsive />
+      </div>
 
       <footer className="border-t border-[#2A313B] px-6 py-10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">

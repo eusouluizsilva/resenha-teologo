@@ -29,6 +29,11 @@ function writeConsent(choice: Consent['choice']) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ choice, at: Date.now() }))
   } catch { /* silencioso */ }
+  // Notifica módulos de analytics/ads para reagirem na mesma sessão sem
+  // exigir refresh do navegador. AdSlot, initGA4 e initAdSense escutam.
+  try {
+    window.dispatchEvent(new CustomEvent('rdt:consent-change', { detail: { choice } }))
+  } catch { /* silencioso */ }
 }
 
 export function CookieBanner() {

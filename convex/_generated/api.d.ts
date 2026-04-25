@@ -10,6 +10,7 @@
 
 import type * as account from "../account.js";
 import type * as admin from "../admin.js";
+import type * as analytics from "../analytics.js";
 import type * as catalog from "../catalog.js";
 import type * as certificates from "../certificates.js";
 import type * as consents from "../consents.js";
@@ -52,6 +53,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   account: typeof account;
   admin: typeof admin;
+  analytics: typeof analytics;
   catalog: typeof catalog;
   certificates: typeof certificates;
   consents: typeof consents;
