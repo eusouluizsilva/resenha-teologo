@@ -74,11 +74,46 @@ export const enroll = mutation({
 
     await ctx.db.patch(courseId, { totalStudents: (course.totalStudents || 0) + 1 })
 
-    return await ctx.db.insert('enrollments', {
+    const enrollmentId = await ctx.db.insert('enrollments', {
       courseId,
       studentId: user.clerkId,
       certificateIssued: false,
     })
+
+    // Auto-follow: ao se matricular, o aluno passa a seguir o criador do curso.
+    // Se ja segue, nao duplica. Se for o proprio criador (caso raro), pula.
+    if (user.clerkId !== course.creatorId) {
+      const alreadyFollows = await ctx.db
+        .query('profileFollows')
+        .withIndex('by_pair', (q) =>
+          q.eq('followerUserId', user.clerkId).eq('authorUserId', course.creatorId),
+        )
+        .unique()
+
+      if (!alreadyFollows) {
+        await ctx.db.insert('profileFollows', {
+          followerUserId: user.clerkId,
+          authorUserId: course.creatorId,
+          notifyArticles: true,
+          notifyCourses: true,
+          notifyLessons: false,
+          emailDigest: false,
+          createdAt: Date.now(),
+        })
+
+        const author = await ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
+          .unique()
+        if (author) {
+          await ctx.db.patch(author._id, {
+            followerCount: (author.followerCount ?? 0) + 1,
+          })
+        }
+      }
+    }
+
+    return enrollmentId
   },
 })
 

@@ -257,8 +257,18 @@ export function PublicProfilePage() {
   )
   const articles = useQuery(
     api.posts.listByAuthor,
-    profile ? { authorUserId: profile.clerkId, limit: 12 } : 'skip'
+    profile ? { authorUserId: profile.clerkId, limit: 50 } : 'skip'
   )
+  const courses = useQuery(
+    api.publicProfiles.listCoursesByCreator,
+    profile ? { authorUserId: profile.clerkId } : 'skip'
+  )
+  const spotlight = useQuery(
+    api.publicProfiles.getProfileSpotlight,
+    profile ? { authorUserId: profile.clerkId } : 'skip'
+  )
+
+  const [activeTab, setActiveTab] = useState<'sobre' | 'cursos' | 'artigos'>('sobre')
 
   useEffect(() => {
     if (!profile) return
@@ -314,7 +324,7 @@ export function PublicProfilePage() {
   }
 
   const hasSocials = profile.website || profile.youtubeChannel || profile.instagram || profile.facebook || profile.linkedin || profile.twitter
-  const hasChurch = profile.denomination || profile.churchName || profile.churchRole
+  const hasChurch = profile.denomination || profile.churchName || profile.churchRole || profile.churchInstagram
 
   return (
     <div className="relative min-h-screen bg-[#0F141A] text-white">
@@ -372,66 +382,217 @@ export function PublicProfilePage() {
             <FollowButton authorUserId={profile.clerkId} authorName={profile.name} tone="dark" />
             <DonateButton tone="dark" variant="inline" />
           </div>
+
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/72">
+            <svg className="h-3.5 w-3.5 text-[#F2BD8A]" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+            <span className="font-semibold text-white">
+              {(profile.followerCount ?? 0).toLocaleString('pt-BR')}
+            </span>
+            <span className="text-white/56">
+              {profile.followerCount === 1 ? 'seguidor' : 'seguidores'}
+            </span>
+          </div>
         </div>
 
-        {/* Bio */}
-        {profile.bio && (
+        {/* Tabs Sobre / Cursos / Artigos */}
+        <div className="mt-8 flex justify-center gap-2 text-sm">
+          {([
+            { id: 'sobre', label: 'Sobre' },
+            { id: 'cursos', label: `Cursos${courses ? ` (${courses.length})` : ''}` },
+            { id: 'artigos', label: `Artigos${articles ? ` (${articles.length})` : ''}` },
+          ] as const).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'rounded-full border px-4 py-1.5 font-semibold transition-all',
+                activeTab === tab.id
+                  ? 'border-[#F37E20]/40 bg-[#F37E20]/15 text-[#F2BD8A]'
+                  : 'border-white/8 bg-white/[0.025] text-white/64 hover:border-white/16 hover:text-white',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sobre */}
+        {activeTab === 'sobre' && (
+          <>
+            {profile.bio && (
+              <div className="mt-8">
+                <p className="text-sm leading-7 text-white/62">{profile.bio}</p>
+              </div>
+            )}
+
+            {/* Spotlight: artigo top + curso top */}
+            {spotlight && (spotlight.topPost || spotlight.topCourse) && (
+              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {spotlight.topPost && (
+                  <Link
+                    to={profile.handle ? `/blog/${profile.handle}/${spotlight.topPost.slug}` : '/blog'}
+                    className="group block rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/30 hover:bg-white/[0.04]"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+                      Artigo em destaque
+                    </p>
+                    <h3 className="mt-2 font-display text-base font-semibold leading-snug text-white group-hover:text-[#F2BD8A]">
+                      {spotlight.topPost.title}
+                    </h3>
+                    <p className="mt-1.5 line-clamp-2 text-xs text-white/52">
+                      {spotlight.topPost.excerpt}
+                    </p>
+                    <div className="mt-3 flex items-center gap-3 text-[11px] text-white/36">
+                      <span>{spotlight.topPost.viewCount.toLocaleString('pt-BR')} leituras</span>
+                      <span>· {spotlight.topPost.likeCount.toLocaleString('pt-BR')} curtidas</span>
+                    </div>
+                  </Link>
+                )}
+                {spotlight.topCourse && (
+                  <Link
+                    to={`/cursos/${spotlight.topCourse._id}`}
+                    className="group block rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/30 hover:bg-white/[0.04]"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+                      Curso em destaque
+                    </p>
+                    <h3 className="mt-2 font-display text-base font-semibold leading-snug text-white group-hover:text-[#F2BD8A]">
+                      {spotlight.topCourse.title}
+                    </h3>
+                    {spotlight.topCourse.shortDescription && (
+                      <p className="mt-1.5 line-clamp-2 text-xs text-white/52">
+                        {spotlight.topCourse.shortDescription}
+                      </p>
+                    )}
+                    <div className="mt-3 flex items-center gap-3 text-[11px] text-white/36">
+                      <span>
+                        {spotlight.topCourse.totalStudents.toLocaleString('pt-BR')}
+                        {' '}
+                        {spotlight.topCourse.totalStudents === 1 ? 'aluno' : 'alunos'}
+                      </span>
+                      <span>· {spotlight.topCourse.totalLessons} aulas</span>
+                    </div>
+                  </Link>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Cursos */}
+        {activeTab === 'cursos' && (
           <div className="mt-8">
-            <p className="text-sm leading-7 text-white/62">{profile.bio}</p>
+            {courses === undefined ? (
+              <div className="flex justify-center py-10">
+                <div className="h-6 w-6 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+              </div>
+            ) : courses.length === 0 ? (
+              <p className="text-center text-sm text-white/48">
+                Este criador ainda não publicou cursos.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {courses.map((course) => (
+                  <Link
+                    key={String(course._id)}
+                    to={`/cursos/${course._id}`}
+                    className="block rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/30 hover:bg-white/[0.04]"
+                  >
+                    <div className="flex items-start gap-4">
+                      {course.thumbnail && (
+                        <img
+                          src={course.thumbnail}
+                          alt={course.title}
+                          className="h-20 w-28 flex-shrink-0 rounded-xl object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+                          {course.category}
+                        </p>
+                        <h3 className="mt-1 font-display text-base font-semibold leading-snug text-white">
+                          {course.title}
+                        </h3>
+                        {course.shortDescription && (
+                          <p className="mt-1 line-clamp-2 text-xs text-white/52">
+                            {course.shortDescription}
+                          </p>
+                        )}
+                        <div className="mt-2 flex items-center gap-3 text-[11px] text-white/36">
+                          <span>{course.totalLessons} aulas</span>
+                          <span>· {course.totalStudents.toLocaleString('pt-BR')} alunos</span>
+                          <span>· {course.level}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Artigos publicados */}
-        {articles && articles.length > 0 && (
+        {/* Artigos */}
+        {activeTab === 'artigos' && (
           <div className="mt-8">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
-              Artigos publicados
-            </p>
-            <div className="space-y-3">
-              {articles.map((post) => (
-                <Link
-                  key={String(post._id)}
-                  to={
-                    profile.handle
-                      ? `/blog/${profile.handle}/${post.slug}`
-                      : `/blog`
-                  }
-                  className="block rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/30 hover:bg-white/[0.04]"
-                >
-                  <div className="flex items-start gap-4">
-                    {post.coverImageUrl && (
-                      <img
-                        src={post.coverImageUrl}
-                        alt={post.title}
-                        className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
-                        {post.categorySlug.replace(/-/g, ' ')}
-                      </p>
-                      <h3 className="mt-1 font-display text-base font-semibold leading-snug text-white">
-                        {post.title}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-xs text-white/52">{post.excerpt}</p>
-                      <div className="mt-2 flex items-center gap-3 text-[11px] text-white/36">
-                        <span>
-                          {post.publishedAt
-                            ? new Date(post.publishedAt).toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                              })
-                            : ''}
-                        </span>
-                        <span>· {post.viewCount.toLocaleString('pt-BR')} leituras</span>
-                        <span>· {post.likeCount.toLocaleString('pt-BR')} curtidas</span>
+            {articles === undefined ? (
+              <div className="flex justify-center py-10">
+                <div className="h-6 w-6 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+              </div>
+            ) : articles.length === 0 ? (
+              <p className="text-center text-sm text-white/48">
+                Nenhum artigo publicado ainda.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {articles.map((post) => (
+                  <Link
+                    key={String(post._id)}
+                    to={
+                      profile.handle
+                        ? `/blog/${profile.handle}/${post.slug}`
+                        : `/blog`
+                    }
+                    className="block rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/30 hover:bg-white/[0.04]"
+                  >
+                    <div className="flex items-start gap-4">
+                      {post.coverImageUrl && (
+                        <img
+                          src={post.coverImageUrl}
+                          alt={post.title}
+                          className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+                          {post.categorySlug.replace(/-/g, ' ')}
+                        </p>
+                        <h3 className="mt-1 font-display text-base font-semibold leading-snug text-white">
+                          {post.title}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-xs text-white/52">{post.excerpt}</p>
+                        <div className="mt-2 flex items-center gap-3 text-[11px] text-white/36">
+                          <span>
+                            {post.publishedAt
+                              ? new Date(post.publishedAt).toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                              : ''}
+                          </span>
+                          <span>· {post.viewCount.toLocaleString('pt-BR')} leituras</span>
+                          <span>· {post.likeCount.toLocaleString('pt-BR')} curtidas</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -600,6 +761,19 @@ export function PublicProfilePage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-white/40">Cargo</span>
                   <span className="text-sm text-white">{profile.churchRole}</span>
+                </div>
+              )}
+              {profile.churchInstagram && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/40">Instagram</span>
+                  <a
+                    href={`https://instagram.com/${profile.churchInstagram.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-white hover:text-[#F2BD8A]"
+                  >
+                    @{profile.churchInstagram.replace('@', '')}
+                  </a>
                 </div>
               )}
             </div>
