@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSignIn } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
 import { AuthLayout } from '@/components/auth/AuthLayout'
-import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { fadeUp } from '@/lib/motion'
 import {
   brandEyebrowClass,
@@ -38,22 +37,6 @@ export function SignInPage() {
   const [password, setPassword] = useState('')
   const [resetCode, setResetCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
-
-  async function handleOAuth(strategy: 'oauth_google' | 'oauth_facebook') {
-    if (!isLoaded) return
-    setLoading(true)
-    setError('')
-    try {
-      await signIn.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: redirectTo,
-      })
-    } catch (err) {
-      setError(clerkErrorMessage(err))
-      setLoading(false)
-    }
-  }
 
   const aside = useMemo(() => {
     if (step === 'forgot') {
@@ -201,18 +184,6 @@ export function SignInPage() {
 
       {step === 'login' && (
         <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
-          <OAuthButtons
-            onGoogle={() => handleOAuth('oauth_google')}
-            onFacebook={() => handleOAuth('oauth_facebook')}
-            loading={loading}
-          />
-
-          <div className="relative my-2 flex items-center gap-3">
-            <span className="h-px flex-1 bg-white/8" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/36">ou</span>
-            <span className="h-px flex-1 bg-white/8" />
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/72">Email</label>
