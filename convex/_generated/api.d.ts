@@ -25,6 +25,7 @@ import type * as gamification from "../gamification.js";
 import type * as handles from "../handles.js";
 import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
+import type * as landingHighlights from "../landingHighlights.js";
 import type * as lessonComments from "../lessonComments.js";
 import type * as lessonLikes from "../lessonLikes.js";
 import type * as lessonMaterials from "../lessonMaterials.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   handles: typeof handles;
   http: typeof http;
   institutions: typeof institutions;
+  landingHighlights: typeof landingHighlights;
   lessonComments: typeof lessonComments;
   lessonLikes: typeof lessonLikes;
   lessonMaterials: typeof lessonMaterials;

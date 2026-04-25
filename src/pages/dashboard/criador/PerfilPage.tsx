@@ -438,15 +438,10 @@ export function PerfilPage() {
   const rejectTestimonial = useMutation(api.testimonials.reject)
   const removeTestimonial = useMutation(api.testimonials.remove)
   const deleteAccount = useMutation(api.account.deleteAccount)
-  const revokeAllConsents = useMutation(api.consents.revokeAll)
 
   // Privacidade / LGPD
   const exportData = useQuery(
     api.account.exportMyData,
-    activeTab === 'privacidade' && currentUser ? {} : 'skip',
-  )
-  const myConsents = useQuery(
-    api.consents.listByUser,
     activeTab === 'privacidade' && currentUser ? {} : 'skip',
   )
   const { signOut } = useClerk()
@@ -455,8 +450,6 @@ export function PerfilPage() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
-  const [revoking, setRevoking] = useState(false)
-  const [revokeMessage, setRevokeMessage] = useState('')
 
   // Sync form from Convex user + Clerk
   useEffect(() => {
@@ -623,23 +616,6 @@ export function PerfilPage() {
       URL.revokeObjectURL(url)
     } finally {
       setExporting(false)
-    }
-  }
-
-  async function handleRevokeConsent() {
-    setRevoking(true)
-    setRevokeMessage('')
-    try {
-      const { revoked } = await revokeAllConsents({})
-      setRevokeMessage(
-        revoked > 0
-          ? `${revoked} consentimento(s) revogado(s). Para voltar a usar funcionalidades que exigem aceite, será necessário consentir novamente.`
-          : 'Nenhum consentimento ativo para revogar.',
-      )
-    } catch (err) {
-      setRevokeMessage(err instanceof Error ? err.message : 'Falha ao revogar consentimento.')
-    } finally {
-      setRevoking(false)
     }
   }
 
@@ -1624,48 +1600,6 @@ export function PerfilPage() {
                 : exporting
                   ? 'Gerando arquivo...'
                   : 'Baixar meus dados (JSON)'}
-            </button>
-          </div>
-
-          <div className={cn('p-6', brandPanelClass)}>
-            <p className={cn('mb-2', brandEyebrowClass)}>Retirar consentimento</p>
-            <h3 className="font-display text-lg font-bold text-white">Revogar aceite dos termos</h3>
-            <p className="mt-2 text-sm leading-6 text-white/52">
-              A LGPD garante o direito de revogar o consentimento a qualquer momento. Ao revogar,
-              registramos a data da retirada e funcionalidades que exigem aceite ficam indisponíveis
-              até você consentir novamente. O histórico de aceites anteriores é preservado como prova
-              legal.
-            </p>
-            {myConsents !== undefined && myConsents.length > 0 && (
-              <div className="mt-4 rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/62">
-                <p className="mb-1 font-semibold text-white/82">Seus consentimentos</p>
-                <ul className="space-y-1">
-                  {myConsents.map((c) => (
-                    <li key={c._id} className="flex items-center justify-between gap-3">
-                      <span>
-                        {c.type === 'geral' ? 'Termos gerais' : c.type === 'aluno' ? 'Termos de aluno' : c.type === 'criador' ? 'Termos de criador' : 'Termos de instituição'}
-                        <span className="ml-2 text-white/32">v{c.documentVersion}</span>
-                      </span>
-                      <span className={c.revokedAt ? 'text-red-300' : 'text-emerald-300'}>
-                        {c.revokedAt ? 'Revogado' : 'Ativo'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {revokeMessage && (
-              <p className="mt-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-xs text-white/72">
-                {revokeMessage}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={handleRevokeConsent}
-              disabled={revoking || (myConsents !== undefined && myConsents.every((c) => c.revokedAt !== undefined))}
-              className="mt-5 rounded-[1.1rem] border border-white/14 bg-white/4 px-5 py-2.5 text-sm font-semibold text-white/86 transition-all duration-200 hover:border-white/24 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {revoking ? 'Revogando...' : 'Retirar consentimento'}
             </button>
           </div>
 
