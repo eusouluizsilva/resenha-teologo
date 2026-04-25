@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { fadeUp, fadeIn, staggerContainer, scaleSoft } from '@/lib/motion'
@@ -17,7 +17,7 @@ const heroStats = [
   { value: '100%', label: 'gratuito para alunos' },
   { value: '70%', label: 'média mínima para certificar' },
   { value: 'PT', label: 'base pensada para o Brasil' },
-  { value: 'Multi', label: 'perfis: aluno, criador e instituição' },
+  { value: 'Multi', label: 'perfis: aluno, professor e instituição' },
 ]
 
 const accessModel = [
@@ -30,10 +30,10 @@ const accessModel = [
     items: ['Sem venda de cursos', 'Certificação com média mínima', 'Experiência pensada para permanência'],
   },
   {
-    eyebrow: 'Criadores',
+    eyebrow: 'Professores',
     title: 'Ensine com autoridade, sem transformar seu conteúdo em página de vendas.',
     description:
-      'Criadores publicam cursos em um ambiente sério, acompanham o progresso dos alunos e recebem apoio da comunidade sem depender de funis de venda.',
+      'Professores publicam cursos em um ambiente sério, acompanham o progresso dos alunos e recebem apoio da comunidade sem depender de funis de venda.',
     dark: false,
     items: ['Dashboard de cursos e aulas', 'Doações e apoio da audiência', 'Espaço próprio dentro da plataforma'],
   },
@@ -43,7 +43,7 @@ const accessModel = [
     description:
       'Os planos sem anúncios melhoram a experiência, mas o centro da proposta continua sendo acesso livre para estudar.',
     dark: false,
-    items: ['Aluno sem anúncios', 'Criador sem anúncios no seu espaço', 'Camada premium sem travar o estudo'],
+    items: ['Aluno sem anúncios', 'Professor sem anúncios no seu espaço', 'Camada premium sem travar o estudo'],
   },
 ]
 
@@ -184,11 +184,22 @@ export function LandingPage() {
   const inView = useInView()
   const { user, isLoaded } = useUser()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!isLoaded || !user) return
     navigate('/dashboard', { replace: true })
   }, [isLoaded, user, navigate])
+
+  useEffect(() => {
+    if (!location.hash) return
+    const id = location.hash.slice(1)
+    const target = document.getElementById(id)
+    if (!target) return
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [location.hash])
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0F141A] text-white">
@@ -229,7 +240,7 @@ export function LandingPage() {
               </motion.h1>
 
               <motion.p variants={fadeUp} className="mt-6 max-w-xl text-base leading-8 text-white/68 md:text-lg">
-                Alunos estudam com mais clareza e continuidade. Criadores publicam com autoridade, formam comunidade e monetizam
+                Alunos estudam com mais clareza e continuidade. Professores publicam com autoridade, formam comunidade e monetizam
                 sem transformar o ensino em página de venda.
               </motion.p>
 
@@ -311,7 +322,7 @@ export function LandingPage() {
               </div>
 
               <div className="absolute right-0 top-10 w-48 rounded-[1.6rem] border border-[#F37E20]/20 bg-[#171D26]/95 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Para criadores</p>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Para professores</p>
                 <p className="mt-3 font-display text-3xl font-bold text-[#FFF1E4]">R$ 0</p>
                 <p className="mt-2 text-sm leading-6 text-white/56">
                   Publique seus cursos gratuitamente e construa sua comunidade.
@@ -363,13 +374,13 @@ export function LandingPage() {
             <motion.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Modelo da plataforma"
-                title="Acesso livre para o aluno, autoridade para o criador e sustentabilidade para a plataforma."
-                description="O aluno não precisa pagar para começar a estudar. O criador não precisa vender curso para gerar receita. A plataforma organiza os dois lados dentro da mesma lógica."
+                title="Acesso livre para o aluno, autoridade para o professor e sustentabilidade para a plataforma."
+                description="O aluno não precisa pagar para começar a estudar. O professor não precisa vender curso para gerar receita. A plataforma organiza os dois lados dentro da mesma lógica."
                 light
               />
             </motion.div>
             <motion.p variants={fadeUp} className="max-w-xl text-sm leading-7 text-[#5A6472] md:text-base">
-              A Resenha do Teólogo parte de uma convicção simples: formação teológica de qualidade deve ser acessível. Criadores ganham estrutura e apoio. Alunos ganham estudo sério, sem que o acesso dependa da venda do conteúdo.
+              A Resenha do Teólogo parte de uma convicção simples: formação teológica de qualidade deve ser acessível. Professores ganham estrutura e apoio. Alunos ganham estudo sério, sem que o acesso dependa da venda do conteúdo.
             </motion.p>
           </div>
 
@@ -507,12 +518,12 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      <section id="para-criadores" className="bg-[#0A0E13] px-6 py-24">
+      <section id="para-professores" className="bg-[#0A0E13] px-6 py-24">
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[1fr_0.95fr] lg:items-center">
             <motion.div variants={fadeUp}>
               <SectionIntro
-                eyebrow="Para criadores"
+                eyebrow="Para professores"
                 title="Publique cursos com a seriedade que seu conteúdo exige."
                 description="Você publica cursos, organiza módulos e acompanha o progresso dos alunos. A plataforma cuida da experiência, da certificação e da base para o crescimento da sua comunidade."
               />
@@ -540,7 +551,7 @@ export function LandingPage() {
               <div className="overflow-hidden rounded-[2rem] border border-white/8">
                 <img
                   src="/fotos/creator-recording.jpg"
-                  alt="Criador gravando aula"
+                  alt="Professor gravando aula"
                   loading="lazy"
                   className="h-64 w-full object-cover object-top"
                 />
@@ -750,18 +761,25 @@ export function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  to={plan.cta === 'Em breve' ? '#' : plan.href}
-                  className={`mt-8 rounded-[1.1rem] border px-5 py-3 text-center text-sm font-semibold transition-all duration-200 ${
-                    plan.cta === 'Em breve'
-                      ? 'cursor-not-allowed border-white/10 bg-white/6 text-white/30'
-                      : plan.highlight
+                {plan.cta === 'Em breve' ? (
+                  <span
+                    aria-disabled="true"
+                    className="mt-8 cursor-not-allowed rounded-[1.1rem] border border-white/10 bg-white/6 px-5 py-3 text-center text-sm font-semibold text-white/30"
+                  >
+                    {plan.cta}
+                  </span>
+                ) : (
+                  <Link
+                    to={plan.href}
+                    className={`mt-8 rounded-[1.1rem] border px-5 py-3 text-center text-sm font-semibold transition-all duration-200 ${
+                      plan.highlight
                         ? 'border-[#F37E20]/30 bg-[#F37E20]/14 text-[#F2BD8A] hover:bg-[#F37E20]/24'
                         : 'border-[#CDBEAF] bg-[#F7F2EC] text-[#111827] hover:border-[#BBA48E] hover:bg-[#EEE7DC]'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
+                    }`}
+                  >
+                    {plan.cta}
+                  </Link>
+                )}
               </motion.div>
             ))}
           </div>
@@ -837,6 +855,9 @@ export function LandingPage() {
           </div>
 
           <div className="flex items-center gap-5">
+            <Link to="/sobre" className="text-xs text-white/30 transition-colors hover:text-white/60">
+              Sobre
+            </Link>
             <Link to="/termos" className="text-xs text-white/30 transition-colors hover:text-white/60">
               Termos
             </Link>

@@ -18,6 +18,7 @@ const LEVELS = [
   { value: 'intermediario' as const, label: 'Intermediário' },
   { value: 'avancado' as const, label: 'Avançado' },
 ]
+const LANGUAGES = ['Português', 'Inglês', 'Espanhol', 'Francês', 'Alemão', 'Italiano', 'Grego', 'Hebraico', 'Latim']
 
 function levelTone(level: string): 'success' | 'info' | 'accent' {
   if (level === 'iniciante') return 'success'
@@ -37,6 +38,7 @@ type CatalogCourse = {
   thumbnail?: string | null
   category: string
   level: string
+  language?: string
   creatorName: string
   totalLessons: number
   totalStudents?: number
@@ -77,6 +79,9 @@ function CourseCard({ course }: { course: CatalogCourse }) {
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className={brandStatusPillClass(levelTone(course.level))}>{levelLabel(course.level)}</span>
           <span className={brandStatusPillClass('neutral')}>{course.category}</span>
+          {course.language && course.language !== 'Português' ? (
+            <span className={brandStatusPillClass('neutral')}>{course.language}</span>
+          ) : null}
         </div>
 
         <h3 className="font-display text-base font-semibold leading-snug text-white group-hover:text-[#F2BD8A] transition-colors duration-200">
@@ -141,11 +146,13 @@ function CourseCard({ course }: { course: CatalogCourse }) {
 export function CatalogPage() {
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined)
   const [activeLevel, setActiveLevel] = useState<'iniciante' | 'intermediario' | 'avancado' | undefined>(undefined)
+  const [activeLanguage, setActiveLanguage] = useState<string | undefined>(undefined)
   const [searchTerm, setSearchTerm] = useState('')
 
   const courses = useQuery(api.catalog.listPublished, {
     category: activeCategory,
     level: activeLevel,
+    language: activeLanguage,
   })
 
   const isLoading = courses === undefined
@@ -283,6 +290,34 @@ export function CatalogPage() {
               </button>
             ))}
           </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveLanguage(undefined)}
+              className={cn(
+                'rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200',
+                !activeLanguage
+                  ? 'border-[#F37E20]/30 bg-[#F37E20]/10 text-[#F2BD8A]'
+                  : 'border-white/8 text-white/48 hover:border-white/16 hover:text-white/70',
+              )}
+            >
+              Todos os idiomas
+            </button>
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setActiveLanguage(activeLanguage === lang ? undefined : lang)}
+                className={cn(
+                  'rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200',
+                  activeLanguage === lang
+                    ? 'border-[#F37E20]/30 bg-[#F37E20]/10 text-[#F2BD8A]'
+                    : 'border-white/8 text-white/48 hover:border-white/16 hover:text-white/70',
+                )}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Grid */}
@@ -308,7 +343,7 @@ export function CatalogPage() {
                 : 'Nenhum curso encontrado para os filtros selecionados.'}
             </p>
             <button
-              onClick={() => { setActiveCategory(undefined); setActiveLevel(undefined); setSearchTerm('') }}
+              onClick={() => { setActiveCategory(undefined); setActiveLevel(undefined); setActiveLanguage(undefined); setSearchTerm('') }}
               className="mt-4 text-sm font-medium text-[#F2BD8A] underline underline-offset-4 hover:text-[#F37E20]"
             >
               Limpar filtros

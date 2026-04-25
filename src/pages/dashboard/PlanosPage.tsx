@@ -72,7 +72,7 @@ const alunoPlans: Plan[] = [
 const criadorPlans: Plan[] = [
   {
     id: 'criador-free',
-    name: 'Criador',
+    name: 'Professor',
     price: 'R$ 0',
     description: 'Publique cursos gratuitamente. A plataforma exibe anúncios no seu espaço.',
     features: [
@@ -88,12 +88,12 @@ const criadorPlans: Plan[] = [
   },
   {
     id: 'criador-sem-ads',
-    name: 'Criador sem anúncios',
-    price: 'R$ 99',
+    name: 'Professor sem anúncios',
+    price: 'R$ 99,90',
     period: '/mês',
     description: 'Seu espaço sem anúncios. Experiência limpa para os seus alunos.',
     features: [
-      { label: 'Tudo do plano Criador', included: true },
+      { label: 'Tudo do plano Professor', included: true },
       { label: 'Sem anúncios no seu espaço', included: true },
       { label: 'Marca pessoal mais forte', included: true },
       { label: 'Suporte prioritário', included: true },
@@ -124,7 +124,7 @@ const instituicaoPlans: Plan[] = [
   {
     id: 'plano-igreja',
     name: 'Plano Igreja',
-    price: 'R$ 99',
+    price: 'R$ 99,90',
     period: '/mês',
     description: 'Membros ilimitados, matrícula em lote e painel pastoral de acompanhamento.',
     features: [
@@ -132,6 +132,7 @@ const instituicaoPlans: Plan[] = [
       { label: 'Membros ilimitados', included: true },
       { label: 'Matricular membros em lote', included: true },
       { label: 'Painel de progresso coletivo', included: true },
+      { label: 'Ferramentas de gestão pastoral', included: true },
       { label: 'Sem anúncios para membros', included: true },
       { label: 'Suporte dedicado', included: true },
     ],
@@ -233,6 +234,15 @@ export function PlanosPage() {
       description="Seu plano atual e as opções de upgrade. O pagamento online estará disponível em breve."
       maxWidthClass="max-w-4xl"
     >
+      <div className="mb-6 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/8 p-4 text-sm leading-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
+          Em breve
+        </p>
+        <p className="mt-1 text-white/72">
+          A plataforma é gratuita por enquanto. O fluxo de assinatura paga (Stripe) será liberado nas próximas fases. Use o email abaixo se quiser garantir acesso antecipado.
+        </p>
+      </div>
+
       <div className="mt-2 grid gap-5 sm:grid-cols-2">
         {plans.map((plan) => (
           <PlanCard key={plan.id} plan={plan} current={plan.id === currentPlanId} />

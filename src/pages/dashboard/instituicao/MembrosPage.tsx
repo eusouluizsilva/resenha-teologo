@@ -44,6 +44,7 @@ export function MembrosPage() {
 
   const ownedOrAdmin = institutions?.filter((i) => i.memberRole !== 'membro') ?? []
   const [activeId, setActiveId] = useState<Id<'institutions'> | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
   const currentId = activeId ?? ownedOrAdmin[0]?._id ?? null
 
   async function handleCreate(e: React.FormEvent) {
@@ -57,6 +58,7 @@ export function MembrosPage() {
       })
       setActiveId(id)
       setCreateForm({ name: '', type: 'igreja' })
+      setShowCreate(false)
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Falha ao criar instituição.')
     } finally {
@@ -129,27 +131,92 @@ export function MembrosPage() {
       title="Membros e convites"
       description="Envie convites por email, acompanhe o status e gerencie os membros ativos."
     >
-      {ownedOrAdmin.length > 1 && (
-        <div className="mb-4 flex flex-wrap gap-2">
-          {ownedOrAdmin.map((inst) => (
-            <button
-              key={inst._id}
-              type="button"
-              onClick={() => setActiveId(inst._id)}
-              className={cn(
-                'rounded-2xl border px-4 py-2 text-sm font-medium transition-all',
-                currentId === inst._id
-                  ? 'border-[#F37E20]/40 bg-[#F37E20]/10 text-[#F2BD8A]'
-                  : 'border-white/10 bg-white/4 text-white/72 hover:border-white/20 hover:bg-white/8',
-              )}
-            >
-              {inst.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {ownedOrAdmin.map((inst) => (
+          <button
+            key={inst._id}
+            type="button"
+            onClick={() => {
+              setActiveId(inst._id)
+              setShowCreate(false)
+            }}
+            className={cn(
+              'rounded-2xl border px-4 py-2 text-sm font-medium transition-all',
+              currentId === inst._id && !showCreate
+                ? 'border-[#F37E20]/40 bg-[#F37E20]/10 text-[#F2BD8A]'
+                : 'border-white/10 bg-white/4 text-white/72 hover:border-white/20 hover:bg-white/8',
+            )}
+          >
+            {inst.name}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className={cn(
+            'rounded-2xl border border-dashed px-4 py-2 text-sm font-medium transition-all',
+            showCreate
+              ? 'border-[#F37E20]/40 bg-[#F37E20]/10 text-[#F2BD8A]'
+              : 'border-white/14 text-white/62 hover:border-[#F37E20]/30 hover:text-[#F2BD8A]',
+          )}
+        >
+          + Nova instituição
+        </button>
+      </div>
 
-      {currentId && <InstitutionSection institutionId={currentId} />}
+      {showCreate ? (
+        <form onSubmit={handleCreate} className={cn('space-y-4 p-6', brandPanelClass)}>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F2BD8A]">
+            Criar nova instituição
+          </p>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/52">Nome da instituição</label>
+            <input
+              type="text"
+              required
+              value={createForm.name}
+              onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Igreja Batista Central, Seminário Teológico..."
+              className={brandInputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/52">Tipo</label>
+            <select
+              value={createForm.type}
+              onChange={(e) => setCreateForm((f) => ({ ...f, type: e.target.value as 'igreja' | 'ensino' | 'empresa' }))}
+              className={brandInputClass}
+            >
+              <option value="igreja">Igreja</option>
+              <option value="ensino">Instituição de ensino</option>
+              <option value="empresa">Empresa</option>
+            </select>
+          </div>
+          {createError && (
+            <p className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+              {createError}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={creating || createForm.name.trim().length < 3}
+              className={cn(brandPrimaryButtonClass, 'px-5 py-2.5 text-sm')}
+            >
+              {creating ? 'Criando...' : 'Criar instituição'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreate(false)}
+              className="rounded-2xl border border-white/10 bg-white/4 px-4 py-2.5 text-sm font-medium text-white/62 hover:border-white/20 hover:text-white"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      ) : (
+        currentId && <InstitutionSection institutionId={currentId} />
+      )}
     </DashboardPageShell>
   )
 }
@@ -283,7 +350,10 @@ function InstitutionSection({ institutionId }: { institutionId: Id<'institutions
                       </button>
                       <button
                         type="button"
-                        onClick={() => revokeInvite({ inviteId: inv._id })}
+                        onClick={() => {
+                          if (!window.confirm(`Revogar o convite enviado para ${inv.email}? O destinatário não poderá mais aceitar.`)) return
+                          revokeInvite({ inviteId: inv._id })
+                        }}
                         className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition-all hover:bg-red-500/20"
                       >
                         Revogar
@@ -334,7 +404,11 @@ function InstitutionSection({ institutionId }: { institutionId: Id<'institutions
                   {m.role !== 'dono' && (
                     <button
                       type="button"
-                      onClick={() => removeMember({ memberId: m._id })}
+                      onClick={() => {
+                        const label = m.user?.name ?? m.user?.email ?? 'este membro'
+                        if (!window.confirm(`Remover ${label} da instituição? Esta ação não pode ser desfeita.`)) return
+                        removeMember({ memberId: m._id })
+                      }}
                       className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition-all hover:bg-red-500/20"
                     >
                       Remover

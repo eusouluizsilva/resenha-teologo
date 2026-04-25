@@ -86,7 +86,7 @@ export function VerifyCertificatePage() {
                 </div>
                 {result.creatorName ? (
                   <div>
-                    <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/42">Criador</dt>
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/42">Professor</dt>
                     <dd className="mt-1 text-white/80">{result.creatorName}</dd>
                   </div>
                 ) : null}

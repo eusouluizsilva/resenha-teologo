@@ -91,7 +91,7 @@ export function CertificadosPage() {
 
             const verificationCode = deriveVerificationCode(enrollment._id)
             const handleDownload = () => {
-              downloadCertificatePdf({
+              void downloadCertificatePdf({
                 studentName,
                 courseTitle: course.title,
                 creatorName,

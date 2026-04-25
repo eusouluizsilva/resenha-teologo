@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { mutation, query, type MutationCtx } from './_generated/server'
+import type { Id } from './_generated/dataModel'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
 
@@ -70,6 +71,37 @@ function extractYouTubeId(url: string): string | null {
   return null
 }
 
+// Chave canonical para comparar URLs de vídeo. Para YouTube usamos o id de 11
+// caracteres (ignora parâmetros como ?t=30 ou playlists). Para outros links
+// usamos a URL bruta em lowercase.
+function canonicalVideoKey(url: string): string {
+  const ytId = extractYouTubeId(url)
+  if (ytId) return `yt:${ytId}`
+  return `raw:${url.trim().toLowerCase()}`
+}
+
+// Verifica se o mesmo link de vídeo já está em uso por outra aula do mesmo
+// criador. Recusa duplicatas dentro do tenant (sem impacto cross-tenant).
+async function ensureUniqueYouTubeUrl(
+  ctx: MutationCtx,
+  creatorId: string,
+  youtubeUrl: string,
+  excludeLessonId?: Id<'lessons'>,
+) {
+  const key = canonicalVideoKey(youtubeUrl)
+  const lessons = await ctx.db
+    .query('lessons')
+    .withIndex('by_creatorId', (q) => q.eq('creatorId', creatorId))
+    .collect()
+
+  for (const other of lessons) {
+    if (excludeLessonId && other._id === excludeLessonId) continue
+    if (canonicalVideoKey(other.youtubeUrl) === key) {
+      throw new Error('Este vídeo já está sendo usado em outra aula sua. Cada URL só pode aparecer uma vez.')
+    }
+  }
+}
+
 export const create = mutation({
   args: {
     moduleId: v.id('modules'),
@@ -94,6 +126,8 @@ export const create = mutation({
     if (!mod || mod.creatorId !== identity.subject || mod.courseId !== args.courseId) {
       throw new Error('Módulo inválido')
     }
+
+    await ensureUniqueYouTubeUrl(ctx, identity.subject, args.youtubeUrl)
 
     const lessonId = await ctx.db.insert('lessons', {
       ...args,
@@ -137,6 +171,11 @@ export const update = mutation({
 
     const lesson = await ctx.db.get(id)
     if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
+
+    if (fields.youtubeUrl !== undefined && fields.youtubeUrl !== lesson.youtubeUrl) {
+      await ensureUniqueYouTubeUrl(ctx, identity.subject, fields.youtubeUrl, id)
+    }
+
     const updates: typeof fields & { slug?: string } = { ...fields }
     if (fields.title) updates.slug = toSlug(fields.title)
     await ctx.db.patch(id, updates)

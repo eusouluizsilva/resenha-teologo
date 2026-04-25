@@ -15,6 +15,11 @@ const categories = [
   'Eclesiologia', 'Escatologia', 'Teologia Prática', 'Outro',
 ]
 
+const languages = [
+  'Português', 'Inglês', 'Espanhol', 'Francês', 'Alemão', 'Italiano',
+  'Grego', 'Hebraico', 'Latim', 'Outro',
+]
+
 const MAX_BASE64_BYTES = 750_000
 
 function compressImage(file: File): Promise<string> {
@@ -193,7 +198,17 @@ export function EditarInfoCursoPage() {
     level: 'iniciante' | 'intermediario' | 'avancado'
     language: string
     tags: string
+    passingScore: number
+    hasLiveStream: boolean
+    liveStreamUrl: string
+    institutionId: string
+    visibility: 'public' | 'institution'
   } | null>(null)
+
+  const myInstitutions = useQuery(api.institutions.listByUser, {})
+  const adminInstitutions = (myInstitutions ?? []).filter(
+    (i) => i.memberRole === 'dono' || i.memberRole === 'admin'
+  )
 
   useEffect(() => {
     if (course && form === null) {
@@ -204,6 +219,11 @@ export function EditarInfoCursoPage() {
         level: course.level,
         language: course.language ?? 'Português',
         tags: course.tags?.join(', ') ?? '',
+        passingScore: Math.max(70, course.passingScore ?? 70),
+        hasLiveStream: course.hasLiveStream ?? false,
+        liveStreamUrl: course.liveStreamUrl ?? '',
+        institutionId: (course.institutionId as string | undefined) ?? '',
+        visibility: course.visibility ?? 'public',
       })
       setThumbnail(course.thumbnail ?? '')
     }
@@ -227,7 +247,18 @@ export function EditarInfoCursoPage() {
   }
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    setForm((current) => (current ? { ...current, [event.target.name]: event.target.value } : current))
+    const target = event.target
+    const name = target.name
+    if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+      const checked = target.checked
+      setForm((current) => (current ? { ...current, [name]: checked } : current))
+    } else if (name === 'passingScore') {
+      const parsed = parseInt(target.value, 10)
+      setForm((current) => (current ? { ...current, passingScore: Number.isFinite(parsed) ? parsed : 70 } : current))
+    } else {
+      const value = target.value
+      setForm((current) => (current ? { ...current, [name]: value } : current))
+    }
     setError('')
   }
 
@@ -237,6 +268,17 @@ export function EditarInfoCursoPage() {
     if (!form.title.trim()) return setError('O título do curso é obrigatório.')
     if (!form.description.trim()) return setError('A descrição é obrigatória.')
     if (!form.category) return setError('Selecione uma categoria.')
+    if (form.passingScore < 70 || form.passingScore > 100) {
+      return setError('A nota mínima deve estar entre 70 e 100.')
+    }
+    if (form.hasLiveStream && form.liveStreamUrl.trim()) {
+      try {
+        const url = new URL(form.liveStreamUrl.trim())
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('')
+      } catch {
+        return setError('Informe uma URL válida de transmissão ao vivo.')
+      }
+    }
 
     setLoading(true)
 
@@ -253,6 +295,11 @@ export function EditarInfoCursoPage() {
         thumbnail: thumbnail || undefined,
         tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
         language: form.language,
+        passingScore: form.passingScore,
+        hasLiveStream: form.hasLiveStream,
+        liveStreamUrl: form.hasLiveStream ? form.liveStreamUrl.trim() || undefined : undefined,
+        institutionId: form.institutionId ? (form.institutionId as Id<'institutions'>) : null,
+        visibility: form.institutionId ? form.visibility : 'public',
       })
 
       navigate('/dashboard/cursos')
@@ -304,7 +351,11 @@ export function EditarInfoCursoPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/72">Idioma</label>
-              <input name="language" value={form.language} onChange={handleChange} className={brandInputClass} />
+              <select name="language" value={form.language} onChange={handleChange} className={brandInputClass}>
+                {languages.map((language) => (
+                  <option key={language} value={language}>{language}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/72">Tags</label>
@@ -323,6 +374,101 @@ export function EditarInfoCursoPage() {
               className={cn(brandInputClass, 'resize-none')}
             />
           </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
+          <DashboardSectionLabel>Avaliação e certificado</DashboardSectionLabel>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white/72">
+              Nota mínima para emitir certificado (%)
+            </label>
+            <input
+              type="number"
+              name="passingScore"
+              min={70}
+              max={100}
+              step={1}
+              value={form.passingScore}
+              onChange={handleChange}
+              className={brandInputClass}
+            />
+            <p className="text-xs leading-6 text-white/40">
+              A nota mínima nunca pode ser inferior a 70%. Aumente apenas se você quiser um curso mais rigoroso.
+            </p>
+          </div>
+        </motion.div>
+
+        {adminInstitutions.length > 0 && (
+          <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
+            <DashboardSectionLabel>Vínculo institucional (opcional)</DashboardSectionLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Instituição</label>
+              <select
+                name="institutionId"
+                value={form.institutionId}
+                onChange={handleChange}
+                className={brandInputClass}
+              >
+                <option value="">Nenhuma, curso público</option>
+                {adminInstitutions.map((inst) => (
+                  <option key={inst._id} value={inst._id as unknown as string}>
+                    {inst.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs leading-6 text-white/40">
+                Vincule este curso a uma instituição que você administra. Necessário apenas se quiser restringir o acesso aos membros.
+              </p>
+            </div>
+            {form.institutionId && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/72">Visibilidade</label>
+                <select
+                  name="visibility"
+                  value={form.visibility}
+                  onChange={handleChange}
+                  className={brandInputClass}
+                >
+                  <option value="public">Público, aparece no catálogo para todos</option>
+                  <option value="institution">Privado, somente membros da instituição</option>
+                </select>
+                <p className="text-xs leading-6 text-white/40">
+                  Em modo privado, o curso some do catálogo público e só pode ser matriculado por membros ativos da instituição.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
+          <DashboardSectionLabel>Transmissão ao vivo (opcional)</DashboardSectionLabel>
+          <label className="flex items-start gap-3 text-sm text-white/72">
+            <input
+              type="checkbox"
+              name="hasLiveStream"
+              checked={form.hasLiveStream}
+              onChange={handleChange}
+              className="mt-1 h-4 w-4 accent-[#F37E20]"
+            />
+            <span>
+              Este curso inclui transmissão ao vivo. Quando marcado, o aluno verá um aviso com o link da live.
+            </span>
+          </label>
+          {form.hasLiveStream ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">URL da transmissão</label>
+              <input
+                name="liveStreamUrl"
+                value={form.liveStreamUrl}
+                onChange={handleChange}
+                placeholder="https://www.youtube.com/live/..."
+                className={brandInputClass}
+              />
+              <p className="text-xs leading-6 text-white/40">
+                Informe o link público da live (YouTube Live, Vimeo Live etc.).
+              </p>
+            </div>
+          ) : null}
         </motion.div>
 
         <motion.div variants={fadeUp}>

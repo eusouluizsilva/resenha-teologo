@@ -4,6 +4,7 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
+import { CourseForum } from '@/components/courseForum/CourseForum'
 
 type LessonWithSlug = {
   _id: string
@@ -158,6 +159,12 @@ export function CursoInternoPage() {
     resolvedCourseId ? { courseId: resolvedCourseId as Id<'courses'> } : 'skip'
   )
 
+  useEffect(() => {
+    if (data === null && rawCourseId) {
+      navigate(`/cursos/${rawCourseId}`, { replace: true })
+    }
+  }, [data, rawCourseId, navigate])
+
   if (data === undefined || (rawCourseId?.includes('-') && slugLookup === undefined)) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center bg-[#F7F5F2]">
@@ -167,8 +174,11 @@ export function CursoInternoPage() {
   }
 
   if (!data) {
-    navigate(`/cursos/${rawCourseId}`, { replace: true })
-    return null
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-[#F7F5F2]">
+        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+      </div>
+    )
   }
 
   const { course, creator, modules, completedLessons, totalLessons, percentage, avgScore, nextLesson, enrollment } = data
@@ -254,21 +264,25 @@ export function CursoInternoPage() {
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
 
-          {/* Módulos e aulas */}
-          <div className="space-y-3">
-            <h2 className="font-display text-lg font-bold text-gray-800">Estrutura do curso</h2>
-            {modules.map((mod, i) => {
-              const hasCurrentLesson = mod.lessons.some((l) => l._id === nextLesson?._id)
-              return (
-                <ModuleSection
-                  key={mod._id}
-                  mod={mod}
-                  courseId={courseId ?? ''}
-                  nextLessonId={nextLesson?._id}
-                  defaultOpen={hasCurrentLesson || i === 0}
-                />
-              )
-            })}
+          {/* Módulos, aulas e fórum */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h2 className="font-display text-lg font-bold text-gray-800">Estrutura do curso</h2>
+              {modules.map((mod, i) => {
+                const hasCurrentLesson = mod.lessons.some((l) => l._id === nextLesson?._id)
+                return (
+                  <ModuleSection
+                    key={mod._id}
+                    mod={mod}
+                    courseId={courseId ?? ''}
+                    nextLessonId={nextLesson?._id}
+                    defaultOpen={hasCurrentLesson || i === 0}
+                  />
+                )
+              })}
+            </div>
+
+            <CourseForum courseId={course._id as Id<'courses'>} />
           </div>
 
           {/* Painel lateral */}
@@ -342,7 +356,7 @@ export function CursoInternoPage() {
 
             {/* Criador */}
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Criador</p>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Professor</p>
               <div className="flex items-center gap-3">
                 {creator.avatarUrl ? (
                   <img src={creator.avatarUrl} alt={creator.name} className="h-10 w-10 flex-shrink-0 rounded-xl object-cover" />

@@ -76,13 +76,13 @@ export function AcceptInvitePage() {
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Link
-                    to={`/entrar?redirect_url=${encodeURIComponent(`/convite/${token}`)}`}
+                    to={`/entrar?redirect=${encodeURIComponent(`/convite/${token}`)}`}
                     className="rounded-2xl bg-[#F37E20] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#e06e10]"
                   >
                     Entrar
                   </Link>
                   <Link
-                    to={`/cadastro?redirect_url=${encodeURIComponent(`/convite/${token}`)}`}
+                    to={`/cadastro?redirect=${encodeURIComponent(`/convite/${token}`)}`}
                     className="rounded-2xl border border-white/14 bg-white/4 px-5 py-2.5 text-sm font-semibold text-white/86 transition-all hover:border-white/24 hover:bg-white/8"
                   >
                     Criar conta

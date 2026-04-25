@@ -138,7 +138,28 @@ export default defineSchema({
     tags: v.optional(v.array(v.string())),
     language: v.optional(v.string()),
     slug: v.optional(v.string()),
-  }).index('by_creatorId', ['creatorId']).index('by_published', ['isPublished']).index('by_slug', ['slug']),
+    // Nota mínima (0–100) para emissão de certificado. Default 70. O professor
+    // pode aumentar para tornar o curso mais rigoroso. Nunca menor que 70.
+    passingScore: v.optional(v.number()),
+    // Quando true, o curso aceita que aulas sejam transmitidas ao vivo (via
+    // YouTube/Vimeo Live). Apenas informativo para o aluno; o player continua
+    // igual ao de vídeos gravados.
+    hasLiveStream: v.optional(v.boolean()),
+    // URL pública da live (YouTube Live, Vimeo Live etc.) quando hasLiveStream
+    // está ativo. Não é cadastrado por aula, apenas no curso.
+    liveStreamUrl: v.optional(v.string()),
+    // Instituição à qual o curso está vinculado. Quando `visibility` é
+    // 'institution', apenas membros ativos desta instituição podem se
+    // matricular e ver o curso no catálogo. Em 'public' (ou ausente) o curso
+    // aparece no catálogo público normalmente, independente de ter
+    // institutionId definido.
+    institutionId: v.optional(v.id('institutions')),
+    visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
+  })
+    .index('by_creatorId', ['creatorId'])
+    .index('by_published', ['isPublished'])
+    .index('by_slug', ['slug'])
+    .index('by_institutionId', ['institutionId']),
 
   modules: defineTable({
     courseId: v.id('courses'),
@@ -298,6 +319,108 @@ export default defineSchema({
     .index('by_parentId', ['parentId'])
     .index('by_authorId', ['authorId']),
 
+  // Flashcards do aluno com revisão espaçada simplificada (SM-2). Decks são
+  // coleções do próprio aluno, podendo opcionalmente referenciar um curso para
+  // agrupar por assunto. Cada card tem easiness/interval/dueAt atualizados
+  // toda vez que o aluno avalia a resposta.
+  flashcardDecks: defineTable({
+    studentId: v.string(),
+    title: v.string(),
+    courseId: v.optional(v.id('courses')),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  }).index('by_studentId', ['studentId']),
+
+  flashcards: defineTable({
+    deckId: v.id('flashcardDecks'),
+    studentId: v.string(),
+    front: v.string(),
+    back: v.string(),
+    easiness: v.number(),
+    intervalDays: v.number(),
+    repetitions: v.number(),
+    dueAt: v.number(),
+    lastReviewedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index('by_deckId', ['deckId'])
+    .index('by_student_due', ['studentId', 'dueAt']),
+
+  // Anotações de aula vinculadas a um timestamp do vídeo. Aluno clica "Anotar
+  // este momento" no player e grava uma nota associada ao segundo atual. Ao
+  // clicar em uma anotação salva, o player pula para aquele ponto. Um aluno
+  // pode ter várias anotações em timestamps distintos na mesma aula.
+  lessonTimestamps: defineTable({
+    studentId: v.string(),
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    timestampSeconds: v.number(),
+    note: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_student_lesson', ['studentId', 'lessonId'])
+    .index('by_lessonId', ['lessonId']),
+
+  // Estatísticas de estudo do aluno para gamificação. Atualizado em lazy-update
+  // quando o aluno conclui aulas ou cursos. streak conta dias consecutivos
+  // (baseado em UTC day); bestStreak guarda o recorde pessoal. points cresce
+  // cumulativamente (+10 por aula concluída, +50 por certificado emitido).
+  // lastStudyDate é o dateKey YYYY-MM-DD do último dia com atividade.
+  studentStats: defineTable({
+    studentId: v.string(),
+    streak: v.number(),
+    bestStreak: v.number(),
+    lastStudyDate: v.optional(v.string()),
+    totalLessonsCompleted: v.number(),
+    totalCoursesCompleted: v.number(),
+    points: v.number(),
+    updatedAt: v.number(),
+    // Última vez que o cron de reengajamento disparou para este aluno (epoch ms).
+    // Usado pra throttle: nunca reengajar mais de uma vez a cada 14 dias.
+    lastReengagementAt: v.optional(v.number()),
+  }).index('by_studentId', ['studentId']),
+
+  // Perguntas privadas do aluno ao professor (dono do curso). Cada documento é
+  // uma pergunta + resposta opcional. Apenas o aluno autor vê suas próprias
+  // perguntas; o professor dono vê todas do seu curso. Opcionalmente vinculada
+  // a uma aula específica para dar contexto.
+  courseQuestions: defineTable({
+    courseId: v.id('courses'),
+    creatorId: v.string(),
+    studentId: v.string(),
+    studentName: v.string(),
+    studentAvatarUrl: v.optional(v.string()),
+    lessonId: v.optional(v.id('lessons')),
+    question: v.string(),
+    answer: v.optional(v.string()),
+    askedAt: v.number(),
+    answeredAt: v.optional(v.number()),
+  })
+    .index('by_course_student', ['courseId', 'studentId'])
+    .index('by_creatorId', ['creatorId'])
+    .index('by_courseId', ['courseId'])
+    .index('by_creator_answered', ['creatorId', 'answeredAt']),
+
+  // Fórum por curso (nível acima das aulas). Mesma estrutura do lessonComments,
+  // mas escopado ao curso inteiro. Aluno matriculado e professor dono têm
+  // acesso de leitura/escrita. Respostas têm 1 nível.
+  courseComments: defineTable({
+    courseId: v.id('courses'),
+    authorId: v.string(),
+    authorName: v.string(),
+    authorAvatarUrl: v.optional(v.string()),
+    authorRole: v.union(v.literal('aluno'), v.literal('criador')),
+    text: v.string(),
+    parentId: v.optional(v.id('courseComments')),
+    isOfficial: v.optional(v.boolean()),
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+  })
+    .index('by_courseId', ['courseId'])
+    .index('by_parentId', ['parentId'])
+    .index('by_authorId', ['authorId']),
+
   donations: defineTable({
     creatorId: v.string(),
     studentId: v.string(),
@@ -350,8 +473,10 @@ export default defineSchema({
       v.literal('course_completed'),
       v.literal('certificate_issued'),
       v.literal('comment_reply'),
+      v.literal('comment_new'),
       v.literal('course_published'),
       v.literal('welcome'),
+      v.literal('reengagement'),
       v.literal('generic'),
     ),
     title: v.string(),

@@ -40,6 +40,27 @@ export const upsert = mutation({
     if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
     if (lesson.courseId !== args.courseId) throw new Error('Curso inválido')
 
+    // Regra do produto: quizzes regulares devem ter pelo menos 5 perguntas.
+    // O quiz da última aula costuma ser mais denso (10 ou 20), mas aceitamos
+    // qualquer valor dentro da faixa 5–20. Cada pergunta precisa ter ao menos
+    // duas alternativas com texto para não ser puramente decorativa.
+    if (args.questions.length < 5) {
+      throw new Error('O quiz precisa ter ao menos 5 perguntas.')
+    }
+    if (args.questions.length > 20) {
+      throw new Error('O quiz pode ter no máximo 20 perguntas.')
+    }
+    for (const q of args.questions) {
+      if (!q.text.trim()) throw new Error('Todas as perguntas precisam de enunciado.')
+      const validOptions = q.options.filter((o) => o.text.trim())
+      if (validOptions.length < 2) {
+        throw new Error('Cada pergunta precisa de pelo menos 2 alternativas.')
+      }
+      if (!q.options.some((o) => o.id === q.correctOptionId)) {
+        throw new Error('Cada pergunta precisa ter uma alternativa correta marcada.')
+      }
+    }
+
     const existing = await ctx.db
       .query('quizzes')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', args.lessonId))

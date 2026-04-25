@@ -16,6 +16,7 @@ import {
   getBibleSource,
   type BibleSource,
 } from '@/lib/bible/translations'
+import { BiblePanel, type BiblePanelInitialRef } from '@/components/BiblePanel'
 
 // ─── YouTube Player ───────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ function VideoPlayer({
   onProgress,
   onComplete,
   resetKey,
+  playerHandleRef,
 }: {
   youtubeUrl: string
   initialWatched: number
@@ -79,6 +81,9 @@ function VideoPlayer({
   // resetKey muda quando o aluno pede retry (watchedSeconds zerado). Força
   // remontagem do player para ignorar o progresso antigo em memória.
   resetKey: string | number
+  // Ref exposto ao parent para consultar o tempo atual e saltar para um
+  // timestamp específico (usado pelas anotações por momento).
+  playerHandleRef?: React.MutableRefObject<YTPlayer | null>
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YTPlayer | null>(null)
@@ -112,7 +117,9 @@ function VideoPlayer({
         start: Math.floor(initialWatchedRef.current),
       },
       events: {
-        onReady: () => {},
+        onReady: (e) => {
+          if (playerHandleRef) playerHandleRef.current = e.target
+        },
         onStateChange: (e) => {
           if (e.data === window.YT.PlayerState.PLAYING) {
             startTracking()
@@ -125,7 +132,7 @@ function VideoPlayer({
         },
       },
     })
-  }, [videoId])
+  }, [videoId, playerHandleRef])
 
   function startTracking() {
     if (intervalRef.current) return
@@ -185,6 +192,7 @@ function VideoPlayer({
     return () => {
       stopTracking()
       playerRef.current?.destroy()
+      if (playerHandleRef) playerHandleRef.current = null
     }
     // resetKey intencional: força reinicialização do player quando o progresso
     // é zerado (retry de quiz) ou a aula muda.
@@ -360,6 +368,494 @@ function VersesSection({ versesRefs }: { versesRefs: VerseRef[] }) {
         ))}
       </div>
     </section>
+  )
+}
+
+// ─── Anotações por momento ────────────────────────────────────────────────────
+
+function formatTimestamp(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  return `${m}:${String(sec).padStart(2, '0')}`
+}
+
+function TimestampNotesSection({
+  lessonId,
+  playerHandleRef,
+}: {
+  lessonId: Id<'lessons'>
+  playerHandleRef: React.MutableRefObject<YTPlayer | null>
+}) {
+  const entries = useQuery(api.lessonTimestamps.listMyByLesson, { lessonId })
+  const create = useMutation(api.lessonTimestamps.create)
+  const update = useMutation(api.lessonTimestamps.update)
+  const remove = useMutation(api.lessonTimestamps.remove)
+
+  const [note, setNote] = useState('')
+  const [capturedSeconds, setCapturedSeconds] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState<Id<'lessonTimestamps'> | null>(null)
+  const [editingText, setEditingText] = useState('')
+
+  function handleCapture() {
+    const p = playerHandleRef.current
+    if (!p) return
+    const current = p.getCurrentTime()
+    setCapturedSeconds(Math.floor(current))
+  }
+
+  async function handleSave() {
+    if (saving) return
+    if (capturedSeconds === null) {
+      handleCapture()
+      return
+    }
+    if (!note.trim()) return
+    setSaving(true)
+    try {
+      await create({ lessonId, timestampSeconds: capturedSeconds, note: note.trim() })
+      setNote('')
+      setCapturedSeconds(null)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function handleJump(seconds: number) {
+    const p = playerHandleRef.current
+    if (!p) return
+    p.seekTo(seconds, true)
+    p.playVideo()
+  }
+
+  async function handleDelete(id: Id<'lessonTimestamps'>) {
+    if (!window.confirm('Remover esta anotação?')) return
+    await remove({ id })
+  }
+
+  async function handleSaveEdit(id: Id<'lessonTimestamps'>) {
+    if (!editingText.trim()) return
+    await update({ id, note: editingText.trim() })
+    setEditingId(null)
+    setEditingText('')
+  }
+
+  return (
+    <section className="mt-10">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F37E20]/10 text-[#F37E20]">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="font-display text-lg font-bold text-gray-800">Anotações por momento</h2>
+          <p className="text-xs text-gray-500">
+            Marque trechos específicos do vídeo com uma observação. Clique depois para voltar àquele ponto.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCapture}
+            className="flex items-center gap-1.5 rounded-full border border-[#F37E20]/40 bg-[#F37E20]/8 px-3 py-1.5 text-xs font-bold text-[#F37E20] hover:bg-[#F37E20]/12"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            {capturedSeconds === null ? 'Marcar este momento' : `Capturado em ${formatTimestamp(capturedSeconds)}`}
+          </button>
+          {capturedSeconds !== null && (
+            <button
+              type="button"
+              onClick={() => setCapturedSeconds(null)}
+              className="text-xs font-semibold text-gray-400 hover:text-gray-600"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="O que você quer anotar sobre este momento?"
+          maxLength={1000}
+          className="mt-3 min-h-[70px] w-full rounded-xl border border-gray-200 bg-[#F7F5F2] px-3 py-2 text-sm leading-6 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
+        />
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-xs text-gray-400">{note.length} / 1.000</span>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !note.trim() || capturedSeconds === null}
+            className="rounded-xl bg-[#F37E20] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#e06e10] disabled:opacity-60"
+          >
+            {saving ? 'Salvando...' : 'Salvar anotação'}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {entries === undefined ? (
+          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-4 text-xs text-gray-400">
+            <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-300 border-t-[#F37E20] animate-spin" />
+            Carregando anotações...
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-5 text-center text-xs text-gray-400">
+            Nenhuma anotação ainda. Marque momentos importantes do vídeo enquanto estuda.
+          </p>
+        ) : (
+          entries.map((entry) => {
+            const isEditing = editingId === entry._id
+            return (
+              <div key={entry._id} className="rounded-xl border border-gray-200 bg-white p-3">
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleJump(entry.timestampSeconds)}
+                    className="flex-shrink-0 rounded-lg bg-[#F37E20]/10 px-3 py-1.5 text-xs font-bold text-[#F37E20] hover:bg-[#F37E20]/15"
+                  >
+                    {formatTimestamp(entry.timestampSeconds)}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    {isEditing ? (
+                      <>
+                        <textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          maxLength={1000}
+                          className="min-h-[60px] w-full rounded-lg border border-gray-200 bg-[#F7F5F2] px-3 py-2 text-sm leading-6 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
+                        />
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSaveEdit(entry._id)}
+                            className="rounded-lg bg-[#F37E20] px-3 py-1 text-xs font-bold text-white hover:bg-[#e06e10]"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingId(null)
+                              setEditingText('')
+                            }}
+                            className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-50"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="whitespace-pre-wrap text-sm leading-6 text-gray-700">{entry.note}</p>
+                        <div className="mt-1 flex items-center gap-3 text-xs text-gray-400">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingId(entry._id)
+                              setEditingText(entry.note)
+                            }}
+                            className="font-semibold hover:text-[#F37E20]"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(entry._id)}
+                            className="font-semibold hover:text-red-500"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ─── Perguntas privadas ao professor ─────────────────────────────────────────
+
+function PrivateQuestionsSection({
+  courseId,
+  lessonId,
+}: {
+  courseId: Id<'courses'>
+  lessonId: Id<'lessons'>
+}) {
+  const entries = useQuery(api.courseQuestions.listMyByCourse, { courseId })
+  const ask = useMutation(api.courseQuestions.ask)
+  const edit = useMutation(api.courseQuestions.editQuestion)
+  const remove = useMutation(api.courseQuestions.remove)
+
+  const [question, setQuestion] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [attachToLesson, setAttachToLesson] = useState(true)
+  const [editingId, setEditingId] = useState<Id<'courseQuestions'> | null>(null)
+  const [editingText, setEditingText] = useState('')
+
+  async function handleAsk() {
+    if (saving || !question.trim()) return
+    setSaving(true)
+    try {
+      await ask({
+        courseId,
+        lessonId: attachToLesson ? lessonId : undefined,
+        question: question.trim(),
+      })
+      setQuestion('')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSaveEdit(id: Id<'courseQuestions'>) {
+    if (!editingText.trim()) return
+    await edit({ id, question: editingText.trim() })
+    setEditingId(null)
+    setEditingText('')
+  }
+
+  async function handleDelete(id: Id<'courseQuestions'>) {
+    if (!window.confirm('Remover esta pergunta?')) return
+    await remove({ id })
+  }
+
+  const lessonEntries = (entries ?? []).filter((e) => e.lessonId === lessonId)
+  const otherEntries = (entries ?? []).filter((e) => e.lessonId !== lessonId)
+
+  return (
+    <section className="mt-10">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F37E20]/10 text-[#F37E20]">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 8.25h.01M15.75 8.25h.01M8.25 14.25c.883 1.2 2.174 2 3.75 2s2.867-.8 3.75-2M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="font-display text-lg font-bold text-gray-800">Perguntas privadas ao professor</h2>
+          <p className="text-xs text-gray-500">
+            Envie uma dúvida em particular. Só você e o professor veem. Respostas aparecem aqui quando estiverem prontas.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <textarea
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Descreva sua dúvida para o professor. Seja específico, isso ajuda a resposta."
+          maxLength={2000}
+          className="min-h-[90px] w-full rounded-xl border border-gray-200 bg-[#F7F5F2] px-3 py-2 text-sm leading-6 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
+        />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <label className="flex items-center gap-2 text-xs text-gray-600">
+            <input
+              type="checkbox"
+              checked={attachToLesson}
+              onChange={(e) => setAttachToLesson(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-gray-300 text-[#F37E20] focus:ring-[#F37E20]"
+            />
+            Vincular a esta aula
+          </label>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-400">{question.length} / 2.000</span>
+            <button
+              type="button"
+              onClick={handleAsk}
+              disabled={saving || !question.trim()}
+              className="rounded-xl bg-[#F37E20] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#e06e10] disabled:opacity-60"
+            >
+              {saving ? 'Enviando...' : 'Enviar pergunta'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {entries === undefined ? (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-4 text-xs text-gray-400">
+          <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-300 border-t-[#F37E20] animate-spin" />
+          Carregando...
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {lessonEntries.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                Nesta aula
+              </h3>
+              {lessonEntries.map((entry) => (
+                <QuestionCard
+                  key={entry._id}
+                  entry={entry}
+                  isEditing={editingId === entry._id}
+                  editingText={editingText}
+                  onStartEdit={() => {
+                    setEditingId(entry._id)
+                    setEditingText(entry.question)
+                  }}
+                  onCancelEdit={() => {
+                    setEditingId(null)
+                    setEditingText('')
+                  }}
+                  onChangeEditing={(v) => setEditingText(v)}
+                  onSaveEdit={() => handleSaveEdit(entry._id)}
+                  onDelete={() => handleDelete(entry._id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {otherEntries.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                Outras aulas deste curso
+              </h3>
+              {otherEntries.map((entry) => (
+                <QuestionCard
+                  key={entry._id}
+                  entry={entry}
+                  isEditing={editingId === entry._id}
+                  editingText={editingText}
+                  onStartEdit={() => {
+                    setEditingId(entry._id)
+                    setEditingText(entry.question)
+                  }}
+                  onCancelEdit={() => {
+                    setEditingId(null)
+                    setEditingText('')
+                  }}
+                  onChangeEditing={(v) => setEditingText(v)}
+                  onSaveEdit={() => handleSaveEdit(entry._id)}
+                  onDelete={() => handleDelete(entry._id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {lessonEntries.length === 0 && otherEntries.length === 0 && (
+            <p className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-5 text-center text-xs text-gray-400">
+              Você ainda não enviou perguntas neste curso.
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function QuestionCard({
+  entry,
+  isEditing,
+  editingText,
+  onStartEdit,
+  onCancelEdit,
+  onChangeEditing,
+  onSaveEdit,
+  onDelete,
+}: {
+  entry: {
+    _id: Id<'courseQuestions'>
+    question: string
+    answer?: string
+    askedAt: number
+    answeredAt?: number
+  }
+  isEditing: boolean
+  editingText: string
+  onStartEdit: () => void
+  onCancelEdit: () => void
+  onChangeEditing: (v: string) => void
+  onSaveEdit: () => void
+  onDelete: () => void
+}) {
+  const isAnswered = Boolean(entry.answeredAt)
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <span className={cn(
+          'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+          isAnswered
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-amber-50 text-amber-700 border border-amber-200'
+        )}>
+          {isAnswered ? 'Respondida' : 'Aguardando resposta'}
+        </span>
+        <span className="text-xs text-gray-400">
+          {new Date(entry.askedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+        </span>
+      </div>
+
+      <div className="mt-3">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Sua pergunta</p>
+        {isEditing ? (
+          <>
+            <textarea
+              value={editingText}
+              onChange={(e) => onChangeEditing(e.target.value)}
+              maxLength={2000}
+              className="mt-1 min-h-[80px] w-full rounded-lg border border-gray-200 bg-[#F7F5F2] px-3 py-2 text-sm leading-6 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
+            />
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={onSaveEdit}
+                className="rounded-lg bg-[#F37E20] px-3 py-1 text-xs font-bold text-white hover:bg-[#e06e10]"
+              >
+                Salvar
+              </button>
+              <button
+                type="button"
+                onClick={onCancelEdit}
+                className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-700">{entry.question}</p>
+        )}
+      </div>
+
+      {isAnswered && entry.answer && (
+        <div className="mt-3 rounded-lg border border-[#F37E20]/20 bg-[#F37E20]/5 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#F37E20]">Resposta do professor</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-800">{entry.answer}</p>
+          {entry.answeredAt && (
+            <p className="mt-2 text-xs text-gray-400">
+              {new Date(entry.answeredAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </p>
+          )}
+        </div>
+      )}
+
+      {!isAnswered && !isEditing && (
+        <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
+          <button type="button" onClick={onStartEdit} className="font-semibold hover:text-gray-700">
+            Editar
+          </button>
+          <button type="button" onClick={onDelete} className="font-semibold hover:text-red-500">
+            Remover
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -639,52 +1135,69 @@ function MaterialsSection({ lessonId }: { lessonId: Id<'lessons'> }) {
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {materials.map((m) => (
-          <a
-            key={m._id}
-            href={m.url ?? '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-all hover:border-[#F37E20]/40 hover:shadow-sm"
-          >
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+        {materials.map((m) => {
+          const hasUrl = typeof m.url === 'string' && m.url.length > 0
+          const inner = (
+            <>
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-gray-800">
+                  {m.name}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {(m.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
               <svg
-                className="h-4 w-4"
+                className="h-4 w-4 flex-shrink-0 text-gray-300"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={1.8}
+                strokeWidth={2}
                 viewBox="0 0 24 24"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5M7.5 16.5L21 3m0 0h-4.875M21 3v4.875"
                 />
               </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-gray-800">
-                {m.name}
-              </p>
-              <p className="text-xs text-gray-400">
-                {(m.size / 1024 / 1024).toFixed(2)} MB
-              </p>
-            </div>
-            <svg
-              className="h-4 w-4 flex-shrink-0 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
+            </>
+          )
+          return hasUrl ? (
+            <a
+              key={m._id}
+              href={m.url as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-all hover:border-[#F37E20]/40 hover:shadow-sm"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5M7.5 16.5L21 3m0 0h-4.875M21 3v4.875"
-              />
-            </svg>
-          </a>
-        ))}
+              {inner}
+            </a>
+          ) : (
+            <div
+              key={m._id}
+              aria-disabled="true"
+              title="Arquivo indisponível"
+              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 opacity-60"
+            >
+              {inner}
+            </div>
+          )
+        })}
       </div>
     </section>
   )
@@ -717,11 +1230,38 @@ type CommentItem = {
 function CommentRow({
   comment,
   isReply = false,
+  canModerate = false,
 }: {
   comment: CommentItem
   isReply?: boolean
+  canModerate?: boolean
 }) {
   const deleted = Boolean(comment.deletedAt)
+  const softDelete = useMutation(api.lessonComments.softDelete)
+  const setOfficial = useMutation(api.lessonComments.setOfficial)
+  const [moderating, setModerating] = useState(false)
+
+  async function handleRemove() {
+    if (moderating) return
+    if (!window.confirm('Remover este comentário? Essa ação não pode ser desfeita.')) return
+    setModerating(true)
+    try {
+      await softDelete({ id: comment._id })
+    } finally {
+      setModerating(false)
+    }
+  }
+
+  async function handleToggleOfficial() {
+    if (moderating) return
+    setModerating(true)
+    try {
+      await setOfficial({ id: comment._id, isOfficial: !comment.isOfficial })
+    } finally {
+      setModerating(false)
+    }
+  }
+
   return (
     <div className={cn('flex gap-3', isReply && 'mt-3 ml-10')}>
       <div className="flex-shrink-0">
@@ -744,7 +1284,7 @@ function CommentRow({
           </span>
           {comment.authorRole === 'criador' && (
             <span className="rounded-full bg-[#F37E20]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#F37E20]">
-              Criador
+              Professor
             </span>
           )}
           {comment.isOfficial && (
@@ -765,13 +1305,37 @@ function CommentRow({
         >
           {deleted ? 'Comentário removido.' : comment.text}
         </p>
+        {canModerate && !deleted && (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            {isReply && (
+              <button
+                type="button"
+                onClick={handleToggleOfficial}
+                disabled={moderating}
+                className="text-xs font-semibold text-emerald-700 hover:underline disabled:opacity-60"
+              >
+                {comment.isOfficial ? 'Remover marcação oficial' : 'Marcar como resposta oficial'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleRemove}
+              disabled={moderating}
+              className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-60"
+            >
+              {moderating ? 'Processando...' : 'Remover'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
-  const thread = useQuery(api.lessonComments.listByLesson, { lessonId })
+  const threadData = useQuery(api.lessonComments.listByLesson, { lessonId })
+  const thread = threadData?.threads
+  const canModerate = threadData?.viewerRole === 'criador'
   const create = useMutation(api.lessonComments.create)
 
   const [rootText, setRootText] = useState('')
@@ -881,12 +1445,13 @@ function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
               key={root._id}
               className="rounded-2xl border border-gray-200 bg-white p-4"
             >
-              <CommentRow comment={root as CommentItem} />
+              <CommentRow comment={root as CommentItem} canModerate={canModerate} />
               {root.replies.map((reply) => (
                 <CommentRow
                   key={reply._id}
                   comment={reply as CommentItem}
                   isReply
+                  canModerate={canModerate}
                 />
               ))}
 
@@ -1315,8 +1880,66 @@ export function AulaPage() {
 
   const updateProgress = useMutation(api.student.updateProgress)
 
+  // Ref do player YouTube exposto a componentes irmãos (anotações por momento).
+  const playerHandleRef = useRef<YTPlayer | null>(null)
+
   // Estado local para acompanhar atingimento de 95% antes do servidor confirmar.
   const [reachedThresholdLocal, setReachedThresholdLocal] = useState(false)
+
+  // Painel lateral da Bíblia. Aluno abre via botão flutuante; quando clica num
+  // versículo da seção VersesSection, abre já posicionado naquela referência.
+  const [bibleOpen, setBibleOpen] = useState(false)
+  const [bibleRef, setBibleRef] = useState<BiblePanelInitialRef | undefined>(undefined)
+
+  // Modo Estudo Profundo: cobre toda a tela (z-[60]) escondendo sidebar e
+  // notificações, layout fica mais largo e silencioso. Atalhos: F para alternar,
+  // Esc para sair. Usa data-study-deep no <html> pra outros componentes
+  // (NotificationsBell) silenciarem som/abertura automática.
+  const [studyDeep, setStudyDeep] = useState(false)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (studyDeep) {
+      document.documentElement.dataset.studyDeep = 'true'
+      try {
+        window.localStorage.setItem('rdt_study_deep_active', '1')
+      } catch {
+        // Privacy mode: ignora.
+      }
+    } else {
+      delete document.documentElement.dataset.studyDeep
+      try {
+        window.localStorage.removeItem('rdt_study_deep_active')
+      } catch {
+        // ignora
+      }
+    }
+    return () => {
+      delete document.documentElement.dataset.studyDeep
+    }
+  }, [studyDeep])
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName?.toLowerCase()
+      const editing =
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        target?.isContentEditable
+      if (e.key === 'Escape' && studyDeep) {
+        setStudyDeep(false)
+        return
+      }
+      if (editing) return
+      if (e.key === 'f' || e.key === 'F') {
+        if (e.metaKey || e.ctrlKey || e.altKey) return
+        e.preventDefault()
+        setStudyDeep((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [studyDeep])
 
   useEffect(() => {
     // Reset quando troca aula ou quando servidor zerou watchedSeconds (retry).
@@ -1366,6 +1989,12 @@ export function AulaPage() {
     }
   }, [courseId, lessonId, updateProgress, data?.lesson.durationSeconds])
 
+  useEffect(() => {
+    if (data === null && rawCourseRef) {
+      navigate(`/dashboard/meus-cursos/${rawCourseRef}`, { replace: true })
+    }
+  }, [data, rawCourseRef, navigate])
+
   if (data === undefined || (isSlugBased && resolved === undefined)) {
     return (
       <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
@@ -1375,8 +2004,11 @@ export function AulaPage() {
   }
 
   if (!data) {
-    navigate(`/dashboard/meus-cursos/${rawCourseRef}`, { replace: true })
-    return null
+    return (
+      <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+      </div>
+    )
   }
 
   const {
@@ -1416,7 +2048,14 @@ export function AulaPage() {
   const playerResetKey = `${lesson._id}-${progress?.watchResetAt ?? 0}`
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F5F2]">
+    <div
+      className={cn(
+        'flex flex-col bg-[#F7F5F2]',
+        studyDeep
+          ? 'fixed inset-0 z-[60] min-h-screen overflow-y-auto'
+          : 'min-h-screen',
+      )}
+    >
       {/* Header fixo com breadcrumb, contador e voltar */}
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
@@ -1459,6 +2098,27 @@ export function AulaPage() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setStudyDeep((v) => !v)}
+              className={cn(
+                'hidden lg:flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                studyDeep
+                  ? 'border-[#F37E20] bg-[#F37E20] text-white hover:bg-[#E6711A]'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800',
+              )}
+              aria-pressed={studyDeep}
+              title="Estudo Profundo (atalho: F)"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                {studyDeep ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                )}
+              </svg>
+              <span>{studyDeep ? 'Sair (Esc)' : 'Estudo Profundo'}</span>
+            </button>
             <span className="text-xs text-gray-400">
               {lessonIndex}/{totalLessons}
             </span>
@@ -1511,6 +2171,7 @@ export function AulaPage() {
             onProgress={handleProgress}
             onComplete={handleComplete}
             resetKey={playerResetKey}
+            playerHandleRef={playerHandleRef}
           />
 
           {/* 3. Informações da aula */}
@@ -1565,7 +2226,13 @@ export function AulaPage() {
           {/* 4. Versículos citados (abaixo do vídeo) */}
           <VersesSection versesRefs={versesRefs} />
 
-          {/* 5. Caderno digital */}
+          {/* 5. Anotações por momento do vídeo */}
+          <TimestampNotesSection
+            lessonId={lesson._id as Id<'lessons'>}
+            playerHandleRef={playerHandleRef}
+          />
+
+          {/* 6. Caderno digital */}
           <NotebookSection lessonId={lesson._id as Id<'lessons'>} />
 
           {/* 6. Materiais */}
@@ -1573,6 +2240,12 @@ export function AulaPage() {
 
           {/* 7. Fórum de comentários */}
           <ForumSection lessonId={lesson._id as Id<'lessons'>} />
+
+          {/* 7b. Perguntas privadas ao professor */}
+          <PrivateQuestionsSection
+            courseId={courseId as Id<'courses'>}
+            lessonId={lesson._id as Id<'lessons'>}
+          />
 
           {/* 8. Quiz */}
           {lesson.hasMandatoryQuiz && (
@@ -1650,6 +2323,29 @@ export function AulaPage() {
           </div>
         </div>
       </main>
+
+      {/* Botão flutuante para abrir o painel da Bíblia em qualquer momento */}
+      <button
+        type="button"
+        onClick={() => {
+          setBibleRef(undefined)
+          setBibleOpen(true)
+        }}
+        className="fixed bottom-6 right-6 z-30 flex h-12 items-center gap-2 rounded-full bg-[#F37E20] px-5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-[#E6711A]"
+        aria-label="Abrir Bíblia"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        Bíblia
+      </button>
+
+      <BiblePanel
+        open={bibleOpen}
+        onClose={() => setBibleOpen(false)}
+        initialRef={bibleRef}
+      />
     </div>
   )
 }

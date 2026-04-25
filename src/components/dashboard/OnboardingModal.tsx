@@ -21,7 +21,7 @@ const FUNCTIONS_CONFIG = [
   {
     id: 'criador' as UserFunction,
     eyebrow: 'Para publicar',
-    title: 'Criador de conteúdo',
+    title: 'Professor',
     description: 'Crie e organize cursos, acompanhe alunos e monetize sua produção.',
     consent: 'Declaro que sou integralmente responsável por todo conteúdo, vídeo, arquivo, material, imagem, produto, dado ou informação que publicar na plataforma, incluindo direitos autorais, licenças, uso de imagem, privacidade e conformidade com regras de plataformas de terceiros.',
     icon: (

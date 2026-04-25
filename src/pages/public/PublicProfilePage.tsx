@@ -294,7 +294,7 @@ export function PublicProfilePage() {
 
   const functionLabels: Record<string, string> = {
     aluno: 'Aluno',
-    criador: 'Criador',
+    criador: 'Professor',
     instituicao: 'Instituição',
   }
 

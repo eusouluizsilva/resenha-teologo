@@ -1,0 +1,34 @@
+{
+  "name": "Resenha do Teólogo",
+  "short_name": "Resenha",
+  "description": "Plataforma gratuita de ensino teológico com cursos, Bíblia integrada, caderno digital e certificados.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "theme_color": "#0F141A",
+  "background_color": "#0F141A",
+  "categories": ["education", "books", "lifestyle"],
+  "icons": [
+    {
+      "src": "/logos/LOGO ICONE PRETA.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logos/LOGO ICONE BRANCA.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logos/LOGO QUADRADA LETRA BRANCA.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

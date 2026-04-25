@@ -93,6 +93,13 @@ export function isValidBibleBookSlug(slug: string): boolean {
   return BY_SLUG.has(slug)
 }
 
+// Número canônico do livro (1=Gênesis, 40=Mateus, 66=Apocalipse). Compatível com
+// a numeração que a API Bolls.life e a maioria dos serviços bíblicos usam.
+export function getCanonicalBookNumber(slug: string): number | null {
+  const idx = BIBLE_BOOKS.findIndex((b) => b.slug === slug)
+  return idx >= 0 ? idx + 1 : null
+}
+
 export function formatVerseReference(ref: {
   bookSlug: string
   chapter: number

@@ -40,6 +40,18 @@ export function FinanceiroPage() {
       maxWidthClass="max-w-5xl"
     >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-8">
+        <motion.div
+          variants={fadeUp}
+          className="rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/8 p-4 text-sm leading-6 text-[#F2BD8A]"
+        >
+          <p className="font-semibold uppercase tracking-[0.18em] text-[10px] text-[#F37E20]">
+            Pré-visualização
+          </p>
+          <p className="mt-1 text-white/72">
+            O painel financeiro ainda está em construção. Os números abaixo são exemplos para ilustrar a estrutura. Repasse de AdSense, doações e relatórios reais entram nas próximas fases.
+          </p>
+        </motion.div>
+
         <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
             {

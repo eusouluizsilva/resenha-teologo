@@ -352,7 +352,7 @@ export function CourseDetailPage() {
 
             {/* Criador */}
             <div className="rounded-2xl border border-white/8 bg-[#151B23] p-6">
-              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/36">Criador do curso</p>
+              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/36">Professor do curso</p>
               <div className="flex items-center gap-4">
                 {course.creatorAvatarUrl ? (
                   <img src={course.creatorAvatarUrl} alt={course.creatorName} className="h-14 w-14 flex-shrink-0 rounded-2xl object-cover" />

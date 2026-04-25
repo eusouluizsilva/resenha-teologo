@@ -112,7 +112,7 @@ export function TermosPage() {
           body: [
             p('A Resenha do Teólogo é uma plataforma digital de ensino, estudo, organização de conteúdo, interação, acompanhamento de progresso, emissão de certificados internos, disponibilização de materiais complementares e gestão de ambientes educacionais e institucionais.'),
             p('A plataforma poderá ser utilizada por diferentes perfis, incluindo, entre outros:'),
-            list(['Aluno', 'Criador de conteúdo', 'Instituição (igreja, escola, empresa ou ministério)', 'Professor', 'Colaborador', 'Administrador']),
+            list(['Aluno', 'Professor', 'Instituição (igreja, escola, empresa ou ministério)', 'Colaborador', 'Administrador']),
             p('A plataforma atua como infraestrutura tecnológica para acesso, organização, exibição, indexação, incorporação, interação, gestão e disponibilização de conteúdos e serviços.'),
           ],
         },
@@ -120,7 +120,7 @@ export function TermosPage() {
           title: '3. Natureza do Serviço',
           body: [
             p('A plataforma não é automaticamente autora, coautora, revisora prévia, certificadora oficial, patrocinadora, editora responsável, garantidora ou endossante de todo conteúdo publicado, incorporado, exibido, divulgado, vendido, referenciado ou utilizado por terceiros no ambiente da plataforma.'),
-            p('O usuário reconhece que muitos conteúdos poderão ser produzidos, hospedados, controlados, mantidos ou disponibilizados por terceiros, inclusive criadores, instituições, professores, parceiros e plataformas externas.'),
+            p('O usuário reconhece que muitos conteúdos poderão ser produzidos, hospedados, controlados, mantidos ou disponibilizados por terceiros, inclusive professores, instituições, parceiros e plataformas externas.'),
             p('A plataforma não garante automaticamente:'),
             list([
               'Veracidade ou atualidade dos conteúdos',
@@ -151,7 +151,7 @@ export function TermosPage() {
           body: [
             p('5.1 Regras comuns a todas as funções: todos os usuários se comprometem a utilizar a plataforma de forma lícita, ética, compatível com a finalidade do serviço e em conformidade com estes Termos e com as políticas aplicáveis.'),
             p('5.2 Função de aluno: o aluno utiliza a plataforma para acessar, acompanhar, estudar, organizar e interagir com conteúdos disponibilizados por terceiros. O aluno reconhece que os conteúdos acessados podem refletir opiniões, interpretações, abordagens doutrinárias, metodologias e estratégias pedagógicas de seus respectivos autores. O aluno se compromete a não copiar, redistribuir, gravar, disponibilizar publicamente, revender, sublicenciar ou explorar comercialmente conteúdos, materiais ou recursos da plataforma sem autorização expressa do titular e da plataforma, quando cabível.'),
-            p('5.3 Função de criador de conteúdo: o criador é integralmente responsável por todo conteúdo, vídeo, arquivo, material, imagem, áudio, link, descrição, thumbnail, aula, quiz, apostila, PDF, eBook, produto, oferta, comentário, anúncio ou informação que publicar, incorporar, divulgar, vender, anexar ou utilizar na plataforma. Ao ativar a função de criador, o usuário declara que possui todos os direitos, licenças, permissões, cessões e autorizações necessárias para utilizar e disponibilizar esse conteúdo na plataforma.'),
+            p('5.3 Função de professor: o professor é integralmente responsável por todo conteúdo, vídeo, arquivo, material, imagem, áudio, link, descrição, thumbnail, aula, quiz, apostila, PDF, eBook, produto, oferta, comentário, anúncio ou informação que publicar, incorporar, divulgar, vender, anexar ou utilizar na plataforma. Ao ativar a função de professor, o usuário declara que possui todos os direitos, licenças, permissões, cessões e autorizações necessárias para utilizar e disponibilizar esse conteúdo na plataforma.'),
             p('5.4 Função institucional: a instituição, incluindo igrejas, empresas, escolas, seminários, ministérios, organizações e entidades em geral, declara que possui autoridade válida para se cadastrar e operar o ambiente institucional. A instituição é responsável pelos usuários vinculados ao seu ambiente, pelos acessos concedidos, pelos conteúdos publicados, pelos dados inseridos, pelas permissões atribuídas e pelos atos praticados em seu espaço institucional.'),
           ],
         },
@@ -191,7 +191,7 @@ export function TermosPage() {
           body: [
             p('A plataforma poderá exibir ou incorporar vídeos, players, conteúdos, links, ferramentas e recursos hospedados ou operados por terceiros, inclusive plataformas externas de vídeo.'),
             p('O usuário reconhece que tais conteúdos e serviços permanecem sujeitos aos termos, políticas, regras técnicas, limitações, condições de monetização, restrições territoriais, configurações de privacidade e critérios operacionais do provedor de origem.'),
-            p('O criador ou a instituição que vincular vídeo ou conteúdo externo declara que: possui legitimidade para utilizá-lo, respeita as regras da plataforma de origem, não está contornando restrições técnicas ou contratuais e responde integralmente por disputas, bloqueios, denúncias ou reivindicações decorrentes desse uso.'),
+            p('O professor ou a instituição que vincular vídeo ou conteúdo externo declara que: possui legitimidade para utilizá-lo, respeita as regras da plataforma de origem, não está contornando restrições técnicas ou contratuais e responde integralmente por disputas, bloqueios, denúncias ou reivindicações decorrentes desse uso.'),
             p('A plataforma não garante que vídeos incorporados permanecerão disponíveis, reproduzíveis, livres de anúncios, monetizados, autorizados para incorporação ou acessíveis em todos os locais e momentos.'),
           ],
         },
@@ -214,7 +214,7 @@ export function TermosPage() {
           title: '10. Planos, Pagamentos, Comissão e Repasses',
           body: [
             p('A plataforma poderá disponibilizar planos, assinaturas, produtos, funcionalidades pagas, recursos premium, vendas de terceiros e mecanismos de repasse financeiro.'),
-            p('Quando houver operações financeiras no ecossistema da plataforma, inclusive vendas realizadas por criadores ou instituições, a plataforma reterá 15% sobre os valores elegíveis da operação, conforme a natureza do produto, serviço, assinatura, venda ou operação processada.'),
+            p('Quando houver operações financeiras no ecossistema da plataforma, inclusive vendas realizadas por professores ou instituições, a plataforma reterá 15% sobre os valores elegíveis da operação, conforme a natureza do produto, serviço, assinatura, venda ou operação processada.'),
             p('Além da retenção da plataforma, poderão incidir taxas de terceiros, custos de processamento, tributos, estornos, chargebacks, tarifas bancárias, custos antifraude e demais encargos aplicáveis.'),
             p('O saldo disponível para repasse poderá considerar deduções relativas a: comissão da plataforma, taxas de terceiros, reembolsos, chargebacks, retenções cautelares, tributos e ajustes operacionais.'),
           ],
@@ -224,7 +224,7 @@ export function TermosPage() {
           body: [
             p('A política de reembolso poderá variar conforme a natureza da operação, do produto, do serviço ou do plano contratado.'),
             p('Em caso de estorno, chargeback, disputa bancária ou contestação de pagamento, a plataforma poderá: debitar o valor correspondente do saldo do responsável, reter saldos futuros, suspender saques, congelar valores relacionados à disputa, exigir documentação adicional ou compensar o prejuízo em operações futuras.'),
-            p('Criadores e instituições respondem por estornos, disputas e chargebacks decorrentes de conteúdo irregular, oferta enganosa, não entrega, promessa descumprida, uso indevido de direitos ou qualquer fato a eles imputável.'),
+            p('Professores e instituições respondem por estornos, disputas e chargebacks decorrentes de conteúdo irregular, oferta enganosa, não entrega, promessa descumprida, uso indevido de direitos ou qualquer fato a eles imputável.'),
           ],
         },
         {
@@ -290,7 +290,7 @@ export function TermosPage() {
               'Conteúdo publicado, incorporado, vendido ou divulgado por terceiros',
               'Indisponibilidade de vídeos externos ou serviços de terceiros',
               'Disputas autorais, contratuais ou comerciais entre usuários e terceiros',
-              'Decisões teológicas, acadêmicas, ministeriais, institucionais ou comerciais tomadas por criadores e instituições',
+              'Decisões teológicas, acadêmicas, ministeriais, institucionais ou comerciais tomadas por professores e instituições',
               'Falhas externas de rede, navegador, dispositivo, banco, gateway, provedor de vídeo ou integração',
               'Perdas indiretas, lucros cessantes, danos presumidos, perda de chance ou prejuízos decorrentes de fatos fora de seu controle razoável',
             ]),
@@ -301,7 +301,7 @@ export function TermosPage() {
           title: '19. Indenização',
           body: [
             p('O usuário que causar prejuízo à plataforma ou a terceiros por violação destes Termos, de políticas aplicáveis, de direitos de terceiros ou da legislação responderá integralmente pelos danos, custos, despesas, notificações, condenações, acordos, estornos, chargebacks, honorários e prejuízos decorrentes de sua conduta.'),
-            p('Criadores e instituições, em especial, obrigam-se a defender, indenizar e manter a plataforma indene por reclamações ligadas a conteúdo, dados, ofertas, produtos, materiais, embeds, cursos, comunicações e atos praticados em seus respectivos ambientes.'),
+            p('Professores e instituições, em especial, obrigam-se a defender, indenizar e manter a plataforma indene por reclamações ligadas a conteúdo, dados, ofertas, produtos, materiais, embeds, cursos, comunicações e atos praticados em seus respectivos ambientes.'),
           ],
         },
         {
@@ -353,7 +353,7 @@ export function PrivacidadePage() {
         {
           title: '1. Quem somos',
           body: [
-            p('A Resenha do Teólogo é uma plataforma digital de ensino teológico online, que oferece acesso a cursos, materiais de estudo, ferramentas de gestão institucional e recursos de formação para alunos, criadores de conteúdo, igrejas e instituições.'),
+            p('A Resenha do Teólogo é uma plataforma digital de ensino teológico online, que oferece acesso a cursos, materiais de estudo, ferramentas de gestão institucional e recursos de formação para alunos, professores, igrejas e instituições.'),
             p('Contato do responsável pelo tratamento de dados: hello@resenhadoteologo.com'),
           ],
         },
@@ -377,7 +377,7 @@ export function PrivacidadePage() {
           body: [
             p('Ao utilizar a plataforma, poderemos tratar os seguintes dados:'),
             list([
-              'Funções ativadas (aluno, criador, instituição) e data de ativação',
+              'Funções ativadas (aluno, professor, instituição) e data de ativação',
               'Registro de aceite dos Termos Gerais e termos por função, incluindo versão do documento e data',
               'Progresso em cursos: aulas assistidas, tempo de visualização, respostas em quizzes e notas obtidas',
               'Cursos em que o usuário está matriculado',

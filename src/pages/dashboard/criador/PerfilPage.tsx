@@ -834,7 +834,7 @@ export function PerfilPage() {
 
   const FUNCTION_LABELS: Record<string, string> = {
     aluno: 'Aluno',
-    criador: 'Criador',
+    criador: 'Professor',
     instituicao: 'Instituição',
   }
 

@@ -100,6 +100,39 @@ export const listEntriesForLesson = query({
   },
 })
 
+// Lista entradas de um caderno enriquecidas com título da aula e do curso,
+// para a página dedicada do Caderno no dashboard do aluno.
+export const listNotebookEntries = query({
+  args: { notebookId: v.id('notebooks') },
+  handler: async (ctx, { notebookId }) => {
+    const identity = await requireIdentity(ctx)
+    const notebook = await ctx.db.get(notebookId)
+    if (!notebook || notebook.studentId !== identity.subject) return []
+
+    const entries = await ctx.db
+      .query('notebookEntries')
+      .withIndex('by_notebook', (q) => q.eq('notebookId', notebookId))
+      .collect()
+
+    entries.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
+
+    const enriched = await Promise.all(
+      entries.map(async (entry) => {
+        const lesson = await ctx.db.get(entry.lessonId)
+        const course = entry.courseId ? await ctx.db.get(entry.courseId) : null
+        return {
+          ...entry,
+          lessonTitle: lesson?.title ?? 'Aula removida',
+          lessonSlug: lesson?.slug,
+          courseTitle: course?.title ?? 'Curso removido',
+          courseSlug: course?.slug,
+        }
+      })
+    )
+    return enriched
+  },
+})
+
 export const upsertEntry = mutation({
   args: {
     notebookId: v.id('notebooks'),

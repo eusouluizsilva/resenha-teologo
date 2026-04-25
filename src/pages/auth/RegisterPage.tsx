@@ -1,21 +1,34 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSignUp } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
 import { motion } from 'framer-motion'
 import { AuthLayout } from '@/components/auth/AuthLayout'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { VerifyStep } from '@/components/auth/VerifyStep'
 import { fadeUp } from '@/lib/motion'
 import {
   brandEyebrowClass,
   brandInputClass,
+  brandPanelSoftClass,
   brandPrimaryButtonClass,
   brandGhostButtonClass,
   cn,
 } from '@/lib/brand'
 import { clerkErrorMessage } from '@/lib/auth'
-import { DOCUMENT_VERSION } from '@/lib/functions'
+import { DOCUMENT_VERSION, type UserFunction } from '@/lib/functions'
 import { api } from '../../../convex/_generated/api'
+
+function safeRedirectTarget(value: string | null): string {
+  if (!value) return '/dashboard'
+  if (!value.startsWith('/') || value.startsWith('//')) return '/dashboard'
+  return value
+}
+
+function parsePerfilHint(value: string | null): UserFunction | null {
+  if (value === 'aluno' || value === 'criador' || value === 'instituicao') return value
+  return null
+}
 
 const COUNTRIES = [
   { code: 'BR', label: 'Brasil', ddi: '+55' },
@@ -48,11 +61,32 @@ type FormState = {
 export function RegisterPage() {
   const { signUp, setActive, isLoaded } = useSignUp()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = safeRedirectTarget(
+    searchParams.get('redirect') ?? searchParams.get('redirect_url'),
+  )
+  const perfilHint = parsePerfilHint(searchParams.get('perfil'))
   const recordConsent = useMutation(api.consents.record)
 
   const [step, setStep] = useState<'form' | 'verify'>('form')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  async function handleOAuth(strategy: 'oauth_google' | 'oauth_facebook') {
+    if (!isLoaded) return
+    setLoading(true)
+    setError('')
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: redirectTo,
+      })
+    } catch (err) {
+      setError(clerkErrorMessage(err))
+      setLoading(false)
+    }
+  }
   const [form, setForm] = useState<FormState>({
     firstName: '',
     lastName: '',
@@ -105,6 +139,7 @@ export function RegisterPage() {
           phoneCountry: selectedCountry.ddi || null,
           termsVersion: DOCUMENT_VERSION,
           termsAcceptedAt: new Date().toISOString(),
+          perfilHint: perfilHint ?? null,
         },
       })
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
@@ -137,7 +172,7 @@ export function RegisterPage() {
         } catch {
           // noop
         }
-        navigate('/dashboard')
+        navigate(redirectTo)
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
@@ -186,7 +221,7 @@ export function RegisterPage() {
       asideDescription="Você decide como usar a plataforma depois do primeiro acesso. Sem compromisso de perfil agora."
       highlights={[
         'Cursos gratuitos para todos os alunos',
-        'Criadores publicam e acompanham sua audiência',
+        'Professores publicam e acompanham sua audiência',
         'Igrejas e instituições organizam a formação de membros',
       ]}
       quote={'\u201cFormação teológica séria, acessível e com a mesma qualidade de produção de qualquer grande plataforma educacional.\u201d'}
@@ -203,10 +238,23 @@ export function RegisterPage() {
         </p>
       </motion.div>
 
+      <motion.div variants={fadeUp} className={cn('mt-8 space-y-3 p-5 sm:p-6', brandPanelSoftClass)}>
+        <OAuthButtons
+          onGoogle={() => handleOAuth('oauth_google')}
+          onFacebook={() => handleOAuth('oauth_facebook')}
+          loading={loading}
+        />
+        <div className="relative my-1 flex items-center gap-3">
+          <span className="h-px flex-1 bg-white/8" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/36">ou cadastro com email</span>
+          <span className="h-px flex-1 bg-white/8" />
+        </div>
+      </motion.div>
+
       <motion.form
         variants={fadeUp}
         onSubmit={handleSubmit}
-        className="mt-8 space-y-4"
+        className="mt-6 space-y-4"
         autoComplete="off"
       >
         <div className="grid grid-cols-2 gap-3">
@@ -345,7 +393,7 @@ export function RegisterPage() {
         </button>
 
         <Link
-          to="/entrar"
+          to={redirectTo === '/dashboard' ? '/entrar' : `/entrar?redirect=${encodeURIComponent(redirectTo)}`}
           className={cn(brandGhostButtonClass, 'w-full py-3')}
         >
           Já tenho conta. Entrar

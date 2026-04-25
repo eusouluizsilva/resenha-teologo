@@ -39,10 +39,24 @@ export const create = mutation({
     thumbnail: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     language: v.optional(v.string()),
+    institutionId: v.optional(v.id('institutions')),
+    visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
   },
   handler: async (ctx, args) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, args.creatorId)
+
+    if (args.institutionId) {
+      const membership = await ctx.db
+        .query('institutionMembers')
+        .withIndex('by_institution_user', (q) =>
+          q.eq('institutionId', args.institutionId!).eq('userId', identity.subject)
+        )
+        .unique()
+      if (!membership || !['dono', 'admin'].includes(membership.role) || membership.status === 'removido') {
+        throw new Error('Você não administra esta instituição.')
+      }
+    }
 
     return await ctx.db.insert('courses', {
       ...args,
@@ -68,6 +82,11 @@ export const update = mutation({
     tags: v.optional(v.array(v.string())),
     isPublished: v.optional(v.boolean()),
     language: v.optional(v.string()),
+    passingScore: v.optional(v.number()),
+    hasLiveStream: v.optional(v.boolean()),
+    liveStreamUrl: v.optional(v.string()),
+    institutionId: v.optional(v.union(v.id('institutions'), v.null())),
+    visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
@@ -75,8 +94,34 @@ export const update = mutation({
 
     const course = await ctx.db.get(id)
     if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
-    const updates: typeof fields & { slug?: string } = { ...fields }
+
+    if (fields.passingScore !== undefined) {
+      if (fields.passingScore < 70 || fields.passingScore > 100) {
+        throw new Error('A nota mínima deve estar entre 70 e 100.')
+      }
+    }
+
+    // Para vincular curso a instituição, o professor precisa ser dono ou admin
+    // dela. Enviar null remove o vínculo.
+    if (fields.institutionId !== undefined && fields.institutionId !== null) {
+      const membership = await ctx.db
+        .query('institutionMembers')
+        .withIndex('by_institution_user', (q) =>
+          q.eq('institutionId', fields.institutionId as NonNullable<typeof fields.institutionId>).eq('userId', identity.subject)
+        )
+        .unique()
+      if (!membership || !['dono', 'admin'].includes(membership.role) || membership.status === 'removido') {
+        throw new Error('Você não administra esta instituição.')
+      }
+    }
+
+    const updates: Record<string, unknown> = { ...fields }
     if (fields.title) updates.slug = toSlug(fields.title)
+    // institutionId: null explícito remove vínculo.
+    if (fields.institutionId === null) {
+      updates.institutionId = undefined
+      updates.visibility = 'public'
+    }
     await ctx.db.patch(id, updates)
   },
 })

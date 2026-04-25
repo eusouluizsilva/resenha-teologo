@@ -320,6 +320,9 @@ export const updateProgress = mutation({
     // cursos sem quiz obrigatório, que antes nunca passavam pela avaliação
     // (submitQuiz nunca era chamado).
     if (justCompleted) {
+      await ctx.runMutation(internal.gamification.recordLessonComplete, {
+        studentId: identity.subject,
+      })
       await checkAndIssueCertificate(ctx, identity.subject, courseId, enrollment._id)
     }
 
@@ -443,7 +446,9 @@ export const submitQuiz = mutation({
     }
 
     const score = quiz.questions.length > 0 ? Math.round((correct / quiz.questions.length) * 100) : 100
-    const passed = score >= 70
+    const course = await ctx.db.get(courseId)
+    const passingScore = Math.max(70, course?.passingScore ?? 70)
+    const passed = score >= passingScore
 
     await ctx.db.patch(progress._id, {
       quizScore: score,
@@ -459,7 +464,8 @@ export const submitQuiz = mutation({
 })
 
 // ─── checkAndIssueCertificate ─────────────────────────────────────────────────
-// Emite certificado se todas as aulas foram concluídas e média >= 70%.
+// Emite certificado se todas as aulas foram concluídas e média >= passingScore
+// do curso (default 70, nunca menor).
 
 async function checkAndIssueCertificate(
   ctx: MutationCtx,
@@ -486,6 +492,12 @@ async function checkAndIssueCertificate(
 
   if (!allCompleted) return
 
+  const enrollment = await ctx.db.get(enrollmentId)
+  const wasIssued = enrollment?.certificateIssued ?? false
+
+  const course = await ctx.db.get(courseId)
+  const passingScore = Math.max(70, course?.passingScore ?? 70)
+
   const lessonsWithQuiz = published.filter((l) => l.hasMandatoryQuiz)
 
   if (lessonsWithQuiz.length > 0) {
@@ -506,19 +518,25 @@ async function checkAndIssueCertificate(
     }
 
     const avg = Math.round(scoresForCert.reduce((a, b) => a + b, 0) / scoresForCert.length)
-    if (avg < 70) return
+    if (avg < passingScore) return
 
     await ctx.db.patch(enrollmentId, {
       certificateIssued: true,
       completedAt: Date.now(),
       finalScore: avg,
     })
+    if (!wasIssued) {
+      await ctx.runMutation(internal.gamification.recordCourseComplete, { studentId })
+    }
     await notifyCertificateIssued(ctx, studentId, courseId)
   } else {
     await ctx.db.patch(enrollmentId, {
       certificateIssued: true,
       completedAt: Date.now(),
     })
+    if (!wasIssued) {
+      await ctx.runMutation(internal.gamification.recordCourseComplete, { studentId })
+    }
     await notifyCertificateIssued(ctx, studentId, courseId)
   }
 }

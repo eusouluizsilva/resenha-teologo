@@ -12,11 +12,19 @@ function formatHours(totalSeconds: number): string {
   return `${hours.toFixed(1)}h`
 }
 
-function StatBlock({ label, value }: { label: string; value: string }) {
+function StatBlock({ label, value, accent = false, sub }: { label: string; value: string; accent?: boolean; sub?: string }) {
   return (
-    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
-      <p className="font-display text-2xl font-bold text-white">{value}</p>
+    <div
+      className={cn(
+        'rounded-[1.4rem] border p-5',
+        accent
+          ? 'border-[#F37E20]/24 bg-[#F37E20]/10'
+          : 'border-white/7 bg-white/[0.025]',
+      )}
+    >
+      <p className={cn('font-display text-2xl font-bold', accent ? 'text-[#F2BD8A]' : 'text-white')}>{value}</p>
       <p className="mt-1 text-xs text-white/48">{label}</p>
+      {sub ? <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-white/36">{sub}</p> : null}
     </div>
   )
 }
@@ -100,6 +108,7 @@ function CourseProgressCard({
 
 export function AlunoDashboardPage() {
   const data = useQuery(api.student.getStudentDashboard, {})
+  const stats = useQuery(api.gamification.getMyStats, {})
 
   if (data === undefined) {
     return (
@@ -213,8 +222,14 @@ export function AlunoDashboardPage() {
         )}
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatBlock label="Cursos matriculados" value={String(totalCoursesEnrolled)} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatBlock
+            label="Sequência de estudos"
+            value={`${stats?.streak ?? 0} ${(stats?.streak ?? 0) === 1 ? 'dia' : 'dias'}`}
+            accent={(stats?.streak ?? 0) >= 3}
+            sub={stats && stats.bestStreak > (stats.streak ?? 0) ? `Recorde ${stats.bestStreak}` : undefined}
+          />
+          <StatBlock label="Pontos acumulados" value={String(stats?.points ?? 0)} />
           <StatBlock label="Cursos concluídos" value={String(totalCoursesCompleted)} />
           <StatBlock label="Tempo estudado" value={formatHours(totalWatchSeconds)} />
         </div>

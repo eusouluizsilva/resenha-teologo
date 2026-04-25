@@ -5,6 +5,7 @@
 // 16 hex chars em maiúsculo) para quem quiser conferir autenticidade no futuro.
 
 import jsPDF from 'jspdf'
+import QRCode from 'qrcode'
 
 type CertificateData = {
   studentName: string
@@ -23,7 +24,7 @@ function formatDate(ts: number): string {
   }).format(new Date(ts))
 }
 
-export function downloadCertificatePdf(data: CertificateData) {
+export async function downloadCertificatePdf(data: CertificateData) {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
@@ -124,6 +125,18 @@ export function downloadCertificatePdf(data: CertificateData) {
     )
   }
 
+  // QR Code apontando para a URL de verificação (ancorado à direita do rodapé)
+  const verifyUrl = `https://resenhadoteologo.com/verificar/${data.verificationCode}`
+  const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+    margin: 1,
+    width: 256,
+    color: { dark: '#1E2430', light: '#F7F5F2' },
+  })
+  const qrSize = 26
+  const qrX = pageW - 20 - qrSize
+  const qrY = pageH - 20 - qrSize
+  doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize)
+
   // Rodapé: data + código de verificação
   const footerY = pageH - 28
 
@@ -136,19 +149,17 @@ export function downloadCertificatePdf(data: CertificateData) {
   doc.setTextColor(130, 130, 130)
   doc.text(
     `Código: ${data.verificationCode}`,
-    pageW - 20,
-    footerY,
-    { align: 'right' },
+    20,
+    footerY + 6,
   )
 
-  // URL de verificação + institucional
-  doc.setFontSize(9)
+  // URL de verificação (à esquerda do QR)
+  doc.setFontSize(8.5)
   doc.setTextColor(120, 120, 120)
   doc.text(
     `Verifique em resenhadoteologo.com/verificar/${data.verificationCode}`,
-    pageW / 2,
-    pageH - 18,
-    { align: 'center' },
+    20,
+    footerY + 12,
   )
 
   const safeCourse = (data.courseTitle || 'curso')

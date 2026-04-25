@@ -236,6 +236,16 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Registra service worker apenas em produção. Evita interferir com HMR do Vite
+// em dev e reduz chance de cache de build quebrado durante desenvolvimento.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('[sw] registro falhou', err)
+    })
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppErrorBoundary>

@@ -44,6 +44,15 @@ const EditarAulaPage = lazy(() =>
 const FinanceiroPage = lazy(() =>
   import('@/pages/dashboard/criador/FinanceiroPage').then((m) => ({ default: m.FinanceiroPage })),
 )
+const AlunosPage = lazy(() =>
+  import('@/pages/dashboard/criador/AlunosPage').then((m) => ({ default: m.AlunosPage })),
+)
+const PerguntasPage = lazy(() =>
+  import('@/pages/dashboard/criador/PerguntasPage'),
+)
+const AdminPage = lazy(() =>
+  import('@/pages/dashboard/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
+)
 const PerfilPage = lazy(() =>
   import('@/pages/dashboard/criador/PerfilPage').then((m) => ({ default: m.PerfilPage })),
 )
@@ -61,6 +70,13 @@ const CertificadosPage = lazy(() =>
     default: m.CertificadosPage,
   })),
 )
+const CadernoPage = lazy(() =>
+  import('@/pages/dashboard/aluno/CadernoPage').then((m) => ({ default: m.CadernoPage })),
+)
+const FlashcardsPage = lazy(() =>
+  import('@/pages/dashboard/aluno/FlashcardsPage').then((m) => ({ default: m.FlashcardsPage })),
+)
+const BibliaPage = lazy(() => import('@/pages/dashboard/aluno/BibliaPage'))
 const CursoInternoPage = lazy(() =>
   import('@/pages/dashboard/aluno/CursoInternoPage').then((m) => ({
     default: m.CursoInternoPage,
@@ -103,6 +119,12 @@ const MembrosPage = lazy(() =>
   import('@/pages/dashboard/instituicao/MembrosPage').then((m) => ({
     default: m.MembrosPage,
   })),
+)
+const SobrePage = lazy(() =>
+  import('@/pages/public/SobrePage').then((m) => ({ default: m.SobrePage })),
+)
+const NotFoundPage = lazy(() =>
+  import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 )
 
 function DashboardRouteLoader() {
@@ -189,7 +211,7 @@ function DashboardIndexPage() {
             href: '/dashboard/funcoes',
           },
           {
-            title: 'Criador de conteúdo',
+            title: 'Professor',
             description: 'Publique cursos, organize módulos e acompanhe sua audiência.',
             href: '/dashboard/funcoes',
           },
@@ -243,6 +265,7 @@ export default function App() {
           <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
           <Route path="/convite/:token" element={<AcceptInvitePage />} />
+          <Route path="/sobre" element={<SobrePage />} />
           <Route path="/:handle" element={<PublicProfilePage />} />
 
           {/* Autenticação */}
@@ -265,6 +288,8 @@ export default function App() {
             <Route path="cursos/:id" element={<RequireFunction allowed={['criador']}><EditarInfoCursoPage /></RequireFunction>} />
             <Route path="cursos/:id/modulos" element={<RequireFunction allowed={['criador']}><EditarCursoPage /></RequireFunction>} />
             <Route path="cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['criador']}><EditarAulaPage /></RequireFunction>} />
+            <Route path="alunos" element={<RequireFunction allowed={['criador']}><AlunosPage /></RequireFunction>} />
+            <Route path="perguntas" element={<RequireFunction allowed={['criador']}><PerguntasPage /></RequireFunction>} />
             <Route path="financeiro" element={<RequireFunction allowed={['criador']}><FinanceiroPage /></RequireFunction>} />
 
             {/* Aluno */}
@@ -272,6 +297,9 @@ export default function App() {
             <Route path="meus-cursos/:courseId" element={<RequireFunction allowed={['aluno']}><CursoInternoPage /></RequireFunction>} />
             <Route path="meus-cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['aluno']}><AulaPage /></RequireFunction>} />
             <Route path="certificados" element={<RequireFunction allowed={['aluno']}><CertificadosPage /></RequireFunction>} />
+            <Route path="caderno" element={<RequireFunction allowed={['aluno']}><CadernoPage /></RequireFunction>} />
+            <Route path="flashcards" element={<RequireFunction allowed={['aluno']}><FlashcardsPage /></RequireFunction>} />
+            <Route path="biblia" element={<BibliaPage />} />
 
             {/* Instituição */}
             <Route path="membros" element={<RequireFunction allowed={['instituicao']}><MembrosPage /></RequireFunction>} />
@@ -283,7 +311,24 @@ export default function App() {
             <Route path="meu-perfil-publico" element={<Navigate to="/dashboard/perfil" replace />} />
             <Route path="funcoes" element={<FuncoesPage />} />
             <Route path="planos" element={<PlanosPage />} />
+
+            {/* Admin (acesso validado server-side por email) */}
+            <Route path="admin" element={<AdminPage />} />
+
+            {/* Catch-all dentro do dashboard */}
+            <Route
+              path="*"
+              element={
+                <EmConstrucao
+                  title="Página do dashboard não encontrada"
+                  description="O endereço acessado não existe. Use o menu lateral para navegar."
+                />
+              }
+            />
           </Route>
+
+          {/* Catch-all global (multi-segmentos não cobertos por /:handle) */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </Suspense>
       </AnimatePresence>

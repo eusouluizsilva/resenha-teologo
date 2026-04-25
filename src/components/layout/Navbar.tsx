@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+
+const SECTIONS = [
+  { hash: 'como-funciona', label: 'Como funciona' },
+  { hash: 'para-alunos', label: 'Para alunos' },
+  { hash: 'para-professores', label: 'Para professores' },
+  { hash: 'para-igrejas', label: 'Para igrejas' },
+  { hash: 'planos', label: 'Planos' },
+]
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const location = useLocation()
+  const onHome = location.pathname === '/'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -36,21 +46,28 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden items-center gap-7 md:flex">
-            <a href="#como-funciona" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
-              Como funciona
-            </a>
-            <a href="#para-alunos" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
-              Para alunos
-            </a>
-            <a href="#para-criadores" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
-              Para criadores
-            </a>
-            <a href="#para-igrejas" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
-              Para igrejas
-            </a>
-            <a href="#planos" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
-              Planos
-            </a>
+            {SECTIONS.map((section) =>
+              onHome ? (
+                <a
+                  key={section.hash}
+                  href={`#${section.hash}`}
+                  className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white"
+                >
+                  {section.label}
+                </a>
+              ) : (
+                <Link
+                  key={section.hash}
+                  to={`/#${section.hash}`}
+                  className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white"
+                >
+                  {section.label}
+                </Link>
+              ),
+            )}
+            <Link to="/sobre" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
+              Sobre
+            </Link>
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
@@ -91,21 +108,30 @@ export function Navbar() {
               className="overflow-hidden border-t border-white/8 px-5 py-5 md:hidden"
             >
               <div className="flex flex-col gap-4">
-                <a href="#como-funciona" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
-                  Como funciona
-                </a>
-                <a href="#para-alunos" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
-                  Para alunos
-                </a>
-                <a href="#para-criadores" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
-                  Para criadores
-                </a>
-                <a href="#para-igrejas" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
-                  Para igrejas
-                </a>
-                <a href="#planos" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
-                  Planos
-                </a>
+                {SECTIONS.map((section) =>
+                  onHome ? (
+                    <a
+                      key={section.hash}
+                      href={`#${section.hash}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="text-sm text-white/70 transition-colors hover:text-white"
+                    >
+                      {section.label}
+                    </a>
+                  ) : (
+                    <Link
+                      key={section.hash}
+                      to={`/#${section.hash}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="text-sm text-white/70 transition-colors hover:text-white"
+                    >
+                      {section.label}
+                    </Link>
+                  ),
+                )}
+                <Link to="/sobre" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
+                  Sobre
+                </Link>
 
                 <div className="mt-2 flex flex-col gap-2 border-t border-white/8 pt-4">
                   <Link

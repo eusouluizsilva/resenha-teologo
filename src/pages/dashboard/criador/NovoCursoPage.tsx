@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
@@ -14,6 +15,11 @@ const categories = [
   'Eclesiologia', 'Escatologia', 'Teologia Prática', 'Outro',
 ]
 
+const languages = [
+  'Português', 'Inglês', 'Espanhol', 'Francês', 'Alemão', 'Italiano',
+  'Grego', 'Hebraico', 'Latim', 'Outro',
+]
+
 type FormData = {
   title: string
   description: string
@@ -21,12 +27,18 @@ type FormData = {
   level: 'iniciante' | 'intermediario' | 'avancado'
   language: string
   tags: string
+  institutionId: string
+  visibility: 'public' | 'institution'
 }
 
 export function NovoCursoPage() {
   const navigate = useNavigate()
   const creatorId = useCreatorId()
   const createCourse = useMutation(api.courses.create)
+  const myInstitutions = useQuery(api.institutions.listByUser, {}) ?? []
+  const adminInstitutions = myInstitutions.filter(
+    (i) => i.memberRole === 'dono' || i.memberRole === 'admin'
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<FormData>({
@@ -36,6 +48,8 @@ export function NovoCursoPage() {
     level: 'iniciante',
     language: 'Português',
     tags: '',
+    institutionId: '',
+    visibility: 'public',
   })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
@@ -61,6 +75,8 @@ export function NovoCursoPage() {
         level: form.level,
         tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
         language: form.language,
+        institutionId: form.institutionId ? (form.institutionId as Id<'institutions'>) : undefined,
+        visibility: form.institutionId ? form.visibility : undefined,
       })
       navigate(`/dashboard/cursos/${id}`)
     } catch {
@@ -120,7 +136,11 @@ export function NovoCursoPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/72">Idioma</label>
-              <input name="language" value={form.language} onChange={handleChange} className={brandInputClass} />
+              <select name="language" value={form.language} onChange={handleChange} className={brandInputClass}>
+                {languages.map((language) => (
+                  <option key={language} value={language}>{language}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -148,6 +168,33 @@ export function NovoCursoPage() {
             />
           </div>
         </motion.div>
+
+        {adminInstitutions.length > 0 && (
+          <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
+            <DashboardSectionLabel>Vínculo institucional (opcional)</DashboardSectionLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/72">Instituição</label>
+              <select name="institutionId" value={form.institutionId} onChange={handleChange} className={brandInputClass}>
+                <option value="">Nenhuma, curso público</option>
+                {adminInstitutions.map((inst) => (
+                  <option key={inst._id} value={inst._id as unknown as string}>{inst.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-white/54">
+                Vincule o curso a uma instituição que você administra, para identificar a origem do conteúdo.
+              </p>
+            </div>
+            {form.institutionId && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/72">Visibilidade</label>
+                <select name="visibility" value={form.visibility} onChange={handleChange} className={brandInputClass}>
+                  <option value="public">Público, aparece no catálogo para todos</option>
+                  <option value="institution">Privado, somente membros da instituição</option>
+                </select>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         <motion.div variants={fadeUp} className={cn('p-6', brandPanelClass)}>
           <DashboardSectionLabel>Direção visual</DashboardSectionLabel>

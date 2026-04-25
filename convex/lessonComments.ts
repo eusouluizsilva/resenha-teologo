@@ -54,23 +54,36 @@ export const create = mutation({
       createdAt: Date.now(),
     })
 
+    const course = await ctx.db.get(lesson.courseId)
+    const excerpt = safeText.length > 90 ? `${safeText.slice(0, 87)}...` : safeText
+
     // Se é uma resposta, notifica o autor do comentário pai (desde que não
     // esteja respondendo a si mesmo e que o pai não tenha sido removido).
     if (parentId) {
       const parent = await ctx.db.get(parentId)
       if (parent && !parent.deletedAt && parent.authorId !== identity.subject) {
-        const course = await ctx.db.get(lesson.courseId)
-        const excerpt = safeText.length > 90 ? `${safeText.slice(0, 87)}...` : safeText
         await ctx.runMutation(internal.notifications.pushInternal, {
           userId: parent.authorId,
           kind: 'comment_reply',
           title: isCourseCreator
-            ? `${user.name} (criador) respondeu seu comentário`
+            ? `${user.name} (professor) respondeu seu comentário`
             : `${user.name} respondeu seu comentário`,
           body: course ? `Em "${course.title}" · ${lesson.title}: ${excerpt}` : excerpt,
           link: `/dashboard/meus-cursos/${lesson.courseId}/aula/${lessonId}`,
         })
       }
+    }
+
+    // Se é um comentário raiz de aluno numa aula de outro professor, notifica
+    // o professor dono do curso para que possa responder ou moderar.
+    if (!parentId && !isCourseCreator) {
+      await ctx.runMutation(internal.notifications.pushInternal, {
+        userId: lesson.creatorId,
+        kind: 'comment_new',
+        title: `${user.name} comentou em sua aula`,
+        body: course ? `Em "${course.title}" · ${lesson.title}: ${excerpt}` : excerpt,
+        link: `/dashboard/meus-cursos/${lesson.courseId}/aula/${lessonId}`,
+      })
     }
 
     return commentId
@@ -140,7 +153,7 @@ export const listByLesson = query({
   handler: async (ctx, { lessonId }) => {
     // Acesso: criador dono OU aluno matriculado. Evita leitura de threads por
     // terceiros que apenas estejam autenticados.
-    await requireLessonAccess(ctx, lessonId)
+    const { role } = await requireLessonAccess(ctx, lessonId)
     const all = await ctx.db
       .query('lessonComments')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', lessonId))
@@ -160,11 +173,14 @@ export const listByLesson = query({
       }
     }
 
-    return roots.map((root) => ({
-      ...root,
-      replies: (repliesByParent.get(root._id as unknown as string) ?? []).sort(
-        (a, b) => a.createdAt - b.createdAt
-      ),
-    }))
+    return {
+      viewerRole: role,
+      threads: roots.map((root) => ({
+        ...root,
+        replies: (repliesByParent.get(root._id as unknown as string) ?? []).sort(
+          (a, b) => a.createdAt - b.createdAt
+        ),
+      })),
+    }
   },
 })

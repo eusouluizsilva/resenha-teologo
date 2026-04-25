@@ -27,7 +27,7 @@ const FUNCTIONS_CONFIG = [
   },
   {
     id: 'criador' as UserFunction,
-    title: 'Criador de conteúdo',
+    title: 'Professor',
     description: 'Crie e organize cursos, acompanhe alunos e monetize sua produção.',
     details: [
       'Criação de cursos, módulos e aulas',

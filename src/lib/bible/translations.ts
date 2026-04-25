@@ -18,6 +18,9 @@ export type BibleSource = {
   // originais, usamos SBLGNT (grego) e WLC (hebraico). Para traduções
   // portuguesas, o próprio label funciona (NVI, NAA, NVT, ARA).
   bibleGatewayVersion: string
+  // Código que a API do Bolls.life aceita. Quando ausente, o painel lateral
+  // bíblico cai pra link externo. Bolls cobre PT, EN, originais, e mais.
+  bollsCode?: string
 }
 
 export const BIBLE_SOURCES: BibleSource[] = [
@@ -29,6 +32,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     language: 'grc',
     testaments: ['new'],
     bibleGatewayVersion: 'SBLGNT',
+    bollsCode: 'SBLGNT',
   },
   {
     id: 'hebraico',
@@ -38,6 +42,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     language: 'hbo',
     testaments: ['old'],
     bibleGatewayVersion: 'WLC',
+    bollsCode: 'WLC',
   },
   {
     id: 'nvi',
@@ -47,6 +52,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     language: 'pt-BR',
     testaments: ['old', 'new'],
     bibleGatewayVersion: 'NVI-PT',
+    bollsCode: 'NVI-PT',
   },
   {
     id: 'naa',
@@ -56,6 +62,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     language: 'pt-BR',
     testaments: ['old', 'new'],
     bibleGatewayVersion: 'NAA',
+    bollsCode: 'NAA',
   },
   {
     id: 'nvt',
@@ -65,6 +72,7 @@ export const BIBLE_SOURCES: BibleSource[] = [
     language: 'pt-BR',
     testaments: ['old', 'new'],
     bibleGatewayVersion: 'NVT',
+    bollsCode: 'NVT',
   },
   {
     id: 'ara',
@@ -74,6 +82,17 @@ export const BIBLE_SOURCES: BibleSource[] = [
     language: 'pt-BR',
     testaments: ['old', 'new'],
     bibleGatewayVersion: 'ARA',
+    bollsCode: 'ARA',
+  },
+  {
+    id: 'acf',
+    label: 'ACF',
+    name: 'Almeida Corrigida e Fiel',
+    kind: 'translation',
+    language: 'pt-BR',
+    testaments: ['old', 'new'],
+    bibleGatewayVersion: 'ACF',
+    bollsCode: 'ACF',
   },
 ]
 

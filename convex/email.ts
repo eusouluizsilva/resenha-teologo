@@ -166,6 +166,25 @@ export const sendCertificateIssued = internalAction({
   },
 })
 
+export const sendReengagement = internalAction({
+  args: { to: v.string(), name: v.string() },
+  handler: async (_ctx, { to, name }): Promise<SendResult> => {
+    return await sendViaResend({
+      to,
+      subject: 'Sua jornada teológica te espera',
+      html: baseHtml({
+        title: `${name}, vamos retomar?`,
+        intro: `
+          <p>Faz alguns dias que você não acessa a Resenha do Teólogo. Tudo bem, todo mundo tem semanas mais corridas, mas seus cursos seguem aqui.</p>
+          <p>Você pode voltar exatamente de onde parou. Sem pressa, sem prazo, no seu ritmo.</p>
+        `,
+        cta: { label: 'Continuar de onde parei', url: 'https://resenhadoteologo.com/dashboard' },
+        footer: 'Se prefere não receber estes lembretes, ajuste suas preferências no painel.',
+      }),
+    })
+  },
+})
+
 export const sendInstitutionInvite = internalAction({
   args: {
     to: v.string(),

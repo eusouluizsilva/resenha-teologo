@@ -8,7 +8,7 @@ export function normalizePerfil(value: unknown): Perfil {
 }
 
 export const perfilLabel: Record<Perfil, string> = {
-  criador: 'Criador de conteúdo',
+  criador: 'Professor',
   aluno: 'Aluno',
   instituicao: 'Igreja ou instituição',
 }

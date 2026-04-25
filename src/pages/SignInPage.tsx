@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSignIn } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
 import { AuthLayout } from '@/components/auth/AuthLayout'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { fadeUp } from '@/lib/motion'
 import {
   brandEyebrowClass,
@@ -14,11 +15,21 @@ import {
 } from '@/lib/brand'
 import { clerkErrorMessage } from '@/lib/auth'
 
+function safeRedirectTarget(value: string | null): string {
+  if (!value) return '/dashboard'
+  if (!value.startsWith('/') || value.startsWith('//')) return '/dashboard'
+  return value
+}
+
 type Step = 'login' | 'forgot' | 'forgot-verify'
 
 export function SignInPage() {
   const { signIn, setActive, isLoaded } = useSignIn()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = safeRedirectTarget(
+    searchParams.get('redirect') ?? searchParams.get('redirect_url'),
+  )
 
   const [step, setStep] = useState<Step>('login')
   const [loading, setLoading] = useState(false)
@@ -27,6 +38,22 @@ export function SignInPage() {
   const [password, setPassword] = useState('')
   const [resetCode, setResetCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
+
+  async function handleOAuth(strategy: 'oauth_google' | 'oauth_facebook') {
+    if (!isLoaded) return
+    setLoading(true)
+    setError('')
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: redirectTo,
+      })
+    } catch (err) {
+      setError(clerkErrorMessage(err))
+      setLoading(false)
+    }
+  }
 
   const aside = useMemo(() => {
     if (step === 'forgot') {
@@ -67,11 +94,11 @@ export function SignInPage() {
       eyebrow: 'Acesso institucional',
       title: 'Entre para retomar seus estudos, cursos ou gestão institucional.',
       description:
-        'Alunos continuam o aprendizado. Criadores administram seus cursos. Instituições acompanham sua comunidade em um só lugar.',
+        'Alunos continuam o aprendizado. Professores administram seus cursos. Instituições acompanham sua comunidade em um só lugar.',
       highlights: [
         'Ambiente feito para estudo contínuo e leitura prolongada',
         'Identidade editorial premium sem perder clareza de uso',
-        'Entrada direta para alunos, criadores e instituições',
+        'Entrada direta para alunos, professores e instituições',
       ],
       quote: '“A primeira tela também ensina o que a marca valoriza.”',
       quoteReference: 'Resenha do Teólogo',
@@ -89,7 +116,7 @@ export function SignInPage() {
       const result = await signIn.create({ identifier: email, password })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        navigate('/dashboard')
+        navigate(redirectTo)
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
@@ -129,7 +156,7 @@ export function SignInPage() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        navigate('/dashboard')
+        navigate(redirectTo)
       }
     } catch (err) {
       setError(clerkErrorMessage(err))
@@ -182,6 +209,18 @@ export function SignInPage() {
 
       {step === 'login' && (
         <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
+          <OAuthButtons
+            onGoogle={() => handleOAuth('oauth_google')}
+            onFacebook={() => handleOAuth('oauth_facebook')}
+            loading={loading}
+          />
+
+          <div className="relative my-2 flex items-center gap-3">
+            <span className="h-px flex-1 bg-white/8" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/36">ou</span>
+            <span className="h-px flex-1 bg-white/8" />
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/72">Email</label>
@@ -294,7 +333,10 @@ export function SignInPage() {
       <motion.div variants={fadeUp} className="mt-8 text-center">
         <p className="text-sm text-white/44">
           Não tem conta?{' '}
-          <Link to="/cadastro" className="font-semibold text-[#F2BD8A] transition-colors hover:text-white">
+          <Link
+            to={redirectTo === '/dashboard' ? '/cadastro' : `/cadastro?redirect=${encodeURIComponent(redirectTo)}`}
+            className="font-semibold text-[#F2BD8A] transition-colors hover:text-white"
+          >
             Criar conta grátis
           </Link>
         </p>
