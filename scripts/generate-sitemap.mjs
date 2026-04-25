@@ -19,6 +19,7 @@ const SITE_URL = 'https://resenhadoteologo.com'
 
 const STATIC_URLS = [
   { loc: '/', changefreq: 'weekly', priority: '1.0' },
+  { loc: '/sobre', changefreq: 'monthly', priority: '0.8' },
   { loc: '/cursos', changefreq: 'daily', priority: '0.9' },
   { loc: '/termos', changefreq: 'monthly', priority: '0.3' },
   { loc: '/privacidade', changefreq: 'monthly', priority: '0.3' },

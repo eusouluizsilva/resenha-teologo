@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
@@ -6,6 +6,83 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
+
+function useCourseSeo(course: {
+  title: string
+  description?: string
+  slug?: string
+  thumbnail?: string
+  creatorName: string
+  level: string
+  category: string
+} | null | undefined) {
+  useEffect(() => {
+    if (!course) return
+    const previousTitle = document.title
+    document.title = `${course.title}, Resenha do Teólogo`
+
+    const canonicalHref = course.slug
+      ? `https://resenhadoteologo.com/cursos/${course.slug}`
+      : window.location.href
+
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+    const previousCanonical = canonical?.href ?? null
+    if (!canonical) {
+      canonical = document.createElement('link')
+      canonical.rel = 'canonical'
+      document.head.appendChild(canonical)
+    }
+    canonical.href = canonicalHref
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: course.title,
+      description: course.description ?? '',
+      provider: {
+        '@type': 'EducationalOrganization',
+        name: 'Resenha do Teólogo',
+        sameAs: 'https://resenhadoteologo.com',
+      },
+      ...(course.thumbnail && { image: course.thumbnail }),
+      inLanguage: 'pt-BR',
+      isAccessibleForFree: true,
+      offers: {
+        '@type': 'Offer',
+        price: 0,
+        priceCurrency: 'BRL',
+        category: 'Free',
+      },
+      hasCourseInstance: {
+        '@type': 'CourseInstance',
+        courseMode: 'Online',
+        inLanguage: 'pt-BR',
+      },
+      educationalLevel: course.level,
+      about: course.category,
+      author: {
+        '@type': 'Person',
+        name: course.creatorName,
+      },
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.dataset.seo = 'course'
+    script.textContent = JSON.stringify(jsonLd)
+    document.head.appendChild(script)
+
+    return () => {
+      document.title = previousTitle
+      if (canonical && previousCanonical) {
+        canonical.href = previousCanonical
+      } else if (canonical && !previousCanonical) {
+        canonical.remove()
+      }
+      script.remove()
+    }
+  }, [course])
+}
 
 function levelLabel(level: string) {
   if (level === 'iniciante') return 'Iniciante'
@@ -177,6 +254,8 @@ export function CourseDetailPage() {
   const enroll = useMutation(api.enrollments.enroll)
   const [enrolling, setEnrolling] = useState(false)
   const [enrollError, setEnrollError] = useState<string | null>(null)
+
+  useCourseSeo(course)
 
   const isAuthenticated = Boolean(user)
   const isAluno = hasFunction('aluno')

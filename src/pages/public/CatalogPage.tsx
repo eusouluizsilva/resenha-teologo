@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -148,6 +148,14 @@ export function CatalogPage() {
   const [activeLevel, setActiveLevel] = useState<'iniciante' | 'intermediario' | 'avancado' | undefined>(undefined)
   const [activeLanguage, setActiveLanguage] = useState<string | undefined>(undefined)
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    const previous = document.title
+    document.title = 'Catálogo de cursos, Resenha do Teólogo'
+    return () => {
+      document.title = previous
+    }
+  }, [])
 
   const courses = useQuery(api.catalog.listPublished, {
     category: activeCategory,

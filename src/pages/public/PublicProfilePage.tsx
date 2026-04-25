@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { useAuth } from '@clerk/clerk-react'
@@ -253,6 +253,15 @@ export function PublicProfilePage() {
     api.ratings.getMyRating,
     profile && isSignedIn ? { profileUserId: profile.clerkId } : 'skip'
   )
+
+  useEffect(() => {
+    if (!profile) return
+    const previous = document.title
+    document.title = `${profile.name ?? profile.handle ?? 'Perfil'}, Resenha do Teólogo`
+    return () => {
+      document.title = previous
+    }
+  }, [profile])
 
   if (profile === undefined) {
     return (
