@@ -4,6 +4,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { useAuth } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
 import { cn, brandPrimaryButtonClass, brandInputClass } from '@/lib/brand'
+import { FollowButton } from '@/components/blog/FollowButton'
 
 function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
   return (
@@ -253,6 +254,10 @@ export function PublicProfilePage() {
     api.ratings.getMyRating,
     profile && isSignedIn ? { profileUserId: profile.clerkId } : 'skip'
   )
+  const articles = useQuery(
+    api.posts.listByAuthor,
+    profile ? { authorUserId: profile.clerkId, limit: 12 } : 'skip'
+  )
 
   useEffect(() => {
     if (!profile) return
@@ -361,12 +366,70 @@ export function PublicProfilePage() {
               ))}
             </div>
           )}
+
+          <div className="mt-5 flex items-center justify-center">
+            <FollowButton authorUserId={profile.clerkId} authorName={profile.name} tone="dark" />
+          </div>
         </div>
 
         {/* Bio */}
         {profile.bio && (
           <div className="mt-8">
             <p className="text-sm leading-7 text-white/62">{profile.bio}</p>
+          </div>
+        )}
+
+        {/* Artigos publicados */}
+        {articles && articles.length > 0 && (
+          <div className="mt-8">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
+              Artigos publicados
+            </p>
+            <div className="space-y-3">
+              {articles.map((post) => (
+                <Link
+                  key={String(post._id)}
+                  to={
+                    profile.handle
+                      ? `/blog/${profile.handle}/${post.slug}`
+                      : `/blog`
+                  }
+                  className="block rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 transition-all hover:border-[#F37E20]/30 hover:bg-white/[0.04]"
+                >
+                  <div className="flex items-start gap-4">
+                    {post.coverImageUrl && (
+                      <img
+                        src={post.coverImageUrl}
+                        alt={post.title}
+                        className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+                        {post.categorySlug.replace(/-/g, ' ')}
+                      </p>
+                      <h3 className="mt-1 font-display text-base font-semibold leading-snug text-white">
+                        {post.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs text-white/52">{post.excerpt}</p>
+                      <div className="mt-2 flex items-center gap-3 text-[11px] text-white/36">
+                        <span>
+                          {post.publishedAt
+                            ? new Date(post.publishedAt).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : ''}
+                        </span>
+                        <span>· {post.viewCount.toLocaleString('pt-BR')} leituras</span>
+                        <span>· {post.likeCount.toLocaleString('pt-BR')} curtidas</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

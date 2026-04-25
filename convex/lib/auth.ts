@@ -12,6 +12,14 @@ export async function requireIdentity(ctx: Ctx) {
   return identity
 }
 
+// Para queries públicas (blog, lesson preview) que aceitam tanto anônimos
+// quanto autenticados. Nunca lança. O retorno NUNCA deve ser usado para
+// vazar PII (email, clerkId) em respostas: o caller deve sanitizar
+// explicitamente o shape retornado ao chamador.
+export async function getOptionalIdentity(ctx: Ctx) {
+  return await ctx.auth.getUserIdentity()
+}
+
 export async function getCurrentUserRecord(ctx: Ctx) {
   const identity = await requireIdentity(ctx)
   const user = await ctx.db

@@ -38,6 +38,9 @@ export default defineSchema({
     // (ausente). Será ligado pelo webhook do Stripe quando a Fase 4 implementar
     // assinaturas. Manualmente patcheável via Convex Dashboard pra testes.
     isPremium: v.optional(v.boolean()),
+    // Contador denormalizado de profileFollows. Atualizado por
+    // profileFollows.follow/unfollow.
+    followerCount: v.optional(v.number()),
   })
     .index('by_clerkId', ['clerkId'])
     .index('by_handle', ['handle']),
@@ -482,6 +485,10 @@ export default defineSchema({
       v.literal('welcome'),
       v.literal('reengagement'),
       v.literal('generic'),
+      v.literal('post_published'),
+      v.literal('post_comment_new'),
+      v.literal('post_comment_reply'),
+      v.literal('profile_followed'),
     ),
     title: v.string(),
     body: v.optional(v.string()),
@@ -537,4 +544,143 @@ export default defineSchema({
     sessionId: v.string(),
     at: v.number(),
   }).index('by_creator_at', ['creatorId', 'at']),
+
+  // ===== BLOG =====
+  // Artigo publicável por qualquer usuário (aluno, criador, instituicao). A
+  // identidade de publicação é capturada em authorIdentity; quando publica como
+  // instituicao, authorInstitutionId aponta para a tabela institutions. URL
+  // pública é /blog/:handle/:slug; slug é único por authorUserId. Métricas
+  // (likeCount, commentCount, shareCount, viewCount) são denormalizadas e
+  // atualizadas dentro das mutations correspondentes para evitar agregação cara
+  // em queries de leitura.
+  posts: defineTable({
+    authorUserId: v.string(),
+    authorIdentity: v.union(
+      v.literal('aluno'),
+      v.literal('criador'),
+      v.literal('instituicao'),
+    ),
+    authorInstitutionId: v.optional(v.id('institutions')),
+    title: v.string(),
+    slug: v.string(),
+    excerpt: v.string(),
+    bodyMarkdown: v.string(),
+    coverImageStorageId: v.optional(v.id('_storage')),
+    categorySlug: v.string(),
+    tagSlugs: v.array(v.string()),
+    status: v.union(
+      v.literal('draft'),
+      v.literal('scheduled'),
+      v.literal('published'),
+      v.literal('unlisted'),
+      v.literal('removed'),
+    ),
+    publishAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+    likeCount: v.number(),
+    commentCount: v.number(),
+    shareCount: v.number(),
+    viewCount: v.number(),
+  })
+    .index('by_author', ['authorUserId'])
+    .index('by_status_publishedAt', ['status', 'publishedAt'])
+    .index('by_category_publishedAt', ['categorySlug', 'publishedAt'])
+    .index('by_author_slug', ['authorUserId', 'slug']),
+
+  // Categorias editoriais. Slug é a chave estável; nome é exibido. order
+  // controla a ordenação na navegação. Seedadas via internalMutation.
+  postCategories: defineTable({
+    slug: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    order: v.number(),
+  }).index('by_slug', ['slug']),
+
+  // Tags livres. postCount é denormalizado e atualizado em publish/unpublish
+  // para listagens populares sem N queries.
+  postTags: defineTable({
+    slug: v.string(),
+    name: v.string(),
+    postCount: v.number(),
+  }).index('by_slug', ['slug']),
+
+  // Snapshot diário do top por categoria. categorySlug='all' guarda ranking
+  // global. Cron computa diariamente; queries de home consomem o último
+  // snapshot por categoria em O(1).
+  postRankingSnapshots: defineTable({
+    categorySlug: v.string(),
+    generatedAt: v.number(),
+    topPostIds: v.array(v.id('posts')),
+  }).index('by_category_at', ['categorySlug', 'generatedAt']),
+
+  // Curtidas em artigos. Index by_post_user dá unicidade lógica (1 like por
+  // usuário por post). likeCount em posts é mantido em sincronia pela mutation.
+  postLikes: defineTable({
+    postId: v.id('posts'),
+    userId: v.string(),
+    at: v.number(),
+  })
+    .index('by_post', ['postId'])
+    .index('by_post_user', ['postId', 'userId']),
+
+  // Cliques em compartilhamento. Anônimos contam (sessionId+postId dedup);
+  // autenticados também passam userId para auditoria. Não confundir com share
+  // real (essa métrica não é mensurável fora do Web Share API).
+  postShares: defineTable({
+    postId: v.id('posts'),
+    userId: v.optional(v.string()),
+    sessionId: v.string(),
+    channel: v.optional(v.string()),
+    at: v.number(),
+  })
+    .index('by_post', ['postId'])
+    .index('by_session_post', ['sessionId', 'postId']),
+
+  // Comentários em artigos. Mesma estrutura de lessonComments: parentId para
+  // threading 1 nível, soft-delete via deletedAt, edição opcional via editedAt.
+  // helpfulCount é o agregado denormalizado de postCommentHelpful (sem dislike).
+  postComments: defineTable({
+    postId: v.id('posts'),
+    authorId: v.string(),
+    authorName: v.string(),
+    authorAvatarUrl: v.optional(v.string()),
+    authorRole: v.union(
+      v.literal('aluno'),
+      v.literal('criador'),
+      v.literal('instituicao'),
+    ),
+    text: v.string(),
+    parentId: v.optional(v.id('postComments')),
+    isOfficial: v.optional(v.boolean()),
+    helpfulCount: v.number(),
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+  })
+    .index('by_post', ['postId'])
+    .index('by_parentId', ['parentId'])
+    .index('by_authorId', ['authorId']),
+
+  postCommentHelpful: defineTable({
+    commentId: v.id('postComments'),
+    userId: v.string(),
+    at: v.number(),
+  }).index('by_comment_user', ['commentId', 'userId']),
+
+  // Seguir um autor. notify* controlam granularidade de notificação. emailDigest
+  // reservado para Wave futura (digest semanal via Resend). by_pair garante
+  // unicidade lógica (1 follow por par follower-author).
+  profileFollows: defineTable({
+    followerUserId: v.string(),
+    authorUserId: v.string(),
+    notifyArticles: v.boolean(),
+    notifyCourses: v.boolean(),
+    notifyLessons: v.boolean(),
+    emailDigest: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index('by_follower', ['followerUserId'])
+    .index('by_author', ['authorUserId'])
+    .index('by_pair', ['followerUserId', 'authorUserId']),
 })

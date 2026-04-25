@@ -81,6 +81,12 @@ const iconChat = (
   </svg>
 )
 
+const iconNewspaper = (
+  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+  </svg>
+)
+
 // Flag para reexibir rotas de Instituição quando elas saírem de placeholder.
 // Hoje esconde Membros/Cursos institucionais/Relatórios da sidebar, mas as
 // rotas continuam registradas em App.tsx para quem tem a função ativa.
@@ -124,17 +130,27 @@ const NAV_GROUPS: NavGroup[] = [
 
 const ALWAYS_NAV: NavItem[] = [
   { label: 'Bíblia', href: '/dashboard/biblia', icon: iconBook },
+  { label: 'Artigos', href: '/dashboard/blog', icon: iconNewspaper },
   { label: 'Meu perfil', href: '/dashboard/perfil', icon: iconUser },
-  { label: 'Minhas funções', href: '/dashboard/funcoes', icon: iconFunctions },
+  { label: 'Configurações', href: '/dashboard/funcoes', icon: iconFunctions },
   { label: 'Planos', href: '/dashboard/planos', icon: iconPlans },
 ]
 
-function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavLink({
+  item,
+  pathname,
+  onNavigate,
+}: {
+  item: NavItem
+  pathname: string
+  onNavigate?: () => void
+}) {
   const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
 
   return (
     <Link
       to={item.href}
+      onClick={onNavigate}
       className={cn(
         'group flex items-center gap-3 rounded-[1.2rem] border px-4 py-3 text-sm font-medium transition-all duration-200',
         active
@@ -157,7 +173,12 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   )
 }
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  isMobileOpen?: boolean
+  onClose?: () => void
+}
+
+export function DashboardSidebar({ isMobileOpen = false, onClose }: DashboardSidebarProps = {}) {
   const { pathname } = useLocation()
   const { clerkUser, currentUser, functions, isLoading } = useCurrentAppUser()
   const { signOut } = useClerk()
@@ -179,8 +200,28 @@ export function DashboardSidebar() {
   }
 
   return (
-    <aside className="z-40 flex w-full flex-col border-b border-white/6 bg-[linear-gradient(180deg,rgba(14,19,26,0.98)_0%,rgba(10,14,20,0.98)_100%)] px-4 py-4 lg:fixed lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:px-5 lg:py-5">
-      <div>
+    <aside
+      className={cn(
+        'fixed inset-y-0 left-0 z-50 flex w-[88%] max-w-[20rem] flex-col overflow-y-auto border-r border-white/6 bg-[linear-gradient(180deg,rgba(14,19,26,0.98)_0%,rgba(10,14,20,0.98)_100%)] px-5 py-5 shadow-[0_30px_120px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out lg:top-0 lg:h-screen lg:w-72 lg:translate-x-0 lg:shadow-none',
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+      )}
+    >
+      <div className="mb-2 flex items-center justify-between lg:hidden">
+        <Link to="/" onClick={onClose} className="inline-flex items-center gap-3">
+          <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
+        </Link>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar menu"
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03] text-white/56 transition-all hover:border-white/14 hover:text-white"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="hidden lg:block">
         <Link to="/" className="inline-flex items-center gap-3">
           <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-10 w-auto" />
         </Link>
@@ -194,6 +235,7 @@ export function DashboardSidebar() {
         to={currentUser?.handle ? `/${currentUser.handle}` : '/dashboard/perfil'}
         target={currentUser?.handle ? '_blank' : undefined}
         rel={currentUser?.handle ? 'noopener noreferrer' : undefined}
+        onClick={onClose}
         className={cn('mt-6 flex items-center gap-3 p-4 transition-all hover:brightness-110', brandPanelSoftClass)}
       >
         {clerkUser?.imageUrl ? (
@@ -222,7 +264,7 @@ export function DashboardSidebar() {
                 : `${functions.length} funções ativas`}
             </p>
           ) : (
-            <p className="mt-1 text-xs text-[#F2BD8A]/70">Configurar funções</p>
+            <p className="mt-1 text-xs text-[#F2BD8A]/70">Configurar perfil</p>
           )}
         </div>
       </Link>
@@ -235,13 +277,13 @@ export function DashboardSidebar() {
                 {group.label}
               </p>
               {group.items.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} />
+                <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onClose} />
               ))}
             </div>
           ))
         ) : activeGroups.length === 1 ? (
           activeGroups[0].items.map((item) => (
-            <NavLink key={item.href} item={item} pathname={pathname} />
+            <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onClose} />
           ))
         ) : null}
 
@@ -250,7 +292,7 @@ export function DashboardSidebar() {
         )}
 
         {ALWAYS_NAV.map((item) => (
-          <NavLink key={item.href} item={item} pathname={pathname} />
+          <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onClose} />
         ))}
 
         {isAdmin && (
@@ -259,6 +301,7 @@ export function DashboardSidebar() {
             <NavLink
               item={{ label: 'Admin', href: '/dashboard/admin', icon: iconShield }}
               pathname={pathname}
+              onNavigate={onClose}
             />
           </>
         )}

@@ -97,6 +97,9 @@ const AlunoDashboardPage = lazy(() =>
 const CourseDetailPage = lazy(() =>
   import('@/pages/public/CourseDetailPage').then((m) => ({ default: m.CourseDetailPage })),
 )
+const LessonPreviewPage = lazy(() =>
+  import('@/pages/public/LessonPreviewPage').then((m) => ({ default: m.LessonPreviewPage })),
+)
 const PlanosPage = lazy(() =>
   import('@/pages/dashboard/PlanosPage').then((m) => ({ default: m.PlanosPage })),
 )
@@ -126,6 +129,24 @@ const SobrePage = lazy(() =>
 )
 const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
+)
+const BlogIndexPage = lazy(() =>
+  import('@/pages/public/blog/BlogIndexPage').then((m) => ({ default: m.BlogIndexPage })),
+)
+const BlogCategoryPage = lazy(() =>
+  import('@/pages/public/blog/BlogCategoryPage').then((m) => ({ default: m.BlogCategoryPage })),
+)
+const BlogPostPage = lazy(() =>
+  import('@/pages/public/blog/BlogPostPage').then((m) => ({ default: m.BlogPostPage })),
+)
+const MeuBlogPage = lazy(() =>
+  import('@/pages/dashboard/blog/MeuBlogPage').then((m) => ({ default: m.MeuBlogPage })),
+)
+const NovoArtigoPage = lazy(() =>
+  import('@/pages/dashboard/blog/NovoArtigoPage').then((m) => ({ default: m.NovoArtigoPage })),
+)
+const EditarArtigoPage = lazy(() =>
+  import('@/pages/dashboard/blog/EditarArtigoPage').then((m) => ({ default: m.EditarArtigoPage })),
 )
 
 function DashboardRouteLoader() {
@@ -177,7 +198,7 @@ function RequireFunction({
     return (
       <EmConstrucao
         title="Acesso não disponível"
-        description="Esta área requer uma função que você ainda não ativou. Acesse Minhas funções para configurar."
+        description="Esta área requer uma função que você ainda não ativou. Acesse Configurações para ativar."
       />
     )
   }
@@ -238,7 +259,7 @@ function DashboardIndexPage() {
         ))}
         <p className="pt-2 text-center text-xs text-white/36">
           Você pode ativar mais de uma função e alterar isso a qualquer momento em{' '}
-          <Link to="/dashboard/funcoes" className="text-[#F2BD8A] hover:underline">Minhas funções</Link>.
+          <Link to="/dashboard/funcoes" className="text-[#F2BD8A] hover:underline">Configurações</Link>.
         </p>
       </div>
     </DashboardPageShell>
@@ -276,9 +297,16 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
+          <Route path="/cursos/:courseSlug/:lessonSlug" element={<LessonPreviewPage />} />
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
           <Route path="/convite/:token" element={<AcceptInvitePage />} />
           <Route path="/sobre" element={<SobrePage />} />
+
+          {/* Blog público (precisa vir antes de /:handle, que é catch-all) */}
+          <Route path="/blog" element={<BlogIndexPage />} />
+          <Route path="/blog/categoria/:categorySlug" element={<BlogCategoryPage />} />
+          <Route path="/blog/:handle/:postSlug" element={<BlogPostPage />} />
+
           <Route path="/:handle" element={<PublicProfilePage />} />
 
           {/* Autenticação */}
@@ -318,6 +346,12 @@ export default function App() {
             <Route path="membros" element={<RequireFunction allowed={['instituicao']}><MembrosPage /></RequireFunction>} />
             <Route path="cursos-instituicao" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Cursos vinculados em preparação" description="A vinculação de cursos a membros será liberada em breve." /></RequireFunction>} />
             <Route path="relatorios" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Relatórios em preparação" description="Os relatórios institucionais serão liberados em breve." /></RequireFunction>} />
+
+            {/* Blog (autoria) — disponível para qualquer função, gating é feito no
+                IdentitySelector dentro do editor (que só lista identidades válidas) */}
+            <Route path="blog" element={<MeuBlogPage />} />
+            <Route path="blog/novo" element={<NovoArtigoPage />} />
+            <Route path="blog/:postId" element={<EditarArtigoPage />} />
 
             {/* Compartilhado */}
             <Route path="perfil" element={<PerfilPage />} />

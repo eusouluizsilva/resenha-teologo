@@ -17,4 +17,20 @@ crons.daily(
   internal.reengagement.run,
 )
 
+// Ranking diário do blog (03:00 UTC = 00:00 BRT). Recalcula snapshots por
+// categoria + global usados pela LandingPage e BlogIndexPage.
+crons.daily(
+  'post-ranking-daily',
+  { hourUTC: 3, minuteUTC: 0 },
+  internal.postRanking.computeDailyRanking,
+)
+
+// Scheduled-publish runner: varre posts com status='scheduled' e publishAt
+// vencido a cada 5 minutos. Tolerância máxima de ~5min por design.
+crons.interval(
+  'post-scheduled-publish',
+  { minutes: 5 },
+  internal.postRanking.runScheduledPublish,
+)
+
 export default crons
