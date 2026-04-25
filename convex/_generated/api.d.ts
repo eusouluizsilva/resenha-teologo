@@ -22,6 +22,7 @@ import type * as email from "../email.js";
 import type * as enrollments from "../enrollments.js";
 import type * as flashcards from "../flashcards.js";
 import type * as gamification from "../gamification.js";
+import type * as generateCovers from "../generateCovers.js";
 import type * as handles from "../handles.js";
 import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
@@ -75,6 +76,7 @@ declare const fullApi: ApiFromModules<{
   enrollments: typeof enrollments;
   flashcards: typeof flashcards;
   gamification: typeof gamification;
+  generateCovers: typeof generateCovers;
   handles: typeof handles;
   http: typeof http;
   institutions: typeof institutions;
