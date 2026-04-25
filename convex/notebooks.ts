@@ -6,7 +6,7 @@ import { requireIdentity, requireUserFunction } from './lib/auth'
 // estudos por assunto/curso. Entradas (notebookEntries) são vinculadas a uma
 // aula específica dentro de um caderno escolhido pelo aluno.
 
-const MAX_TITLE_LEN = 80
+const MAX_TITLE_LEN = 50
 const MAX_CONTENT_LEN = 20000
 
 export const listMine = query({
@@ -61,8 +61,10 @@ export const remove = mutation({
       .query('notebookEntries')
       .withIndex('by_notebook', (q) => q.eq('notebookId', id))
       .collect()
-    for (const entry of entries) {
-      await ctx.db.delete(entry._id)
+    if (entries.length > 0) {
+      throw new Error(
+        `Apague as ${entries.length} ${entries.length === 1 ? 'anotação' : 'anotações'} deste caderno antes de removê-lo.`
+      )
     }
     await ctx.db.delete(id)
   },

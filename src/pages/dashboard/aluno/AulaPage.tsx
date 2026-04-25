@@ -906,7 +906,13 @@ function NotebookSection({
   const [isDirty, setIsDirty] = useState(false)
 
   const createNotebook = useMutation(api.notebooks.create)
+  const renameNotebook = useMutation(api.notebooks.rename)
+  const removeNotebook = useMutation(api.notebooks.remove)
   const upsertEntry = useMutation(api.notebooks.upsertEntry)
+
+  const [editingNotebookId, setEditingNotebookId] = useState<Id<'notebooks'> | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
+  const [notebookActionError, setNotebookActionError] = useState<string | null>(null)
 
   // Seleciona caderno padrão quando carrega lista.
   useEffect(() => {
@@ -958,6 +964,45 @@ function NotebookSection({
     setActiveNotebookId(id as Id<'notebooks'>)
     setNewNotebookTitle('')
     setNewNotebookOpen(false)
+  }
+
+  function startEditingNotebook(id: Id<'notebooks'>, currentTitle: string) {
+    setEditingNotebookId(id)
+    setEditingTitle(currentTitle)
+    setNotebookActionError(null)
+  }
+
+  function cancelEditingNotebook() {
+    setEditingNotebookId(null)
+    setEditingTitle('')
+  }
+
+  async function commitRenameNotebook() {
+    if (!editingNotebookId) return
+    const title = editingTitle.trim()
+    if (!title) {
+      cancelEditingNotebook()
+      return
+    }
+    try {
+      await renameNotebook({ id: editingNotebookId, title })
+      cancelEditingNotebook()
+    } catch (e) {
+      setNotebookActionError(e instanceof Error ? e.message : 'Não foi possível renomear.')
+    }
+  }
+
+  async function handleDeleteNotebook(id: Id<'notebooks'>, title: string) {
+    if (!window.confirm(`Apagar o caderno "${title}"?`)) return
+    setNotebookActionError(null)
+    try {
+      await removeNotebook({ id })
+      if (activeNotebookId === id) {
+        setActiveNotebookId(null)
+      }
+    } catch (e) {
+      setNotebookActionError(e instanceof Error ? e.message : 'Não foi possível apagar.')
+    }
   }
 
   return (
@@ -1013,21 +1058,80 @@ function NotebookSection({
       ) : (
         <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
           <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-3">
-            {notebooks.map((nb) => (
-              <button
-                key={nb._id}
-                type="button"
-                onClick={() => setActiveNotebookId(nb._id)}
-                className={cn(
-                  'rounded-full border px-3 py-1 text-xs font-semibold transition-all',
-                  activeNotebookId === nb._id
-                    ? 'border-[#F37E20] bg-[#F37E20]/10 text-[#F37E20]'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                )}
-              >
-                {nb.title}
-              </button>
-            ))}
+            {notebooks.map((nb) => {
+              const isActive = activeNotebookId === nb._id
+              const isEditing = editingNotebookId === nb._id
+
+              if (isEditing) {
+                return (
+                  <input
+                    key={nb._id}
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    maxLength={50}
+                    autoFocus
+                    onFocus={(e) => e.currentTarget.select()}
+                    onBlur={() => commitRenameNotebook()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        commitRenameNotebook()
+                      }
+                      if (e.key === 'Escape') {
+                        e.preventDefault()
+                        cancelEditingNotebook()
+                      }
+                    }}
+                    className="w-40 rounded-full border border-[#F37E20]/40 bg-white px-3 py-1 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
+                  />
+                )
+              }
+
+              return (
+                <div
+                  key={nb._id}
+                  className={cn(
+                    'group flex items-center gap-1 rounded-full border pr-1 transition-all',
+                    isActive
+                      ? 'border-[#F37E20] bg-[#F37E20]/10 text-[#F37E20]'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveNotebookId(nb._id)}
+                    className="rounded-full px-3 py-1 text-xs font-semibold"
+                  >
+                    {nb.title}
+                  </button>
+                  {isActive && (
+                    <>
+                      <button
+                        type="button"
+                        title="Renomear caderno"
+                        onClick={() => startEditingNotebook(nb._id, nb.title)}
+                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-full p-1 text-[#F37E20] hover:bg-[#F37E20]/15 transition-opacity"
+                      >
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        title="Apagar caderno"
+                        onClick={() => handleDeleteNotebook(nb._id, nb.title)}
+                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-full p-1 text-[#F37E20] hover:bg-[#F37E20]/15 transition-opacity"
+                      >
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )
+            })}
 
             {newNotebookOpen ? (
               <div className="flex items-center gap-1.5">
@@ -1036,7 +1140,7 @@ function NotebookSection({
                   value={newNotebookTitle}
                   onChange={(e) => setNewNotebookTitle(e.target.value)}
                   placeholder="Nome do caderno"
-                  maxLength={80}
+                  maxLength={50}
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleCreateNotebook()
@@ -1088,6 +1192,12 @@ function NotebookSection({
               </button>
             )}
           </div>
+
+          {notebookActionError && (
+            <div className="border-b border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700">
+              {notebookActionError}
+            </div>
+          )}
 
           {activeNotebookId && (
             <div className="p-4">
