@@ -511,6 +511,19 @@ export default defineSchema({
     .index('by_creator_at', ['creatorId', 'at'])
     .index('by_session_slot', ['sessionId', 'slotId']),
 
+  // Curtidas internas em aulas. Substitui o botão "Curtir no YouTube":
+  // o aluno reage à aula dentro da plataforma, sem depender de OAuth ou de
+  // sair para o YouTube. Index by_lesson_user garante unicidade lógica
+  // (1 like por aluno por aula); by_lesson agrega contagem.
+  lessonLikes: defineTable({
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    userId: v.string(),
+    at: v.number(),
+  })
+    .index('by_lesson', ['lessonId'])
+    .index('by_lesson_user', ['lessonId', 'userId']),
+
   // Pageviews em páginas atribuídas a criador (catálogo do criador, detalhe
   // do curso, AulaPage). Backup interno do GA4 para reconciliar atribuição
   // sem depender de sampling do Google. Páginas genéricas da plataforma

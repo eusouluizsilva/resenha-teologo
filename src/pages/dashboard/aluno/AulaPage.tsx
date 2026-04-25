@@ -2316,6 +2316,26 @@ export function AulaPage() {
 
   const updateProgress = useMutation(api.student.updateProgress)
 
+  // Curtida interna da aula. Substitui o antigo botão "Curtir no YouTube":
+  // sem OAuth, sem redirect. Toggle idempotente no servidor.
+  const likeStatus = useQuery(
+    api.lessonLikes.getStatus,
+    lessonId ? { lessonId: lessonId as Id<'lessons'> } : 'skip'
+  )
+  const toggleLike = useMutation(api.lessonLikes.toggle)
+  const [likePending, setLikePending] = useState(false)
+  const handleToggleLike = useCallback(async () => {
+    if (!lessonId || likePending) return
+    setLikePending(true)
+    try {
+      await toggleLike({ lessonId: lessonId as Id<'lessons'> })
+    } catch {
+      // Silencioso: usuário sem acesso (caso raro) ou rede caindo.
+    } finally {
+      setLikePending(false)
+    }
+  }, [lessonId, likePending, toggleLike])
+
   const { user: clerkUser } = useUser()
   const isCreatorOfThisCourse = Boolean(
     clerkUser?.id && data?.course?.creatorId && clerkUser.id === data.course.creatorId
@@ -2462,7 +2482,6 @@ export function AulaPage() {
     nextLesson,
     lessonIndex,
     totalLessons,
-    creatorYoutubeUrl,
   } = data
 
   const lessonCompleted = Boolean(progress?.completed)
@@ -2478,7 +2497,6 @@ export function AulaPage() {
     quiz.questions[0].correctOptionId !== ''
 
   const displayPercent = lessonCompleted && !retryPending ? 100 : progressPercent
-  const youtubeVideoId = extractYouTubeId(lesson.youtubeUrl)
 
   const versesRefs = ((lesson.versesRefs ?? []) as VerseRef[]).filter(
     (v) => v.bookSlug
@@ -2627,40 +2645,39 @@ export function AulaPage() {
             )}
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
-              {youtubeVideoId && (
-                <a
-                  href={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50"
-                >
-                  <svg
-                    className="h-4 w-4 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                    />
-                  </svg>
-                  Curtir no YouTube
-                </a>
-              )}
-              <a
-                href={creatorYoutubeUrl ?? `https://www.youtube.com/@ResenhaDoTe%C3%B3logo`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-red-700"
+              <button
+                type="button"
+                onClick={handleToggleLike}
+                disabled={likePending || likeStatus === undefined}
+                aria-pressed={Boolean(likeStatus?.liked)}
+                className={cn(
+                  'flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm transition-all',
+                  likeStatus?.liked
+                    ? 'border-[#F37E20] bg-[#F37E20]/10 text-[#F37E20] hover:bg-[#F37E20]/15'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50',
+                  (likePending || likeStatus === undefined) && 'opacity-60 cursor-wait'
+                )}
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill={likeStatus?.liked ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                  />
                 </svg>
-                Inscrever-se no canal
-              </a>
+                {likeStatus?.liked ? 'Curtido' : 'Curtir'}
+                {likeStatus && likeStatus.count > 0 && (
+                  <span className="ml-1 rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold tabular-nums text-gray-600">
+                    {likeStatus.count}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 

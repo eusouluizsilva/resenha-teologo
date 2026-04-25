@@ -26,6 +26,7 @@ import type * as handles from "../handles.js";
 import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
 import type * as lessonComments from "../lessonComments.js";
+import type * as lessonLikes from "../lessonLikes.js";
 import type * as lessonMaterials from "../lessonMaterials.js";
 import type * as lessonTimestamps from "../lessonTimestamps.js";
 import type * as lessons from "../lessons.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   institutions: typeof institutions;
   lessonComments: typeof lessonComments;
+  lessonLikes: typeof lessonLikes;
   lessonMaterials: typeof lessonMaterials;
   lessonTimestamps: typeof lessonTimestamps;
   lessons: typeof lessons;
