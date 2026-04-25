@@ -66,6 +66,13 @@ function extractYouTubeId(url: string): string | null {
 // Limiar de conclusão alinhado ao backend (COMPLETION_RATIO em convex/student.ts).
 const COMPLETION_RATIO = 0.95
 
+function formatClock(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds))
+  const m = Math.floor(s / 60)
+  const r = s % 60
+  return `${m}:${String(r).padStart(2, '0')}`
+}
+
 function VideoPlayer({
   youtubeUrl,
   initialWatched,
@@ -90,11 +97,38 @@ function VideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YTPlayer | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const overlayHideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const blockToastRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialWatchedRef = useRef(initialWatched)
   const maxWatchedRef = useRef(initialWatched)
   const completedRef = useRef(false)
+  const isPlayingRef = useRef(false)
+  const barRef = useRef<HTMLDivElement>(null)
+  const isDraggingRef = useRef(false)
+
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(initialWatched)
+  const [duration, setDuration] = useState(totalSeconds)
+  const [maxWatched, setMaxWatched] = useState(initialWatched)
+  const [overlayVisible, setOverlayVisible] = useState(true)
+  const [blockToast, setBlockToast] = useState(false)
 
   const videoId = extractYouTubeId(youtubeUrl)
+
+  const showOverlayTemporarily = useCallback(() => {
+    setOverlayVisible(true)
+    if (overlayHideRef.current) clearTimeout(overlayHideRef.current)
+    if (isPlayingRef.current) {
+      overlayHideRef.current = setTimeout(() => setOverlayVisible(false), 2500)
+    }
+  }, [])
+
+  const flashBlockToast = useCallback(() => {
+    setBlockToast(true)
+    if (blockToastRef.current) clearTimeout(blockToastRef.current)
+    blockToastRef.current = setTimeout(() => setBlockToast(false), 2500)
+  }, [])
 
   const initPlayer = useCallback(() => {
     if (!containerRef.current || !videoId) return
@@ -121,12 +155,29 @@ function VideoPlayer({
       events: {
         onReady: (e) => {
           if (playerHandleRef) playerHandleRef.current = e.target
+          const d = e.target.getDuration()
+          if (d > 0) setDuration(d)
         },
         onStateChange: (e) => {
           if (e.data === window.YT.PlayerState.PLAYING) {
+            isPlayingRef.current = true
+            setIsPlaying(true)
             startTracking()
+            startTick()
+            // some o overlay automaticamente quando começa a tocar
+            if (overlayHideRef.current) clearTimeout(overlayHideRef.current)
+            overlayHideRef.current = setTimeout(() => setOverlayVisible(false), 1500)
           } else {
+            isPlayingRef.current = false
+            setIsPlaying(false)
             stopTracking()
+            stopTick()
+            // pausado: mantém overlay visível
+            setOverlayVisible(true)
+            if (overlayHideRef.current) {
+              clearTimeout(overlayHideRef.current)
+              overlayHideRef.current = null
+            }
           }
           if (e.data === window.YT.PlayerState.ENDED) {
             handleComplete()
@@ -136,27 +187,54 @@ function VideoPlayer({
     })
   }, [videoId, playerHandleRef])
 
+  function startTick() {
+    if (tickRef.current) return
+    tickRef.current = setInterval(() => {
+      if (!playerRef.current) return
+      const t = playerRef.current.getCurrentTime()
+      const d = playerRef.current.getDuration()
+      if (d > 0 && d !== duration) setDuration(d)
+      // anti-skip imediato: se passou de maxWatched + 10, reverte
+      if (t > maxWatchedRef.current + 10) {
+        playerRef.current.seekTo(maxWatchedRef.current, true)
+        flashBlockToast()
+        setCurrentTime(maxWatchedRef.current)
+        return
+      }
+      if (t > maxWatchedRef.current) {
+        maxWatchedRef.current = t
+        setMaxWatched(t)
+      }
+      setCurrentTime(t)
+    }, 250)
+  }
+
+  function stopTick() {
+    if (tickRef.current) {
+      clearInterval(tickRef.current)
+      tickRef.current = null
+    }
+  }
+
   function startTracking() {
     if (intervalRef.current) return
     intervalRef.current = setInterval(() => {
       if (!playerRef.current) return
       const current = playerRef.current.getCurrentTime()
-      const duration = playerRef.current.getDuration() || totalSeconds
+      const dur = playerRef.current.getDuration() || totalSeconds
 
-      // Anti-skip: bloqueia avanço acima de 10s do ponto máximo assistido.
-      // Permite rebobinar livremente.
       if (current > maxWatchedRef.current + 10) {
         playerRef.current.seekTo(maxWatchedRef.current, true)
         return
       }
 
       maxWatchedRef.current = Math.max(maxWatchedRef.current, current)
-      onProgress(Math.floor(maxWatchedRef.current), Math.floor(duration))
+      onProgress(Math.floor(maxWatchedRef.current), Math.floor(dur))
 
       if (
         !completedRef.current &&
-        duration > 0 &&
-        maxWatchedRef.current / duration >= COMPLETION_RATIO
+        dur > 0 &&
+        maxWatchedRef.current / dur >= COMPLETION_RATIO
       ) {
         handleComplete()
       }
@@ -177,9 +255,48 @@ function VideoPlayer({
     onComplete()
   }
 
+  function togglePlay() {
+    if (!playerRef.current) return
+    if (isPlayingRef.current) playerRef.current.pauseVideo()
+    else playerRef.current.playVideo()
+  }
+
+  function seekFromPointer(clientX: number) {
+    if (!barRef.current || !playerRef.current) return
+    const rect = barRef.current.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    const target = ratio * (duration || totalSeconds || 1)
+    if (target > maxWatchedRef.current + 1) {
+      flashBlockToast()
+      return
+    }
+    const clamped = Math.max(0, Math.min(target, maxWatchedRef.current))
+    playerRef.current.seekTo(clamped, true)
+    setCurrentTime(clamped)
+  }
+
+  function onBarPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault()
+    isDraggingRef.current = true
+    barRef.current?.setPointerCapture(e.pointerId)
+    seekFromPointer(e.clientX)
+  }
+
+  function onBarPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isDraggingRef.current) return
+    seekFromPointer(e.clientX)
+  }
+
+  function onBarPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    isDraggingRef.current = false
+    barRef.current?.releasePointerCapture(e.pointerId)
+  }
+
   useEffect(() => {
     initialWatchedRef.current = initialWatched
     maxWatchedRef.current = initialWatched
+    setMaxWatched(initialWatched)
+    setCurrentTime(initialWatched)
     completedRef.current = false
 
     if (window.YT?.Player) {
@@ -193,6 +310,9 @@ function VideoPlayer({
 
     return () => {
       stopTracking()
+      stopTick()
+      if (overlayHideRef.current) clearTimeout(overlayHideRef.current)
+      if (blockToastRef.current) clearTimeout(blockToastRef.current)
       playerRef.current?.destroy()
       if (playerHandleRef) playerHandleRef.current = null
     }
@@ -209,12 +329,97 @@ function VideoPlayer({
     )
   }
 
+  const safeDuration = duration > 0 ? duration : totalSeconds || 1
+  const playedPct = Math.min(100, (currentTime / safeDuration) * 100)
+  const allowedPct = Math.min(100, (maxWatched / safeDuration) * 100)
+
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-black aspect-video shadow-2xl">
+    <div
+      className="relative w-full overflow-hidden rounded-2xl bg-black aspect-video shadow-2xl"
+      onMouseMove={showOverlayTemporarily}
+      onMouseEnter={showOverlayTemporarily}
+      onTouchStart={showOverlayTemporarily}
+    >
       <div
         ref={containerRef}
         className="absolute inset-0 [&>div]:h-full [&>div]:w-full [&>iframe]:h-full [&>iframe]:w-full"
       />
+
+      {/* Camada que cobre o iframe e captura o clique para play/pause sem
+          deixar o usuário interagir com a UI nativa do YouTube. */}
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+        aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+      />
+
+      {/* Toast de bloqueio: aparece quando o aluno tenta adiantar */}
+      {blockToast && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-full bg-black/85 px-4 py-2 text-xs font-semibold text-white shadow-lg">
+          Você não pode adiantar a aula. Continue assistindo para liberar.
+        </div>
+      )}
+
+      {/* Overlay de controles: bottom bar com play/pause + scrubber + tempo */}
+      <div
+        className={cn(
+          'absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-4 pb-3 pt-10 transition-opacity motion-reduce:transition-none',
+          overlayVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+      >
+        {/* Barra (scrubber) */}
+        <div
+          ref={barRef}
+          onPointerDown={onBarPointerDown}
+          onPointerMove={onBarPointerMove}
+          onPointerUp={onBarPointerUp}
+          onPointerCancel={onBarPointerUp}
+          className="group relative h-2 w-full cursor-pointer touch-none"
+        >
+          {/* trilho */}
+          <div className="absolute inset-y-0 left-0 right-0 my-auto h-1 rounded-full bg-white/25" />
+          {/* parte liberada (até maxWatched) */}
+          <div
+            className="absolute inset-y-0 left-0 my-auto h-1 rounded-full bg-[#F37E20]/40"
+            style={{ width: `${allowedPct}%` }}
+          />
+          {/* progresso atual */}
+          <div
+            className="absolute inset-y-0 left-0 my-auto h-1 rounded-full bg-[#F37E20]"
+            style={{ width: `${playedPct}%` }}
+          />
+          {/* handle */}
+          <div
+            className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-[#F37E20] shadow-md transition-transform group-hover:scale-125"
+            style={{ left: `${playedPct}%` }}
+          />
+        </div>
+
+        {/* Linha inferior: play/pause + tempo */}
+        <div className="mt-2 flex items-center justify-between text-xs font-semibold text-white">
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+            aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+          >
+            {isPlaying ? (
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+            ) : (
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </button>
+          <span className="tabular-nums tracking-wide text-white/90">
+            {formatClock(currentTime)} / {formatClock(safeDuration)}
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
