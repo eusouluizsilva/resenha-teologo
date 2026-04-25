@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
+import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
@@ -594,11 +595,16 @@ function TimestampNotesSection({
 function PrivateQuestionsSection({
   courseId,
   lessonId,
+  isCreator,
 }: {
   courseId: Id<'courses'>
   lessonId: Id<'lessons'>
+  isCreator: boolean
 }) {
-  const entries = useQuery(api.courseQuestions.listMyByCourse, { courseId })
+  const entries = useQuery(
+    api.courseQuestions.listMyByCourse,
+    isCreator ? 'skip' : { courseId }
+  )
   const ask = useMutation(api.courseQuestions.ask)
   const edit = useMutation(api.courseQuestions.editQuestion)
   const remove = useMutation(api.courseQuestions.remove)
@@ -608,10 +614,14 @@ function PrivateQuestionsSection({
   const [attachToLesson, setAttachToLesson] = useState(true)
   const [editingId, setEditingId] = useState<Id<'courseQuestions'> | null>(null)
   const [editingText, setEditingText] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  if (isCreator) return null
 
   async function handleAsk() {
     if (saving || !question.trim()) return
     setSaving(true)
+    setError(null)
     try {
       await ask({
         courseId,
@@ -619,6 +629,8 @@ function PrivateQuestionsSection({
         question: question.trim(),
       })
       setQuestion('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível enviar a pergunta.')
     } finally {
       setSaving(false)
     }
@@ -626,14 +638,24 @@ function PrivateQuestionsSection({
 
   async function handleSaveEdit(id: Id<'courseQuestions'>) {
     if (!editingText.trim()) return
-    await edit({ id, question: editingText.trim() })
-    setEditingId(null)
-    setEditingText('')
+    setError(null)
+    try {
+      await edit({ id, question: editingText.trim() })
+      setEditingId(null)
+      setEditingText('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível salvar a edição.')
+    }
   }
 
   async function handleDelete(id: Id<'courseQuestions'>) {
     if (!window.confirm('Remover esta pergunta?')) return
-    await remove({ id })
+    setError(null)
+    try {
+      await remove({ id })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível remover a pergunta.')
+    }
   }
 
   const lessonEntries = (entries ?? []).filter((e) => e.lessonId === lessonId)
@@ -685,6 +707,11 @@ function PrivateQuestionsSection({
             </button>
           </div>
         </div>
+        {error && (
+          <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {error}
+          </p>
+        )}
       </div>
 
       {entries === undefined ? (
@@ -1880,6 +1907,11 @@ export function AulaPage() {
 
   const updateProgress = useMutation(api.student.updateProgress)
 
+  const { user: clerkUser } = useUser()
+  const isCreatorOfThisCourse = Boolean(
+    clerkUser?.id && data?.course?.creatorId && clerkUser.id === data.course.creatorId
+  )
+
   // Ref do player YouTube exposto a componentes irmãos (anotações por momento).
   const playerHandleRef = useRef<YTPlayer | null>(null)
 
@@ -2241,10 +2273,11 @@ export function AulaPage() {
           {/* 7. Fórum de comentários */}
           <ForumSection lessonId={lesson._id as Id<'lessons'>} />
 
-          {/* 7b. Perguntas privadas ao professor */}
+          {/* 7b. Perguntas privadas ao professor (escondida para o próprio criador) */}
           <PrivateQuestionsSection
             courseId={courseId as Id<'courses'>}
             lessonId={lesson._id as Id<'lessons'>}
+            isCreator={isCreatorOfThisCourse}
           />
 
           {/* 8. Quiz */}
