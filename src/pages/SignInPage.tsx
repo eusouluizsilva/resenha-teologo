@@ -67,8 +67,6 @@ export function SignInPage() {
           'Linguagem visual consistente com a identidade institucional',
           'Continuidade de estudo sem ruído visual desnecessário',
         ],
-        quote: '“Todo ambiente de formação precisa acolher o retorno com a mesma seriedade do começo.”',
-        quoteReference: 'Experiência de acesso',
         imageSrc: '/fotos/bible-laptop-headphones.jpg',
       }
     }
@@ -84,8 +82,6 @@ export function SignInPage() {
           'Tom premium, sem excesso de elementos',
           'Transição natural de volta ao dashboard',
         ],
-        quote: '“Clareza também é uma forma de cuidado.”',
-        quoteReference: 'Direção de produto',
         imageSrc: '/fotos/library-hall.jpg',
       }
     }
@@ -100,8 +96,6 @@ export function SignInPage() {
         'Identidade editorial premium sem perder clareza de uso',
         'Entrada direta para alunos, professores e instituições',
       ],
-      quote: '“A primeira tela também ensina o que a marca valoriza.”',
-      quoteReference: 'Resenha do Teólogo',
       imageSrc: '/fotos/hero-bible.jpg',
     }
   }, [step])
@@ -171,8 +165,6 @@ export function SignInPage() {
       asideTitle={aside.title}
       asideDescription={aside.description}
       highlights={aside.highlights}
-      quote={aside.quote}
-      quoteReference={aside.quoteReference}
       imageSrc={aside.imageSrc}
     >
       <motion.div variants={fadeUp}>

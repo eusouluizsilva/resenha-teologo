@@ -224,8 +224,6 @@ export function RegisterPage() {
         'Professores publicam e acompanham sua audiência',
         'Igrejas e instituições organizam a formação de membros',
       ]}
-      quote={'\u201cFormação teológica séria, acessível e com a mesma qualidade de produção de qualquer grande plataforma educacional.\u201d'}
-      quoteReference="Resenha do Teólogo"
       imageSrc="/fotos/bible-laptop-headphones.jpg"
     >
       <motion.div variants={fadeUp}>
