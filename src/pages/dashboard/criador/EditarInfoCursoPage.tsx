@@ -187,6 +187,8 @@ export function EditarInfoCursoPage() {
     id && creatorId ? { id: id as Id<'courses'>, creatorId } : 'skip',
   )
   const updateCourse = useMutation(api.courses.update)
+  const markComplete = useMutation(api.courses.markComplete)
+  const markInProgress = useMutation(api.courses.markInProgress)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -203,6 +205,8 @@ export function EditarInfoCursoPage() {
     liveStreamUrl: string
     institutionId: string
     visibility: 'public' | 'institution'
+    isInProgress: boolean
+    expectedTotalLessons: string
   } | null>(null)
 
   const myInstitutions = useQuery(api.institutions.listByUser, {})
@@ -224,6 +228,11 @@ export function EditarInfoCursoPage() {
         liveStreamUrl: course.liveStreamUrl ?? '',
         institutionId: (course.institutionId as string | undefined) ?? '',
         visibility: course.visibility ?? 'public',
+        isInProgress: course.releaseStatus === 'in_progress',
+        expectedTotalLessons:
+          typeof course.expectedTotalLessons === 'number'
+            ? String(course.expectedTotalLessons)
+            : '',
       })
       setThumbnail(course.thumbnail ?? '')
     }
@@ -285,6 +294,13 @@ export function EditarInfoCursoPage() {
     try {
       if (!creatorId) return setError('Sessão expirada. Faça login novamente.')
 
+      const expectedTotalParsed = form.expectedTotalLessons.trim()
+        ? parseInt(form.expectedTotalLessons.trim(), 10)
+        : undefined
+      if (expectedTotalParsed !== undefined && (!Number.isFinite(expectedTotalParsed) || expectedTotalParsed < 1)) {
+        return setError('Total previsto de aulas precisa ser um número maior que zero.')
+      }
+
       await updateCourse({
         id: id as Id<'courses'>,
         creatorId,
@@ -300,7 +316,21 @@ export function EditarInfoCursoPage() {
         liveStreamUrl: form.hasLiveStream ? form.liveStreamUrl.trim() || undefined : undefined,
         institutionId: form.institutionId ? (form.institutionId as Id<'institutions'>) : null,
         visibility: form.institutionId ? form.visibility : 'public',
+        expectedTotalLessons: expectedTotalParsed,
       })
+
+      const previousInProgress = course?.releaseStatus === 'in_progress'
+      if (form.isInProgress !== previousInProgress) {
+        if (form.isInProgress) {
+          await markInProgress({
+            id: id as Id<'courses'>,
+            creatorId,
+            expectedTotalLessons: expectedTotalParsed,
+          })
+        } else {
+          await markComplete({ id: id as Id<'courses'>, creatorId })
+        }
+      }
 
       navigate('/dashboard/cursos')
     } catch {
@@ -373,6 +403,38 @@ export function EditarInfoCursoPage() {
               placeholder="Descreva o que o aluno vai aprender e o contexto do curso."
               className={cn(brandInputClass, 'resize-none')}
             />
+          </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
+          <DashboardSectionLabel>Estado de produção</DashboardSectionLabel>
+          <label className="flex items-start gap-3 text-sm text-white/72">
+            <input
+              type="checkbox"
+              name="isInProgress"
+              checked={form.isInProgress}
+              onChange={handleChange}
+              className="mt-1 h-4 w-4 accent-[#F37E20]"
+            />
+            <span>
+              Curso em produção. Marque enquanto você ainda está publicando aulas. O certificado fica bloqueado mesmo que o aluno conclua todas as aulas já publicadas. Desmarque quando o curso estiver finalizado.
+            </span>
+          </label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white/72">Total previsto de aulas (opcional)</label>
+            <input
+              type="number"
+              name="expectedTotalLessons"
+              min={1}
+              step={1}
+              value={form.expectedTotalLessons}
+              onChange={handleChange}
+              placeholder="Ex: 24"
+              className={brandInputClass}
+            />
+            <p className="text-xs leading-6 text-white/40">
+              Quando preenchido, os alunos veem "X de Y aulas" no card do curso.
+            </p>
           </div>
         </motion.div>
 

@@ -162,6 +162,16 @@ export default defineSchema({
     // institutionId definido.
     institutionId: v.optional(v.id('institutions')),
     visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
+    // Estado de produção do curso. 'in_progress' = ainda em desenvolvimento, o
+    // criador está publicando aulas aos poucos; certificado fica bloqueado até
+    // virar 'complete'. 'complete' (ou ausente, para cursos legados) = curso
+    // finalizado; certificado é emitido normalmente quando o aluno termina
+    // todas as aulas publicadas.
+    releaseStatus: v.optional(v.union(v.literal('in_progress'), v.literal('complete'))),
+    // Total previsto de aulas quando o criador finalizar a produção. Mostrado
+    // ao aluno como "X/Y aulas" e usado para comunicar progresso real do curso.
+    // Opcional; quando ausente a UI mostra apenas o número atual de aulas.
+    expectedTotalLessons: v.optional(v.number()),
   })
     .index('by_creatorId', ['creatorId'])
     .index('by_published', ['isPublished'])
@@ -204,6 +214,12 @@ export default defineSchema({
     // Quando true, o aluno pode zerar a nota do quiz e refazer mediante nova
     // visualização integral da aula. Quando false/undefined, a nota é final.
     allowQuizRetry: v.optional(v.boolean()),
+    // Data prevista de publicação. Usado em cursos com lançamento incremental
+    // ('releaseStatus=in_progress'): o criador agenda quando uma aula deve ir
+    // ao ar; até lá ela aparece como "próxima aula em DD/MM" para o aluno.
+    // Independente do isPublished (que continua sendo a fonte de verdade da
+    // visibilidade real). Opcional para não afetar aulas já publicadas.
+    publishAt: v.optional(v.number()),
   })
     .index('by_courseId', ['courseId'])
     .index('by_moduleId', ['moduleId'])

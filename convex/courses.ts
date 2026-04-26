@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
+import { checkAndIssueCertificate } from './student'
 
 export const listByCreator = query({
   args: { creatorId: v.string() },
@@ -87,6 +88,7 @@ export const update = mutation({
     liveStreamUrl: v.optional(v.string()),
     institutionId: v.optional(v.union(v.id('institutions'), v.null())),
     visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
+    expectedTotalLessons: v.optional(v.number()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
@@ -172,6 +174,58 @@ export const publishWithLessons = mutation({
       if (!lesson.isPublished) {
         await ctx.db.patch(lesson._id, { isPublished: true })
       }
+    }
+  },
+})
+
+// Marca o curso como em produção (lançamento incremental). Bloqueia a emissão
+// de certificados mesmo que o aluno conclua todas as aulas já publicadas. Útil
+// para criadores que publicam aulas aos poucos (ex. duas por semana).
+export const markInProgress = mutation({
+  args: {
+    id: v.id('courses'),
+    creatorId: v.string(),
+    expectedTotalLessons: v.optional(v.number()),
+  },
+  handler: async (ctx, { id, creatorId, expectedTotalLessons }) => {
+    const { identity } = await requireUserFunction(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
+    const course = await ctx.db.get(id)
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+
+    if (expectedTotalLessons !== undefined && expectedTotalLessons < 1) {
+      throw new Error('Total previsto de aulas precisa ser pelo menos 1.')
+    }
+
+    await ctx.db.patch(id, {
+      releaseStatus: 'in_progress',
+      ...(expectedTotalLessons !== undefined ? { expectedTotalLessons } : {}),
+    })
+  },
+})
+
+// Marca o curso como concluído. Reavalia todas as matrículas para emitir
+// certificados que estavam represados pelo gate de 'in_progress'.
+export const markComplete = mutation({
+  args: { id: v.id('courses'), creatorId: v.string() },
+  handler: async (ctx, { id, creatorId }) => {
+    const { identity } = await requireUserFunction(ctx, ['criador'])
+    ensureIdentityMatches(identity.subject, creatorId)
+
+    const course = await ctx.db.get(id)
+    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+
+    await ctx.db.patch(id, { releaseStatus: 'complete' })
+
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+
+    for (const enrollment of enrollments) {
+      if (enrollment.certificateIssued) continue
+      await checkAndIssueCertificate(ctx, enrollment.studentId, id, enrollment._id)
     }
   },
 })

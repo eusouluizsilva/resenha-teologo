@@ -467,7 +467,7 @@ export const submitQuiz = mutation({
 // Emite certificado se todas as aulas foram concluídas e média >= passingScore
 // do curso (default 70, nunca menor).
 
-async function checkAndIssueCertificate(
+export async function checkAndIssueCertificate(
   ctx: MutationCtx,
   studentId: string,
   courseId: Id<'courses'>,
@@ -496,6 +496,12 @@ async function checkAndIssueCertificate(
   const wasIssued = enrollment?.certificateIssued ?? false
 
   const course = await ctx.db.get(courseId)
+
+  // Cursos em produção (lançamento incremental) não emitem certificado mesmo
+  // que o aluno tenha concluído todas as aulas já publicadas. O certificado
+  // sai automaticamente quando o criador marcar o curso como 'complete'.
+  if (course?.releaseStatus === 'in_progress') return
+
   const passingScore = Math.max(70, course?.passingScore ?? 70)
 
   const lessonsWithQuiz = published.filter((l) => l.hasMandatoryQuiz)
