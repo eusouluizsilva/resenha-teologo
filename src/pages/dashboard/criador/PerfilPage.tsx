@@ -835,9 +835,24 @@ export function PerfilPage() {
       description="Informações pessoais, perfil público, conquistas e depoimentos."
       maxWidthClass="max-w-4xl"
       actions={
-        saved && effectiveTab === 'dados-pessoais' ? (
-          <DashboardStatusPill tone="success">Alterações salvas</DashboardStatusPill>
-        ) : undefined
+        <div className="flex items-center gap-3">
+          {saved && effectiveTab === 'dados-pessoais' && (
+            <DashboardStatusPill tone="success">Alterações salvas</DashboardStatusPill>
+          )}
+          {handle && (
+            <a
+              href={`/${handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/10 px-4 py-2 text-xs font-semibold text-[#F2BD8A] transition-all hover:border-[#F37E20]/40 hover:bg-[#F37E20]/16 hover:text-white"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+              Ver perfil público
+            </a>
+          )}
+        </div>
       }
     >
       <TabBar tabs={visibleTabs} active={effectiveTab} onChange={setActiveTab} />
@@ -881,18 +896,18 @@ export function PerfilPage() {
                 <p className="font-display text-xl font-bold text-white leading-tight">{displayName}</p>
                 {email && <p className="mt-0.5 text-sm text-white/40">{email}</p>}
                 {handle ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
                     <span className="text-sm text-white/52">@{handle}</span>
                     <a
                       href={`/${handle}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-[#F2BD8A] hover:underline"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/10 px-3.5 py-1.5 text-xs font-semibold text-[#F2BD8A] transition-all hover:border-[#F37E20]/40 hover:bg-[#F37E20]/16 hover:text-white"
                     >
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                       </svg>
-                      Ver perfil público
+                      Ver meu perfil público
                     </a>
                   </div>
                 ) : (

@@ -86,6 +86,12 @@ const iconNewspaper = (
   </svg>
 )
 
+const iconSearch = (
+  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+  </svg>
+)
+
 // Flag para reexibir rotas de Instituição quando elas saírem de placeholder.
 // Hoje esconde Membros/Cursos institucionais/Relatórios da sidebar, mas as
 // rotas continuam registradas em App.tsx para quem tem a função ativa.
@@ -103,6 +109,8 @@ const NAV_GROUPS: NavGroupExt[] = [
       { label: 'Caderno', href: '/dashboard/caderno', icon: iconPencilSquare },
       { label: 'Flashcards', href: '/dashboard/flashcards', icon: iconStack },
       { label: 'Certificados', href: '/dashboard/certificados', icon: iconCert },
+      { label: 'Catálogo de cursos', href: '/cursos', icon: iconSearch },
+      { label: 'Catálogo de artigos', href: '/blog', icon: iconSearch },
     ],
   },
   {
@@ -135,7 +143,7 @@ const NAV_GROUPS: NavGroupExt[] = [
 
 const ALWAYS_NAV: NavItemMaybeAdmin[] = [
   { label: 'Bíblia', href: '/dashboard/biblia', icon: iconBook },
-  { label: 'Blog', href: '/dashboard/blog', icon: iconNewspaper },
+  { label: 'Meu blog', href: '/dashboard/blog', icon: iconNewspaper },
   { label: 'Meu perfil', href: '/dashboard/perfil', icon: iconUser },
   { label: 'Configurações', href: '/dashboard/funcoes', icon: iconFunctions },
   // Planos fica oculto para usuarios comuns enquanto Stripe nao esta ativo.
