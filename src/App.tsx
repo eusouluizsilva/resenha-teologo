@@ -8,6 +8,7 @@ import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/
 import { CookieBanner } from '@/components/CookieBanner'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { trackPageView } from '@/lib/analytics'
+import { trackMetaPageView } from '@/lib/metaPixel'
 import type { UserFunction } from '@/lib/functions'
 
 // Code-splitting: rotas secundárias viram chunks sob demanda para manter o
@@ -269,13 +270,16 @@ function DashboardIndexPage() {
   )
 }
 
-// Dispara pageview no GA4 a cada navegação SPA. A atribuição por criador
-// (CourseDetailPage, AulaPage) é feita dentro dessas páginas via mutation
-// logPageView, porque só elas conhecem o creatorId após carregar os dados.
+// Dispara pageview no GA4 e no Meta Pixel a cada navegação SPA. A atribuição
+// por criador (CourseDetailPage, AulaPage) é feita dentro dessas páginas via
+// mutation logPageView, porque só elas conhecem o creatorId após carregar os
+// dados. O Meta Pixel já dispara o primeiro PageView no init (main.tsx); aqui
+// cobrimos as navegações subsequentes do React Router.
 function RouteTracker() {
   const location = useLocation()
   useEffect(() => {
     trackPageView({ path: location.pathname + location.search })
+    trackMetaPageView()
   }, [location.pathname, location.search])
   return null
 }
