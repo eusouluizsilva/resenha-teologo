@@ -3,7 +3,7 @@
 // compartilhado depois sem precisar de login. Quando Stripe/Pix estiverem
 // integrados, esta pagina recebe o widget de pagamento.
 
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { useSeo } from '@/lib/seo'
 
 export function SupportPage() {
@@ -17,9 +17,8 @@ export function SupportPage() {
   })
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#0F141A] text-white">
-      <Navbar />
-
       <main className="pt-28 pb-24">
         <div className="mx-auto max-w-3xl px-5 md:px-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
@@ -74,5 +73,6 @@ export function SupportPage() {
         </div>
       </main>
     </div>
+    </PublicPageShell>
   )
 }

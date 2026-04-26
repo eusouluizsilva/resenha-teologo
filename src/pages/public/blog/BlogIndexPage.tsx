@@ -1,9 +1,12 @@
 import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
 import { api } from '../../../../convex/_generated/api'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { ArticleCard } from '@/components/blog/ArticleCard'
-import { useSeo } from '@/lib/seo'
+import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+
+const BLOG_ORIGIN =
+  typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
 
 export function BlogIndexPage() {
   const articles = useQuery(api.posts.listPublic, { limit: 24 })
@@ -14,11 +17,29 @@ export function BlogIndexPage() {
   })
 
   useSeo({
-    title: 'Blog | Resenha do Teólogo',
+    title: 'Blog de teologia, artigos gratuitos, Resenha do Teólogo',
     description:
-      'Artigos editoriais de teologia, Bíblia, história da igreja e vida cristã. Conteúdo gratuito e plural.',
-    url: 'https://resenhadoteologo.com/blog',
+      'Artigos editoriais de teologia, Bíblia, história da igreja e vida cristã. Conteúdo gratuito, plural e em português.',
+    url: `${BLOG_ORIGIN}/blog`,
     type: 'website',
+  })
+
+  useBreadcrumbJsonLd([
+    { name: 'Início', url: `${BLOG_ORIGIN}/` },
+    { name: 'Blog', url: `${BLOG_ORIGIN}/blog` },
+  ])
+
+  useJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Blog da Resenha do Teólogo',
+    url: `${BLOG_ORIGIN}/blog`,
+    inLanguage: 'pt-BR',
+    publisher: {
+      '@type': 'Organization',
+      name: 'Resenha do Teólogo',
+      url: `${BLOG_ORIGIN}/`,
+    },
   })
 
   const isLoading = articles === undefined
@@ -28,9 +49,8 @@ export function BlogIndexPage() {
   const rest = hasArticles ? articles.filter((a) => !featuredIds.has(String(a._id))) : []
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#F7F5F2] text-[#111827]">
-      <Navbar />
-
       <main className="pt-32 pb-24">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <header className="mb-10">
@@ -105,5 +125,6 @@ export function BlogIndexPage() {
         </div>
       </main>
     </div>
+    </PublicPageShell>
   )
 }

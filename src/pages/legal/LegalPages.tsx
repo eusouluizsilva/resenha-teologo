@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 
 type BodyItem =
   | { type: 'paragraph'; text: string }
@@ -21,9 +21,8 @@ type LegalPageProps = {
 
 function LegalPage({ eyebrow, title, updatedAt, description, sections, footerNote }: LegalPageProps) {
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#0F141A] text-white">
-      <Navbar />
-
       <main className="px-6 pb-20 pt-32 md:pt-36">
         <div className="mx-auto max-w-4xl">
           <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(13,18,24,0.92)_0%,rgba(10,14,20,0.96)_100%)] p-8 shadow-[0_30px_120px_rgba(0,0,0,0.25)] sm:p-10">
@@ -80,6 +79,7 @@ function LegalPage({ eyebrow, title, updatedAt, description, sections, footerNot
         </div>
       </main>
     </div>
+    </PublicPageShell>
   )
 }
 

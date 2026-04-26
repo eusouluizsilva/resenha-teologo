@@ -4,9 +4,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { AdSlot } from '@/components/AdSlot'
 import { fadeUp, fadeIn, staggerContainer, scaleSoft } from '@/lib/motion'
+import { useFaqJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 function useInView(threshold = 0.15) {
   return {
@@ -230,6 +231,71 @@ export function LandingPage() {
     navigate('/dashboard', { replace: true })
   }, [isLoaded, user, navigate])
 
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
+
+  useSeo({
+    title: 'Resenha do Teólogo, formação teológica gratuita e séria',
+    description:
+      'Plataforma gratuita de teologia: cursos, blog, leitor bíblico e caderno digital. Estude no seu ritmo, com certificado e professores convidados.',
+    url: `${origin}/`,
+    type: 'website',
+  })
+
+  useJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOrganization',
+    name: 'Resenha do Teólogo',
+    url: 'https://resenhadoteologo.com',
+    logo: 'https://resenhadoteologo.com/logos/LOGO%20QUADRADA%20LETRA%20BRANCA.png',
+    description:
+      'Plataforma gratuita de formação teológica com cursos, blog, leitor bíblico e caderno digital.',
+    sameAs: [
+      'https://www.youtube.com/@ResenhaDoTe%C3%B3logo',
+      'https://www.instagram.com/eusouluizsilva/',
+      'https://www.facebook.com/profile.php?id=61574237807743',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'hello@resenhadoteologo.com',
+      availableLanguage: ['Portuguese'],
+    },
+  })
+
+  useFaqJsonLd([
+    {
+      question: 'Os cursos da Resenha do Teólogo são realmente gratuitos?',
+      answer:
+        'Sim. Todo o conteúdo, cursos, aulas, certificados, Bíblia integrada e caderno digital, é gratuito para o aluno. A operação é sustentada por anúncios respeitosos e por planos opcionais para professores e instituições.',
+    },
+    {
+      question: 'Preciso pagar para receber o certificado?',
+      answer:
+        'Não. O certificado é emitido automaticamente quando o aluno conclui todas as aulas e atinge nota mínima de 70% nos questionários. O certificado tem código único de verificação pública.',
+    },
+    {
+      question: 'Quem pode criar cursos na plataforma?',
+      answer:
+        'Professores, teólogos, pastores, seminários e instituições religiosas podem se cadastrar e publicar gratuitamente. O conteúdo é organizado em um espaço editorial próprio, sem competição em marketplace.',
+    },
+    {
+      question: 'Como funciona o leitor de Bíblia integrado?',
+      answer:
+        'O leitor traz o texto bíblico em português, em interface limpa, com integração ao caderno digital para anotações, marcação de versículos e ligação com aulas que comentam cada passagem.',
+    },
+    {
+      question: 'A plataforma funciona no celular?',
+      answer:
+        'Sim. É um Progressive Web App (PWA), funciona em qualquer celular, tablet ou computador via navegador, sem necessidade de baixar aplicativo da loja, e pode ser instalado na tela inicial.',
+    },
+    {
+      question: 'Posso usar a Resenha do Teólogo na minha igreja ou seminário?',
+      answer:
+        'Sim. Existe a opção de cadastro institucional para igrejas, ministérios e seminários. Permite organizar a formação dos membros, acompanhar progresso e emitir certificados internos.',
+    },
+  ])
+
   useEffect(() => {
     if (!location.hash) return
     const id = location.hash.slice(1)
@@ -248,12 +314,17 @@ export function LandingPage() {
   ]
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen overflow-x-hidden bg-[#0F141A] text-white">
-      <Navbar />
-
       <section className="relative overflow-hidden px-6 pb-16 pt-32 md:pt-36">
         <div className="absolute inset-0 pointer-events-none">
-          <img src="/fotos/hero-bible.jpg" alt="" className="h-full w-full object-cover opacity-[0.12]" />
+          <img
+            src="/fotos/hero-bible.jpg"
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            className="h-full w-full object-cover opacity-[0.12]"
+          />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,18,0.48)_0%,rgba(15,20,26,0.88)_48%,#0F141A_100%)]" />
           <div className="absolute left-[8%] top-[10%] h-56 w-56 rounded-full bg-[#F37E20]/10 blur-[110px]" />
           <div className="absolute right-[10%] top-[18%] h-72 w-72 rounded-full bg-white/5 blur-[130px]" />
@@ -1034,7 +1105,7 @@ export function LandingPage() {
       <section className="px-6 py-24">
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-4xl text-center">
           <motion.div variants={fadeIn}>
-            <img src="/logos/LOGO ICONE BRANCA.png" alt="" className="mx-auto mb-8 h-36 w-36" />
+            <img src="/logos/LOGO ICONE BRANCA.png" alt="Resenha do Teólogo" className="mx-auto mb-8 h-36 w-36" />
           </motion.div>
           <motion.h2 variants={fadeUp} className="font-display text-3xl font-bold leading-tight text-white md:text-4xl">
             Comece hoje sua formação teológica, gratuitamente.
@@ -1136,5 +1207,6 @@ export function LandingPage() {
         </div>
       </footer>
     </div>
+    </PublicPageShell>
   )
 }

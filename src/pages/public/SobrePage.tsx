@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { useBreadcrumbJsonLd, useFaqJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 const pilares = [
   {
@@ -48,19 +48,79 @@ const caminhos = [
   },
 ]
 
+const ABOUT_FAQS = [
+  {
+    question: 'A Resenha do Teólogo é gratuita?',
+    answer:
+      'Sim. Todos os cursos, aulas, certificados, Bíblia integrada e caderno digital são gratuitos para o aluno. A operação é sustentada por anúncios respeitosos e por planos opcionais para professores e instituições.',
+  },
+  {
+    question: 'Quem pode publicar cursos na plataforma?',
+    answer:
+      'Professores, teólogos, pastores e instituições religiosas. O cadastro é gratuito e o conteúdo é publicado em um espaço editorial próprio, sem competir por atenção em um marketplace.',
+  },
+  {
+    question: 'Como funciona o certificado?',
+    answer:
+      'O certificado é emitido automaticamente quando o aluno conclui todas as aulas e atinge nota mínima de 70% nos questionários. Cada certificado tem código único e pode ser verificado publicamente.',
+  },
+  {
+    question: 'Existe aplicativo para celular?',
+    answer:
+      'A plataforma é um Progressive Web App (PWA), funciona em qualquer celular, tablet ou computador via navegador, e pode ser instalada como aplicativo na tela inicial.',
+  },
+  {
+    question: 'Em quais idiomas a plataforma está disponível?',
+    answer:
+      'A plataforma está em português brasileiro. Versões em inglês e espanhol estão no roadmap das próximas fases.',
+  },
+  {
+    question: 'Como funciona o repasse de receita aos professores?',
+    answer:
+      'A receita de anúncios exibidos nas aulas e perfis dos professores é dividida com cada criador, proporcionalmente às visualizações em seu conteúdo. Os professores acompanham seus ganhos em tempo real no painel financeiro.',
+  },
+]
+
+const ORIGIN =
+  typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
+
 export function SobrePage() {
-  useEffect(() => {
-    const previous = document.title
-    document.title = 'Sobre, Resenha do Teólogo'
-    return () => {
-      document.title = previous
-    }
-  }, [])
+  useSeo({
+    title: 'Sobre a Resenha do Teólogo, plataforma gratuita de ensino teológico',
+    description:
+      'Conheça a missão, os pilares e o time por trás da Resenha do Teólogo. Formação teológica séria, gratuita e em português, com cursos, Bíblia integrada, caderno digital e certificados.',
+    url: `${ORIGIN}/sobre`,
+    type: 'website',
+  })
+
+  useBreadcrumbJsonLd([
+    { name: 'Início', url: `${ORIGIN}/` },
+    { name: 'Sobre', url: `${ORIGIN}/sobre` },
+  ])
+
+  useFaqJsonLd(ABOUT_FAQS)
+
+  useJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'Sobre a Resenha do Teólogo',
+    url: `${ORIGIN}/sobre`,
+    inLanguage: 'pt-BR',
+    mainEntity: {
+      '@type': 'EducationalOrganization',
+      name: 'Resenha do Teólogo',
+      url: `${ORIGIN}/`,
+      founder: {
+        '@type': 'Person',
+        name: 'Luiz Carlos da Silva Junior',
+        jobTitle: 'Fundador e professor',
+      },
+    },
+  })
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#0F141A] text-white">
-      <Navbar />
-
       <main className="px-6 pb-24 pt-36 md:pt-40">
         <motion.section
           variants={staggerContainer}
@@ -297,5 +357,6 @@ export function SobrePage() {
         </p>
       </footer>
     </div>
+    </PublicPageShell>
   )
 }

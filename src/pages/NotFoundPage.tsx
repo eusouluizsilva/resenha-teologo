@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 
 export function NotFoundPage() {
   return (
+    <PublicPageShell>
     <div className="min-h-screen overflow-hidden bg-[#0F141A] text-white">
-      <Navbar />
-
       <section className="relative px-6 pb-24 pt-40">
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
@@ -35,5 +34,6 @@ export function NotFoundPage() {
         </div>
       </section>
     </div>
+    </PublicPageShell>
   )
 }

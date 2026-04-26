@@ -6,9 +6,9 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { LessonGate } from '@/components/public/LessonGate'
-import { useSeo } from '@/lib/seo'
+import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 function formatSeconds(s: number | null) {
   if (!s) return ''
@@ -27,33 +27,99 @@ export function LessonPreviewPage() {
     courseSlug && lessonSlug ? { courseSlug, lessonSlug } : 'skip',
   )
 
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
+  const lessonUrl = `${origin}/cursos/${courseSlug}/${lessonSlug}`
+
   useSeo({
-    title: data ? `${data.lesson.title} | ${data.course.title}` : 'Carregando…',
-    description: data?.lesson.description ?? data?.course.title ?? '',
-    url: `https://resenhadoteologo.com/cursos/${courseSlug}/${lessonSlug}`,
+    title: data
+      ? `${data.lesson.title}, ${data.course.title}, Resenha do Teólogo`
+      : 'Aula, Resenha do Teólogo',
+    description:
+      data?.lesson.description ??
+      data?.course.title ??
+      'Aula gratuita de teologia na Resenha do Teólogo.',
+    url: lessonUrl,
     image: data?.lesson.youtubeVideoId
       ? `https://i.ytimg.com/vi/${data.lesson.youtubeVideoId}/hqdefault.jpg`
       : data?.course.thumbnail ?? null,
     type: 'website',
+    authorName: data?.course.creatorName ?? null,
   })
 
-  if (!courseSlug || !lessonSlug) return <Navigate to="/catalogo" replace />
+  const lessonJsonLd =
+    data &&
+    ({
+      '@context': 'https://schema.org',
+      '@type': 'LearningResource',
+      name: data.lesson.title,
+      description: data.lesson.description ?? '',
+      url: lessonUrl,
+      inLanguage: 'pt-BR',
+      isAccessibleForFree: true,
+      isPartOf: {
+        '@type': 'Course',
+        name: data.course.title,
+        url: `${origin}/cursos/${data.course.slug ?? data.course._id}`,
+      },
+      author: {
+        '@type': 'Person',
+        name: data.course.creatorName,
+      },
+    } as Record<string, unknown>)
+  useJsonLd(lessonJsonLd)
+
+  useBreadcrumbJsonLd(
+    data
+      ? [
+          { name: 'Início', url: `${origin}/` },
+          { name: 'Cursos', url: `${origin}/cursos` },
+          {
+            name: data.course.title,
+            url: `${origin}/cursos/${data.course.slug ?? data.course._id}`,
+          },
+          { name: data.lesson.title, url: lessonUrl },
+        ]
+      : null,
+  )
+
+  if (!courseSlug || !lessonSlug) return <Navigate to="/cursos" replace />
 
   if (data === undefined) {
     return (
-      <div className="min-h-screen bg-[#0F141A]">
-        <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
-        </div>
+      <PublicPageShell>
+      <div className="min-h-screen bg-[#0F141A] text-white">
+        <main className="mx-auto max-w-6xl animate-pulse px-5 pt-28 pb-24 md:px-8">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
+              <div className="aspect-video w-full rounded-2xl bg-white/8" />
+              <div className="h-4 w-32 rounded-full bg-white/8" />
+              <div className="h-9 w-3/4 rounded-xl bg-white/8" />
+              <div className="space-y-2">
+                <div className="h-4 w-full rounded bg-white/6" />
+                <div className="h-4 w-11/12 rounded bg-white/6" />
+                <div className="h-4 w-2/3 rounded bg-white/6" />
+              </div>
+            </div>
+            <aside>
+              <div className="rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 space-y-3">
+                <div className="h-4 w-24 rounded-full bg-white/8" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-10 w-full rounded-xl bg-white/6" />
+                ))}
+              </div>
+            </aside>
+          </div>
+        </main>
       </div>
+      </PublicPageShell>
     )
   }
 
   if (data === null) {
     return (
+      <PublicPageShell>
       <div className="min-h-screen bg-[#0F141A] text-white">
-        <Navbar />
         <main className="pt-32 pb-24">
           <div className="mx-auto max-w-2xl px-5 text-center">
             <h1 className="font-display text-3xl font-bold">Aula não encontrada</h1>
@@ -61,7 +127,7 @@ export function LessonPreviewPage() {
               Esta aula não existe ou o curso não está disponível publicamente.
             </p>
             <Link
-              to="/catalogo"
+              to="/cursos"
               className="mt-6 inline-flex rounded-2xl bg-[#F37E20] px-5 py-3 text-sm font-semibold text-white hover:bg-[#e06e10]"
             >
               Ver catálogo de cursos
@@ -69,6 +135,7 @@ export function LessonPreviewPage() {
           </div>
         </main>
       </div>
+      </PublicPageShell>
     )
   }
 
@@ -79,9 +146,8 @@ export function LessonPreviewPage() {
   const courseHref = `/cursos/${course.slug ?? course._id}`
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#0F141A] text-white">
-      <Navbar />
-
       <main className="pt-28 pb-24">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <div className="mb-6">
@@ -224,5 +290,6 @@ export function LessonPreviewPage() {
         </div>
       </main>
     </div>
+    </PublicPageShell>
   )
 }

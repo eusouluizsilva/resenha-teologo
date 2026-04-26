@@ -2,15 +2,17 @@ import { useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { ArticleBody } from '@/components/blog/ArticleBody'
 import { ArticleReactions } from '@/components/blog/ArticleReactions'
 import { ArticleComments } from '@/components/blog/ArticleComments'
 import { FollowButton } from '@/components/blog/FollowButton'
 import { AdSlot } from '@/components/AdSlot'
-import { useSeo, useArticleJsonLd } from '@/lib/seo'
+import { useArticleJsonLd, useBreadcrumbJsonLd, useSeo } from '@/lib/seo'
 
 const VIEW_DEDUP_KEY_PREFIX = 'rdt_post_view_'
+const POST_ORIGIN =
+  typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
 
 function formatDate(ts: number | null) {
   if (!ts) return ''
@@ -25,13 +27,16 @@ export function BlogPostPage() {
   )
   const incrementView = useMutation(api.posts.incrementView)
 
-  const url = `https://resenhadoteologo.com/blog/${handle}/${postSlug}`
+  const url = `${POST_ORIGIN}/blog/${handle}/${postSlug}`
 
   useSeo({
-    title: post ? `${post.title} | Resenha do Teólogo` : 'Carregando…',
-    description: post?.excerpt ?? '',
+    title: post
+      ? `${post.title}, ${post.author.name}, Resenha do Teólogo`
+      : 'Artigo, Resenha do Teólogo',
+    description: post?.excerpt ?? 'Artigo no blog gratuito da Resenha do Teólogo.',
     url,
     image: post?.coverImageUrl ?? null,
+    imageAlt: post ? `Capa do artigo: ${post.title}` : null,
     publishedAt: post?.publishedAt ?? null,
     updatedAt: post?.updatedAt ?? null,
     authorName: post?.author.name ?? null,
@@ -46,8 +51,19 @@ export function BlogPostPage() {
     publishedAt: post?.publishedAt ?? null,
     updatedAt: post?.updatedAt ?? null,
     authorName: post?.author.name ?? null,
-    authorUrl: post?.author.handle ? `https://resenhadoteologo.com/${post.author.handle}` : null,
+    authorUrl: post?.author.handle ? `${POST_ORIGIN}/${post.author.handle}` : null,
   })
+
+  useBreadcrumbJsonLd(
+    post
+      ? [
+          { name: 'Início', url: `${POST_ORIGIN}/` },
+          { name: 'Blog', url: `${POST_ORIGIN}/blog` },
+          { name: post.author.name, url: `${POST_ORIGIN}/${post.author.handle ?? handle}` },
+          { name: post.title, url },
+        ]
+      : null,
+  )
 
   useEffect(() => {
     if (!post) return
@@ -61,19 +77,20 @@ export function BlogPostPage() {
 
   if (post === undefined) {
     return (
-      <div className="min-h-screen bg-[#F7F5F2]">
-        <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
+      <PublicPageShell>
+        <div className="min-h-screen bg-[#F7F5F2]">
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
+          </div>
         </div>
-      </div>
+      </PublicPageShell>
     )
   }
 
   if (post === null) {
     return (
+      <PublicPageShell>
       <div className="min-h-screen bg-[#F7F5F2] text-[#111827]">
-        <Navbar />
         <main className="pt-32 pb-24">
           <div className="mx-auto max-w-2xl px-5 text-center">
             <h1 className="font-display text-3xl font-bold">Artigo não encontrado</h1>
@@ -86,6 +103,7 @@ export function BlogPostPage() {
           </div>
         </main>
       </div>
+      </PublicPageShell>
     )
   }
 
@@ -95,9 +113,8 @@ export function BlogPostPage() {
       : post.author.name
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#F7F5F2] text-[#111827]">
-      <Navbar />
-
       <main className="pt-28 pb-24">
         <article className="mx-auto max-w-3xl px-5 md:px-8">
           <div className="mb-8">
@@ -197,5 +214,6 @@ export function BlogPostPage() {
         </article>
       </main>
     </div>
+    </PublicPageShell>
   )
 }

@@ -1,9 +1,12 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { Navbar } from '@/components/layout/Navbar'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { ArticleCard } from '@/components/blog/ArticleCard'
-import { useSeo } from '@/lib/seo'
+import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+
+const CATEGORY_ORIGIN =
+  typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
 
 export function BlogCategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>()
@@ -15,13 +18,47 @@ export function BlogCategoryPage() {
 
   const category = categories?.find((c) => c.slug === categorySlug)
   const categoryName = category?.name ?? (categorySlug ?? '').replace(/-/g, ' ')
+  const categoryUrl = `${CATEGORY_ORIGIN}/blog/categoria/${categorySlug ?? ''}`
 
   useSeo({
-    title: `${categoryName} | Blog | Resenha do Teólogo`,
-    description: category?.description ?? `Artigos sobre ${categoryName}.`,
-    url: `https://resenhadoteologo.com/blog/categoria/${categorySlug ?? ''}`,
+    title: `${categoryName}, artigos de teologia, Resenha do Teólogo`,
+    description:
+      category?.description ??
+      `Artigos editoriais sobre ${categoryName} no blog gratuito da Resenha do Teólogo.`,
+    url: categoryUrl,
     type: 'website',
   })
+
+  useBreadcrumbJsonLd(
+    categorySlug
+      ? [
+          { name: 'Início', url: `${CATEGORY_ORIGIN}/` },
+          { name: 'Blog', url: `${CATEGORY_ORIGIN}/blog` },
+          { name: categoryName, url: categoryUrl },
+        ]
+      : null,
+  )
+
+  useJsonLd(
+    articles && articles.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: `${categoryName}, artigos de teologia`,
+          url: categoryUrl,
+          inLanguage: 'pt-BR',
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: articles.slice(0, 30).map((a, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              url: `${CATEGORY_ORIGIN}/blog/${a.author.handle ?? ''}/${a.slug}`,
+              name: a.title,
+            })),
+          },
+        }
+      : null,
+  )
 
   if (!categorySlug) return <Navigate to="/blog" replace />
 
@@ -29,9 +66,8 @@ export function BlogCategoryPage() {
   const hasArticles = !!articles && articles.length > 0
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#F7F5F2] text-[#111827]">
-      <Navbar />
-
       <main className="pt-32 pb-24">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <header className="mb-10">
@@ -71,5 +107,6 @@ export function BlogCategoryPage() {
         </div>
       </main>
     </div>
+    </PublicPageShell>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
@@ -7,83 +7,8 @@ import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
 import { AdSlot } from '@/components/AdSlot'
 import { getSessionId } from '@/lib/analytics'
-
-function useCourseSeo(course: {
-  title: string
-  description?: string
-  slug?: string
-  thumbnail?: string
-  creatorName: string
-  level: string
-  category: string
-} | null | undefined) {
-  useEffect(() => {
-    if (!course) return
-    const previousTitle = document.title
-    document.title = `${course.title}, Resenha do Teólogo`
-
-    const canonicalHref = course.slug
-      ? `https://resenhadoteologo.com/cursos/${course.slug}`
-      : window.location.href
-
-    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
-    const previousCanonical = canonical?.href ?? null
-    if (!canonical) {
-      canonical = document.createElement('link')
-      canonical.rel = 'canonical'
-      document.head.appendChild(canonical)
-    }
-    canonical.href = canonicalHref
-
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Course',
-      name: course.title,
-      description: course.description ?? '',
-      provider: {
-        '@type': 'EducationalOrganization',
-        name: 'Resenha do Teólogo',
-        sameAs: 'https://resenhadoteologo.com',
-      },
-      ...(course.thumbnail && { image: course.thumbnail }),
-      inLanguage: 'pt-BR',
-      isAccessibleForFree: true,
-      offers: {
-        '@type': 'Offer',
-        price: 0,
-        priceCurrency: 'BRL',
-        category: 'Free',
-      },
-      hasCourseInstance: {
-        '@type': 'CourseInstance',
-        courseMode: 'Online',
-        inLanguage: 'pt-BR',
-      },
-      educationalLevel: course.level,
-      about: course.category,
-      author: {
-        '@type': 'Person',
-        name: course.creatorName,
-      },
-    }
-
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.dataset.seo = 'course'
-    script.textContent = JSON.stringify(jsonLd)
-    document.head.appendChild(script)
-
-    return () => {
-      document.title = previousTitle
-      if (canonical && previousCanonical) {
-        canonical.href = previousCanonical
-      } else if (canonical && !previousCanonical) {
-        canonical.remove()
-      }
-      script.remove()
-    }
-  }, [course])
-}
+import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 
 function levelLabel(level: string) {
   if (level === 'iniciante') return 'Iniciante'
@@ -281,7 +206,72 @@ export function CourseDetailPage() {
   const [enrolling, setEnrolling] = useState(false)
   const [enrollError, setEnrollError] = useState<string | null>(null)
 
-  useCourseSeo(course)
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
+  const courseUrl = course
+    ? `${origin}/cursos/${course.slug ?? course._id}`
+    : `${origin}/cursos`
+
+  useSeo({
+    title: course
+      ? `${course.title}, curso de teologia gratuito, Resenha do Teólogo`
+      : 'Curso, Resenha do Teólogo',
+    description:
+      course?.description?.slice(0, 200) ??
+      'Curso gratuito de teologia na Resenha do Teólogo.',
+    url: courseUrl,
+    image: course?.thumbnail ?? null,
+    type: 'website',
+    authorName: course?.creatorName ?? null,
+  })
+
+  const courseJsonLd = useMemo(() => {
+    if (!course) return null
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: course.title,
+      description: course.description ?? '',
+      url: courseUrl,
+      provider: {
+        '@type': 'EducationalOrganization',
+        name: 'Resenha do Teólogo',
+        sameAs: 'https://resenhadoteologo.com',
+      },
+      ...(course.thumbnail && { image: course.thumbnail }),
+      inLanguage: 'pt-BR',
+      isAccessibleForFree: true,
+      offers: {
+        '@type': 'Offer',
+        price: 0,
+        priceCurrency: 'BRL',
+        category: 'Free',
+        availability: 'https://schema.org/InStock',
+      },
+      hasCourseInstance: {
+        '@type': 'CourseInstance',
+        courseMode: 'Online',
+        inLanguage: 'pt-BR',
+      },
+      educationalLevel: course.level,
+      about: course.category,
+      author: {
+        '@type': 'Person',
+        name: course.creatorName,
+      },
+    }
+  }, [course, courseUrl])
+  useJsonLd(courseJsonLd)
+
+  useBreadcrumbJsonLd(
+    course
+      ? [
+          { name: 'Início', url: `${origin}/` },
+          { name: 'Cursos', url: `${origin}/cursos` },
+          { name: course.title, url: courseUrl },
+        ]
+      : null,
+  )
 
   // Atribui a pageview ao criador (revenue share). Roda uma vez por carga
   // do curso. Falha em silêncio se Convex estiver offline.
@@ -315,22 +305,91 @@ export function CourseDetailPage() {
 
   if (course === undefined || userLoading) {
     return (
+      <PublicPageShell>
       <div className="min-h-screen bg-[#0F141A]">
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
-        </div>
+        {!user && (
+          <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+              <Link to="/">
+                <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
+              </Link>
+              <Link to="/cursos" className="text-sm text-white/54 hover:text-white transition-colors">Cursos</Link>
+            </div>
+          </header>
+        )}
+        <main className="mx-auto max-w-7xl animate-pulse px-4 py-10 sm:px-6 lg:py-14">
+          <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
+            <div className="space-y-6">
+              <div className="flex gap-2">
+                <div className="h-6 w-20 rounded-full bg-white/8" />
+                <div className="h-6 w-24 rounded-full bg-white/8" />
+                <div className="h-6 w-16 rounded-full bg-white/8" />
+              </div>
+              <div className="h-10 w-3/4 rounded-xl bg-white/8" />
+              <div className="space-y-2">
+                <div className="h-4 w-full rounded bg-white/6" />
+                <div className="h-4 w-11/12 rounded bg-white/6" />
+                <div className="h-4 w-2/3 rounded bg-white/6" />
+              </div>
+              <div className="aspect-video w-full rounded-2xl bg-white/8" />
+            </div>
+            <div>
+              <div className="rounded-2xl border border-white/8 bg-[#151B23] p-6 space-y-4">
+                <div className="aspect-video w-full rounded-xl bg-white/8" />
+                <div className="h-12 w-full rounded-2xl bg-white/8" />
+                <div className="h-10 w-full rounded-2xl bg-white/6" />
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
+      </PublicPageShell>
     )
   }
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-[#0F141A]">
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-          <p className="text-white/50">Curso não encontrado.</p>
-          <Link to="/cursos" className="text-sm font-semibold text-[#F2BD8A] hover:underline">Ver catálogo</Link>
-        </div>
+      <PublicPageShell>
+      <div className="min-h-screen bg-[#0F141A] text-white">
+        {!user && (
+          <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+              <Link to="/">
+                <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
+              </Link>
+              <Link to="/cursos" className="text-sm text-white/54 hover:text-white transition-colors">Cursos</Link>
+            </div>
+          </header>
+        )}
+        <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-5 px-5 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+            <svg className="h-8 w-8 text-white/50" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold text-white">Curso não encontrado</h1>
+            <p className="mt-2 text-sm leading-7 text-white/56">
+              Este curso pode ter sido removido, despublicado ou ainda não está visível para o público.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/cursos"
+              className="rounded-2xl bg-[#F37E20] px-5 py-3 text-sm font-semibold text-white hover:bg-[#e06e10] transition-colors"
+            >
+              Ver catálogo
+            </Link>
+            <Link
+              to="/"
+              className="rounded-2xl border border-white/14 px-5 py-3 text-sm font-semibold text-white/72 hover:border-white/24 hover:text-white transition-colors"
+            >
+              Página inicial
+            </Link>
+          </div>
+        </main>
       </div>
+      </PublicPageShell>
     )
   }
 
@@ -344,28 +403,22 @@ export function CourseDetailPage() {
   )
 
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#0F141A]">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link to="/">
-            <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
-          </Link>
-          <nav className="flex items-center gap-3">
-            <Link to="/cursos" className="text-sm text-white/54 hover:text-white transition-colors">Cursos</Link>
-            {user ? (
-              <Link to="/dashboard" className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-all hover:border-white/20 hover:text-white">
-                Painel
-              </Link>
-            ) : (
-              <>
-                <Link to="/entrar" className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-all hover:border-white/20 hover:text-white">Entrar</Link>
-                <Link to="/cadastro" className="rounded-2xl bg-[#F37E20] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#e06e10]">Criar conta</Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      {!user && (
+        <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+            <Link to="/">
+              <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
+            </Link>
+            <nav className="flex items-center gap-3">
+              <Link to="/cursos" className="text-sm text-white/54 hover:text-white transition-colors">Cursos</Link>
+              <Link to="/entrar" className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-all hover:border-white/20 hover:text-white">Entrar</Link>
+              <Link to="/cadastro" className="rounded-2xl bg-[#F37E20] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#e06e10]">Criar conta</Link>
+            </nav>
+          </div>
+        </header>
+      )}
 
       {/* Breadcrumb */}
       <div className="border-b border-white/4 bg-[#0F141A]">
@@ -436,7 +489,7 @@ export function CourseDetailPage() {
             {/* Thumbnail */}
             {course.thumbnail && (
               <div className="overflow-hidden rounded-2xl border border-white/8">
-                <img src={course.thumbnail} alt={course.title} className="w-full aspect-video object-cover" />
+                <img src={course.thumbnail} alt={course.title} loading="eager" decoding="async" fetchPriority="high" className="w-full aspect-video object-cover" />
               </div>
             )}
 
@@ -547,5 +600,6 @@ export function CourseDetailPage() {
         </div>
       </main>
     </div>
+    </PublicPageShell>
   )
 }

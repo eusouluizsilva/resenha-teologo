@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
+import { useAuth } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
 import { AdSlot } from '@/components/AdSlot'
+import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+import { PublicPageShell } from '@/components/layout/PublicPageShell'
 
 function normalizeSearch(s: string) {
   return s
@@ -62,7 +65,7 @@ function CourseCard({ course }: { course: CatalogCourse }) {
     >
       <div className="relative aspect-video w-full overflow-hidden bg-[#111820]">
         {thumb ? (
-          <img src={thumb} alt={course.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+          <img src={thumb} alt={course.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <svg className="h-10 w-10 text-white/14" fill="none" stroke="currentColor" strokeWidth={1.2} viewBox="0 0 24 24">
@@ -155,18 +158,11 @@ function CourseCard({ course }: { course: CatalogCourse }) {
 }
 
 export function CatalogPage() {
+  const { isSignedIn } = useAuth()
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined)
   const [activeLevel, setActiveLevel] = useState<'iniciante' | 'intermediario' | 'avancado' | undefined>(undefined)
   const [activeLanguage, setActiveLanguage] = useState<string | undefined>(undefined)
   const [searchTerm, setSearchTerm] = useState('')
-
-  useEffect(() => {
-    const previous = document.title
-    document.title = 'Catálogo de cursos, Resenha do Teólogo'
-    return () => {
-      document.title = previous
-    }
-  }, [])
 
   const courses = useQuery(api.catalog.listPublished, {
     category: activeCategory,
@@ -188,30 +184,69 @@ export function CatalogPage() {
     })
   }, [courses, searchTerm])
 
+  const canonicalUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/cursos`
+      : 'https://resenhadoteologo.com/cursos'
+
+  useSeo({
+    title: 'Catálogo de cursos de teologia, gratuito, Resenha do Teólogo',
+    description:
+      'Catálogo gratuito de cursos de teologia, hermenêutica, apologética e estudos bíblicos. Conteúdo de criadores e instituições, no seu ritmo, com certificado.',
+    url: canonicalUrl,
+    type: 'website',
+  })
+
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
+
+  useBreadcrumbJsonLd([
+    { name: 'Início', url: `${origin}/` },
+    { name: 'Cursos', url: `${origin}/cursos` },
+  ])
+
+  const itemListJsonLd = useMemo(() => {
+    if (!filteredCourses || filteredCourses.length === 0) return null
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Cursos de teologia',
+      itemListElement: filteredCourses.slice(0, 30).map((c, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${origin}/cursos/${c._id}`,
+        name: c.title,
+      })),
+    }
+  }, [filteredCourses, origin])
+  useJsonLd(itemListJsonLd)
+
   return (
+    <PublicPageShell>
     <div className="min-h-screen bg-[#0F141A]">
-      {/* Navbar minima */}
-      <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link to="/">
-            <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/entrar"
-              className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-all duration-200 hover:border-white/20 hover:text-white"
-            >
-              Entrar
+      {!isSignedIn && (
+        <header className="sticky top-0 z-50 border-b border-white/6 bg-[#0F141A]/90 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+            <Link to="/">
+              <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
             </Link>
-            <Link
-              to="/cadastro"
-              className="rounded-2xl bg-[#F37E20] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#e06e10]"
-            >
-              Criar conta
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/entrar"
+                className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-all duration-200 hover:border-white/20 hover:text-white"
+              >
+                Entrar
+              </Link>
+              <Link
+                to="/cadastro"
+                className="rounded-2xl bg-[#F37E20] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#e06e10]"
+              >
+                Criar conta
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         {/* Cabecalho */}
@@ -385,5 +420,6 @@ export function CatalogPage() {
         <p className="text-xs text-white/28">Resenha do Teólogo. Todos os direitos reservados.</p>
       </footer>
     </div>
+    </PublicPageShell>
   )
 }
