@@ -181,9 +181,10 @@ export function CursoInternoPage() {
     )
   }
 
-  const { course, creator, modules, completedLessons, totalLessons, percentage, avgScore, nextLesson, enrollment } = data
+  const { course, creator, modules, completedLessons, totalLessons, percentage, avgScore, nextLesson, nextScheduledLesson, enrollment } = data
 
   const courseId = rawCourseId ?? ''
+  const isInProgress = course.releaseStatus === 'in_progress'
 
   const nextLessonHref = nextLesson
     ? `/dashboard/meus-cursos/${courseId}/aula/${(nextLesson as { slug?: string })?.slug ?? nextLesson._id}`
@@ -191,9 +192,18 @@ export function CursoInternoPage() {
 
   const certificateStatus = enrollment.certificateIssued
     ? 'emitido'
+    : isInProgress
+    ? 'em_producao'
     : avgScore !== null && avgScore >= 70 && completedLessons === totalLessons
     ? 'disponivel'
     : 'pendente'
+
+  const formatScheduled = (ts: number) => {
+    const d = new Date(ts)
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    return `${dd}/${mm}`
+  }
 
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
@@ -253,6 +263,7 @@ export function CursoInternoPage() {
                 )}>
                   {certificateStatus === 'emitido' ? 'Certificado emitido' :
                    certificateStatus === 'disponivel' ? 'Certificado disponível' :
+                   certificateStatus === 'em_producao' ? 'Certificado liberado ao final do curso' :
                    'Certificado pendente'}
                 </span>
               </div>
@@ -260,6 +271,25 @@ export function CursoInternoPage() {
           </div>
         </div>
       </div>
+
+      {isInProgress && (
+        <div className="border-b border-amber-200 bg-amber-50">
+          <div className="mx-auto flex max-w-5xl items-start gap-3 px-4 py-3 sm:px-6">
+            <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-sm leading-6 text-amber-900">
+              <strong className="font-semibold">Curso em produção.</strong>{' '}
+              {nextScheduledLesson
+                ? `Próxima aula prevista para ${formatScheduled(nextScheduledLesson.publishAt)}.`
+                : 'O criador está publicando aulas aos poucos. Acompanhe por aqui.'}
+              {' '}O certificado será liberado quando o curso for finalizado.
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
@@ -314,6 +344,20 @@ export function CursoInternoPage() {
                     {completedLessons === 0 ? 'Começar primeira aula' : 'Continuar de onde parei'}
                   </Link>
                 </>
+              ) : isInProgress ? (
+                <>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="font-semibold text-gray-800">Você está em dia</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {nextScheduledLesson
+                      ? `Próxima aula prevista para ${formatScheduled(nextScheduledLesson.publishAt)}.`
+                      : 'O criador ainda vai publicar mais aulas. Volte em breve.'}
+                  </p>
+                </>
               ) : (
                 <>
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
@@ -331,9 +375,19 @@ export function CursoInternoPage() {
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Certificado</p>
               <div className="space-y-2.5">
+                {isInProgress && (
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-2 w-2 flex-shrink-0 rounded-full bg-gray-200" />
+                    <p className="text-sm text-gray-600">Aguardar a finalização do curso</p>
+                  </div>
+                )}
                 <div className="flex items-center gap-2.5">
-                  <div className={cn('h-2 w-2 flex-shrink-0 rounded-full', completedLessons === totalLessons ? 'bg-emerald-500' : 'bg-gray-200')} />
-                  <p className="text-sm text-gray-600">Concluir todas as aulas ({completedLessons}/{totalLessons})</p>
+                  <div className={cn('h-2 w-2 flex-shrink-0 rounded-full', completedLessons === totalLessons && totalLessons > 0 ? 'bg-emerald-500' : 'bg-gray-200')} />
+                  <p className="text-sm text-gray-600">
+                    Concluir todas as aulas {course.expectedTotalLessons && isInProgress
+                      ? `(${completedLessons}/${course.expectedTotalLessons} previstas)`
+                      : `(${completedLessons}/${totalLessons})`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className={cn('h-2 w-2 flex-shrink-0 rounded-full', avgScore !== null && avgScore >= 70 ? 'bg-emerald-500' : 'bg-gray-200')} />

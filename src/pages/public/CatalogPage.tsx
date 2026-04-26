@@ -45,6 +45,8 @@ type CatalogCourse = {
   totalStudents?: number
   avgRating: number | null
   ratingsCount: number
+  releaseStatus?: 'in_progress' | 'complete'
+  expectedTotalLessons?: number
 }
 
 function CourseCard({ course }: { course: CatalogCourse }) {
@@ -69,10 +71,18 @@ function CourseCard({ course }: { course: CatalogCourse }) {
             </svg>
           </div>
         )}
-        <div className="absolute left-3 top-3">
+        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           <span className="rounded-full border border-white/10 bg-[#0F141A]/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 backdrop-blur-sm">
             Gratuito
           </span>
+          {course.releaseStatus === 'in_progress' ? (
+            <span className="rounded-full border border-[#F37E20]/30 bg-[#F37E20]/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#F2BD8A] backdrop-blur-sm">
+              Em produção
+              {course.expectedTotalLessons
+                ? ` • ${course.totalLessons}/${course.expectedTotalLessons}`
+                : ''}
+            </span>
+          ) : null}
         </div>
       </div>
 

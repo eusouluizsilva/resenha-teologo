@@ -115,6 +115,7 @@ export const create = mutation({
     hasMandatoryQuiz: v.boolean(),
     versesRefs: v.optional(v.array(verseRefValidator)),
     allowQuizRetry: v.optional(v.boolean()),
+    publishAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
@@ -164,6 +165,7 @@ export const update = mutation({
     hasMandatoryQuiz: v.optional(v.boolean()),
     versesRefs: v.optional(v.array(verseRefValidator)),
     allowQuizRetry: v.optional(v.boolean()),
+    publishAt: v.optional(v.union(v.number(), v.null())),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
@@ -176,8 +178,15 @@ export const update = mutation({
       await ensureUniqueYouTubeUrl(ctx, identity.subject, fields.youtubeUrl, id)
     }
 
-    const updates: typeof fields & { slug?: string } = { ...fields }
+    const { publishAt: rawPublishAt, ...rest } = fields
+    const updates: Record<string, unknown> = { ...rest }
     if (fields.title) updates.slug = toSlug(fields.title)
+    // null explícito limpa a data agendada; undefined mantém o valor atual.
+    if (rawPublishAt === null) {
+      updates.publishAt = undefined
+    } else if (rawPublishAt !== undefined) {
+      updates.publishAt = rawPublishAt
+    }
     await ctx.db.patch(id, updates)
   },
 })

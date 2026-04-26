@@ -88,6 +88,17 @@ export const getEnrolledCourse = query({
       }
     }
 
+    // Aula agendada mais próxima: aulas que ainda não foram publicadas mas têm
+    // publishAt definido. Mostra "próxima aula em DD/MM" ao aluno quando o
+    // curso é incremental (releaseStatus='in_progress'). Pega a com publishAt
+    // mais cedo entre as não publicadas.
+    const scheduled = allLessons
+      .filter((l) => !l.isPublished && typeof l.publishAt === 'number')
+      .sort((a, b) => (a.publishAt as number) - (b.publishAt as number))
+    const nextScheduledLesson = scheduled[0]
+      ? { title: scheduled[0].title, publishAt: scheduled[0].publishAt as number }
+      : null
+
     return {
       course,
       enrollment,
@@ -102,6 +113,7 @@ export const getEnrolledCourse = query({
       percentage,
       avgScore,
       nextLesson,
+      nextScheduledLesson,
     }
   },
 })
@@ -197,6 +209,13 @@ export const getLessonForPlayer = query({
     const nextLesson =
       currentIndex < orderedLessons.length - 1 ? orderedLessons[currentIndex + 1] : null
 
+    const scheduled = allLessons
+      .filter((l) => !l.isPublished && typeof l.publishAt === 'number')
+      .sort((a, b) => (a.publishAt as number) - (b.publishAt as number))
+    const nextScheduledLesson = scheduled[0]
+      ? { title: scheduled[0].title, publishAt: scheduled[0].publishAt as number }
+      : null
+
     return {
       lesson,
       course,
@@ -205,6 +224,7 @@ export const getLessonForPlayer = query({
       quiz,
       prevLesson,
       nextLesson,
+      nextScheduledLesson,
       enrollment,
       lessonIndex: currentIndex + 1,
       totalLessons: orderedLessons.length,

@@ -909,6 +909,7 @@ export function EditarAulaPage() {
   const [verses, setVerses] = useState<VerseRef[]>([])
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [allowQuizRetry, setAllowQuizRetry] = useState(false)
+  const [publishAtDate, setPublishAtDate] = useState('')
   const [initialized, setInitialized] = useState(false)
   const [quizInitialized, setQuizInitialized] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -922,6 +923,15 @@ export function EditarAulaPage() {
       setDescription(lesson.description ?? '')
       setIsPublished(lesson.isPublished)
       setAllowQuizRetry(lesson.allowQuizRetry ?? false)
+      if (typeof lesson.publishAt === 'number') {
+        const d = new Date(lesson.publishAt)
+        const yyyy = d.getFullYear()
+        const mm = String(d.getMonth() + 1).padStart(2, '0')
+        const dd = String(d.getDate()).padStart(2, '0')
+        setPublishAtDate(`${yyyy}-${mm}-${dd}`)
+      } else {
+        setPublishAtDate('')
+      }
       // Carrega versículos estruturados. Se a aula só tem o campo legado
       // (string[]), ignoramos na UI — aparecerão como "nenhum versículo"
       // e o criador pode adicionar estruturados agora.
@@ -977,6 +987,14 @@ export function EditarAulaPage() {
         testament: v.testament,
       }))
 
+      let publishAtArg: number | null | undefined
+      if (publishAtDate.trim()) {
+        const ts = new Date(`${publishAtDate}T00:00:00`).getTime()
+        publishAtArg = Number.isFinite(ts) ? ts : undefined
+      } else {
+        publishAtArg = null
+      }
+
       await updateLesson({
         id: lessonId as Id<'lessons'>,
         creatorId,
@@ -987,6 +1005,7 @@ export function EditarAulaPage() {
         hasMandatoryQuiz: hasQuiz,
         versesRefs: versesRefs.length > 0 ? versesRefs : undefined,
         allowQuizRetry: hasQuiz ? allowQuizRetry : false,
+        publishAt: publishAtArg,
       })
 
       if (hasQuiz) {
@@ -1109,6 +1128,31 @@ export function EditarAulaPage() {
             setAllowQuizRetry={setAllowQuizRetry}
             hasQuiz={hasQuiz}
           />
+        </motion.div>
+
+        <motion.div variants={fadeUp} className={cn('space-y-4 p-6 sm:p-7', brandPanelClass)}>
+          <DashboardSectionLabel>Agendamento (opcional)</DashboardSectionLabel>
+          <p className="text-sm leading-6 text-white/60">
+            Use em cursos publicados de forma incremental. Informe a data prevista de publicação para que os alunos vejam "Próxima aula em DD/MM" enquanto a aula ainda não está no ar. Não publica automaticamente, apenas comunica.
+          </p>
+          <div className="grid gap-3 sm:max-w-xs">
+            <label className="text-sm font-medium text-white/72">Data prevista de publicação</label>
+            <input
+              type="date"
+              value={publishAtDate}
+              onChange={(event) => setPublishAtDate(event.target.value)}
+              className={brandInputClass}
+            />
+            {publishAtDate && (
+              <button
+                type="button"
+                onClick={() => setPublishAtDate('')}
+                className="text-left text-xs text-white/50 underline underline-offset-2 hover:text-white/80"
+              >
+                Remover data prevista
+              </button>
+            )}
+          </div>
         </motion.div>
       </motion.div>
     </DashboardPageShell>

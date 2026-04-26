@@ -2578,6 +2578,7 @@ export function AulaPage() {
     quiz,
     prevLesson,
     nextLesson,
+    nextScheduledLesson,
     lessonIndex,
     totalLessons,
   } = data
@@ -2642,6 +2643,11 @@ export function AulaPage() {
             <span className="flex-shrink-0 hidden sm:block truncate max-w-[120px]">
               {course.title}
             </span>
+            {course.releaseStatus === 'in_progress' && (
+              <span className="flex-shrink-0 hidden sm:inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                Em produção
+              </span>
+            )}
             <span className="flex-shrink-0 hidden sm:block">/</span>
             {mod && (
               <span className="flex-shrink-0 hidden sm:block truncate max-w-[100px]">
@@ -2885,6 +2891,25 @@ export function AulaPage() {
                   />
                 </svg>
               </Link>
+            ) : course.releaseStatus === 'in_progress' ? (
+              <div className="flex flex-col items-end gap-1">
+                <Link
+                  to={`/dashboard/meus-cursos/${rawCourseRef}`}
+                  className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-amber-600"
+                >
+                  Você está em dia
+                </Link>
+                {nextScheduledLesson ? (
+                  <span className="text-[11px] text-amber-700">
+                    Próxima aula em {(() => {
+                      const d = new Date(nextScheduledLesson.publishAt)
+                      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+                    })()}
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-amber-700">Aguarde a próxima aula.</span>
+                )}
+              </div>
             ) : (
               <Link
                 to={`/dashboard/meus-cursos/${rawCourseRef}`}
