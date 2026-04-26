@@ -64,6 +64,82 @@ const ARTICLE_PROMPTS: Record<string, string> = {
     'cinematic painting of dark heavy wooden door studded with old iron nails, parchment paper still affixed to central nail, side lighting suggesting a hand just departed, five subtle golden light points distributed vertically across the door, oil painting historical book cover, no text no logo no faces no people',
   'a-cruz-que-voce-ainda-nao-entendeu':
     'cinematic painting of rough wooden cross rooted in rocky hill silhouetted against stormy sky that opens with single dramatic golden ray descending from above, veiled sun, oil painting, navy and deep violet palette with single warm amber cut of light, editorial book cover, no text no logo no people no blood',
+  'a-parabola-do-joio-por-que-deus-permite-o-mal-crescer':
+    'cinematic painting of golden wheat field at golden hour with dark twisted weeds growing intermixed among mature wheat stalks, low warm sun casting long shadows across the field, distant farmhouse silhouette, oil painting chiaroscuro editorial book cover, navy sky and amber palette, no text no logo no people no faces',
+  'o-maior-milagre-nao-e-o-que-voce-pensa':
+    'cinematic painting of small mustard seed sprouting through cracked stone surface with single tender green leaf reaching toward beam of golden light from above, dramatic Caravaggio side lighting, dust particles suspended, oil painting editorial book cover, navy and amber palette, no text no logo no people no faces',
+  'a-parabola-do-credor-incompassivo':
+    'cinematic painting of antique ledger book open on dark wooden table with quill pen and brass scales of justice in shadow background, single golden coin catching candlelight, dust particles suspended, dutch still life oil painting style, navy and amber palette, no text no logo no readable writing no people',
+  'o-evangelho-redefine-tudo':
+    'cinematic painting of dark closed leather bound book on dark wooden table beginning to glow from within, golden light escaping from edges of pages, dust motes rising, dramatic chiaroscuro Rembrandt lighting, oil painting editorial book cover, deep navy and warm amber palette, no text no logo no readable writing no people',
+  'o-reino-de-deus-presente-e-futuro':
+    'cinematic painting of stone path beginning in shadowed foreground and rising into golden distant horizon where ancient city gates appear partially formed in mist, dual lighting cool blue near and warm amber far, oil painting editorial book cover, navy and amber palette, no text no logo no people no faces',
+  'eternidade-salvacao-nao-e-o-fim':
+    'cinematic painting of single star burning brightly in vast dark night sky above silhouetted mountain horizon at first light, soft amber glow on horizon edge, deep navy upper sky with scattered constellations, oil painting editorial book cover, no text no logo no people no faces',
+  'sacerdocio-universal-voce-e-o-sacerdote':
+    'cinematic painting of simple stone altar in dark ancient temple interior with single white linen cloth draped over it, three small lit oil lamps casting warm amber glow, tall stone columns receding into shadow, oil painting chiaroscuro editorial book cover, navy and amber palette, no text no logo no people no faces',
+  'a-igreja-nao-e-onde-voce-vai-e-quem-voce-e':
+    'cinematic painting of large empty cathedral interior with stone columns receding into golden light from tall windows, single small flame at center floor, soft mist drifting through the space, oil painting editorial book cover, deep navy and warm amber palette, no text no logo no people no faces',
+  'frutos-e-dons-do-espirito-santo':
+    'cinematic painting of mature grape vine heavy with ripe purple grapes alongside ripe wheat stalks resting on dark wooden table, soft golden side light, dutch still life oil painting style, deep navy background and amber palette, no text no logo no people no faces',
+  'a-ressurreicao-muda-tudo':
+    'cinematic painting of empty tomb interior with stone floor scattered with white linen burial cloths neatly folded, single shaft of bright golden morning light entering from open doorway, oil painting chiaroscuro editorial book cover, navy and amber palette, no text no logo no people no faces',
+  'o-gadareno-encontro-com-jesus':
+    'cinematic painting of broken iron chains lying scattered on rocky shore beside calm water at dawn, distant cliffside cave entrance in shadow, soft amber light spreading across water, oil painting editorial book cover, deep navy and warm amber palette, no text no logo no people no faces',
+  'paciencia-macrotumia-marca-do-cristao':
+    'cinematic painting of single tall white candle burning steadily on dark wooden table with very long pool of melted wax extending around the base, soft warm light, dutch still life oil painting style, deep navy background and amber palette, no text no logo no people no faces',
+  'amor-nao-e-moeda-de-troca':
+    'cinematic painting of two open empty hands cupped together facing upward illuminated by single warm light from above, dark blurred background, dramatic Caravaggio chiaroscuro, oil painting editorial book cover, navy and amber palette, no text no logo no faces no full bodies',
+  'quem-vai-morar-na-cidade-de-deus':
+    'cinematic painting of distant golden city with multiple tall gates seen across dark valley at twilight, single bright star above city, narrow stone path leading toward it from foreground, oil painting editorial book cover, deep navy and warm amber palette, no text no logo no people no faces',
+  'estevao-uma-vida-que-marca':
+    'cinematic painting of small smooth stones piled at base of dark stone altar with single shaft of bright golden light descending from above onto the pile, dramatic chiaroscuro lighting, oil painting editorial book cover, deep navy and amber palette, no text no logo no people no faces',
+  'se-jesus-voltasse-hoje-voce-estaria-salvo':
+    'cinematic painting of antique brass pendulum clock on dark mantelpiece with hands frozen near midnight, dust particles suspended in soft amber light from candle, dutch still life oil painting style, deep navy background, no text no logo no readable numbers no people',
+  'o-espirito-do-anticristo':
+    'cinematic painting of empty stone pedestal in dark ancient hall with subtle amber glow from below as if lit from beneath, tall shadowed columns receding, dramatic moody oil painting editorial book cover, deep navy and minimal amber palette, no text no logo no people no faces',
+  'lancado-no-fogo-cinco-marcas-do-cristao':
+    'cinematic painting of clay vessel held above forge fire with bright amber glowing embers below, sparks rising into dark air, blacksmith tongs in foreground silhouette, oil painting chiaroscuro editorial book cover, deep navy and intense amber palette, no text no logo no faces no full bodies',
+  'adoracao-nao-e-onde-e-a-quem':
+    'cinematic painting of open ancient stone temple ruins at dusk with single shaft of golden light descending vertically onto mossy floor, deep blue twilight sky above, oil painting editorial book cover, navy and amber palette, no text no logo no people no faces',
+  'a-santa-ceia-muito-alem-de-comer-e-beber':
+    'cinematic painting of broken loaf of rustic bread and pewter chalice of dark wine on simple dark wooden table, single shaft of warm golden light from window catching the bread, oil painting Rembrandt chiaroscuro, navy and amber palette, no text no logo no people no faces',
+  'embaixadores-de-cristo':
+    'cinematic painting of antique parchment scroll sealed with red wax bearing royal crest resting on dark wooden table beside quill and inkwell, single warm candle glow from side, dutch still life oil painting style, deep navy and amber palette, no text no logo no readable writing no people',
+  'a-voz-de-deus-contra-as-outras-vozes':
+    'cinematic painting of single warm beam of golden light cutting through thick dark fog from above, illuminating small clearing of stone ground in the center, oil painting moody editorial book cover, deep navy and amber palette, no text no logo no people no faces',
+  'transicao-dos-filhos-de-deus':
+    'cinematic painting of butterfly emerging from cocoon hanging on bare branch with first light of dawn breaking behind, soft amber sky transitioning to deep navy above, oil painting editorial book cover, no text no logo no people no faces',
+  'multidao-ovelha-ou-discipulo':
+    'cinematic painting of single white sheep standing apart on rocky path looking toward distant warm light, blurred crowd of sheep silhouettes in mist behind, oil painting chiaroscuro editorial book cover, deep navy and amber palette, no text no logo no people no faces',
+  'o-bom-combate-de-paulo':
+    'cinematic painting of weathered iron sword resting upright point down in rocky ground beside laurel crown of victory, golden light from setting sun illuminating both, oil painting chiaroscuro editorial book cover, deep navy sky and amber palette, no text no logo no people no faces',
+  'voce-entendeu-o-amor-errado':
+    'cinematic painting of antique mirror in ornate dark wooden frame on dark wall reflecting only soft warm amber glow without any image, dramatic side lighting, oil painting editorial book cover, deep navy and amber palette, no text no logo no people no faces',
+  'acorda-pedrinho-o-evangelho-nao-e-o-que-voce-faz':
+    'cinematic painting of antique alarm clock on dark wooden bedside table with hands at dawn time, soft golden light from window beginning to illuminate the room, dutch still life oil painting style, deep navy and amber palette, no text no logo no readable numbers no people',
+  'termometro-ou-termostato':
+    'cinematic painting of brass antique thermometer beside brass thermostat dial both displayed on dark wooden surface, soft warm light from candle, dutch still life oil painting style, deep navy and amber palette, no text no logo no readable numbers no people',
+  'falsos-deuses-bezerro-de-ouro':
+    'cinematic painting of small ornate golden idol fragment lying broken on dark stone ground with cracks running through it, soft amber light from above, oil painting chiaroscuro editorial book cover, deep navy and amber palette, no text no logo no people no faces',
+  'o-repartir-do-pao-o-sentido-da-ceia':
+    'cinematic painting of two halves of broken rustic bread on simple dark wooden table beside small earthenware bowl, soft warm side light from candle, dutch still life oil painting style, deep navy background and amber palette, no text no logo no people no faces',
+  'cultura-da-honra':
+    'cinematic painting of antique brass crown resting on dark velvet cushion atop dark wooden pedestal, soft warm light from above casting subtle highlights on the metal, dutch still life oil painting style, deep navy background and amber palette, no text no logo no people no faces',
+  'seja-inteiro-so-reparte-quem-esta-completo':
+    'cinematic painting of single perfectly ripe pomegranate fruit on dark wooden table cut open revealing rich red interior with seeds intact, soft amber side light, dutch still life oil painting style, deep navy background, no text no logo no people no faces',
+  'escute-a-voz-de-deus-seja-quem-voce-nasceu':
+    'cinematic painting of single seedling sprouting from dark soil within terracotta pot on dark wooden windowsill with first sunlight breaking through, soft amber morning glow, dutch still life oil painting style, deep navy palette, no text no logo no people no faces',
+  'se-voce-e-deus-tres-atitudes-diante-da-cruz':
+    'cinematic painting of three weathered iron nails arranged on dark stone surface beside crown of dried thorns, single shaft of warm light from above, oil painting chiaroscuro editorial book cover, deep navy and amber palette, no text no logo no people no faces',
+  'o-lugar-do-homem-abencoado':
+    'cinematic painting of mature green tree planted beside flowing stream at dawn with sun rising behind illuminating leaves in golden glow, deep navy sky transitioning to warm amber horizon, oil painting editorial book cover, no text no logo no people no faces',
+  'o-que-e-o-reino-de-deus-e-sua-justica':
+    'cinematic painting of brass scales of justice perfectly balanced on dark wooden table beside open ancient book, soft warm candle light from side, dutch still life oil painting style, deep navy background and amber palette, no text no logo no readable writing no people',
+  'qual-e-o-preco-da-salvacao':
+    'cinematic painting of single ancient bronze coin lying on dark wooden table beside antique scale weight, soft golden light from candle, dutch still life oil painting style, deep navy background and amber palette, no text no logo no readable inscription no people',
+  'perigos-da-insatisfacao-e-ingratidao':
+    'cinematic painting of full grain horn cornucopia spilling ripe wheat and dried fruits onto dark wooden table beside simple clay bowl, soft warm side light, dutch still life oil painting style, deep navy background and amber palette, no text no logo no people no faces',
 }
 
 const COURSE_PROMPTS: Record<string, string> = {
