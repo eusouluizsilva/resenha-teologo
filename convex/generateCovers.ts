@@ -35,6 +35,18 @@ function checkSecret(secret: string) {
 
 type Job = { kind: 'post' | 'course'; id: string; slug: string; prompt: string }
 
+function asciiSlug(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/ç/g, 'c')
+}
+
+function findArticlePrompt(slug: string): string | undefined {
+  return ARTICLE_PROMPTS[slug] ?? ARTICLE_PROMPTS[asciiSlug(slug)]
+}
+
 const ARTICLE_PROMPTS: Record<string, string> = {
   'a-ressurreicao-que-ninguem-te-contou':
     'cinematic painting of empty tomb at dawn, large stone rolled away revealing dark interior, single shaft of golden light entering from outside, folded white linen cloth on rocky floor, low mist on ground, deep navy and warm amber palette, oil painting chiaroscuro editorial book cover, no text no logo no people no faces',
@@ -197,7 +209,7 @@ export const _listJobs = internalQuery({
       .withIndex('by_status_publishedAt', (q) => q.eq('status', 'published'))
       .collect()
     for (const p of posts) {
-      const prompt = ARTICLE_PROMPTS[p.slug]
+      const prompt = findArticlePrompt(p.slug)
       if (!prompt) continue
       jobs.push({ kind: 'post', id: String(p._id), slug: p.slug, prompt })
     }
@@ -222,7 +234,7 @@ export const listJobsPublic = query({
       .withIndex('by_status_publishedAt', (q) => q.eq('status', 'published'))
       .collect()
     for (const p of posts) {
-      const prompt = ARTICLE_PROMPTS[p.slug]
+      const prompt = findArticlePrompt(p.slug)
       if (!prompt) continue
       jobs.push({ kind: 'post', id: String(p._id), slug: p.slug, prompt })
     }
