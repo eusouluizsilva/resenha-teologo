@@ -326,7 +326,7 @@ export function LandingPage() {
               </motion.p>
             </div>
 
-            <motion.div variants={scaleSoft} className="relative h-[34rem] lg:h-[38rem]">
+            <motion.div variants={scaleSoft} className="relative hidden h-[34rem] lg:block lg:h-[38rem]">
               <div className="absolute inset-x-10 top-6 rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,#1A2230_0%,#141B24_100%)] shadow-[0_28px_90px_rgba(0,0,0,0.32)]">
                 <div className="flex items-center justify-between px-6 pt-5 text-[11px] uppercase tracking-[0.18em] text-white/38">
                   <span>Curso em destaque</span>

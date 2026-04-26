@@ -1167,7 +1167,7 @@ export function PerfilPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-white/72">Telefone</label>
-                <div className="grid grid-cols-[11rem_1fr] gap-2">
+                <div className="grid grid-cols-[7rem_1fr] gap-2 sm:grid-cols-[11rem_1fr]">
                   <select name="phoneCountry" value={form.phoneCountry} onChange={handleChange} className={brandInputClass}>
                     {PHONE_COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code}>{c.label}</option>
