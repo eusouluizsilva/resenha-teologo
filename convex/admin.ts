@@ -31,6 +31,7 @@ export const getStats = query({
     const enrollments = await ctx.db.query('enrollments').collect()
     const donations = await ctx.db.query('donations').collect()
     const userFunctions = await ctx.db.query('userFunctions').collect()
+    const posts = await ctx.db.query('posts').collect()
 
     const now = Date.now()
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
@@ -40,6 +41,12 @@ export const getStats = query({
 
     const publishedCourses = courses.filter((c) => c.isPublished).length
     const certificatesIssued = enrollments.filter((e) => e.certificateIssued).length
+
+    const publishedPosts = posts.filter((p) => p.status === 'published').length
+    const draftPosts = posts.filter((p) => p.status === 'draft').length
+    const newPosts30d = posts.filter(
+      (p) => p.status === 'published' && (p.publishedAt ?? 0) >= thirtyDaysAgo,
+    ).length
 
     const completedDonations = donations.filter((d) => d.status === 'completed')
     const totalDonationCents = completedDonations.reduce((acc, d) => acc + d.amountCents, 0)
@@ -63,6 +70,10 @@ export const getStats = query({
       certificatesIssued,
       totalDonationCents,
       donationCount,
+      totalPosts: posts.length,
+      publishedPosts,
+      draftPosts,
+      newPosts30d,
     }
   },
 })

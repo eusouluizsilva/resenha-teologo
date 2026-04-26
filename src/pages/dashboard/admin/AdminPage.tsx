@@ -44,6 +44,45 @@ function StatTile({
   )
 }
 
+function AnalyticsCard({
+  label,
+  description,
+  href,
+  badge,
+}: {
+  label: string
+  description: string
+  href: string
+  badge: string
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'group block p-5 transition hover:border-[#F37E20]/35 hover:bg-[#F37E20]/[0.04]',
+        brandPanelClass,
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/36">
+          {label}
+        </p>
+        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#F37E20]/10 text-[#F37E20] transition group-hover:bg-[#F37E20]/16">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 3h7v7M21 3l-9 9M5 5h6M5 11h6M5 17h14" />
+          </svg>
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-white/72">{description}</p>
+      <p className="mt-4 truncate font-mono text-[10px] uppercase tracking-[0.18em] text-white/36">
+        {badge}
+      </p>
+    </a>
+  )
+}
+
 export function AdminPage() {
   const isAdmin = useQuery(api.admin.amIAdmin, {})
   const stats = useQuery(api.admin.getStats, isAdmin ? {} : 'skip')
@@ -98,6 +137,11 @@ export function AdminPage() {
                 sub={`${stats.totalCourses} no total`}
               />
               <StatTile
+                label="Artigos publicados"
+                value={String(stats.publishedPosts)}
+                sub={`${stats.draftPosts} em rascunho, +${stats.newPosts30d} em 30 dias`}
+              />
+              <StatTile
                 label="Matrículas"
                 value={String(stats.totalEnrollments)}
                 sub={`+${stats.newEnrollments30d} em 30 dias`}
@@ -106,10 +150,42 @@ export function AdminPage() {
                 label="Certificados emitidos"
                 value={String(stats.certificatesIssued)}
               />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <StatTile
                 label="Doações"
                 value={formatCurrency(stats.totalDonationCents)}
                 sub={`${stats.donationCount} ${stats.donationCount === 1 ? 'doação concluída' : 'doações concluídas'}`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <DashboardSectionLabel>Tráfego e analytics</DashboardSectionLabel>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <AnalyticsCard
+                label="Google Analytics 4"
+                description="Visitantes, fontes de tráfego, comportamento por página, audiências."
+                href="https://analytics.google.com/analytics/web/"
+                badge="G-S2QLVX24GB"
+              />
+              <AnalyticsCard
+                label="Vercel Analytics"
+                description="Pageviews, top páginas, países e dispositivos em tempo real."
+                href="https://vercel.com/luiz-silvas-projects-aaeb9d4d/resenha-teologo-v18/analytics"
+                badge="ativo"
+              />
+              <AnalyticsCard
+                label="Vercel Speed Insights"
+                description="Core Web Vitals (LCP, INP, CLS) e performance real do usuário."
+                href="https://vercel.com/luiz-silvas-projects-aaeb9d4d/resenha-teologo-v18/speed-insights"
+                badge="ativo"
+              />
+              <AnalyticsCard
+                label="Meta Pixel (rt)"
+                description="Eventos de PageView e conversões para campanhas no Facebook e Instagram Ads."
+                href="https://business.facebook.com/events_manager2/list/pixel/1884382392256153/overview"
+                badge="1884382392256153"
               />
             </div>
           </div>
