@@ -225,8 +225,8 @@ export const _listJobs = internalQuery({
 })
 
 export const listJobsPublic = query({
-  args: { secret: v.string() },
-  handler: async (ctx, { secret }): Promise<Job[]> => {
+  args: { secret: v.string(), skipExisting: v.optional(v.boolean()) },
+  handler: async (ctx, { secret, skipExisting }): Promise<Job[]> => {
     checkSecret(secret)
     const jobs: Job[] = []
     const posts = await ctx.db
@@ -234,6 +234,7 @@ export const listJobsPublic = query({
       .withIndex('by_status_publishedAt', (q) => q.eq('status', 'published'))
       .collect()
     for (const p of posts) {
+      if (skipExisting && p.coverImageStorageId) continue
       const prompt = findArticlePrompt(p.slug)
       if (!prompt) continue
       jobs.push({ kind: 'post', id: String(p._id), slug: p.slug, prompt })
@@ -241,6 +242,7 @@ export const listJobsPublic = query({
     const courses = await ctx.db.query('courses').collect()
     for (const c of courses) {
       if (!c.slug) continue
+      if (skipExisting && c.thumbnail) continue
       const prompt = COURSE_PROMPTS[c.slug]
       if (!prompt) continue
       jobs.push({ kind: 'course', id: String(c._id), slug: c.slug, prompt })

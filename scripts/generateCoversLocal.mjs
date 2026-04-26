@@ -80,6 +80,7 @@ async function uploadAndStore(blob) {
 async function main() {
   const jobs = await client.query('generateCovers:listJobsPublic', {
     secret: SECRET,
+    skipExisting: true,
   })
   console.log(`\nEncontrei ${jobs.length} jobs.\n`)
 
