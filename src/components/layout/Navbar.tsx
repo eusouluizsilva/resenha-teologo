@@ -65,6 +65,12 @@ export function Navbar() {
                 </Link>
               ),
             )}
+            <Link to="/cursos" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
+              Cursos
+            </Link>
+            <Link to="/blog" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
+              Blog
+            </Link>
             <Link to="/sobre" className="text-sm font-medium text-white/62 transition-colors duration-200 hover:text-white">
               Sobre
             </Link>
@@ -129,6 +135,12 @@ export function Navbar() {
                     </Link>
                   ),
                 )}
+                <Link to="/cursos" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
+                  Cursos
+                </Link>
+                <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
+                  Blog
+                </Link>
                 <Link to="/sobre" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 transition-colors hover:text-white">
                   Sobre
                 </Link>

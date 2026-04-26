@@ -220,7 +220,17 @@ export function TermosPage() {
           ],
         },
         {
-          title: '11. Reembolsos, Estornos e Chargebacks',
+          title: '11. Publicidade no plano gratuito',
+          body: [
+            p('Todo o conteúdo educacional da plataforma, incluindo cursos, aulas, materiais complementares, eBooks, leitor bíblico, caderno digital e blog, é oferecido gratuitamente. Para sustentar essa operação, o plano gratuito exibe anúncios fornecidos pelo Google AdSense e por parceiros de publicidade, em espaços previamente definidos no rodapé de páginas públicas e ao final de artigos do blog.'),
+            p('Usuários com assinatura premium ativa não recebem publicidade em nenhuma área da plataforma.'),
+            p('Os anúncios podem ser personalizados com base em interesses inferidos pelo Google, conforme as preferências de cada usuário e as configurações do navegador. O usuário pode revogar o consentimento para publicidade personalizada a qualquer momento, ajustando a preferência no banner de cookies, optando pelo plano premium ou desativando a personalização diretamente em https://www.google.com/settings/ads.'),
+            p('A plataforma não exibe anúncios em áreas restritas, incluindo o player de aulas, conteúdos institucionais privados, dashboards autenticados e páginas de pagamento. Anúncios também não são exibidos sobre material com restrição etária ou conteúdo sensível.'),
+            p('Quando aplicável, parte da receita gerada pelos anúncios é repassada ao criador (professor ou instituição) responsável pelo conteúdo onde o anúncio foi exibido, conforme regras internas de revenue share publicadas no painel financeiro do criador.'),
+          ],
+        },
+        {
+          title: '12. Reembolsos, Estornos e Chargebacks',
           body: [
             p('A política de reembolso poderá variar conforme a natureza da operação, do produto, do serviço ou do plano contratado.'),
             p('Em caso de estorno, chargeback, disputa bancária ou contestação de pagamento, a plataforma poderá: debitar o valor correspondente do saldo do responsável, reter saldos futuros, suspender saques, congelar valores relacionados à disputa, exigir documentação adicional ou compensar o prejuízo em operações futuras.'),
@@ -228,7 +238,7 @@ export function TermosPage() {
           ],
         },
         {
-          title: '12. Condutas Proibidas',
+          title: '13. Condutas Proibidas',
           body: [
             p('É proibido utilizar a plataforma para:'),
             list([
@@ -246,14 +256,14 @@ export function TermosPage() {
           ],
         },
         {
-          title: '13. Moderação, Remoção e Medidas da Plataforma',
+          title: '14. Moderação, Remoção e Medidas da Plataforma',
           body: [
             p('A plataforma poderá, a qualquer tempo, adotar medidas como: moderação de comentários, fóruns e interações; remoção ou ocultação de conteúdos; limitação de funcionalidades; restrição de acesso; advertência; suspensão temporária; congelamento de valores; bloqueio de saques; encerramento de contas; preservação de registros e evidências.'),
             p('Essas medidas poderão ser tomadas em caso de denúncia plausível, disputa, risco jurídico, suspeita de fraude, violação de política, necessidade de proteção da operação, cumprimento de ordem judicial ou exigência legal.'),
           ],
         },
         {
-          title: '14. Direitos Autorais e Denúncias',
+          title: '15. Direitos Autorais e Denúncias',
           body: [
             p('A plataforma respeita direitos autorais, conexos, marcas, imagem, voz, privacidade, proteção de dados e demais direitos de terceiros.'),
             p('Qualquer pessoa que entenda que determinado conteúdo viola seus direitos poderá enviar denúncia contendo: identificação do denunciante, comprovação razoável de legitimidade, identificação clara do conteúdo denunciado, fundamento da alegação, link ou localização exata do conteúdo e dados para contato.'),
@@ -261,7 +271,7 @@ export function TermosPage() {
           ],
         },
         {
-          title: '15. Privacidade e Proteção de Dados',
+          title: '16. Privacidade e Proteção de Dados',
           body: [
             p('O tratamento de dados pessoais realizado pela plataforma observará a Política de Privacidade e a legislação aplicável, incluindo a Lei Geral de Proteção de Dados (Lei 13.709/2018).'),
             p('O usuário reconhece que a plataforma poderá tratar dados para fins de autenticação, segurança, suporte, operação do serviço, prevenção à fraude, cumprimento contratual, cumprimento de obrigação legal, exercício regular de direitos, emissão de certificados, cobrança, repasse e melhoria da experiência.'),
@@ -269,21 +279,21 @@ export function TermosPage() {
           ],
         },
         {
-          title: '16. Comunicações da Plataforma',
+          title: '17. Comunicações da Plataforma',
           body: [
             p('O usuário autoriza o recebimento de comunicações operacionais, administrativas, contratuais, de segurança, cobrança, suporte, atualização de políticas e notificações relacionadas ao uso da plataforma.'),
             p('Comunicações promocionais, quando houver, seguirão as preferências e regras aplicáveis.'),
           ],
         },
         {
-          title: '17. Propriedade Intelectual da Plataforma',
+          title: '18. Propriedade Intelectual da Plataforma',
           body: [
             p('Todos os direitos sobre o software, código, interface, arquitetura, identidade visual, nome, marca, banco de dados próprio, design, documentação e demais elementos exclusivos da plataforma pertencem à Resenha do Teólogo ou aos seus licenciantes.'),
             p('É vedado copiar, modificar, reproduzir, distribuir, desmontar, explorar comercialmente ou usar indevidamente tais elementos sem autorização expressa.'),
           ],
         },
         {
-          title: '18. Limitação de Responsabilidade',
+          title: '19. Limitação de Responsabilidade',
           body: [
             p('Na máxima extensão permitida pela legislação aplicável, a plataforma não será responsável por:'),
             list([
@@ -298,41 +308,41 @@ export function TermosPage() {
           ],
         },
         {
-          title: '19. Indenização',
+          title: '20. Indenização',
           body: [
             p('O usuário que causar prejuízo à plataforma ou a terceiros por violação destes Termos, de políticas aplicáveis, de direitos de terceiros ou da legislação responderá integralmente pelos danos, custos, despesas, notificações, condenações, acordos, estornos, chargebacks, honorários e prejuízos decorrentes de sua conduta.'),
             p('Professores e instituições, em especial, obrigam-se a defender, indenizar e manter a plataforma indene por reclamações ligadas a conteúdo, dados, ofertas, produtos, materiais, embeds, cursos, comunicações e atos praticados em seus respectivos ambientes.'),
           ],
         },
         {
-          title: '20. Alterações da Plataforma e dos Termos',
+          title: '21. Alterações da Plataforma e dos Termos',
           body: [
             p('A plataforma poderá alterar estes Termos, funcionalidades, políticas, integrações, fluxos, layout, critérios operacionais e recursos a qualquer tempo, mediante publicação de nova versão.'),
             p('Quando a alteração for relevante, a plataforma poderá solicitar novo aceite do usuário. A continuidade de uso após a publicação de nova versão implica concordância com os Termos atualizados.'),
           ],
         },
         {
-          title: '21. Suspensão e Encerramento da Conta',
+          title: '22. Suspensão e Encerramento da Conta',
           body: [
             p('O usuário poderá encerrar sua conta conforme os meios disponibilizados pela plataforma, sujeito às obrigações pendentes e à preservação de registros necessários à operação, segurança, auditoria, prevenção à fraude e defesa de direitos.'),
             p('A plataforma poderá suspender ou encerrar contas nos casos previstos nestes Termos e nas políticas relacionadas.'),
           ],
         },
         {
-          title: '22. Disposições Gerais',
+          title: '23. Disposições Gerais',
           body: [
             p('A eventual tolerância da plataforma quanto ao descumprimento de qualquer disposição não constituirá renúncia de direito.'),
             p('Se qualquer cláusula destes Termos for considerada inválida ou inexequível, as demais disposições permanecerão válidas.'),
           ],
         },
         {
-          title: '23. Contato',
+          title: '24. Contato',
           body: [
             p('Para dúvidas, notificações, denúncias, solicitações jurídicas, questões de privacidade ou comunicações institucionais, o usuário deverá utilizar os canais oficiais da plataforma: hello@resenhadoteologo.com.'),
           ],
         },
         {
-          title: '24. Lei Aplicável e Foro',
+          title: '25. Lei Aplicável e Foro',
           body: [
             p('A lei aplicável, o idioma prevalente e o foro competente serão definidos na versão final validada juridicamente para a operação da plataforma, considerando o público atendido e os territórios de operação.'),
           ],
@@ -432,12 +442,15 @@ export function PrivacidadePage() {
             list([
               'Clerk: autenticação, gerenciamento de sessão e dados de conta',
               'Convex: banco de dados em tempo real e armazenamento de dados da plataforma',
-              'Vercel: hospedagem e entrega do aplicativo',
+              'Vercel: hospedagem, entrega do aplicativo e métricas de performance (Vercel Analytics)',
               'Stripe: processamento de pagamentos (quando aplicável)',
               'Resend: envio de emails transacionais',
               'YouTube e outras plataformas de vídeo: incorporação de conteúdo externo',
+              'Google Analytics 4: análise agregada de uso, sessões e origem de tráfego',
+              'Google AdSense e parceiros: exibição de publicidade contextual e personalizada (apenas para usuários do plano gratuito), incluindo cookies próprios da Google e do DoubleClick (doubleclick.net) para limitar a frequência de anúncios, prevenir fraudes e medir desempenho de campanhas',
             ]),
             p('Esses serviços operam com seus próprios termos e políticas de privacidade. Não vendemos dados pessoais a terceiros.'),
+            p('Para mais informações sobre como o Google trata dados em parceria com publishers, consulte a política do Google em https://policies.google.com/technologies/partner-sites. O usuário pode gerenciar a personalização de anúncios e desativar a publicidade comportamental do Google em https://www.google.com/settings/ads.'),
           ],
         },
         {
@@ -447,10 +460,12 @@ export function PrivacidadePage() {
             list([
               'Manter a sessão autenticada do usuário',
               'Armazenar preferências de uso',
-              'Coletar dados de desempenho e uso para melhoria do produto',
-              'Exibir publicidade contextual (apenas para usuários do plano gratuito)',
+              'Coletar dados de desempenho e uso para melhoria do produto (Vercel Analytics e Google Analytics 4)',
+              'Exibir publicidade contextual e personalizada (apenas para usuários do plano gratuito), por meio do Google AdSense e parceiros',
             ]),
+            p('Cookies de publicidade e analytics só são carregados após o usuário aceitar a categoria correspondente no banner de cookies. Quem optar por aceitar apenas os cookies essenciais não recebe scripts da Google AdSense, Google Analytics nem cookies do DoubleClick.'),
             p('O usuário pode gerenciar cookies nas configurações do navegador. A desativação de cookies essenciais pode impedir o funcionamento adequado da plataforma.'),
+            p('Em conformidade com a LGPD (Brasil) e o GDPR (União Europeia), o usuário tem o direito de revogar a qualquer momento o consentimento para cookies de publicidade e analytics, ajustando a preferência no banner de cookies, no painel da conta ou desativando a personalização diretamente no Google em https://www.google.com/settings/ads.'),
           ],
         },
         {

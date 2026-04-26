@@ -1,0 +1,2 @@
+# ads.txt placeholder. Substituir pela linha oficial apos aprovacao no Google AdSense:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
