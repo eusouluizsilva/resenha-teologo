@@ -218,3 +218,80 @@ export const getPublicById = query({
     }
   },
 })
+
+// Cursos recomendados para mostrar quando o aluno terminou todas as aulas de um
+// curso 'in_progress'. Estratégia: (1) outros cursos publicados do mesmo
+// criador, (2) cursos publicados na mesma categoria de outros criadores, em
+// ordem de preferência. Cursos institucionais filtrados pela mesma regra de
+// listPublished. Exclui o próprio curso e máximo 6 resultados.
+export const listRecommendedForInProgress = query({
+  args: {
+    courseId: v.id('courses'),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { courseId, limit }) => {
+    const cap = Math.max(1, Math.min(limit ?? 6, 12))
+    const current = await ctx.db.get(courseId)
+    if (!current) return []
+
+    const all = await ctx.db
+      .query('courses')
+      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .collect()
+
+    const identity = await ctx.auth.getUserIdentity()
+    const memberships = identity
+      ? await ctx.db
+          .query('institutionMembers')
+          .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+          .filter((q) => q.neq(q.field('status'), 'removido'))
+          .collect()
+      : []
+    const memberInstitutionIds = new Set(memberships.map((m) => m.institutionId as unknown as string))
+
+    const visible = all.filter((c) => {
+      if (c._id === courseId) return false
+      if (c.visibility !== 'institution') return true
+      if (!c.institutionId) return true
+      return memberInstitutionIds.has(c.institutionId as unknown as string)
+    })
+
+    const sameCreator = visible.filter((c) => c.creatorId === current.creatorId)
+    const sameCategory = visible.filter(
+      (c) => c.creatorId !== current.creatorId && c.category === current.category,
+    )
+    const ordered = [...sameCreator, ...sameCategory].slice(0, cap)
+
+    const uniqueCreatorIds = Array.from(new Set(ordered.map((c) => c.creatorId)))
+    const creators = await Promise.all(
+      uniqueCreatorIds.map((cid) =>
+        ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', cid))
+          .unique(),
+      ),
+    )
+    const creatorByClerkId = new Map<string, { name: string; handle: string | null }>()
+    creators.forEach((u, i) => {
+      if (u) creatorByClerkId.set(uniqueCreatorIds[i], { name: u.name, handle: u.handle ?? null })
+    })
+
+    return ordered.map((c) => {
+      const creator = creatorByClerkId.get(c.creatorId)
+      return {
+        _id: c._id,
+        slug: c.slug ?? null,
+        title: c.title,
+        thumbnail: c.thumbnail ?? null,
+        category: c.category,
+        level: c.level,
+        totalLessons: c.totalLessons,
+        avgRating: (c.ratingsCount ?? 0) > 0 ? (c.avgRating ?? null) : null,
+        ratingsCount: c.ratingsCount ?? 0,
+        creatorName: creator?.name ?? 'Professor',
+        creatorHandle: creator?.handle ?? null,
+        sameCreator: c.creatorId === current.creatorId,
+      }
+    })
+  },
+})

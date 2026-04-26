@@ -207,6 +207,7 @@ export function EditarInfoCursoPage() {
     visibility: 'public' | 'institution'
     isInProgress: boolean
     expectedTotalLessons: string
+    nextLessonScheduleText: string
   } | null>(null)
 
   const myInstitutions = useQuery(api.institutions.listByUser, {})
@@ -233,6 +234,7 @@ export function EditarInfoCursoPage() {
           typeof course.expectedTotalLessons === 'number'
             ? String(course.expectedTotalLessons)
             : '',
+        nextLessonScheduleText: course.nextLessonScheduleText ?? '',
       })
       setThumbnail(course.thumbnail ?? '')
     }
@@ -301,6 +303,11 @@ export function EditarInfoCursoPage() {
         return setError('Total previsto de aulas precisa ser um número maior que zero.')
       }
 
+      const scheduleTextTrim = form.nextLessonScheduleText.trim()
+      if (scheduleTextTrim.length > 200) {
+        return setError('Texto do cronograma não pode passar de 200 caracteres.')
+      }
+
       await updateCourse({
         id: id as Id<'courses'>,
         creatorId,
@@ -317,6 +324,7 @@ export function EditarInfoCursoPage() {
         institutionId: form.institutionId ? (form.institutionId as Id<'institutions'>) : null,
         visibility: form.institutionId ? form.visibility : 'public',
         expectedTotalLessons: expectedTotalParsed,
+        nextLessonScheduleText: scheduleTextTrim || undefined,
       })
 
       const previousInProgress = course?.releaseStatus === 'in_progress'
@@ -326,6 +334,7 @@ export function EditarInfoCursoPage() {
             id: id as Id<'courses'>,
             creatorId,
             expectedTotalLessons: expectedTotalParsed,
+            nextLessonScheduleText: scheduleTextTrim || undefined,
           })
         } else {
           await markComplete({ id: id as Id<'courses'>, creatorId })
@@ -434,6 +443,21 @@ export function EditarInfoCursoPage() {
             />
             <p className="text-xs leading-6 text-white/40">
               Quando preenchido, os alunos veem "X de Y aulas" no card do curso.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white/72">Cronograma das próximas aulas (opcional)</label>
+            <textarea
+              name="nextLessonScheduleText"
+              value={form.nextLessonScheduleText}
+              onChange={handleChange}
+              maxLength={200}
+              rows={2}
+              placeholder="Ex: Toda quarta e sábado. Ou: Lançamentos quinzenais."
+              className={cn(brandInputClass, 'resize-none')}
+            />
+            <p className="text-xs leading-6 text-white/40">
+              Mostrado quando o aluno termina todas as aulas publicadas. Se vazio, exibimos a frase padrão "Você será notificado quando uma nova aula sair".
             </p>
           </div>
         </motion.div>

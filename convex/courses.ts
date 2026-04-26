@@ -90,6 +90,7 @@ export const update = mutation({
     institutionId: v.optional(v.union(v.id('institutions'), v.null())),
     visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
     expectedTotalLessons: v.optional(v.number()),
+    nextLessonScheduleText: v.optional(v.string()),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
@@ -97,6 +98,10 @@ export const update = mutation({
 
     const course = await ctx.db.get(id)
     if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+
+    if (fields.nextLessonScheduleText !== undefined && fields.nextLessonScheduleText.length > 200) {
+      throw new Error('Texto do cronograma não pode passar de 200 caracteres.')
+    }
 
     if (fields.passingScore !== undefined) {
       if (fields.passingScore < 70 || fields.passingScore > 100) {
@@ -187,8 +192,9 @@ export const markInProgress = mutation({
     id: v.id('courses'),
     creatorId: v.string(),
     expectedTotalLessons: v.optional(v.number()),
+    nextLessonScheduleText: v.optional(v.string()),
   },
-  handler: async (ctx, { id, creatorId, expectedTotalLessons }) => {
+  handler: async (ctx, { id, creatorId, expectedTotalLessons, nextLessonScheduleText }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
     ensureIdentityMatches(identity.subject, creatorId)
 
@@ -198,10 +204,14 @@ export const markInProgress = mutation({
     if (expectedTotalLessons !== undefined && expectedTotalLessons < 1) {
       throw new Error('Total previsto de aulas precisa ser pelo menos 1.')
     }
+    if (nextLessonScheduleText !== undefined && nextLessonScheduleText.length > 200) {
+      throw new Error('Texto do cronograma não pode passar de 200 caracteres.')
+    }
 
     await ctx.db.patch(id, {
       releaseStatus: 'in_progress',
       ...(expectedTotalLessons !== undefined ? { expectedTotalLessons } : {}),
+      ...(nextLessonScheduleText !== undefined ? { nextLessonScheduleText } : {}),
     })
   },
 })

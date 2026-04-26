@@ -21,6 +21,7 @@ import { BiblePanel, type BiblePanelInitialRef } from '@/components/BiblePanel'
 import { fetchChapter, type BibleVerse } from '@/lib/bible/api'
 import { DonateButton } from '@/components/donate/DonateButton'
 import { FlashcardsLessonSection } from '@/components/aula/FlashcardsLessonSection'
+import { CourseInDevelopmentNotice } from '@/components/aula/CourseInDevelopmentNotice'
 
 // ─── YouTube Player ───────────────────────────────────────────────────────────
 
@@ -2919,6 +2920,17 @@ export function AulaPage() {
               </Link>
             )}
           </div>
+
+          {/* 10. Curso em desenvolvimento (Caminho C) — somente na ultima aula
+               publicada de um curso em producao. Mensagem editorial + carrossel
+               de cursos recomendados (mesmo professor, depois mesma categoria). */}
+          {!nextLesson && course.releaseStatus === 'in_progress' ? (
+            <CourseInDevelopmentNotice
+              courseId={courseId as Id<'courses'>}
+              scheduleText={course.nextLessonScheduleText ?? null}
+              nextScheduledLessonAt={nextScheduledLesson?.publishAt ?? null}
+            />
+          ) : null}
         </div>
       </main>
 

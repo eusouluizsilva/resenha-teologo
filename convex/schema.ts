@@ -172,6 +172,12 @@ export default defineSchema({
     // ao aluno como "X/Y aulas" e usado para comunicar progresso real do curso.
     // Opcional; quando ausente a UI mostra apenas o número atual de aulas.
     expectedTotalLessons: v.optional(v.number()),
+    // Mensagem livre do criador sobre o cronograma das próximas aulas em curso
+    // 'in_progress'. Ex.: "Toda quarta e sábado", "Lançamentos quinzenais",
+    // "Aulas extras conforme demanda". Quando vazio, a UI cai para a frase
+    // padrão "Você será notificado quando uma nova aula sair". Apenas exibido
+    // ao aluno que já concluiu todas as aulas atualmente publicadas.
+    nextLessonScheduleText: v.optional(v.string()),
     // Média e contagem de avaliações denormalizadas (mantidas por
     // student.rateCourse). Catalog.listPublished lê em O(1) sem N+1 sobre
     // courseRatings. Quando ausente significa "ainda não recalculado" e a UI
