@@ -3854,3 +3854,61 @@ export const seedFromCanal = internalMutation({
     return { created, updated, total: SEED_POSTS.length }
   },
 })
+
+function asciiSlug(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/ç/g, 'c')
+}
+
+export const cleanupAccentedDuplicates = internalMutation({
+  args: { adminEmail: v.optional(v.string()), dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const adminEmail = (args.adminEmail ?? 'hello@resenhadoteologo.com').toLowerCase()
+    const author = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('email'), adminEmail))
+      .first()
+    if (!author) throw new Error(`Usuario admin nao encontrado: ${adminEmail}`)
+
+    const all = await ctx.db
+      .query('posts')
+      .withIndex('by_author', (q) => q.eq('authorUserId', author.clerkId))
+      .collect()
+
+    const buckets = new Map<string, typeof all>()
+    for (const p of all) {
+      const key = asciiSlug(p.slug)
+      const arr = buckets.get(key) ?? []
+      arr.push(p)
+      buckets.set(key, arr)
+    }
+
+    const toDelete: { id: typeof all[number]['_id']; slug: string }[] = []
+    for (const [, posts] of buckets) {
+      if (posts.length < 2) continue
+      for (const p of posts) {
+        if (p.slug !== asciiSlug(p.slug)) {
+          toDelete.push({ id: p._id, slug: p.slug })
+        }
+      }
+    }
+
+    if (args.dryRun) return { wouldDelete: toDelete.length, slugs: toDelete.map((d) => d.slug) }
+
+    let deleted = 0
+    for (const { id } of toDelete) {
+      const likes = await ctx.db.query('postLikes').withIndex('by_post', (q) => q.eq('postId', id)).collect()
+      for (const l of likes) await ctx.db.delete(l._id)
+      const shares = await ctx.db.query('postShares').withIndex('by_post', (q) => q.eq('postId', id)).collect()
+      for (const s of shares) await ctx.db.delete(s._id)
+      const comments = await ctx.db.query('postComments').withIndex('by_post', (q) => q.eq('postId', id)).collect()
+      for (const c of comments) await ctx.db.delete(c._id)
+      await ctx.db.delete(id)
+      deleted += 1
+    }
+    return { deleted, slugs: toDelete.map((d) => d.slug) }
+  },
+})
