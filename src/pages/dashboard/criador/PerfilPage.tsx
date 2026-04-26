@@ -935,6 +935,61 @@ export function PerfilPage() {
             {avatarError && <p className="mt-3 text-xs text-red-300">{avatarError}</p>}
           </div>
 
+          {/* Visibilidade do perfil publico, sempre visivel na visao geral */}
+          {handle && (
+            <div className={cn('p-5', brandPanelClass)}>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div
+                    className={cn(
+                      'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border',
+                      visibility === 'public'
+                        ? 'border-emerald-400/24 bg-emerald-400/10 text-emerald-300'
+                        : 'border-white/10 bg-white/[0.04] text-white/56',
+                    )}
+                  >
+                    {visibility === 'public' ? (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/36">
+                      Perfil publico
+                    </p>
+                    <p className="mt-1 text-base font-semibold text-white">
+                      {visibility === 'public' ? 'Visivel publicamente' : 'Nao listado'}
+                    </p>
+                    <p className="mt-1 text-xs text-white/48">
+                      {visibility === 'public'
+                        ? `Qualquer pessoa pode acessar resenhadoteologo.com/${handle}.`
+                        : 'Seu perfil existe mas nao aparece em buscas nem em listagens publicas.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:flex-shrink-0">
+                  <Toggle
+                    value={visibility === 'public'}
+                    onChange={(v) => {
+                      const next = v ? 'public' : 'unlisted'
+                      setVisibility(next)
+                      void updateVisibility({ visibility: next, showProgressPublicly: showProgress })
+                    }}
+                  />
+                  <span className="text-sm font-medium text-white/68">
+                    {visibility === 'public' ? 'Publico' : 'Privado'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Stats (se houver dados) */}
           {hasStats && (
             <div>

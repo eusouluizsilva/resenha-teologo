@@ -117,6 +117,18 @@ export function BlogPostPage() {
     <div className="min-h-screen bg-[#F7F5F2] text-[#111827]">
       <main className="pt-28 pb-24">
         <article className="mx-auto max-w-3xl px-5 md:px-8">
+          <div className="mb-6">
+            <Link
+              to="/blog"
+              className="inline-flex items-center gap-2 text-sm text-[#6B7280] transition-colors hover:text-[#F37E20]"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Voltar ao blog
+            </Link>
+          </div>
+
           <div className="mb-8">
             <Link to={`/blog/categoria/${post.categorySlug}`} className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F37E20] hover:underline">
               {post.categorySlug.replace(/-/g, ' ')}
