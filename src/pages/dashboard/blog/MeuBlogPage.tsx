@@ -5,6 +5,7 @@ import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
+import { useCurrentAppUser } from '@/lib/currentUser'
 import {
   DashboardEmptyState,
   DashboardPageShell,
@@ -40,6 +41,8 @@ function formatDate(ts: number | null) {
 export function MeuBlogPage() {
   const posts = useQuery(api.posts.listMine, {})
   const softDelete = useMutation(api.posts.softDeleteMine)
+  const { currentUser } = useCurrentAppUser()
+  const handle = currentUser?.handle ?? null
 
   const isLoading = posts === undefined
   const list = posts ?? []
@@ -94,7 +97,7 @@ export function MeuBlogPage() {
                 <DashboardSectionLabel>Em produção</DashboardSectionLabel>
                 <div className="grid gap-4 lg:grid-cols-2">
                   {drafts.map((p) => (
-                    <PostRow key={p._id} post={p} onDelete={handleDelete} />
+                    <PostRow key={p._id} post={p} handle={handle} onDelete={handleDelete} />
                   ))}
                 </div>
               </motion.section>
@@ -105,7 +108,7 @@ export function MeuBlogPage() {
                 <DashboardSectionLabel>Publicados</DashboardSectionLabel>
                 <div className="grid gap-4 lg:grid-cols-2">
                   {published.map((p) => (
-                    <PostRow key={p._id} post={p} onDelete={handleDelete} />
+                    <PostRow key={p._id} post={p} handle={handle} onDelete={handleDelete} />
                   ))}
                 </div>
               </motion.section>
@@ -120,6 +123,7 @@ export function MeuBlogPage() {
 type PostListItem = {
   _id: Id<'posts'>
   title: string
+  slug: string
   excerpt: string
   status: 'draft' | 'scheduled' | 'published' | 'unlisted' | 'removed'
   publishedAt: number | null
@@ -128,52 +132,94 @@ type PostListItem = {
   commentCount: number
   viewCount: number
   categorySlug: string
+  coverImageUrl: string | null
 }
 
-function PostRow({ post, onDelete }: { post: PostListItem; onDelete: (id: Id<'posts'>) => void }) {
+function PostRow({
+  post,
+  handle,
+  onDelete,
+}: {
+  post: PostListItem
+  handle: string | null
+  onDelete: (id: Id<'posts'>) => void
+}) {
+  const canViewLive = post.status === 'published' && handle
   return (
-    <div className={cn('p-5', brandPanelClass)}>
-      <div className="flex items-start justify-between gap-3">
-        <DashboardStatusPill tone={statusTone[post.status] ?? 'neutral'}>
-          {statusLabel[post.status] ?? post.status}
-        </DashboardStatusPill>
-        <span className="text-[11px] uppercase tracking-[0.16em] text-white/28">
-          {post.categorySlug.replace(/-/g, ' ')}
-        </span>
-      </div>
-
-      <h3 className="mt-4 font-display text-xl font-bold leading-tight text-white">{post.title}</h3>
-      <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/52">{post.excerpt}</p>
-
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-xl border border-white/8 bg-white/[0.03] py-2">
-          <p className="font-display text-base font-bold text-white">{post.viewCount.toLocaleString('pt-BR')}</p>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-white/28">Leituras</p>
+    <div className={cn('overflow-hidden p-0', brandPanelClass)}>
+      {post.coverImageUrl ? (
+        <div className="relative aspect-[16/7] w-full overflow-hidden bg-white/[0.04]">
+          <img
+            src={post.coverImageUrl}
+            alt={post.title}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
         </div>
-        <div className="rounded-xl border border-white/8 bg-white/[0.03] py-2">
-          <p className="font-display text-base font-bold text-white">{post.likeCount}</p>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-white/28">Curtidas</p>
+      ) : (
+        <div className="flex aspect-[16/7] w-full items-center justify-center bg-[linear-gradient(135deg,rgba(243,126,32,0.08)_0%,rgba(243,126,32,0.02)_100%)]">
+          <svg className="h-10 w-10 text-white/20" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
         </div>
-        <div className="rounded-xl border border-white/8 bg-white/[0.03] py-2">
-          <p className="font-display text-base font-bold text-white">{post.commentCount}</p>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-white/28">Comentários</p>
+      )}
+
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <DashboardStatusPill tone={statusTone[post.status] ?? 'neutral'}>
+            {statusLabel[post.status] ?? post.status}
+          </DashboardStatusPill>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-white/28">
+            {post.categorySlug.replace(/-/g, ' ')}
+          </span>
         </div>
-      </div>
 
-      <p className="mt-3 text-[11px] uppercase tracking-[0.14em] text-white/30">
-        {post.status === 'published' ? `Publicado em ${formatDate(post.publishedAt)}` : `Atualizado em ${formatDate(post.updatedAt)}`}
-      </p>
+        <h3 className="mt-4 font-display text-xl font-bold leading-tight text-white">{post.title}</h3>
+        <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/52">{post.excerpt}</p>
 
-      <div className="mt-4 flex gap-3">
-        <Link to={`/dashboard/blog/${post._id}`} className={cn('flex-1', brandSecondaryButtonClass)}>
-          Editar
-        </Link>
-        <button
-          onClick={() => onDelete(post._id)}
-          className="inline-flex items-center justify-center rounded-2xl border border-red-400/12 bg-red-400/6 px-4 py-3 text-sm font-semibold text-red-200 transition-colors duration-200 hover:bg-red-400/12"
-        >
-          Remover
-        </button>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] py-2">
+            <p className="font-display text-base font-bold text-white">{post.viewCount.toLocaleString('pt-BR')}</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-white/28">Leituras</p>
+          </div>
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] py-2">
+            <p className="font-display text-base font-bold text-white">{post.likeCount}</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-white/28">Curtidas</p>
+          </div>
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] py-2">
+            <p className="font-display text-base font-bold text-white">{post.commentCount}</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-white/28">Comentários</p>
+          </div>
+        </div>
+
+        <p className="mt-3 text-[11px] uppercase tracking-[0.14em] text-white/30">
+          {post.status === 'published' ? `Publicado em ${formatDate(post.publishedAt)}` : `Atualizado em ${formatDate(post.updatedAt)}`}
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link to={`/dashboard/blog/${post._id}`} className={cn('flex-1 min-w-[8rem]', brandSecondaryButtonClass)}>
+            Editar
+          </Link>
+          {canViewLive && (
+            <a
+              href={`/blog/${handle}/${post.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/10 px-4 py-3 text-sm font-semibold text-[#F2BD8A] transition-all hover:border-[#F37E20]/40 hover:bg-[#F37E20]/16 hover:text-white"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+              Ver artigo
+            </a>
+          )}
+          <button
+            onClick={() => onDelete(post._id)}
+            className="inline-flex items-center justify-center rounded-2xl border border-red-400/12 bg-red-400/6 px-4 py-3 text-sm font-semibold text-red-200 transition-colors duration-200 hover:bg-red-400/12"
+          >
+            Remover
+          </button>
+        </div>
       </div>
     </div>
   )

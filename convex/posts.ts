@@ -501,9 +501,9 @@ export const listMine = query({
       .withIndex('by_author', (q) => q.eq('authorUserId', identity.subject))
       .order('desc')
       .collect()
-    return rows
-      .filter((p) => p.status !== 'removed')
-      .map((p) => ({
+    const filtered = rows.filter((p) => p.status !== 'removed')
+    return await Promise.all(
+      filtered.map(async (p) => ({
         _id: p._id,
         title: p.title,
         slug: p.slug,
@@ -517,7 +517,11 @@ export const listMine = query({
         viewCount: p.viewCount,
         authorIdentity: p.authorIdentity,
         authorInstitutionId: p.authorInstitutionId ?? null,
-      }))
+        coverImageUrl: p.coverImageStorageId
+          ? await ctx.storage.getUrl(p.coverImageStorageId)
+          : null,
+      })),
+    )
   },
 })
 
