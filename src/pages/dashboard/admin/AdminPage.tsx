@@ -44,6 +44,214 @@ function StatTile({
   )
 }
 
+function formatNumber(n: number) {
+  return n.toLocaleString('pt-BR')
+}
+
+function formatDelta(current: number, prev: number) {
+  if (prev === 0) {
+    return current > 0 ? { label: 'novo período', positive: true } : { label: 'sem dados', positive: false }
+  }
+  const pct = ((current - prev) / prev) * 100
+  const sign = pct >= 0 ? '+' : ''
+  return {
+    label: `${sign}${pct.toFixed(0)}% vs período anterior`,
+    positive: pct >= 0,
+  }
+}
+
+type AnalyticsData = {
+  window: number
+  totalViews: number
+  totalViewsPrev: number
+  uniqueSessions: number
+  uniqueSessionsPrev: number
+  uniqueUsers: number
+  viewsByDay: { date: string; views: number; sessions: number }[]
+  topPages: { page: string; views: number }[]
+  topReferrers: { host: string; views: number }[]
+  deviceCounts: { mobile: number; desktop: number; tablet: number; unknown: number }
+}
+
+function Sparkline({ values, color = '#F37E20' }: { values: number[]; color?: string }) {
+  if (values.length === 0) return null
+  const max = Math.max(...values, 1)
+  const w = 100
+  const h = 28
+  const step = values.length > 1 ? w / (values.length - 1) : w
+  const points = values
+    .map((v, i) => `${(i * step).toFixed(2)},${(h - (v / max) * h).toFixed(2)}`)
+    .join(' ')
+  const areaPoints = `0,${h} ${points} ${w},${h}`
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-7 w-full">
+      <polygon points={areaPoints} fill={color} fillOpacity="0.12" />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MetricTile({
+  label,
+  value,
+  delta,
+  spark,
+}: {
+  label: string
+  value: string
+  delta?: { label: string; positive: boolean }
+  spark?: number[]
+}) {
+  return (
+    <div className={cn('p-5', brandPanelClass)}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/36">
+        {label}
+      </p>
+      <p className="mt-3 font-display text-3xl font-bold text-white">{value}</p>
+      {delta && (
+        <p
+          className={cn(
+            'mt-1 text-xs',
+            delta.positive ? 'text-emerald-300/80' : 'text-rose-300/80',
+          )}
+        >
+          {delta.label}
+        </p>
+      )}
+      {spark && spark.length > 1 && (
+        <div className="mt-3">
+          <Sparkline values={spark} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AnalyticsSection({ analytics }: { analytics: AnalyticsData | undefined }) {
+  if (analytics === undefined) {
+    return (
+      <div>
+        <DashboardSectionLabel>Analytics, últimos 30 dias</DashboardSectionLabel>
+        <div className={cn('mt-4 flex items-center justify-center p-10', brandPanelClass)}>
+          <div className="h-6 w-6 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+        </div>
+      </div>
+    )
+  }
+
+  const sparkViews = analytics.viewsByDay.map((d) => d.views)
+  const sparkSessions = analytics.viewsByDay.map((d) => d.sessions)
+  const totalDevices =
+    analytics.deviceCounts.mobile +
+    analytics.deviceCounts.desktop +
+    analytics.deviceCounts.tablet +
+    analytics.deviceCounts.unknown
+  const pct = (n: number) =>
+    totalDevices === 0 ? '0%' : `${Math.round((n / totalDevices) * 100)}%`
+
+  return (
+    <div>
+      <DashboardSectionLabel>Analytics, últimos 30 dias</DashboardSectionLabel>
+      <p className="mt-1 text-xs text-white/42">
+        Dados próprios coletados a cada navegação. Atualiza em tempo real conforme
+        o tráfego entra.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricTile
+          label="Pageviews"
+          value={formatNumber(analytics.totalViews)}
+          delta={formatDelta(analytics.totalViews, analytics.totalViewsPrev)}
+          spark={sparkViews}
+        />
+        <MetricTile
+          label="Sessões únicas"
+          value={formatNumber(analytics.uniqueSessions)}
+          delta={formatDelta(analytics.uniqueSessions, analytics.uniqueSessionsPrev)}
+          spark={sparkSessions}
+        />
+        <MetricTile
+          label="Usuários logados"
+          value={formatNumber(analytics.uniqueUsers)}
+        />
+        <MetricTile
+          label="Mobile vs desktop"
+          value={pct(analytics.deviceCounts.mobile)}
+          delta={{
+            label: `${pct(analytics.deviceCounts.desktop)} desktop · ${pct(analytics.deviceCounts.tablet)} tablet`,
+            positive: true,
+          }}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-6 lg:grid-cols-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/36">
+            Top páginas
+          </p>
+          <div className={cn('mt-3 divide-y divide-white/6', brandPanelClass)}>
+            {analytics.topPages.length === 0 ? (
+              <p className="p-5 text-sm text-white/42">Sem pageviews ainda.</p>
+            ) : (
+              analytics.topPages.map((p) => {
+                const max = analytics.topPages[0].views
+                const pct = (p.views / max) * 100
+                return (
+                  <div key={p.page} className="relative p-4">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-[#F37E20]/[0.06]"
+                      style={{ width: `${pct}%` }}
+                    />
+                    <div className="relative flex items-center justify-between gap-3">
+                      <p className="truncate font-mono text-xs text-white/80">{p.page}</p>
+                      <span className="flex-shrink-0 font-mono text-xs font-semibold text-white">
+                        {formatNumber(p.views)}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/36">
+            Top referrers
+          </p>
+          <div className={cn('mt-3 divide-y divide-white/6', brandPanelClass)}>
+            {analytics.topReferrers.length === 0 ? (
+              <p className="p-5 text-sm text-white/42">
+                Sem referrers ainda. Tráfego vem direto ou de mídias sociais via
+                app (sem header Referer).
+              </p>
+            ) : (
+              analytics.topReferrers.map((r) => {
+                const max = analytics.topReferrers[0].views
+                const pct = (r.views / max) * 100
+                return (
+                  <div key={r.host} className="relative p-4">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-[#F37E20]/[0.06]"
+                      style={{ width: `${pct}%` }}
+                    />
+                    <div className="relative flex items-center justify-between gap-3">
+                      <p className="truncate text-xs text-white/80">{r.host}</p>
+                      <span className="flex-shrink-0 font-mono text-xs font-semibold text-white">
+                        {formatNumber(r.views)}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AnalyticsCard({
   label,
   description,
@@ -88,6 +296,7 @@ export function AdminPage() {
   const stats = useQuery(api.admin.getStats, isAdmin ? {} : 'skip')
   const recentUsers = useQuery(api.admin.listRecentUsers, isAdmin ? {} : 'skip')
   const recentCourses = useQuery(api.admin.listRecentCourses, isAdmin ? {} : 'skip')
+  const analytics = useQuery(api.admin.getAnalytics, isAdmin ? { days: 30 } : 'skip')
 
   if (isAdmin === undefined) {
     return (
@@ -160,8 +369,10 @@ export function AdminPage() {
             </div>
           </div>
 
+          <AnalyticsSection analytics={analytics} />
+
           <div>
-            <DashboardSectionLabel>Tráfego e analytics</DashboardSectionLabel>
+            <DashboardSectionLabel>Plataformas externas</DashboardSectionLabel>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <AnalyticsCard
                 label="Google Analytics 4"

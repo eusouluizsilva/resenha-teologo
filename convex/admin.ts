@@ -78,6 +78,107 @@ export const getStats = query({
   },
 })
 
+// Métricas de tráfego internas, agregadas em memória sobre a tabela pageViews.
+// Usa o índice by_at pra recortar a janela temporal sem varrer tudo. Janela
+// padrão: 30d. Compara com a janela anterior de mesmo tamanho pra calcular
+// delta. Para escala futura (>1M views), migrar pra snapshot diário em cron.
+export const getAnalytics = query({
+  args: { days: v.optional(v.number()) },
+  handler: async (ctx, { days }) => {
+    await requireAdmin(ctx)
+
+    const window = days ?? 30
+    const now = Date.now()
+    const dayMs = 24 * 60 * 60 * 1000
+    const periodStart = now - window * dayMs
+    const prevPeriodStart = now - 2 * window * dayMs
+
+    const current = await ctx.db
+      .query('pageViews')
+      .withIndex('by_at', (q) => q.gte('at', periodStart))
+      .collect()
+
+    const previous = await ctx.db
+      .query('pageViews')
+      .withIndex('by_at', (q) => q.gte('at', prevPeriodStart).lt('at', periodStart))
+      .collect()
+
+    const totalViews = current.length
+    const totalViewsPrev = previous.length
+    const uniqueSessions = new Set(current.map((v) => v.sessionId)).size
+    const uniqueSessionsPrev = new Set(previous.map((v) => v.sessionId)).size
+    const uniqueUsers = new Set(
+      current.filter((v) => v.userId).map((v) => v.userId as string),
+    ).size
+
+    // Views por dia (array de {date: 'YYYY-MM-DD', views, sessions}).
+    const byDay = new Map<string, { views: number; sessions: Set<string> }>()
+    for (const v of current) {
+      const d = new Date(v.at)
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+      const existing = byDay.get(key) ?? { views: 0, sessions: new Set() }
+      existing.views += 1
+      existing.sessions.add(v.sessionId)
+      byDay.set(key, existing)
+    }
+    const viewsByDay = Array.from(byDay.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, x]) => ({ date, views: x.views, sessions: x.sessions.size }))
+
+    // Top 10 páginas por views.
+    const byPage = new Map<string, number>()
+    for (const v of current) {
+      byPage.set(v.page, (byPage.get(v.page) ?? 0) + 1)
+    }
+    const topPages = Array.from(byPage.entries())
+      .map(([page, views]) => ({ page, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10)
+
+    // Top 8 referrers (domínio extraído).
+    const byRef = new Map<string, number>()
+    for (const v of current) {
+      if (!v.referrer) continue
+      let host = ''
+      try {
+        host = new URL(v.referrer).hostname.replace(/^www\./, '')
+      } catch {
+        continue
+      }
+      if (!host) continue
+      // Filtra self-referrals da própria plataforma
+      if (host === 'resenhadoteologo.com') continue
+      byRef.set(host, (byRef.get(host) ?? 0) + 1)
+    }
+    const topReferrers = Array.from(byRef.entries())
+      .map(([host, views]) => ({ host, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 8)
+
+    // Breakdown por device.
+    const deviceCounts = { mobile: 0, desktop: 0, tablet: 0, unknown: 0 }
+    for (const v of current) {
+      if (v.device === 'mobile') deviceCounts.mobile += 1
+      else if (v.device === 'desktop') deviceCounts.desktop += 1
+      else if (v.device === 'tablet') deviceCounts.tablet += 1
+      else deviceCounts.unknown += 1
+    }
+
+    return {
+      window,
+      totalViews,
+      totalViewsPrev,
+      uniqueSessions,
+      uniqueSessionsPrev,
+      uniqueUsers,
+      viewsByDay,
+      topPages,
+      topReferrers,
+      deviceCounts,
+    }
+  },
+})
+
 // Lista os usuários mais recentes (últimos 50). Útil para o admin acompanhar
 // novos cadastros e bloquear contas suspeitas quando necessário.
 export const listRecentUsers = query({

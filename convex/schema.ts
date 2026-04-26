@@ -576,7 +576,16 @@ export default defineSchema({
     userId: v.optional(v.string()),
     sessionId: v.string(),
     at: v.number(),
-  }).index('by_creator_at', ['creatorId', 'at']),
+    // Adicionados em 2026-04-26 para o dashboard admin de analytics interno.
+    // Optional para compat com registros antigos.
+    referrer: v.optional(v.string()),
+    device: v.optional(
+      v.union(v.literal('mobile'), v.literal('desktop'), v.literal('tablet')),
+    ),
+  })
+    .index('by_creator_at', ['creatorId', 'at'])
+    .index('by_at', ['at'])
+    .index('by_page_at', ['page', 'at']),
 
   // ===== BLOG =====
   // Artigo publicável por qualquer usuário (aluno, criador, instituicao). A

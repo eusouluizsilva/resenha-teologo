@@ -13,8 +13,15 @@ export const logPageView = mutation({
     creatorId: v.optional(v.string()),
     courseId: v.optional(v.id('courses')),
     lessonId: v.optional(v.id('lessons')),
+    referrer: v.optional(v.string()),
+    device: v.optional(
+      v.union(v.literal('mobile'), v.literal('desktop'), v.literal('tablet')),
+    ),
   },
-  handler: async (ctx, { page, sessionId, creatorId, courseId, lessonId }) => {
+  handler: async (
+    ctx,
+    { page, sessionId, creatorId, courseId, lessonId, referrer, device },
+  ) => {
     const identity = await ctx.auth.getUserIdentity()
     await ctx.db.insert('pageViews', {
       page,
@@ -24,6 +31,8 @@ export const logPageView = mutation({
       lessonId,
       userId: identity?.subject,
       at: Date.now(),
+      referrer,
+      device,
     })
   },
 })

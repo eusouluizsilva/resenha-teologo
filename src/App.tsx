@@ -1,14 +1,17 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
+import { useMutation } from 'convex/react'
 import { AnimatePresence } from 'framer-motion'
 import { LandingPage } from '@/pages/LandingPage'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { CookieBanner } from '@/components/CookieBanner'
 import { useCurrentAppUser } from '@/lib/currentUser'
-import { trackPageView } from '@/lib/analytics'
+import { trackPageView, getSessionId } from '@/lib/analytics'
 import { trackMetaPageView } from '@/lib/metaPixel'
+import { detectDevice } from '@/lib/device'
+import { api } from '../convex/_generated/api'
 import type { UserFunction } from '@/lib/functions'
 
 // Code-splitting: rotas secundárias viram chunks sob demanda para manter o
@@ -270,17 +273,25 @@ function DashboardIndexPage() {
   )
 }
 
-// Dispara pageview no GA4 e no Meta Pixel a cada navegação SPA. A atribuição
-// por criador (CourseDetailPage, AulaPage) é feita dentro dessas páginas via
-// mutation logPageView, porque só elas conhecem o creatorId após carregar os
-// dados. O Meta Pixel já dispara o primeiro PageView no init (main.tsx); aqui
-// cobrimos as navegações subsequentes do React Router.
+// Dispara pageview no GA4, no Meta Pixel e no Convex (analytics interno) a
+// cada navegação SPA. A atribuição por criador (CourseDetailPage, AulaPage) é
+// feita dentro dessas páginas com creatorId/courseId/lessonId. Aqui cobrimos
+// só path/referrer/device para o dashboard admin global. logPageView falha
+// silenciosamente se Convex estiver offline.
 function RouteTracker() {
   const location = useLocation()
+  const logPageView = useMutation(api.analytics.logPageView)
   useEffect(() => {
-    trackPageView({ path: location.pathname + location.search })
+    const path = location.pathname + location.search
+    trackPageView({ path })
     trackMetaPageView()
-  }, [location.pathname, location.search])
+    logPageView({
+      page: path,
+      sessionId: getSessionId(),
+      referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+      device: detectDevice(),
+    }).catch(() => { /* silencioso */ })
+  }, [location.pathname, location.search, logPageView])
   return null
 }
 
