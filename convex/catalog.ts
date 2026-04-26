@@ -4,7 +4,9 @@ import { query } from './_generated/server'
 // Resolução pura de slug → id. Não retorna conteúdo do curso para caller
 // anônimo. Para detalhes públicos use getPublicByIdOrSlug; para o player
 // autenticado use student.getEnrolledCourse (ambos aplicam visibilidade
-// e enrollment).
+// e enrollment). Cursos institucionais só resolvem para membros ativos da
+// instituição vinculada (ou para o próprio criador), evitando enumeração de
+// slugs privados por anônimos.
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {
@@ -13,6 +15,22 @@ export const getBySlug = query({
       .withIndex('by_slug', (q) => q.eq('slug', slug))
       .unique()
     if (!course || !course.isPublished) return null
+
+    if (course.visibility === 'institution' && course.institutionId) {
+      const identity = await ctx.auth.getUserIdentity()
+      if (!identity) return null
+      const isCreator = identity.subject === course.creatorId
+      if (!isCreator) {
+        const membership = await ctx.db
+          .query('institutionMembers')
+          .withIndex('by_institution_user', (q) =>
+            q.eq('institutionId', course.institutionId!).eq('userId', identity.subject),
+          )
+          .unique()
+        if (!membership || membership.status === 'removido') return null
+      }
+    }
+
     return { _id: course._id, slug: course.slug ?? slug }
   },
 })
