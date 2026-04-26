@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { internal } from './_generated/api'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
 import { checkAndIssueCertificate } from './student'
@@ -223,8 +224,17 @@ export const markComplete = mutation({
       .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
 
+    const courseRef = course.slug ?? id
     for (const enrollment of enrollments) {
-      if (enrollment.certificateIssued) continue
+      if (!enrollment.certificateIssued) {
+        await ctx.runMutation(internal.notifications.pushInternal, {
+          userId: enrollment.studentId,
+          kind: 'course_marked_complete',
+          title: 'Curso finalizado',
+          body: `O curso "${course.title}" foi finalizado. Conclua as aulas restantes para receber seu certificado.`,
+          link: `/dashboard/meus-cursos/${courseRef}`,
+        })
+      }
       await checkAndIssueCertificate(ctx, enrollment.studentId, id, enrollment._id)
     }
   },

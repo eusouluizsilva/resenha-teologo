@@ -84,6 +84,8 @@ export const pushInternal = internalMutation({
       v.literal('post_comment_new'),
       v.literal('post_comment_reply'),
       v.literal('profile_followed'),
+      v.literal('course_marked_complete'),
+      v.literal('lesson_scheduled_published'),
     ),
     title: v.string(),
     body: v.optional(v.string()),

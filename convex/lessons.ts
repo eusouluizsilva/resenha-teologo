@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query, type MutationCtx } from './_generated/server'
+import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
@@ -188,6 +189,34 @@ export const update = mutation({
       updates.publishAt = rawPublishAt
     }
     await ctx.db.patch(id, updates)
+
+    // Quando uma aula que estava agendada (tinha publishAt) é publicada agora,
+    // notifica todos os matriculados do curso. Filtra por transição
+    // false→true para não disparar em edições subsequentes.
+    const wasUnpublished = !lesson.isPublished
+    const becamePublished = fields.isPublished === true
+    const wasScheduled = typeof lesson.publishAt === 'number'
+    if (wasUnpublished && becamePublished && wasScheduled) {
+      const course = await ctx.db.get(lesson.courseId)
+      if (course) {
+        const enrollments = await ctx.db
+          .query('enrollments')
+          .withIndex('by_courseId', (q) => q.eq('courseId', lesson.courseId))
+          .collect()
+        const courseRef = course.slug ?? course._id
+        const lessonRef = (fields.title ? toSlug(fields.title) : lesson.slug) ?? lesson._id
+        const lessonTitle = fields.title ?? lesson.title
+        for (const enrollment of enrollments) {
+          await ctx.runMutation(internal.notifications.pushInternal, {
+            userId: enrollment.studentId,
+            kind: 'lesson_scheduled_published',
+            title: 'Nova aula publicada',
+            body: `A aula "${lessonTitle}" foi publicada em "${course.title}".`,
+            link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
+          })
+        }
+      }
+    }
   },
 })
 
