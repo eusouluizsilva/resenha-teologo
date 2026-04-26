@@ -133,11 +133,13 @@ export const listByAuthor = query({
   },
   handler: async (ctx, args): Promise<PublicPostListItem[]> => {
     const limit = Math.min(args.limit ?? 12, 50)
+    // take(200) com buffer evita .collect() em autores prolíficos. Filtra
+    // status no servidor para nunca vazar draft/scheduled/removed.
     const rows = await ctx.db
       .query('posts')
       .withIndex('by_author', (q) => q.eq('authorUserId', args.authorUserId))
       .order('desc')
-      .collect()
+      .take(200)
     const published = rows
       .filter((p) => p.status === 'published')
       .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0))
@@ -447,16 +449,22 @@ export const publish = mutation({
           ? (await ctx.db.get(post.authorInstitutionId))?.name ?? author?.name ?? 'Autor'
           : author?.name ?? 'Autor'
 
-      for (const f of followers) {
-        if (!f.notifyArticles) continue
-        await ctx.runMutation(internal.notifications.pushInternal, {
-          userId: f.followerUserId,
-          kind: 'post_published',
-          title: `Novo artigo de ${authorName}`,
-          body: post.title,
-          link,
-        })
-      }
+      // Promise.all paraleliza a inserção das notificações para todos os
+      // seguidores ativos. Loop sequencial bloqueava a mutation com timeouts
+      // possíveis em autores com mais de uma centena de seguidores.
+      await Promise.all(
+        followers
+          .filter((f) => f.notifyArticles)
+          .map((f) =>
+            ctx.runMutation(internal.notifications.pushInternal, {
+              userId: f.followerUserId,
+              kind: 'post_published',
+              title: `Novo artigo de ${authorName}`,
+              body: post.title,
+              link,
+            }),
+          ),
+      )
     }
   },
 })

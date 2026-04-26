@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSignUp } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
@@ -108,6 +108,13 @@ export function RegisterPage() {
   const [step, setStep] = useState<'form' | 'verify'>('form')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const errorRef = useRef<HTMLParagraphElement | null>(null)
+
+  useEffect(() => {
+    if (!error || step !== 'form') return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    errorRef.current?.focus()
+  }, [error, step])
   const [selectedFunction, setSelectedFunction] = useState<UserFunction>(
     perfilHint ?? 'aluno',
   )
@@ -441,7 +448,13 @@ export function RegisterPage() {
         </label>
 
         {error && (
-          <p className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+          <p
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert"
+            aria-live="polite"
+            className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300 outline-none"
+          >
             {error}
           </p>
         )}
@@ -449,9 +462,19 @@ export function RegisterPage() {
         <button
           type="submit"
           disabled={loading || !form.termsAccepted}
-          className={cn(brandPrimaryButtonClass, 'w-full py-3.5')}
+          className={cn(brandPrimaryButtonClass, 'flex w-full items-center justify-center gap-2 py-3.5')}
         >
-          {loading ? 'Criando conta...' : 'Criar conta'}
+          {loading ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+              Criando conta...
+            </>
+          ) : (
+            'Criar conta'
+          )}
         </button>
 
         <Link

@@ -167,7 +167,6 @@ export const setOfficial = mutation({
 
 type PublicComment = {
   _id: Doc<'postComments'>['_id']
-  authorId: string
   authorName: string
   authorAvatarUrl: string | null
   authorRole: AuthorRole
@@ -179,16 +178,23 @@ type PublicComment = {
   editedAt: number | null
   deleted: boolean
   authorHandle: string | null
+  // isMine é resolvido no servidor a partir da identidade autenticada do
+  // caller. Anônimos sempre recebem false. Evita expor o clerkId do autor
+  // do comentário no payload público.
+  isMine: boolean
 }
 
-async function shapePublic(ctx: QueryCtx, c: Doc<'postComments'>): Promise<PublicComment> {
+async function shapePublic(
+  ctx: QueryCtx,
+  c: Doc<'postComments'>,
+  callerSubject: string | null,
+): Promise<PublicComment> {
   const u = await ctx.db
     .query('users')
     .withIndex('by_clerkId', (q) => q.eq('clerkId', c.authorId))
     .unique()
   return {
     _id: c._id,
-    authorId: c.authorId,
     authorName: c.authorName,
     authorAvatarUrl: c.authorAvatarUrl ?? null,
     authorRole: c.authorRole,
@@ -200,19 +206,23 @@ async function shapePublic(ctx: QueryCtx, c: Doc<'postComments'>): Promise<Publi
     editedAt: c.editedAt ?? null,
     deleted: !!c.deletedAt,
     authorHandle: u?.handle ?? null,
+    isMine: !!callerSubject && callerSubject === c.authorId,
   }
 }
 
-// Listagem pública. Não vaza email; apenas handle e dados públicos do autor.
+// Listagem pública. Não vaza email nem clerkId. authorHandle é o link público
+// para o perfil. isMine é derivado server-side a partir da identidade do caller.
 export const listByPost = query({
   args: { postId: v.id('posts') },
   handler: async (ctx, { postId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    const callerSubject = identity?.subject ?? null
     const all = await ctx.db
       .query('postComments')
       .withIndex('by_post', (q) => q.eq('postId', postId))
       .collect()
 
-    const shaped = await Promise.all(all.map((c) => shapePublic(ctx, c)))
+    const shaped = await Promise.all(all.map((c) => shapePublic(ctx, c, callerSubject)))
     const roots = shaped
       .filter((c) => !c.parentId)
       .sort((a, b) => a.createdAt - b.createdAt)

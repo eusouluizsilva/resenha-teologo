@@ -17,8 +17,10 @@ export const getByHandle = query({
       .withIndex('by_userId', (q) => q.eq('userId', user.clerkId))
       .collect()
 
+    // userId é o identificador público de criador (mesmo valor de
+     // courses.creatorId / posts.authorUserId). Não há tokens de sessão aqui.
     return {
-      clerkId: user.clerkId,
+      userId: user.clerkId,
       name: user.name,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
@@ -89,10 +91,12 @@ export const listCoursesByCreator = query({
 export const getProfileSpotlight = query({
   args: { authorUserId: v.string() },
   handler: async (ctx, { authorUserId }) => {
+    // take(200) limita carga com buffer suficiente para escolher o destaque.
     const posts = await ctx.db
       .query('posts')
       .withIndex('by_author', (q) => q.eq('authorUserId', authorUserId))
-      .collect()
+      .order('desc')
+      .take(200)
 
     const published = posts.filter((p) => p.status === 'published')
 

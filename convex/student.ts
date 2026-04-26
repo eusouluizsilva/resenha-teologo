@@ -638,6 +638,19 @@ export const rateCourse = mutation({
       })
     }
 
+    // Recalcula avg/contagem denormalizados no curso. Usado pelo catálogo
+    // para evitar N+1 sobre courseRatings em cada listagem.
+    const all = await ctx.db
+      .query('courseRatings')
+      .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+      .collect()
+    const count = all.length
+    const avg =
+      count > 0
+        ? Math.round((all.reduce((sum, r) => sum + r.stars, 0) / count) * 10) / 10
+        : 0
+    await ctx.db.patch(courseId, { avgRating: avg, ratingsCount: count })
+
     return { stars }
   },
 })

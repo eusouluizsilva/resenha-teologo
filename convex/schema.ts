@@ -172,6 +172,12 @@ export default defineSchema({
     // ao aluno como "X/Y aulas" e usado para comunicar progresso real do curso.
     // Opcional; quando ausente a UI mostra apenas o número atual de aulas.
     expectedTotalLessons: v.optional(v.number()),
+    // Média e contagem de avaliações denormalizadas (mantidas por
+    // student.rateCourse). Catalog.listPublished lê em O(1) sem N+1 sobre
+    // courseRatings. Quando ausente significa "ainda não recalculado" e a UI
+    // cai para "sem avaliações".
+    avgRating: v.optional(v.number()),
+    ratingsCount: v.optional(v.number()),
   })
     .index('by_creatorId', ['creatorId'])
     .index('by_published', ['isPublished'])
@@ -224,7 +230,10 @@ export default defineSchema({
     .index('by_courseId', ['courseId'])
     .index('by_moduleId', ['moduleId'])
     .index('by_creatorId', ['creatorId'])
-    .index('by_courseId_slug', ['courseId', 'slug']),
+    .index('by_courseId_slug', ['courseId', 'slug'])
+    // Index composto usado pelo cron de scheduled-publish: scan apenas dos
+    // candidatos (isPublished=false E publishAt definido) sem full-table scan.
+    .index('by_published_publishAt', ['isPublished', 'publishAt']),
 
   quizzes: defineTable({
     lessonId: v.id('lessons'),

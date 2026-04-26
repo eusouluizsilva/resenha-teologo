@@ -1,6 +1,10 @@
 import { v } from 'convex/values'
 import { query } from './_generated/server'
 
+// Resolução pura de slug → id. Não retorna conteúdo do curso para caller
+// anônimo. Para detalhes públicos use getPublicByIdOrSlug; para o player
+// autenticado use student.getEnrolledCourse (ambos aplicam visibilidade
+// e enrollment).
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {
@@ -8,7 +12,8 @@ export const getBySlug = query({
       .query('courses')
       .withIndex('by_slug', (q) => q.eq('slug', slug))
       .unique()
-    return course ?? null
+    if (!course || !course.isPublished) return null
+    return { _id: course._id, slug: course.slug ?? slug }
   },
 })
 
@@ -53,32 +58,30 @@ export const listPublished = query({
       courses = courses.filter((c) => (c.language ?? 'Português') === language)
     }
 
-    const result = await Promise.all(
-      courses.map(async (course) => {
-        const creator = await ctx.db
+    // Lookup de criadores deduplicado: um Convex query por criador único, não
+     // por curso. Antes este map disparava N queries de users + N queries de
+     // courseRatings. Ratings vêm denormalizados em course.avgRating /
+     // course.ratingsCount (mantidos por student.rateCourse).
+    const uniqueCreatorIds = Array.from(new Set(courses.map((c) => c.creatorId)))
+    const creators = await Promise.all(
+      uniqueCreatorIds.map((cid) =>
+        ctx.db
           .query('users')
-          .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
-          .unique()
-
-        const courseRatings = await ctx.db
-          .query('courseRatings')
-          .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
-          .collect()
-
-        const ratingsCount = courseRatings.length
-        const avgRating =
-          ratingsCount > 0
-            ? Math.round((courseRatings.reduce((sum, r) => sum + r.stars, 0) / ratingsCount) * 10) / 10
-            : null
-
-        return {
-          ...course,
-          creatorName: creator?.name ?? 'Professor',
-          ratingsCount,
-          avgRating,
-        }
-      })
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', cid))
+          .unique(),
+      ),
     )
+    const creatorByClerkId = new Map<string, string>()
+    creators.forEach((u, i) => {
+      if (u?.name) creatorByClerkId.set(uniqueCreatorIds[i], u.name)
+    })
+
+    const result = courses.map((course) => ({
+      ...course,
+      creatorName: creatorByClerkId.get(course.creatorId) ?? 'Professor',
+      ratingsCount: course.ratingsCount ?? 0,
+      avgRating: (course.ratingsCount ?? 0) > 0 ? course.avgRating ?? null : null,
+    }))
 
     return result
   },

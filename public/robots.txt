@@ -4,8 +4,10 @@ Allow: /
 Disallow: /dashboard
 Disallow: /dashboard/
 Disallow: /entrar
-Disallow: /criar-conta
-Disallow: /aula/
+Disallow: /cadastro
+Disallow: /sso-callback
+Disallow: /verificar/
+Disallow: /convite/
 Disallow: /api/
 
-Sitemap: https://resenhadoteologo.com/sitemap.xml
+Sitemap: https://resenhadoteologo.com/sitemap-index.xml

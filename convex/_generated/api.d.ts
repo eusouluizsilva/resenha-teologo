@@ -50,6 +50,7 @@ import type * as ratings from "../ratings.js";
 import type * as reengagement from "../reengagement.js";
 import type * as seedBlog from "../seedBlog.js";
 import type * as seedCourses from "../seedCourses.js";
+import type * as sitemapData from "../sitemapData.js";
 import type * as student from "../student.js";
 import type * as testimonials from "../testimonials.js";
 import type * as userFunctions from "../userFunctions.js";
@@ -104,6 +105,7 @@ declare const fullApi: ApiFromModules<{
   reengagement: typeof reengagement;
   seedBlog: typeof seedBlog;
   seedCourses: typeof seedCourses;
+  sitemapData: typeof sitemapData;
   student: typeof student;
   testimonials: typeof testimonials;
   userFunctions: typeof userFunctions;

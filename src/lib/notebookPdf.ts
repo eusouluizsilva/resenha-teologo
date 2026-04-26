@@ -1,5 +1,3 @@
-import jsPDF from 'jspdf'
-
 type NotebookEntry = {
   lessonTitle: string
   courseTitle: string
@@ -21,7 +19,9 @@ function formatDate(ts: number) {
   }).format(new Date(ts))
 }
 
-export function downloadNotebookPdf(data: NotebookPdfData) {
+export async function downloadNotebookPdf(data: NotebookPdfData) {
+  // jsPDF é ~400KB minificado, dynamic-import evita carregar no bundle inicial.
+  const { default: jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()

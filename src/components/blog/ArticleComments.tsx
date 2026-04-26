@@ -181,7 +181,7 @@ function CommentRow({
 }: CommentRowProps) {
   const [isEditing, setEditing] = useState(false)
   const [draft, setDraft] = useState(comment.text)
-  const isMine = currentUserId === comment.authorId
+  const isMine = comment.isMine
   const isPostOwner = currentUserId === postAuthorUserId
   const isReply = !!comment.parentId
 

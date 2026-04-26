@@ -81,7 +81,7 @@ function NotebookDetail({ notebookId, notebookTitle, studentName }: { notebookId
 
   function handleExport() {
     if (!entries || entries.length === 0) return
-    downloadNotebookPdf({
+    void downloadNotebookPdf({
       notebookTitle,
       studentName,
       entries: entries.map((e) => ({

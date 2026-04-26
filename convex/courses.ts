@@ -225,16 +225,22 @@ export const markComplete = mutation({
       .collect()
 
     const courseRef = course.slug ?? id
+    // Notificações em paralelo. checkAndIssueCertificate continua sequencial
+    // pois faz writes no mesmo enrollment e dispara fluxos secundários.
+    await Promise.all(
+      enrollments
+        .filter((enrollment) => !enrollment.certificateIssued)
+        .map((enrollment) =>
+          ctx.runMutation(internal.notifications.pushInternal, {
+            userId: enrollment.studentId,
+            kind: 'course_marked_complete',
+            title: 'Curso finalizado',
+            body: `O curso "${course.title}" foi finalizado. Conclua as aulas restantes para receber seu certificado.`,
+            link: `/dashboard/meus-cursos/${courseRef}`,
+          }),
+        ),
+    )
     for (const enrollment of enrollments) {
-      if (!enrollment.certificateIssued) {
-        await ctx.runMutation(internal.notifications.pushInternal, {
-          userId: enrollment.studentId,
-          kind: 'course_marked_complete',
-          title: 'Curso finalizado',
-          body: `O curso "${course.title}" foi finalizado. Conclua as aulas restantes para receber seu certificado.`,
-          link: `/dashboard/meus-cursos/${courseRef}`,
-        })
-      }
       await checkAndIssueCertificate(ctx, enrollment.studentId, id, enrollment._id)
     }
   },
@@ -254,22 +260,22 @@ export const remove = mutation({
       .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
 
-    for (const lesson of lessons) {
-      const quiz = await ctx.db
-        .query('quizzes')
-        .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
-        .first()
-      if (quiz) await ctx.db.delete(quiz._id)
-      await ctx.db.delete(lesson._id)
-    }
+    await Promise.all(
+      lessons.map(async (lesson) => {
+        const quiz = await ctx.db
+          .query('quizzes')
+          .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
+          .first()
+        if (quiz) await ctx.db.delete(quiz._id)
+        await ctx.db.delete(lesson._id)
+      }),
+    )
 
     const modules = await ctx.db
       .query('modules')
       .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
-    for (const mod of modules) {
-      await ctx.db.delete(mod._id)
-    }
+    await Promise.all(modules.map((mod) => ctx.db.delete(mod._id)))
 
     await ctx.db.delete(id)
   },

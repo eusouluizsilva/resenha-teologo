@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { useAuth } from '@clerk/clerk-react'
@@ -6,6 +6,10 @@ import { api } from '../../../convex/_generated/api'
 import { cn, brandPrimaryButtonClass, brandInputClass } from '@/lib/brand'
 import { FollowButton } from '@/components/blog/FollowButton'
 import { DonateButton } from '@/components/donate/DonateButton'
+import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+
+const PROFILE_ORIGIN =
+  typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
 
 function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
   return (
@@ -241,43 +245,98 @@ export function PublicProfilePage() {
   const profile = useQuery(api.publicProfiles.getByHandle, { handle: handle ?? '' })
   const stats = useQuery(
     api.publicProfiles.getPublicStats,
-    profile ? { userId: profile.clerkId } : 'skip'
+    profile ? { userId: profile.userId } : 'skip'
   )
   const testimonials = useQuery(
     api.testimonials.listApproved,
-    profile ? { profileUserId: profile.clerkId } : 'skip'
+    profile ? { profileUserId: profile.userId } : 'skip'
   )
   const ratingData = useQuery(
     api.ratings.getAverage,
-    profile ? { profileUserId: profile.clerkId } : 'skip'
+    profile ? { profileUserId: profile.userId } : 'skip'
   )
   const myRating = useQuery(
     api.ratings.getMyRating,
-    profile && isSignedIn ? { profileUserId: profile.clerkId } : 'skip'
+    profile && isSignedIn ? { profileUserId: profile.userId } : 'skip'
   )
   const articles = useQuery(
     api.posts.listByAuthor,
-    profile ? { authorUserId: profile.clerkId, limit: 50 } : 'skip'
+    profile ? { authorUserId: profile.userId, limit: 50 } : 'skip'
   )
   const courses = useQuery(
     api.publicProfiles.listCoursesByCreator,
-    profile ? { authorUserId: profile.clerkId } : 'skip'
+    profile ? { authorUserId: profile.userId } : 'skip'
   )
   const spotlight = useQuery(
     api.publicProfiles.getProfileSpotlight,
-    profile ? { authorUserId: profile.clerkId } : 'skip'
+    profile ? { authorUserId: profile.userId } : 'skip'
   )
 
   const [activeTab, setActiveTab] = useState<'sobre' | 'cursos' | 'artigos'>('sobre')
 
-  useEffect(() => {
-    if (!profile) return
-    const previous = document.title
-    document.title = `${profile.name ?? profile.handle ?? 'Perfil'}, Resenha do Teólogo`
-    return () => {
-      document.title = previous
-    }
-  }, [profile])
+  const profileUrl = `${PROFILE_ORIGIN}/${handle ?? ''}`
+  const profileTitle = profile
+    ? `${profile.name ?? profile.handle ?? 'Perfil'}, Resenha do Teólogo`
+    : 'Perfil, Resenha do Teólogo'
+  const profileDescription = profile
+    ? profile.bio?.slice(0, 200) ??
+      `Perfil de ${profile.name} na Resenha do Teólogo. Cursos gratuitos e artigos sobre teologia.`
+    : 'Perfil público na Resenha do Teólogo.'
+
+  useSeo({
+    title: profileTitle,
+    description: profileDescription,
+    url: profileUrl,
+    image: profile?.avatarUrl ?? null,
+    imageAlt: profile ? `Foto de ${profile.name}` : null,
+    type: 'website',
+    authorName: profile?.name ?? null,
+  })
+
+  useBreadcrumbJsonLd(
+    profile
+      ? [
+          { name: 'Início', url: `${PROFILE_ORIGIN}/` },
+          { name: profile.name, url: profileUrl },
+        ]
+      : null,
+  )
+
+  useJsonLd(
+    profile
+      ? (() => {
+          const isInstitution = profile.functions.includes('instituicao')
+          const sameAs: string[] = []
+          if (profile.website) sameAs.push(profile.website)
+          if (profile.youtubeChannel) sameAs.push(profile.youtubeChannel)
+          if (profile.instagram)
+            sameAs.push(`https://instagram.com/${profile.instagram.replace('@', '')}`)
+          if (profile.facebook) sameAs.push(profile.facebook)
+          if (profile.linkedin) sameAs.push(profile.linkedin)
+          if (profile.twitter)
+            sameAs.push(`https://twitter.com/${profile.twitter.replace('@', '')}`)
+
+          const base: Record<string, unknown> = {
+            '@context': 'https://schema.org',
+            '@type': isInstitution ? 'Organization' : 'Person',
+            name: profile.name,
+            url: profileUrl,
+            description: profile.bio ?? undefined,
+          }
+          if (profile.avatarUrl) base.image = profile.avatarUrl
+          if (sameAs.length > 0) base.sameAs = sameAs
+          if (!isInstitution && profile.functions.includes('criador')) {
+            base.jobTitle = 'Professor de teologia'
+            base.affiliation = {
+              '@type': 'EducationalOrganization',
+              name: 'Resenha do Teólogo',
+              url: `${PROFILE_ORIGIN}/`,
+            }
+          }
+          return base
+        })()
+      : null,
+  )
 
   if (profile === undefined) {
     return (
@@ -379,7 +438,7 @@ export function PublicProfilePage() {
           )}
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <FollowButton authorUserId={profile.clerkId} authorName={profile.name} tone="dark" />
+            <FollowButton authorUserId={profile.userId} authorName={profile.name} tone="dark" />
             <DonateButton tone="dark" variant="inline" />
           </div>
 

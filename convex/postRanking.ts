@@ -226,16 +226,19 @@ export const runScheduledPublish = internalMutation({
         post.authorIdentity === 'instituicao' && post.authorInstitutionId
           ? (await ctx.db.get(post.authorInstitutionId))?.name ?? author?.name ?? 'Autor'
           : author?.name ?? 'Autor'
-      for (const f of followers) {
-        if (!f.notifyArticles) continue
-        await ctx.runMutation(internal.notifications.pushInternal, {
-          userId: f.followerUserId,
-          kind: 'post_published',
-          title: `Novo artigo de ${authorName}`,
-          body: post.title,
-          link,
-        })
-      }
+      await Promise.all(
+        followers
+          .filter((f) => f.notifyArticles)
+          .map((f) =>
+            ctx.runMutation(internal.notifications.pushInternal, {
+              userId: f.followerUserId,
+              kind: 'post_published',
+              title: `Novo artigo de ${authorName}`,
+              body: post.title,
+              link,
+            }),
+          ),
+      )
     }
   },
 })

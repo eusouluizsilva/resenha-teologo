@@ -33,4 +33,13 @@ crons.interval(
   internal.postRanking.runScheduledPublish,
 )
 
+// Scheduled-publish runner para aulas (lessons.publishAt). Mesmo intervalo;
+// flippa isPublished=false → true quando publishAt vence e notifica
+// matriculados. Espelha o pattern dos posts.
+crons.interval(
+  'lesson-scheduled-publish',
+  { minutes: 5 },
+  internal.lessons.runScheduledPublish,
+)
+
 export default crons

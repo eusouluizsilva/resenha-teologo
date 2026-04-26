@@ -4,7 +4,6 @@
 // criador, data e um código de verificação derivado do enrollmentId (primeiros
 // 16 hex chars em maiúsculo) para quem quiser conferir autenticidade no futuro.
 
-import jsPDF from 'jspdf'
 import QRCode from 'qrcode'
 
 type CertificateData = {
@@ -25,6 +24,8 @@ function formatDate(ts: number): string {
 }
 
 export async function downloadCertificatePdf(data: CertificateData) {
+  // jsPDF é ~400KB minificado, dynamic-import evita carregar no bundle inicial.
+  const { default: jsPDF } = await import('jspdf')
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',

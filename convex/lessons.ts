@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation, query, type MutationCtx } from './_generated/server'
+import { mutation, query, internalMutation, type MutationCtx } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
@@ -206,29 +206,79 @@ export const update = mutation({
         const courseRef = course.slug ?? course._id
         const lessonRef = (fields.title ? toSlug(fields.title) : lesson.slug) ?? lesson._id
         const lessonTitle = fields.title ?? lesson.title
-        for (const enrollment of enrollments) {
-          await ctx.runMutation(internal.notifications.pushInternal, {
-            userId: enrollment.studentId,
-            kind: 'lesson_scheduled_published',
-            title: 'Nova aula publicada',
-            body: `A aula "${lessonTitle}" foi publicada em "${course.title}".`,
-            link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
-          })
-        }
+        // Promise.all dispara as inserções em paralelo. Antes era loop
+        // sequencial: 100 alunos = 100 round-trips encadeados na mutation.
+        await Promise.all(
+          enrollments.map((enrollment) =>
+            ctx.runMutation(internal.notifications.pushInternal, {
+              userId: enrollment.studentId,
+              kind: 'lesson_scheduled_published',
+              title: 'Nova aula publicada',
+              body: `A aula "${lessonTitle}" foi publicada em "${course.title}".`,
+              link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
+            }),
+          ),
+        )
       }
     }
   },
 })
 
-export const generateLessonSlugs = mutation({
+// Cron: a cada 5 minutos, varre aulas com publishAt vencido (e ainda em
+// rascunho) e publica automaticamente. Notifica matriculados em paralelo.
+// Tolerância: até 5 min de atraso por design. Espelha o pattern de
+// posts.runScheduledPublish.
+export const runScheduledPublish = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now()
+    const candidates = await ctx.db
+      .query('lessons')
+      .withIndex('by_published_publishAt', (q) =>
+        q.eq('isPublished', false).lte('publishAt', now),
+      )
+      .take(50)
+
+    for (const lesson of candidates) {
+      if (typeof lesson.publishAt !== 'number') continue
+      if (lesson.publishAt > now) continue
+
+      await ctx.db.patch(lesson._id, { isPublished: true })
+
+      const course = await ctx.db.get(lesson.courseId)
+      if (!course) continue
+      const enrollments = await ctx.db
+        .query('enrollments')
+        .withIndex('by_courseId', (q) => q.eq('courseId', lesson.courseId))
+        .collect()
+      const courseRef = course.slug ?? course._id
+      const lessonRef = lesson.slug ?? lesson._id
+      await Promise.all(
+        enrollments.map((enrollment) =>
+          ctx.runMutation(internal.notifications.pushInternal, {
+            userId: enrollment.studentId,
+            kind: 'lesson_scheduled_published',
+            title: 'Nova aula publicada',
+            body: `A aula "${lesson.title}" foi publicada em "${course.title}".`,
+            link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
+          }),
+        ),
+      )
+    }
+  },
+})
+
+// Migração one-shot: gera slug para aulas legadas sem slug. Internal-only,
+// não exposta ao cliente. Rodar via `npx convex run lessons:generateLessonSlugs`.
+export const generateLessonSlugs = internalMutation({
   args: {},
   handler: async (ctx) => {
     const lessons = await ctx.db.query('lessons').collect()
-    for (const lesson of lessons) {
-      if (!lesson.slug) {
-        await ctx.db.patch(lesson._id, { slug: toSlug(lesson.title) })
-      }
-    }
+    await Promise.all(
+      lessons
+        .filter((l) => !l.slug)
+        .map((l) => ctx.db.patch(l._id, { slug: toSlug(l.title) })),
+    )
   },
 })
 

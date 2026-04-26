@@ -101,14 +101,17 @@ export const pushInternal = internalMutation({
       createdAt: Date.now(),
     })
 
-    const all = await ctx.db
+    // Poda: lê apenas MAX_PER_USER + 32 (buffer pequeno) e apaga só o excesso
+    // mais antigo. Antes era .collect() da tabela inteira do usuário a cada
+    // inserção, custo O(N) onde N cresce sem limite até a poda.
+    const recent = await ctx.db
       .query('notifications')
       .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .order('desc')
-      .collect()
-    if (all.length > MAX_PER_USER) {
-      const toDelete = all.slice(MAX_PER_USER)
-      for (const row of toDelete) await ctx.db.delete(row._id)
+      .take(MAX_PER_USER + 32)
+    if (recent.length > MAX_PER_USER) {
+      const toDelete = recent.slice(MAX_PER_USER)
+      await Promise.all(toDelete.map((row) => ctx.db.delete(row._id)))
     }
   },
 })
