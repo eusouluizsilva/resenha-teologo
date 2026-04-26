@@ -1991,13 +1991,13 @@ A historia do gadareno revela quatro marcas do encontro real com Jesus. As treva
 Se nenhuma dessas marcas aparece na sua vida, talvez valha a pena perguntar se o encontro foi real ou se foi apenas uma adesão cultural a algo que tem o nome de Jesus, mas não tem o poder dEle.
 
 O endemoniado não mediu palavras na sua testemunha. Falou em todo lugar. Foi visto por todos. E todos se admiravam. Que essa seja a marca do seu encontro também. Não um cristianismo discreto, decorativo, encaixado entre os porcos. Um cristianismo que rompeu correntes, expos sujeira e correu para contar o que viu.`,
-    categorySlug: `Bíblia`,
+    categorySlug: `biblia`,
     tags: ["evangelho de marcos", "libertação", "encontro com jesus", "testemunho"],
     source: `11_encontro_com_jesus_endemoniado_gadareno.txt`,
   },
   {
     title: `Macrotumia: a paciência que prova que você tem o Espírito Santo`,
-    slug: `paciência-macrotumia-marca-do-cristão`,
+    slug: `paciencia-macrotumia-marca-do-cristao`,
     excerpt: `Paulo lista paciência entre os frutos do Espírito. Mas a palavra grega original revela algo que mudaria seu jeito de medir maturidade espiritual.`,
     bodyMarkdown: `Em Galatas 5, Paulo apresenta duas listas. De um lado, as obras da carne: imoralidade, idolatria, inimizades, ciumes, iras. Do outro, o fruto do Espírito: amor, alegria, paz, longanimidade, benignidade, bondade, fidelidade, mansidão, dominio próprio.
 
@@ -2035,7 +2035,7 @@ Existe um teste rápido para descobrir o idolo do seu coração. Pergunte: o que
 
 Sua reputação? Talvez reputação seja um idolo. Seu dinheiro? Talvez dinheiro seja um idolo. Seus planos atrapalhados? Talvez controle seja um idolo. Sua imagem questionada? Talvez aprovação seja um idolo.
 
-A impaciência e um sintoma. A doenca e algo no seu coração que você não entregou para Deus. Algo que você protege como se fosse vida. E quando alguém ameaca essa coisa, você explode.
+A impaciência é um sintoma. A doenca e algo no seu coração que você não entregou para Deus. Algo que você protege como se fosse vida. E quando alguém ameaca essa coisa, você explode.
 
 Por isso a solução para impaciência não é técnica de respiração. E morte. Paulo escreveu em Galatas 2:20: "Estou crucificado com Cristo. Logo, já não sou eu quem vive, mas Cristo vive em mim".
 
@@ -2047,7 +2047,7 @@ A primeira morte e abandono do trono. Você não está no controle. Cristo está
 
 A segunda morte e renomear sua identidade. Você não é mais o que você era. A reação do velho homem não é mais a sua reação. Quando você age por pavio curto, você está vestindo uma roupa que não serve mais.
 
-A terceira morte e o exercicio diário. Macrotumia não aparece em uma noite. Aparece em mil pequenas oportunidades de explodir e não explodir. Cada engarrafamento, cada filho irritante, cada injustiça no trabalho e treino. Cada vez que você escolhe o longo animo, o musculo cresce.
+A terceira morte é o exercicio diário. Macrotumia não aparece em uma noite. Aparece em mil pequenas oportunidades de explodir e não explodir. Cada engarrafamento, cada filho irritante, cada injustiça no trabalho e treino. Cada vez que você escolhe o longo animo, o musculo cresce.
 
 ## A paciência como golpe
 
@@ -2055,7 +2055,7 @@ Existe uma frase que muda tudo: o golpe mais forte que você pode dar no seu ini
 
 Quando você devolve mansidão para quem te agrediu, você desarma a batalha. Você não perdeu. Você venceu de um jeito que o agressor não consegue compreender. Porque a lógica da carne não processa macrotumia. Só o Espírito explica.
 
-Quando alguém te ataca e você, em vez de revidar, ora pelo agressor, você está provando que tem o Espírito. E não é você quem está orando. E o Espírito orando atraves de você. E a natureza de Deus, que é longanimo, fluindo do Pai por Cristo até você, e de você para o mundo.
+Quando alguém te ataca e você, em vez de revidar, ora pelo agressor, você está provando que tem o Espírito. E não é você quem está orando. E o Espírito orando atraves de você. E a natureza de Deus, que e longanimo, fluindo do Pai por Cristo até você, e de você para o mundo.
 
 A pergunta não é: você tem paciência? A pergunta é: o Espírito tem espaco em você? Porque onde o Espírito reina, paciência aparece sem esforco. Como fruto.`,
     categorySlug: `vida-crista`,
@@ -2064,7 +2064,7 @@ A pergunta não é: você tem paciência? A pergunta é: o Espírito tem espaco 
   },
   {
     title: `Amor não é moeda de troca: a marca real do discípulo`,
-    slug: `amor-não-e-moeda-de-troca`,
+    slug: `amor-nao-e-moeda-de-troca`,
     excerpt: `Jesus disse que o mundo reconheceria seus discípulos pelo amor. Mas o amor que Ele descreveu e radicalmente diferente do que aprendemos a chamar de amor.`,
     bodyMarkdown: `Em João 13, Jesus deixa um mandamento novo. "Amém-se uns aos outros como eu os amei. Com isso todos saberão que vocês são meus discípulos". Repare na sequência. Não disse que o mundo reconheceria pelos milagres. Nem pelo conhecimento bíblico. Nem pelos jejuns. Pelo amor.
 
@@ -2078,9 +2078,9 @@ Jesus deixou isso claro em Mateus 5: "Vocês ouviram que foi dito: ame seu próx
 
 Se você só ama quem te ama, você não está amando como Deus ama. Esta apenas trocando. Até publicano e pagão fazem isso. O amor cristão não é resposta ao merecimento do outro. E natureza que sai de você porque a vida divina está dentro de você.
 
-Pense em uma macieira. Ela não se esforca para dar maca. Ela da maca porque é macieira. O fruto e a expressão da natureza. Galatas 5 chama amor de "fruto do Espírito" exatamente por isso. Quando o Espírito habita em você, o amor não é tarefa. E natureza.
+Pense em uma macieira. Ela não se esforca para dar maca. Ela da maca porque e macieira. O fruto é a expressão da natureza. Galatas 5 chama amor de "fruto do Espírito" exatamente por isso. Quando o Espírito habita em você, o amor não é tarefa. E natureza.
 
-Jesus na cruz e a prova. O acoite tirava sangue do seu corpo, mas o que saia da boca era amor. "Pai, perdoa-lhes". Por que? Porque dor não tira de você o que você não tem. Tira o que você tem. Se debaixo do acoite saia perdão, era porque dentro dEle havia perdão.
+Jesus na cruz é a prova. O acoite tirava sangue do seu corpo, mas o que saia da boca era amor. "Pai, perdoa-lhes". Por que? Porque dor não tira de você o que você não tem. Tira o que você tem. Se debaixo do acoite saia perdão, era porque dentro dEle havia perdão.
 
 ## O próximo não é quem você escolhe
 
@@ -2088,7 +2088,7 @@ Jesus condicionou o amor a uma palavra: próximo. Ame o seu próximo. Mas qual e
 
 Quem entrou no seu raio de ação na última semana e seu próximo. O vendedor mal humorado da padaria, seu próximo. O motorista que te fechou no transito, seu próximo. O colega de trabalho que você não gosta, seu próximo. O parente que te decepcionou, seu próximo.
 
-E o próximo não precisa ser merecedor. Só precisa estar próximo. Esse e o pré-requisito único para amar.
+E o próximo não precisa ser merecedor. Só precisa estar próximo. Esse é o pré-requisito único para amar.
 
 ## A marca esquecida
 
@@ -2096,7 +2096,7 @@ Quando o mundo pensa em "crente" hoje, qual e a primeira palavra que vem? Provav
 
 Quase nunca a primeira palavra é "amor".
 
-E essa e a tragedia. Jesus deu uma marca, e nos trocamos por outra. Trocamos amor por ética de aparência. Trocamos amor por discurso político. Trocamos amor por defesa de doutrina. Tudo isso pode estar certo, mas se não houver amor, nada disso identifica você como discípulo.
+E essa é a tragedia. Jesus deu uma marca, e nos trocamos por outra. Trocamos amor por ética de aparência. Trocamos amor por discurso político. Trocamos amor por defesa de doutrina. Tudo isso pode estar certo, mas se não houver amor, nada disso identifica você como discípulo.
 
 Billy Graham resumiu: nos somos as Biblias que o mundo lê. Nos somos os sermoes que o mundo presta atenção. Se a única Bíblia que aquele seu vizinho já leu e você, qual evangelho ele está lendo? Um evangelho de amor que se sacrifica? Ou um evangelho de moralismo que se distancia?
 
@@ -2114,7 +2114,7 @@ A maior parte das relações humanas se quebra porque cada lado conta os direito
 
 ## A pessoa, não o conceito
 
-Por fim, amor não é filosofia. Amor e uma pessoa. João escreveu: "Deus é amor". Não "Deus é amoroso". Deus é amor. A própria definição de amor é Deus mesmo. Jesus encarnado e o dicionario do amor.
+Por fim, amor não é filosofia. Amor é uma pessoa. João escreveu: "Deus e amor". Não "Deus e amoroso". Deus e amor. A própria definição de amor é Deus mesmo. Jesus encarnado é o dicionario do amor.
 
 Por isso a referência para amar é Jesus. Quando você não sabe se está amando direito, pergunte: e parecido com o jeito que Jesus amou? Se for, e amor. Se não for, não é amor, importa o quanto você chame de amor.
 
@@ -2149,11 +2149,11 @@ Querem ser crentes sem morar na cidade. Querem ser membros sem entrar na batalha
 
 A solução é contada em duas etapas. Primeiro, alguns se ofereceram voluntariamente. Levantaram a mão. Disseram: eu vou. Tenho casa boa em outro lugar, mas eu vou para Jerusalém porque a cidade precisa de mim.
 
-Esses são os Joaquins, os Calebes, os Estevaos. Pessoas que olham para o vazio da casa de Deus é dizem: eu fico. Mesmo que custe. Mesmo que ninguém mais va. São raros, mas mudam a historia.
+Esses são os Joaquins, os Calebes, os Estevaos. Pessoas que olham para o vazio da casa de Deus e dizem: eu fico. Mesmo que custe. Mesmo que ninguém mais va. São raros, mas mudam a historia.
 
 Depois, fizeram sorteio. Um a cada dez foi escolhido para morar em Jerusalém. Não foi voluntario. Foi designação. Talvez essa familia tivesse acabado de plantar uma colheita. Talvez tivesse acabado de construir casa. Mas o sorteio caiu, e eles tiveram que ir.
 
-Deus combina convocação é designação. Alguns chegam por escolha. Outros chegam por providência. Mas o resultado e o mesmo: a cidade ganha moradores.
+Deus combina convocação é designação. Alguns chegam por escolha. Outros chegam por providência. Mas o resultado é o mesmo: a cidade ganha moradores.
 
 ## Funções diferentes, cidade única
 
@@ -2163,7 +2163,7 @@ Os porteiros guardavam os portoes. Os cantores conduziam o culto. Os levitas cui
 
 Paulo retoma essa imagem em 1 Corintios 12. "O corpo é um só, embora tenha muitos membros". Você é parte da cidade de Deus, mas não é qualquer parte. Você e uma parte específica, com função específica, que ninguém mais pode cumprir do mesmo jeito.
 
-E essa e a tragedia de quem fica fora. Quando você decide não morar na cidade, você não deixa apenas de ganhar. A cidade também deixa de receber o que você ia oferecer. Cada porteiro ausente e um portão desguardado. Cada cantor calado e um louvor sem voz. Cada sacerdote distraido e um sacrifício sem mediador.
+E essa é a tragedia de quem fica fora. Quando você decide não morar na cidade, você não deixa apenas de ganhar. A cidade também deixa de receber o que você ia oferecer. Cada porteiro ausente é um portão desguardado. Cada cantor calado é um louvor sem voz. Cada sacerdote distraido é um sacrifício sem mediador.
 
 A cidade precisa de você. E você, mais do que sabe, precisa da cidade.
 
@@ -2190,7 +2190,7 @@ A cidade santa não se sustenta com visitantes. Se sustenta com moradores. E o S
   },
   {
     title: `Estêvão: a vida que marcou Paulo para sempre`,
-    slug: `Estêvão-uma-vida-que-marca`,
+    slug: `estevao-uma-vida-que-marca`,
     excerpt: `Vinte e cinco anos depois da morte de Estêvão, Paulo ainda lembrava o nome. O que aquele jovem fez para gravar tão fundo na memoria do maior apóstolo?`,
     bodyMarkdown: `Em Atos 22, Paulo está orando no templo de Jerusalém. Entra em extase espiritual. Tem uma visão com Jesus. E Jesus avisa: "Saia logo de Jerusalém, porque não aceitarão seu testemunho".
 
@@ -2202,7 +2202,7 @@ Pensa no que aconteceu nesse intervalo. Paulo viajou o mundo conhecido. Plantou 
 
 Que tipo de vida marca tão fundo a alma do maior missionario do cristianismo? E como você vive uma dessas?
 
-## Cheio do Espírito e da Palavra
+## Cheio do Espírito é da Palavra
 
 Em Atos 6, a igreja precisava resolver um conflito administrativo. Reclamações sobre distribuição de comida. Os apóstolos pediram que escolhessem sete homens cheios do Espírito Santo e de sabedoria para cuidar disso. Estêvão foi o primeiro nome.
 
@@ -2259,7 +2259,7 @@ Que você viva assim. Olhos em Jesus. Mãos abertas para soltar. Coração pront
   },
   {
     title: `Se Jesus voltasse hoje, você estaria salvo? A parábola do filho prodigo redefinida`,
-    slug: `se-jesus-voltasse-hoje-você-estaria-salvo`,
+    slug: `se-jesus-voltasse-hoje-voce-estaria-salvo`,
     excerpt: `Existem três filhos na parábola que você só leu como historia de dois. Descobrir o terceiro pode mudar tudo o que você entende sobre salvação.`,
     bodyMarkdown: `Em Galatas 1, Paulo escreve uma das frases mais perturbadas do Novo Testamento. "Admiro-me de que vocês estejam abandonando tão rapidamente aquele que os chamou pela graça de Cristo, para seguirem outro evangelho que, na realidade, não é o evangelho".
 
@@ -2275,11 +2275,11 @@ Para definir o que é o evangelho, Jesus contou a parábola mais famosa da histo
 
 O contexto e crucial. Jesus contava essa parábola para dois grupos diferentes. De um lado, gente que ignorava a lei, prostitutas, publicanos, pecadores publicos. Do outro, mestres da lei, fariseus, gente que sabia de cor os 613 mandamentos do Pentateuco.
 
-Jesus queria redefinir, na cabeça dos dois, o que é pecado. É o que é salvação.
+Jesus queria redefinir, na cabeça dos dois, o que e pecado. É o que e salvação.
 
 ## O filho mais novo
 
-A historia você conhece. O filho mais novo pede a herança em vida, vai embora para terra distante, gasta tudo, acaba cuidando de porcos, passa fome, cai em si, decide voltar. Volta com discurso ensaiado: "Pai, pequei contra o céu e contra ti. Não sou mais digno de ser chamado teu filho".
+A historia você conhece. O filho mais novo pede a herança em vida, vai embora para terra distante, gasta tudo, acaba cuidando de porcos, passa fome, cai em si, decide voltar. Volta com discurso ensaiado: "Pai, pequei contra o céu é contra ti. Não sou mais digno de ser chamado teu filho".
 
 O pai não deixa terminar o discurso. Já o avistou de longe. Correu. Abraçou. Beijou. Mandou trazer a melhor roupa, anel, calcado. Matou o bezerro gordo. Fez festa.
 
@@ -2329,7 +2329,7 @@ A festa do prodigo só foi possível porque Cristo absorveu o custo. Você não 
 
 O evangelho não é você melhorando para Deus aceitar você. O evangelho é Deus correndo para abraçar você sujo. Saindo do trono. Pulando no seu pescoco fedido. Beijando o filho que desejava sua morte.
 
-Você não pode sujar Deus. A sujeira dEle pode te limpar. Por isso você não precisa se limpar antes de chegar. Você chega e Ele limpa. Esse e o escandalo. Por isso Paulo se admira quando alguém adiciona qualquer coisa.
+Você não pode sujar Deus. A sujeira dEle pode te limpar. Por isso você não precisa se limpar antes de chegar. Você chega e Ele limpa. Esse é o escandalo. Por isso Paulo se admira quando alguém adiciona qualquer coisa.
 
 Se você busca Deus com medo de ir para o inferno, quem você está amando? Você mesmo. Esta tentando se salvar. O evangelho real começa quando você descobre que já e amado. Que o pai te beijou primeiro. E então você começa a devolver amor.
 
@@ -2341,7 +2341,7 @@ Volte para a pergunta inicial. Se Jesus voltasse hoje, você estaria salvo? Se v
 
 Se você respondesse "porque Jesus trocou de lugar comigo na cruz", você entendeu o evangelho.
 
-Você não é salvo porque você é bom. Você e salvo porque Ele é bom. Você não é filho porque mereceu. Você e filho porque Ele e fiel. Você não precisa de Cristo mais alguma coisa. Cristo basta. Cristo é suficiente. Cristo é o pai correndo, o irmão mais velho pagando, o convite para a festa.
+Você não é salvo porque você é bom. Você e salvo porque Ele é bom. Você não é filho porque mereceu. Você e filho porque Ele e fiel. Você não precisa de Cristo mais alguma coisa. Cristo basta. Cristo e suficiente. Cristo é o pai correndo, o irmão mais velho pagando, o convite para a festa.
 
 Volte sujo. O pai esta de bracos abertos. Não para te punir. Para te beijar.`,
     categorySlug: `soteriologia`,
@@ -2350,7 +2350,7 @@ Volte sujo. O pai esta de bracos abertos. Não para te punir. Para te beijar.`,
   },
   {
     title: `O espírito do anticristo: as armas invisíveis da batalha que você não ve`,
-    slug: `o-espírito-do-anticristo`,
+    slug: `o-espirito-do-anticristo`,
     excerpt: `João alertou que o espírito do anticristo já estava no mundo no primeiro século. As armas dele continuam as mesmas, é a maioria dos cristãos não percebe quando esta sob ataque.`,
     bodyMarkdown: `Quando você ouve "anticristo", talvez pense em um vilão apocalíptico, um governante mundial cheio de simbolos satanicos, uma figura específica do fim dos tempos. João tinha um conceito mais perturbador. Ele disse, na primeira carta, que o espírito do anticristo já estava no mundo. No primeiro século. E continua ativo.
 
@@ -2400,7 +2400,7 @@ Cristo deu a vida em favor dos outros. O diabo te convida a dar a vida em favor 
 
 Filipenses 2 mostra a mente de Cristo. "Existindo em forma de Deus, não considerou o ser igual a Deus algo a que se devesse apegar. Antes, esvaziou-se a si mesmo, assumindo a forma de servo, fazendo-se semelhante aos homens. E, achado em forma humana, humilhou-se a si mesmo, sendo obediente até a morte, e morte de cruz".
 
-A lógica do reino e o oposto da lógica do mundo. Quem se humilha será exaltado. Quem perder a vida vai encontra-la. O último será o primeiro. Você não vence se mostrando forte. Vence sendo servo.
+A lógica do reino é o oposto da lógica do mundo. Quem se humilha será exaltado. Quem perder a vida vai encontra-la. O último será o primeiro. Você não vence se mostrando forte. Vence sendo servo.
 
 Quando Pedro tirou a espada para defender Jesus, Jesus mandou guardar. Quando Pedro foi atacado, Jesus orou pelo agressor. Mateus 5 ensina: "Amém os seus inimigos e orem pelos que os perseguem". A não reação é arma. O perdão é arma. A oração pelo agressor e arma.
 
@@ -2413,13 +2413,13 @@ Você não escolhe estar nessa guerra. Você esta nela desde que respirou. A que
 A vida cristã não é férias entre dois céus. E batalha entre dois reinos. Mas a batalha já foi vencida em Cristo. Você não luta para ganhar. Você luta porque já ganhou. Você ocupa territorio que já e seu. Você vive na vitoria que já foi conquistada.
 
 Vista a armadura. Discirna os espíritos. Vigie a influência. Ame o inimigo humano. Combata o inimigo espiritual. E mantenha Cristo no centro, porque tudo gira em torno disso.`,
-    categorySlug: `apologética`,
+    categorySlug: `apologetica`,
     tags: ["batalha espiritual", "anticristo", "discernimento", "armadura de deus"],
     source: `17_o_espirito_do_anti_cristo.txt`,
   },
   {
     title: `Lançado no fogo: cinco coisas que mantem o cristão em chamas`,
-    slug: `lançado-no-fogo-cinco-marcas-do-cristão`,
+    slug: `lancado-no-fogo-cinco-marcas-do-cristao`,
     excerpt: `Sadraque, Mesaque e Abede-Nego foram jogados em uma fornalha sete vezes mais quente que o normal. E sairam intactos. O que sustenta uma fé assim?`,
     bodyMarkdown: `Daniel 3 conta uma das historias mais visualmente impactantes da Bíblia. O rei Nabucodonosor levanta uma estatua de ouro de quase trinta metros. Ordena que todo povo, ao som da música, se prostre e adore. Quem não se prostrar será lançado em uma fornalha de fogo ardente.
 
@@ -2431,7 +2431,7 @@ A historia parece sobre o milagre. Na verdade é sobre o que mantem alguém em p
 
 Vivemos uma epoca em que ser crente está na moda. Empresarios aparecem com Bíblia. Cantores oram em entrevista. Políticos pedem voto em nome de Jesus. Antes era fácil identificar quem era da igreja, porque a aparência era diferente. Hoje, a aparência se misturou.
 
-Se a roupa não é mais a marca, o que é? E aqui aparece a pergunta de Daniel 3. Por que aqueles três não queimaram? Porque a vida deles já estava pegando fogo. Quem vive em chamas para Deus não se queima nas chamas do mundo. Ou você já arde no fogo do altar, ou você será consumido pelo fogo da fornalha.
+Se a roupa não é mais a marca, o que e? E aqui aparece a pergunta de Daniel 3. Por que aqueles três não queimaram? Porque a vida deles já estava pegando fogo. Quem vive em chamas para Deus não se queima nas chamas do mundo. Ou você já arde no fogo do altar, ou você será consumido pelo fogo da fornalha.
 
 Cinco coisas mantem o cristão em chamas.
 
@@ -2473,7 +2473,7 @@ Submeta-se ao corpo. Encontre seu papel. Envolva-se. Cristão isolado virá cris
 
 ## Quarta: fé verdadeira
 
-O que esses três jovens disseram ao rei e uma das frases mais impressionantes da Bíblia. "Se o nosso Deus, a quem servimos, quiser livrar-nos, ele nos livrara da fornalha. E mesmo que ele não nos livre, fique sabendo, o rei, que não prestaremos culto aos teus deuses".
+O que esses três jovens disseram ao rei é uma das frases mais impressionantes da Bíblia. "Se o nosso Deus, a quem servimos, quiser livrar-nos, ele nos livrara da fornalha. E mesmo que ele não nos livre, fique sabendo, o rei, que não prestaremos culto aos teus deuses".
 
 Repare na construção. Eles tem certeza de que Deus pode livrar. Mas tem mais certeza ainda de que vão adorar Deus, livre ou não livre.
 
@@ -2508,7 +2508,7 @@ Sem essas marcas, você vai se queimar pelo fogo do mundo. Com elas, você já a
   },
   {
     title: `Adoração não é onde, e a quem: a lição da samaritana no poco`,
-    slug: `adoração-não-e-onde-e-a-quem`,
+    slug: `adoracao-nao-e-onde-e-a-quem`,
     excerpt: `Uma mulher samaritana foi buscar agua ao meio dia. Saiu de la com a maior revelação sobre adoração da historia da igreja.`,
     bodyMarkdown: `Em João 4, Jesus faz uma viagem que parecia desnecessaria. "Era-lhe necessário passar por Samaria". Para um judeu, não era. Os judeus contornavam Samaria. Atravessavam outras rotas para evitar pisar la. Mas Jesus tinha uma necessidade que não era geográfica. Era pessoal. Tinha uma mulher esperando, e ela não sabia.
 
@@ -2520,9 +2520,9 @@ A conversa que se segue inverte tudo o que a humanidade tinha aprendido sobre ad
 
 A samaritana faz a pergunta clássica. "Nossos antepassados adoraram neste monte, mas vocês, judeus, dizem que Jerusalém é o lugar onde se deve adorar". A pergunta dela parece de geografia. Onde adorar?
 
-Jesus não responde a pergunta. Ele substitui a pergunta. "Esta chegando a hora, e de fato já chegou, em que os verdadeiros adoradores adorarão o Pai em espírito e em verdade".
+Jesus não responde a pergunta. Ele substitui a pergunta. "Esta chegando a hora, e de fato já chegou, em que os verdadeiros adoradores adorarão o Pai em espírito é em verdade".
 
-A pergunta certa nunca foi onde. Foi a quem. Você pode estar no monte mais sagrado, na catedral mais antiga, no templo mais bonito, e estar adorando a coisa errada. E você pode estar na sua cozinha, no transito, no trabalho, e estar adorando o Pai em espírito e em verdade.
+A pergunta certa nunca foi onde. Foi a quem. Você pode estar no monte mais sagrado, na catedral mais antiga, no templo mais bonito, e estar adorando a coisa errada. E você pode estar na sua cozinha, no transito, no trabalho, e estar adorando o Pai em espírito é em verdade.
 
 Deus não busca adoradores. Todo mundo é adorador. Você vai adorar alguma coisa, querendo ou não. A questão é: quem você está adorando? Deus busca verdadeiros adoradores.
 
@@ -2538,7 +2538,7 @@ A samaritana tinha colocado romance no centro. Cinco maridos, e o atual não era
 
 Tim Keller conta de uma mulher que trocou o idolo dos homens pelo idolo do trabalho. Quando o trabalho pareceu ameacado, ela tentou se matar. O idolo era diferente, mas o resultado de colocar qualquer coisa no centro que não fosse Deus era o mesmo: colapso.
 
-Deus não exige adoração porque é carente. Exige porque sabe que se você não colocar Ele no centro, você vai cair. Adoração não é benefício para Deus. E proteção para você.
+Deus não exige adoração porque e carente. Exige porque sabe que se você não colocar Ele no centro, você vai cair. Adoração não é benefício para Deus. E proteção para você.
 
 ## A pergunta que mostra seu idolo
 
@@ -2551,9 +2551,9 @@ Nada disso é ruim em si. Casamento é bom. Trabalho é bom. Reputação é boa.
 
 Só Deus aguenta o peso. Só Ele tem energia própria. Quando Ele está no centro, todo o resto se ajusta. Quando você coloca outra coisa, todo o resto desorienta.
 
-## Em espírito e em verdade
+## Em espírito é em verdade
 
-Jesus disse que verdadeiros adoradores adoram em espírito e em verdade. Os dois são necessários. Faltando um, virá culto vazio.
+Jesus disse que verdadeiros adoradores adoram em espírito é em verdade. Os dois são necessários. Faltando um, virá culto vazio.
 
 Em verdade significa conhecimento. Você conhece o Deus que adora? Você sabe quem Ele e? Eterno, imutável, infinito, onipresente, onipotente, onisciente, soberano, amor, justo, santo. Você tem palavras para descrever o objeto da sua adoração? Você sabe pelo que está louvando?
 
@@ -2585,14 +2585,14 @@ As pessoas que estão perto de você conseguem ver alegria saindo? Conseguem ver
 
 Foi assim que a samaritana virou missionaria. Largou o cantaro. Correu para a cidade. "Venham ver um homem que me disse tudo o que eu fiz". A adoração dela já tinha virado fonte. E aquela fonte alimentou uma cidade inteira.
 
-Você está adorando alguma coisa agora. Hoje, neste minuto, alguma coisa está no centro do seu sistema solar. A pergunta não é se você adora. A pergunta é quem. Coloque Ele no centro. Adore em conhecimento e em afeto. E veja sua vida virar fonte para os que estão ao redor.`,
+Você está adorando alguma coisa agora. Hoje, neste minuto, alguma coisa está no centro do seu sistema solar. A pergunta não é se você adora. A pergunta é quem. Coloque Ele no centro. Adore em conhecimento é em afeto. E veja sua vida virar fonte para os que estão ao redor.`,
     categorySlug: `vida-crista`,
     tags: ["adoração", "samaritana", "evangelho de João", "espiritualidade"],
     source: `19_adore_somente_ele.txt`,
   },
   {
     title: `A santa ceia: muito além de comer e beber`,
-    slug: `a-santa-ceia-muito-além-de-comer-e-beber`,
+    slug: `a-santa-ceia-muito-alem-de-comer-e-beber`,
     excerpt: `Para Jesus, a ceia era promessa de vida eterna. Para a igreja primitiva, era ato comunitario. Para muitos hoje, virou apenas ritual silencioso. O que você está perdendo?`,
     bodyMarkdown: `Em João 6, Jesus faz uma das declarações mais escandalosas da sua vida pública. "Se vocês não comerem a carne do Filho do Homem e não beberem o seu sangue, não terão vida em si mesmos. Todo aquele que come a minha carne e bebê o meu sangue tem a vida eterna, e eu o ressuscitarei no último dia".
 
@@ -2602,7 +2602,7 @@ A multidão se incomodou. Muitos foram embora. A linguagem era difícil. Jesus n
 
 Cada vez que você participa da ceia, está confirmando quatro afirmações profundas, mesmo que não perceba.
 
-A primeira: Jesus está vivo eternamente. A ceia memora a morte, mas testemunha a ressurreição. Você não come o corpo de um morto. Você come o corpo de Quem venceu a morte e por isso pode dar vida eterna a quem se alimenta dEle.
+A primeira: Jesus está vivo eternamente. A ceia memora a morte, mas testemunha a ressurreição. Você não come o corpo de um morto. Você come o corpo de Quem venceu a morte é por isso pode dar vida eterna a quem se alimenta dEle.
 
 A segunda: você permanece nEle. Permanecer em Cristo não é nivel especial reservado para alguns cristãos avancados. E a posição normal de todo verdadeiro crente. Quando você participa da ceia, você está declarando que sua vida está enraizada nEle. Que o lugar onde você mora espiritualmente não mudou.
 
@@ -2630,15 +2630,15 @@ Em 1 Corintios 11, Paulo descreve o que estava acontecendo em Corinto e por que 
 
 Paulo se indigna. Diz que assim eles "não estão comendo a ceia do Senhor". Estão comendo, mas não a ceia. Por que? Porque a ceia tinha um propósito que eles tinham esquecido: comunhão. O propósito era partilhar.
 
-Repare em uma palavra que muda tudo no texto. "Tomou o pão, agradeceu, partiu-o, e disse: este e meu corpo". O destaque não é o comer. E o partir. Por que? Porque o partir é o sinal de que existe comunhão. Existe alguém para receber a parte. Existe corpo unido.
+Repare em uma palavra que muda tudo no texto. "Tomou o pão, agradeceu, partiu-o, e disse: este é meu corpo". O destaque não é o comer. E o partir. Por que? Porque o partir é o sinal de que existe comunhão. Existe alguém para receber a parte. Existe corpo unido.
 
 Quando você come o pão, você anuncia que Jesus morreu. Quando você parte o pão, você anuncia que o corpo de Cristo está vivo, presente, unido. Comer e memoria do passado. Partir e proclamação do presente.
 
-## O que é comer indignamente
+## O que e comer indignamente
 
 Esse trecho de 1 Corintios 11 e um dos mais mal interpretados da Bíblia. Paulo escreve: "quem come do pão ou bebê do calice do Senhor indignamente e culpado de pecar contra o corpo é o sangue do Senhor".
 
-A maioria lê isso é pensa em pecado pessoal. Se você está com algum pecado não confessado, não tome a ceia. Se você não se examinou bem, não tome.
+A maioria lê isso e pensa em pecado pessoal. Se você está com algum pecado não confessado, não tome a ceia. Se você não se examinou bem, não tome.
 
 Mas o contexto de Paulo não é individual. E comunitario. O pecado que ele está acusando e o pecado de comer sem reconhecer o corpo. Que corpo? A igreja. Quando você come sozinho enquanto seu irmão está com fome ao lado, você está comendo indignamente. Quando você participa da ceia sem partilhar, você está tomando uma ceia falsa.
 
@@ -2662,7 +2662,7 @@ Hoje, a maioria toma a ceia de olhos fechados. Mas ela foi planejada para olhos 
 
 A ceia ritual e simbolo de algo que devia acontecer todos os dias. Você, repartindo o que recebeu. Você, alimentando o irmão com fome. Você, sendo parte concreta de um corpo que se cuida.
 
-Se você come o pão no domingo e no resto da semana fecha à porta para o irmão em necessidade, você comeu indignamente. Se você levanta o calice no culto e na sexta virá o rosto para o sofrimento ao lado, levantou indignamente.
+Se você come o pão no domingo e no resto da semana fecha à porta para o irmão em necessidade, você comeu indignamente. Se você levanta o calice no culto é na sexta virá o rosto para o sofrimento ao lado, levantou indignamente.
 
 A ceia e ensaio. E retrato. E lembrete. Toda vez que você participa, você está dizendo: vou viver assim a semana toda. Vou repartir. Vou esperar. Vou olhar ao redor. Vou anunciar que Cristo morreu, é que o corpo dEle está vivo e operante.
 
@@ -2675,13 +2675,13 @@ Pegue o pão com olhos abertos esta semana. E veja a ceia ganhar uma profundidad
     title: `Embaixadores de Cristo: o que faz uma mensagem ser realmente o evangelho`,
     slug: `embaixadores-de-cristo`,
     excerpt: `Existe um evangelho. Tudo que não reconcilia o homem com Deus por meio de Jesus, por mais espiritual que pareça, e outra coisa.`,
-    bodyMarkdown: `Quantas mensagens diferentes você ouve hoje em nome do evangelho? Quantos pregadores, livros, posts e podcasts apresentam visões diferentes do que é ser cristão, do que é seguir Jesus, do que é o caminho de Deus? E em meio a essa multiplicidade, uma pergunta precisa ser feita com seriedade: tudo isso que se autodenomina evangelho realmente o é? A resposta bíblica é dura, mas é libertadora. Evangelho só existe um. Tudo que não leva o homem a se reconciliar com Deus por meio de Jesus, por mais bonito que pareça, não é o evangelho.
+    bodyMarkdown: `Quantas mensagens diferentes você ouve hoje em nome do evangelho? Quantos pregadores, livros, posts e podcasts apresentam visões diferentes do que e ser cristão, do que e seguir Jesus, do que é o caminho de Deus? E em meio a essa multiplicidade, uma pergunta precisa ser feita com seriedade: tudo isso que se autodenomina evangelho realmente o é? A resposta bíblica é dura, mas é libertadora. Evangelho só existe um. Tudo que não leva o homem a se reconciliar com Deus por meio de Jesus, por mais bonito que pareça, não é o evangelho.
 
 ## Uma mensagem com identidade fixa
 
 O apóstolo João escreveu palavras duras sobre as mensagens que circulavam no seu tempo. Ele afirmou que todo espírito que não confessa Jesus não procede de Deus, e identificou isso como espírito do anticristo, já agindo no mundo. A informação é antiga e atual ao mesmo tempo. João não estava falando de uma figura futura distante. Ele estava dizendo que já, no primeiro século, existiam mensagens espirituais que não confessavam Jesus, e essas mensagens não eram neutras, eram contrárias a Cristo.
 
-A diversidade religiosa não é novidade. Sempre houve quem oferecesse caminhos alternativos, espiritualidades sem Cristo, evangelhos sem cruz. O que muda e a embalagem. Hoje a embalagem e moderna, terapêutica, motivacional, prosperidade, autoajuda. Mas o teste e o mesmo de sempre. A mensagem confessa Jesus como Senhor crucificado e ressuscitado? Ela leva o homem a se reconciliar com Deus por meio dele? Se a resposta é não, não importa quão espiritual ela soe, não é o evangelho.
+A diversidade religiosa não é novidade. Sempre houve quem oferecesse caminhos alternativos, espiritualidades sem Cristo, evangelhos sem cruz. O que muda e a embalagem. Hoje a embalagem e moderna, terapêutica, motivacional, prosperidade, autoajuda. Mas o teste é o mesmo de sempre. A mensagem confessa Jesus como Senhor crucificado e ressuscitado? Ela leva o homem a se reconciliar com Deus por meio dele? Se a resposta é não, não importa quão espiritual ela soe, não é o evangelho.
 
 ## A grande proposta de 2 Corintios 5
 
@@ -2693,11 +2693,11 @@ Dois pontos saltam aqui. Primeiro, o ministério confiado a nos e o ministério 
 
 Pense no que um embaixador do Brasil faz quando está em outro país. Ele estreita laços de cooperação com o país onde está instalado. Acompanha a situação política e econômica daquele lugar. Promove os interesses culturais e econômicos do Brasil onde está. Ele não representa a si mesmo, ele representa o país que o enviou. Tudo que ele fala em ato oficial, fala em nome do Brasil. Tudo que ele faz, faz em nome do Brasil.
 
-Aplique isso ao cristão. Você não foi chamado a representar a sua opinião, sua cultura, suas preferências, sua igreja local, sua tradição. Você foi chamado a representar Cristo. Tudo que você fala em nome dele precisa ser fiel ao que ele disse. Tudo que você faz em nome dele precisa refletir quem ele é. Quando você abandona essa fidelidade, você deixa de ser embaixador e passa a ser apenas mais uma voz no mercado das ideias religiosas.
+Aplique isso ao cristão. Você não foi chamado a representar a sua opinião, sua cultura, suas preferências, sua igreja local, sua tradição. Você foi chamado a representar Cristo. Tudo que você fala em nome dele precisa ser fiel ao que ele disse. Tudo que você faz em nome dele precisa refletir quem ele e. Quando você abandona essa fidelidade, você deixa de ser embaixador e passa a ser apenas mais uma voz no mercado das ideias religiosas.
 
 ## A definição de evangelho
 
-Aqui entra a definição operacional. Evangelho e toda mensagem que faz a reconciliação do homem com Deus por meio de Jesus. E todos que pregam essa mensagem são ministros da reconciliação. Tudo o que não tem esse centro pode até ser bem intencionado, pode trazer algum conforto, pode até ser útil em algum sentido prático, mas não é o evangelho. E é justamente nessa hora que muita gente se ofende. Mas como assim a minha mensagem não é evangelho, se ela me faz bem? Bem não é o teste. Cristo crucificado e ressuscitado e o teste.
+Aqui entra a definição operacional. Evangelho e toda mensagem que faz a reconciliação do homem com Deus por meio de Jesus. E todos que pregam essa mensagem são ministros da reconciliação. Tudo o que não tem esse centro pode até ser bem intencionado, pode trazer algum conforto, pode até ser útil em algum sentido prático, mas não é o evangelho. E é justamente nessa hora que muita gente se ofende. Mas como assim a minha mensagem não é evangelho, se ela me faz bem? Bem não é o teste. Cristo crucificado e ressuscitado é o teste.
 
 ## A advertência de Galatas
 
@@ -2707,16 +2707,16 @@ Essa dureza não vem de intolerância. Vem do entendimento de que está em jogo 
 
 ## O peso da responsabilidade do embaixador
 
-Se você confessa Jesus, você é embaixador. Isso não é cargo que você escolhe assumir, e identidade que vem com a fé. E o mundo lê Cristo a partir do que ve em você. O que você diz quando fala de Deus, o que você vive quando está em casa, como você trata as pessoas no trabalho, o que você posta nas redes, o que você defende publicamente, tudo isso é considerado uma declaração oficial do reino do qual você diz ser embaixador.
+Se você confessa Jesus, você é embaixador. Isso não é cargo que você escolhe assumir, e identidade que vem com a fé. E o mundo lê Cristo a partir do que ve em você. O que você diz quando fala de Deus, o que você vive quando está em casa, como você trata as pessoas no trabalho, o que você posta nas redes, o que você defende publicamente, tudo isso e considerado uma declaração oficial do reino do qual você diz ser embaixador.
 
-Por amor a Cristo lhes suplicamos: reconciliem-se com Deus. Esse e o apelo final de Paulo. Esse e o seu apelo, atraves de cada um que confessa o nome de Jesus. O mundo precisa ouvir essa mensagem. Não a mensagem da prosperidade superficial, não a mensagem da autoajuda espiritualizada, não a mensagem do moralismo religioso. A mensagem da reconciliação. Aquele que não conheceu pecado foi feito pecado por nos, para que nele fossemos feitos justiça de Deus.
+Por amor a Cristo lhes suplicamos: reconciliem-se com Deus. Esse é o apelo final de Paulo. Esse é o seu apelo, atraves de cada um que confessa o nome de Jesus. O mundo precisa ouvir essa mensagem. Não a mensagem da prosperidade superficial, não a mensagem da autoajuda espiritualizada, não a mensagem do moralismo religioso. A mensagem da reconciliação. Aquele que não conheceu pecado foi feito pecado por nos, para que nele fossemos feitos justiça de Deus.
 
 ## A pergunta para o seu coração
 
 Quando você abre a boca para falar de Deus para alguém, qual e a sua mensagem? Você está apresentando Jesus crucificado e ressuscitado como o caminho único de reconciliação com Deus, ou você está apresentando uma versão adaptada, suavizada, mais palatável para o mundo? Você está falando como embaixador do reino, ou está misturando interesses pessoais, denominacionais, políticos no que diz?
 
 A mensagem da reconciliação é o tesouro confiado a você. Não é o seu tesouro pessoal, e o tesouro do rei que enviou você. Pregue, viva, defenda esse evangelho. E se você ouvir mensagens que não confessam Jesus, lembre-se das palavras de João. O espírito que não confessa Jesus não procede de Deus. E lembre-se das palavras de Paulo. Que seja amaldiçoado, ainda que venha de um anjo do céu. Existe um evangelho. Só um. E você foi chamado a ser embaixador dele.`,
-    categorySlug: `missões`,
+    categorySlug: `missoes`,
     tags: ["embaixadores", "evangelho", "reconciliação", "missão", "fidelidade"],
     source: `21_embaixadores_de_cristo.txt`,
   },
@@ -2736,35 +2736,35 @@ Lúcifer começou no céu a desejar ser semelhante a Deus. Por causa dessa ambi�
 
 Três consequências aparecem em sequência em Genesis 3, e elas se repetem em todo cristão que decide escutar outras vozes em vez da voz de Deus.
 
-A primeira e a perda da identidade. Você deixa de ser quem Deus criou você para ser. A serpente disse a mulher que se ela comesse do fruto, seria como Deus. O grande paradoxo é que ela já era. Já tinha sido criada a imagem de Deus. Mas ao tentar conquistar o que já possuía por engano, perdeu o que tinha. Sempre que você ouve a voz que diz que você precisa ser outra coisa para valer, você está perdendo o que já e.
+A primeira é a perda da identidade. Você deixa de ser quem Deus criou você para ser. A serpente disse a mulher que se ela comesse do fruto, seria como Deus. O grande paradoxo é que ela já era. Já tinha sido criada a imagem de Deus. Mas ao tentar conquistar o que já possuía por engano, perdeu o que tinha. Sempre que você ouve a voz que diz que você precisa ser outra coisa para valer, você está perdendo o que já e.
 
-A segunda consequência e o afastamento de Deus. A voz do diabo sempre conduz para outros caminhos. Adão é Eva, depois do pecado, ouviram os passos do Senhor andando pelo jardim quando soprava a brisa do dia, e se esconderam. Quem até ali corria para o encontro, agora corria para fugir. A voz errada cria distancia. Você começa a evitar a presença de Deus, evitar a oração, evitar a Palavra, evitar a comunidade. Tudo que antes era prazer, agora pesa.
+A segunda consequência é o afastamento de Deus. A voz do diabo sempre conduz para outros caminhos. Adão é Eva, depois do pecado, ouviram os passos do Senhor andando pelo jardim quando soprava a brisa do dia, e se esconderam. Quem até ali corria para o encontro, agora corria para fugir. A voz errada cria distancia. Você começa a evitar a presença de Deus, evitar a oração, evitar a Palavra, evitar a comunidade. Tudo que antes era prazer, agora pesa.
 
-A terceira e a expulsão do lugar de comunhão. Deus os mandou embora do Jardim do Éden para cultivar o solo. Onde existe à luz, não habitam as trevas. Onde Deus reina, não reina o pecado. Quando você escolhe permanecer no que separa, você deixa o lugar onde Deus se faz presente.
+A terceira é a expulsão do lugar de comunhão. Deus os mandou embora do Jardim do Éden para cultivar o solo. Onde existe à luz, não habitam as trevas. Onde Deus reina, não reina o pecado. Quando você escolhe permanecer no que separa, você deixa o lugar onde Deus se faz presente.
 
 ## Como discernir as vozes que falam com você
 
 Como saber qual voz e a de Deus? Existe um teste prático, e ele tem alguns pilares.
 
-O primeiro e o conteúdo. Paulo escreveu aos corintios que aquele que profetiza fala para edificação, encorajamento e consolação. Voz que destrói sem propósito, voz que humilha, voz que esmaga sem oferecer caminho, não costuma ser de Deus. Voz que confronta com firmeza mas leva ao arrependimento e a esperança, essa tem o cheiro do pai.
+O primeiro e o conteúdo. Paulo escreveu aos corintios que aquele que profetiza fala para edificação, encorajamento e consolação. Voz que destrói sem propósito, voz que humilha, voz que esmaga sem oferecer caminho, não costuma ser de Deus. Voz que confronta com firmeza mas leva ao arrependimento é a esperança, essa tem o cheiro do pai.
 
 O segundo e o conselho. Provérbios diz que ha palavras que ferem como espada, mas a lingua dos sabios traz cura. Conversar com alguém instruido e experimentado na Palavra e um filtro de seguranca. Não para que outros decidam por você, mas para que você não se autoconvenca de algo apenas porque sente.
 
-O terceiro e o exercicio do sacerdocio. Pedro disse que vocês são geração eleita, sacerdocio real, nação santa, povo exclusivo de Deus, para anunciar as grandezas daquele que chamou vocês das trevas para a sua maravilhosa luz. Quem não tem relacionamento direto com Deus não consegue distinguir a sua voz. Como reconhecer a voz da sua esposa em meio a uma multidão? Pelo tempo de convivência. Você conhece. Com Deus é igual.
+O terceiro e o exercicio do sacerdocio. Pedro disse que vocês são geração eleita, sacerdocio real, nação santa, povo exclusivo de Deus, para anunciar as grandezas daquele que chamou vocês das trevas para a sua maravilhosa luz. Quem não tem relacionamento direto com Deus não consegue distinguir a sua voz. Como reconhecer a voz da sua esposa em meio a uma multidão? Pelo tempo de convivência. Você conhece. Com Deus e igual.
 
 ## O que recebe quem escuta a voz de Deus
 
 Três coisas distinguem o cristão que aprendeu a ouvir.
 
-A primeira e a revelação. Quando Jesus perguntou aos discípulos quem o povo dizia que ele era, surgiram várias respoostas. Uns diziam João Batista, outros Elias, outros Jeremias. Mas quando ele perguntou aos discípulos quem eles diziam que ele era, Pedro respondeu: tu és o Cristo, o Filho do Deus vivo. Jesus respondeu que isso não foi revelado por carne ou sangue, mas pelo Pai. Quem escuta Deus tem revelação da identidade de Cristo. Quem não estuda a Bíblia, dizia João Calvino, confunde heresia com a voz de Deus.
+A primeira é a revelação. Quando Jesus perguntou aos discípulos quem o povo dizia que ele era, surgiram várias respoostas. Uns diziam João Batista, outros Elias, outros Jeremias. Mas quando ele perguntou aos discípulos quem eles diziam que ele era, Pedro respondeu: tu és o Cristo, o Filho do Deus vivo. Jesus respondeu que isso não foi revelado por carne ou sangue, mas pelo Pai. Quem escuta Deus tem revelação da identidade de Cristo. Quem não estuda a Bíblia, dizia João Calvino, confunde heresia com a voz de Deus.
 
-A segunda e o cumprimento do propósito. Logo depois de Jesus ser batizado e o Pai ter declarado que ele era o Filho amado, o diabo veio com três tentações que começavam com a frase: se você é o Filho de Deus. O diabo lançou dúvida sobre a identidade. Mas Jesus não deu ouvidos. Ele saiu do deserto e começou imediatamente a viver o seu propósito, pregando que o Reino dos céus estava próximo. Quem escuta Deus não gasta a vida tentando se provar, vive o que já foi declarado.
+A segunda é o cumprimento do propósito. Logo depois de Jesus ser batizado é o Pai ter declarado que ele era o Filho amado, o diabo veio com três tentações que começavam com a frase: se você é o Filho de Deus. O diabo lançou dúvida sobre a identidade. Mas Jesus não deu ouvidos. Ele saiu do deserto e começou imediatamente a viver o seu propósito, pregando que o Reino dos céus estava próximo. Quem escuta Deus não gasta a vida tentando se provar, vive o que já foi declarado.
 
-A terceira e a confirmação da filiação. A voz do céu disse que aquele era o Filho amado em quem o Pai se agradava. Ser quem você foi chamado a ser não significa que você vai agradar todos. Significa que você vai agradar a Deus. Jesus, o homem mais incrivel que já pisou na terra, foi rejeitado por muitos. Foi rejeitado pelo próprio povo. Por isso a aprovação do Pai precisa ser maior do que a aprovação dos homens.
+A terceira é a confirmação da filiação. A voz do céu disse que aquele era o Filho amado em quem o Pai se agradava. Ser quem você foi chamado a ser não significa que você vai agradar todos. Significa que você vai agradar a Deus. Jesus, o homem mais incrivel que já pisou na terra, foi rejeitado por muitos. Foi rejeitado pelo próprio povo. Por isso a aprovação do Pai precisa ser maior do que a aprovação dos homens.
 
 ## A morada que voltou a habitar em nos
 
-Adão foi expulso do jardim e perdeu a sua identidade, o seu propósito e o seu relacionamento com Deus. Ele se relacionava por meio de sacrifícios. Mas em Cristo, o jardim agora habita em nos. Paulo perguntou aos corintios se eles não sabiam que eram santuario de Deus é que o Espírito de Deus habita neles. Jesus disse que se alguém o ama, guardara a sua palavra, e o Pai o amara, e ambos virão a ele é farão nele morada.
+Adão foi expulso do jardim e perdeu a sua identidade, o seu propósito é o seu relacionamento com Deus. Ele se relacionava por meio de sacrifícios. Mas em Cristo, o jardim agora habita em nos. Paulo perguntou aos corintios se eles não sabiam que eram santuario de Deus é que o Espírito de Deus habita neles. Jesus disse que se alguém o ama, guardara a sua palavra, e o Pai o amara, e ambos virão a ele e farão nele morada.
 
 A voz de Deus não chega de longe. Ela vem de dentro, do Espírito que habita em você, confirmando o que a Palavra já disse. E essa voz e clara para quem aprendeu a silenciar as outras. Pare de emprestar seus ouvidos a vozes que destroem a sua identidade. Pare de dar audiência a vozes que afastam você de Deus. Aprenda a reconhecer a voz que chamou você pelo nome desde antes da fundação do mundo.
 
@@ -2777,9 +2777,9 @@ Qual voz tem governado a sua vida? Quem você tem escutado nas decisões que imp
   },
   {
     title: `A transição dos filhos: de bebê espiritual a herdeiro maduro do reino`,
-    slug: `transição-dos-filhos-de-deus`,
+    slug: `transicao-dos-filhos-de-deus`,
     excerpt: `Existe uma diferença grande entre nascer de novo e amadurecer. A herança do Pai não é entregue a quem ainda não sabe administrar.`,
-    bodyMarkdown: `Para nascer de novo, basta clamar pelo nome de Jesus é ser adotado como filho. Mas para receber a herança, é preciso amadurecer. Existe um momento em que cada cristão precisa fazer a transição de bebê espiritual a filho maduro. E essa transição não acontece com o passar dos anos, acontece com a entrega progressiva da vida ao governo do Espírito. Os maduros não pedem, eles tomam posse. Os imaturos passam a vida pedindo coisas que já são suas, mas que não podem ser administradas porque o coração ainda não está pronto.
+    bodyMarkdown: `Para nascer de novo, basta clamar pelo nome de Jesus e ser adotado como filho. Mas para receber a herança, é preciso amadurecer. Existe um momento em que cada cristão precisa fazer a transição de bebê espiritual a filho maduro. E essa transição não acontece com o passar dos anos, acontece com a entrega progressiva da vida ao governo do Espírito. Os maduros não pedem, eles tomam posse. Os imaturos passam a vida pedindo coisas que já são suas, mas que não podem ser administradas porque o coração ainda não está pronto.
 
 ## Duas palavras gregas para uma só tradução
 
@@ -2795,7 +2795,7 @@ Você já parou para pensar quantas coisas você pede a Deus que ele não entreg
 
 ## Como se mede maturidade espiritual
 
-Existe uma medida simples, e ela não tem nada a ver com tempo de igreja, com cargos, com conhecimento bíblico ou com dons espetaculares. A maturidade espiritual se mede pelo quanto você se parece com Jesus. Esse e o termômetro. Se você ouve, lê, ora, frequenta, mas continua reagindo aos conflitos, ao dinheiro, ao casamento, ao trabalho da mesma forma que reagia antes de conhecer Cristo, alguma coisa não está crescendo.
+Existe uma medida simples, e ela não tem nada a ver com tempo de igreja, com cargos, com conhecimento bíblico ou com dons espetaculares. A maturidade espiritual se mede pelo quanto você se parece com Jesus. Esse é o termômetro. Se você ouve, lê, ora, frequenta, mas continua reagindo aos conflitos, ao dinheiro, ao casamento, ao trabalho da mesma forma que reagia antes de conhecer Cristo, alguma coisa não está crescendo.
 
 Paulo continua em Romanos 8: se vocês viverem de acordo com a carne, morrerão, mas se pelo Espírito fizerem morrer os atos do corpo, viverão, porque todos os que são guiados pelo Espírito de Deus são filhos de Deus. Os filhos huios vivem dominados pelo Espírito. Os filhos teknon vivem dominados pelo desejo do momento. A diferença não é teórica. E prática e visível.
 
@@ -2809,7 +2809,7 @@ Ser maduro não é ser inflexivel, não é ser duro, não é ser perfeito. E ter
 
 Ha um sinal claro de que a maturidade está chegando. Você começa a pedir menos para Deus é a perguntar mais para Deus. Os filhos imaturos passam a vida apresentando listas de pedidos. Os filhos maduros aprendem a perguntar: Pai, qual e a tua vontade? O que você quer me ensinar nisso? Como você quer ser glorificado aqui? Para o que você quer me usar?
 
-Ser filho maduro de Deus é parar de pedir para Deus enxugar as suas lagrimas e começar a enxugar as lagrimas de Deus com obras de justiça. E parar de pedir dinheiro para Deus é colocar o seu dinheiro a disposição do Pai. E parar de levar os seus problemas para Deus resolver e perguntar a ele qual e o problema dele, para que você participe da solução.
+Ser filho maduro de Deus e parar de pedir para Deus enxugar as suas lagrimas e começar a enxugar as lagrimas de Deus com obras de justiça. E parar de pedir dinheiro para Deus e colocar o seu dinheiro a disposição do Pai. E parar de levar os seus problemas para Deus resolver e perguntar a ele qual e o problema dele, para que você participe da solução.
 
 Davi, já envelhecido, escreveu no Salmo 116: como posso retribuir ao Senhor toda a sua bondade para comigo? Essa pergunta é a marca de um filho que cresceu. Ele não pergunta o que Deus pode dar. Ele pergunta o que ele pode dar.
 
@@ -2830,7 +2830,7 @@ A graça de nosso Senhor Jesus Cristo, o amor de Deus é a comunhão do Espírit
   },
   {
     title: `Multidão, ovelha ou discípulo: quem você é diante de Jesus`,
-    slug: `multidão-ovelha-ou-discípulo`,
+    slug: `multidao-ovelha-ou-discipulo`,
     excerpt: `Três grupos cercavam Jesus. Você está em qual deles? A resposta importa porque cada lugar produz uma vida espiritual diferente.`,
     bodyMarkdown: `Quando Marcos descreve um momento decisivo do ministério de Jesus, ele faz um detalhe importante. Jesus chamou a multidão é os discípulos. Existem dois grupos ali, é Jesus fala com os dois ao mesmo tempo. Logo depois, ele lanca o convite mais radical do evangelho: se alguém quer me seguir, negue-se a si mesmo, tome a sua cruz e siga-me. Mas o Novo Testamento mostra que existem na verdade três tipos de pessoas em torno de Jesus. A multidão, a ovelha e o discípulo. E você precisa saber em qual desses você se encontra hoje.
 
@@ -2838,7 +2838,7 @@ A graça de nosso Senhor Jesus Cristo, o amor de Deus é a comunhão do Espírit
 
 A multidão é o grupo mais visível, mais barulhento e ao mesmo tempo o mais superficial. João escreve que grande multidão seguia Jesus porque via os sinais que ele operava sobre os enfermos. A motivação da multidão é o benefício. Ela esta atrás dos milagres, das curas, das provisões. Quando esses sinais aparecem, ela aplaude. Quando eles desaparecem, ela some.
 
-A obediência da multidão é rasa. Ela obedece quando é conveniente. Mateus 15 mostra Jesus mandando a multidão se assentar para receber comida, e todos obedecem. Mas em Marcos 10, quando Jesus pede ao jovem rico que venda tudo e siga, o homem se retira triste. A obediência que custa pouco e bem aceita. A que custa caro e rejeitada.
+A obediência da multidão é rasa. Ela obedece quando e conveniente. Mateus 15 mostra Jesus mandando a multidão se assentar para receber comida, e todos obedecem. Mas em Marcos 10, quando Jesus pede ao jovem rico que venda tudo e siga, o homem se retira triste. A obediência que custa pouco e bem aceita. A que custa caro e rejeitada.
 
 A multidão ouve, mas não aprende. Marcos relata que Jesus falava por parábolas a multidão, dizendo que só podia transmitir aquilo conforme podiam receber. Mas quando estava a sos com os discípulos, explicava tudo. A multidão escuta o que interessa. Ela seleciona, filtra, descarta. Ela vai embora sem ter compreendido o cerne do que foi dito.
 
@@ -2850,7 +2850,7 @@ E ainda assim, Jesus não despreza a multidão. Mateus relata que Jesus, vendo a
 
 ## A ovelha: já conhece a voz
 
-A ovelha e o passo seguinte. Ela já ouve a voz do Pastor. João registra as palavras de Jesus: as minhas ovelhas ouvem a minha voz, eu as conheco e elas me seguem. A ovelha tem uma relação pessoal com Cristo que a multidão não tem. Ela frequenta a comunidade da fé, ela compartilha com os irmãos, ela se alegra na comunhão. Não deixa de congregar porque sabe que isso é essencial para nutrição.
+A ovelha e o passo seguinte. Ela já ouve a voz do Pastor. João registra as palavras de Jesus: as minhas ovelhas ouvem a minha voz, eu as conheco e elas me seguem. A ovelha tem uma relação pessoal com Cristo que a multidão não tem. Ela frequenta a comunidade da fé, ela compartilha com os irmãos, ela se alegra na comunhão. Não deixa de congregar porque sabe que isso e essencial para nutrição.
 
 A ovelha não se alimenta de qualquer coisa. Ela tem prazer na Palavra de Deus. Começa a sentir uma fome diferente. Aquilo que antes alimentava o coração agora parece raso. Ela tem prazer no que vem do Pastor. E ela se incomoda com o pecado. Aquela sujeira que antes não incomodava agora pesa. O porco gosta da lama, mas a ovelha sente a sujeira incomodando.
 
@@ -2864,7 +2864,7 @@ Pense em seguir um carro até um lugar que você não conhece. Você não consul
 
 ## O préço é à vontade
 
-O discípulo entende que suas vontades estão corrompidas. Por isso ele ora seja feita a tua vontade. Ele percebe que o que parece bom para ele agora pode ser desastroso amanhã. País sabem disso. Quando um filho doente quer ir a um parque em vez de descansar, o pai nega o desejo não por crueldade, mas por amar mais o filho do que à vontade dele. País já viveram o futuro que os filhos ainda não viveram. Deus é Pai eterno. Ele já viu o seu futuro inteiro. Ele sabe quando a sua vontade vai te machucar. Por isso, o discípulo confia.
+O discípulo entende que suas vontades estão corrompidas. Por isso ele ora seja feita a tua vontade. Ele percebe que o que parece bom para ele agora pode ser desastroso amanhã. País sabem disso. Quando um filho doente quer ir a um parque em vez de descansar, o pai nega o desejo não por crueldade, mas por amar mais o filho do que à vontade dele. País já viveram o futuro que os filhos ainda não viveram. Deus e Pai eterno. Ele já viu o seu futuro inteiro. Ele sabe quando a sua vontade vai te machucar. Por isso, o discípulo confia.
 
 Como alinhar a sua vontade com à vontade de Deus? Pelo principio do Getsemani. Jesus ficou no jardim até sua vontade humana se alinhar à vontade do Pai. Não foi rápido. Não foi simples. Houve gota de sangue como gota de suor. Mas ele permaneceu até o sim sair com paz. O discípulo aprende a ficar no Getsemani quanto tempo for preciso.
 
@@ -2881,7 +2881,7 @@ Jesus tem compaixão da multidão. Jesus tem cuidado da ovelha. Mas Jesus convoc
     title: `O bom combate de Paulo: por que sofrer é parte do caminho cristão`,
     slug: `o-bom-combate-de-paulo`,
     excerpt: `Paulo chamou a própria vida sofrida de bom combate. O que faz uma luta ser boa não é a ausência de dor, e o propósito que ela serve.`,
-    bodyMarkdown: `Lutei o bom combate, terminei a corrida e permaneci fiel. Essa e a frase final que Paulo escreve no fim da vida, em sua segunda carta ao discípulo Timoteo. Mas se você conhecer o que aconteceu com Paulo entre a conversão é essa carta, vai ficar surpreso que ele tenha chamado tudo aquilo de bom combate. A vida cristã, segundo Paulo, e uma batalha. E a pergunta não é se você vai lutar. A pergunta é se você vai lutar bem. Como você ve as suas lutas determina como você vai sair delas.
+    bodyMarkdown: `Lutei o bom combate, terminei a corrida e permaneci fiel. Essa é a frase final que Paulo escreve no fim da vida, em sua segunda carta ao discípulo Timoteo. Mas se você conhecer o que aconteceu com Paulo entre a conversão é essa carta, vai ficar surpreso que ele tenha chamado tudo aquilo de bom combate. A vida cristã, segundo Paulo, e uma batalha. E a pergunta não é se você vai lutar. A pergunta é se você vai lutar bem. Como você ve as suas lutas determina como você vai sair delas.
 
 ## A vida de Paulo em dez sofrimentos
 
@@ -2893,13 +2893,13 @@ Em Jerusalém foi acusado injustamente de levar um grego ao templo, foi persegui
 
 A palavra que Paulo usa em grego para bom e kalos. E ela carrega um campo semântico que va muito além do nosso bom em portugues. Kalos significa bonito, gracioso, excelente, eminente, escolhido, insuperável, precioso, recomendável, louvável, nobre, moralmente bom e digno de honra. Paulo não está dizendo que a luta foi razoável. Ele está dizendo que a luta foi bonita, foi nobre, foi digna de honra.
 
-E aqui está a chave. O que faz o combate ser bom não é a luta em si. E o propósito da batalha. Não é a guerra que é kalos, são os motivos pelos quais lutamos. Paulo enxergava o propósito daquilo que fazia. Ele via o resultado que viria depois da batalha, o reino de Deus se expandindo, o evangelho de Jesus sendo pregado, vidas sendo salvas. E por isso chamava o combate de bom.
+E aqui está a chave. O que faz o combate ser bom não é a luta em si. E o propósito da batalha. Não é a guerra que e kalos, são os motivos pelos quais lutamos. Paulo enxergava o propósito daquilo que fazia. Ele via o resultado que viria depois da batalha, o reino de Deus se expandindo, o evangelho de Jesus sendo pregado, vidas sendo salvas. E por isso chamava o combate de bom.
 
 O velho homem dele diria: pare, você vai perder. O novo homem dele dizia: continue, eu posso perder, mas o reino vai ganhar.
 
 ## Por que precisamos passar por isso
 
-Conflitos, batalhas, tribulações é provações são inevitáveis na vida crista. O evangelho pregado por muitos hoje e tão confortável que se você está passando por dificuldades, você é ensinado a achar que há algo errado. Mas em Atos 14, Paulo e Barnabé fortalecem os discípulos lembrando-os de que é necessário passar por muitos sofrimentos até entrar no reino de Deus.
+Conflitos, batalhas, tribulações é provações são inevitáveis na vida crista. O evangelho pregado por muitos hoje e tão confortável que se você está passando por dificuldades, você é ensinado a achar que há algo errado. Mas em Atos 14, Paulo e Barnabé fortalecem os discípulos lembrando-os de que e necessário passar por muitos sofrimentos até entrar no reino de Deus.
 
 Romanos 5 explica o motivo. Paulo escreve que se alegra ao enfrentar dificuldades, porque elas contribuem para desenvolver perseveranca. A perseveranca produz carater aprovado. O carater aprovado fortalece a esperança. E essa esperança não decepcionara, porque o amor de Deus foi derramado em nos pelo Espírito Santo. Tiago repete a mesma lógica. Considerem motivo de grande alegria sempre que passarem por qualquer tipo de provação, porque a fé provada produz perseveranca, e ela precisa crescer até vocês serem maduros e completos, sem que nada lhes falte.
 
@@ -2917,7 +2917,7 @@ Saber qual luta você está travando importa, porque cada luta tem armas diferen
 
 ## Onde encontrar força
 
-Hebreus 4 traz a fonte. Aproximemo-nos com toda confiança do trono da graça, onde receberemos misericórdia e encontraremos graça para nos ajudar quando for preciso. O trono da graça fortalece. Mas o ato de chegar diante do trono e um compromisso seu. A graça esta disponível, mas e você que precisa caminhar até ela.
+Hebreus 4 traz a fonte. Aproximemo-nos com toda confiança do trono da graça, onde receberemos misericórdia e encontraremos graça para nos ajudar quando for preciso. O trono da graça fortalece. Mas o ato de chegar diante do trono é um compromisso seu. A graça esta disponível, mas e você que precisa caminhar até ela.
 
 E quanto as armas? Paulo escreve em 2 Corintios 10: usamos as armas poderosas de Deus, e não as armas do mundo, para derrubar fortalezas do raciocinio humano e acabar com falsos argumentos. As armas do reino são oração, Palavra, jejum, comunhão com o Espírito, comunidade. Você não luta com as armas que o mundo te oferece, porque elas não funcionam para o tipo de inimigo que você enfrenta.
 
@@ -2934,9 +2934,9 @@ Como você ve as suas lutas? A maneira como você ve determina como você vai li
   },
   {
     title: `Você entendeu o amor errado: amor não é moeda de troca, e natureza`,
-    slug: `você-entendeu-o-amor-errado`,
+    slug: `voce-entendeu-o-amor-errado`,
     excerpt: `O amor não é o que você sente. Não é o que você barganha. Não é o que você retem. O amor é a evidência visível de quem habita em você.`,
-    bodyMarkdown: `Ha uma confusão gigante na cabeça de muito cristão quando o assunto e amor. Achamos que amor é sentimento. Achamos que amor é algo que damos para quem merece. Achamos que é moeda de troca, recompensa por bom comportamento, retribuição por gentileza. Tudo isso está errado segundo a Bíblia. Jesus disse algo radical sobre o amor que reorganiza tudo. E e provável que você, cristão de longa data, ainda não tenha entendido o amor da forma certa. Vamos ver de novo.
+    bodyMarkdown: `Ha uma confusão gigante na cabeça de muito cristão quando o assunto e amor. Achamos que amor é sentimento. Achamos que amor é algo que damos para quem merece. Achamos que e moeda de troca, recompensa por bom comportamento, retribuição por gentileza. Tudo isso está errado segundo a Bíblia. Jesus disse algo radical sobre o amor que reorganiza tudo. E e provável que você, cristão de longa data, ainda não tenha entendido o amor da forma certa. Vamos ver de novo.
 
 ## O fruto que evidência quem você é
 
@@ -2944,13 +2944,13 @@ Paulo escreveu em Galatas 5 que o fruto do Espírito e amor, alegria, paz, paci�
 
 Antes desse texto, Paulo lista as obras da carne: imoralidade sexual, impureza, libertinagem, idolatria, feitiçaria, odio, discordia, ciumes, irá, egoismo, dissensões, facções, inveja, embriaguez, orgias e coisas semelhantes. Ele é claro: os que praticam essas coisas não herdarão o Reino de Deus. As listas não são para você escolher itens da segunda lista e tentar produzi-los. As listas evidenciam quem habita dentro de você.
 
-Pense em uma casa. Os habitos da casa não dependem da casa, dependem da familia que mora nela. Se a familia muda, os habitos mudam. A casa e a mesma, mas a alma que governa e diferente. O Espírito Santo é Deus habitando em você, governando a sua vida. Quando você tem o Espírito, os frutos aparecem. Quando você sustenta o controle da carne, as obras aparecem.
+Pense em uma casa. Os habitos da casa não dependem da casa, dependem da familia que mora nela. Se a familia muda, os habitos mudam. A casa é a mesma, mas a alma que governa e diferente. O Espírito Santo é Deus habitando em você, governando a sua vida. Quando você tem o Espírito, os frutos aparecem. Quando você sustenta o controle da carne, as obras aparecem.
 
 ## A guerra interna que todo cristão trava
 
-Você pode pensar: tenho certeza de que tenho o Espírito Santo, mas vejo mais da lista da carne do que do fruto. Isso e mais comum do que se imagina. Paulo trata disso no mesmo capitulo. Ele diz que existe duas naturezas habitando em você, o Espírito e a carne, é que a carne milita contra o Espírito. A carne deseja o que é contrário ao Espírito, e o Espírito o que é contrário a carne. Eles estão em conflito.
+Você pode pensar: tenho certeza de que tenho o Espírito Santo, mas vejo mais da lista da carne do que do fruto. Isso é mais comum do que se imagina. Paulo trata disso no mesmo capitulo. Ele diz que existe duas naturezas habitando em você, o Espírito é a carne, é que a carne milita contra o Espírito. A carne deseja o que e contrário ao Espírito, e o Espírito o que e contrário a carne. Eles estão em conflito.
 
-A carne quer fazer a sua vontade. O Espírito quer fazer à vontade do Pai. A pergunta diária e: quem você está deixando vencer? As obras da carne são como um menu no restaurante do diabo. Você escolhe o que comer naquele momento. O fruto do Espírito e como uma tangerina, uma fruta com vários gomos. Se você tem o fruto, você tem todos os atributos. Não da para ter alegria sem ter paz, nem ter paciência sem ter mansidão. O fruto vem inteiro.
+A carne quer fazer a sua vontade. O Espírito quer fazer à vontade do Pai. A pergunta diária e: quem você está deixando vencer? As obras da carne são como um menu no restaurante do diabo. Você escolhe o que comer naquele momento. O fruto do Espírito é como uma tangerina, uma fruta com vários gomos. Se você tem o fruto, você tem todos os atributos. Não da para ter alegria sem ter paz, nem ter paciência sem ter mansidão. O fruto vem inteiro.
 
 ## A primeira surpresa: amor não é sentimento
 
@@ -2976,7 +2976,7 @@ Como mostramos quem é Deus para o mundo? Amando. Existe pregação mais alta qu
 
 Em 1 Corintios 13, Paulo abre o assunto declarando que ainda que ele fale linguas dos homens e dos anjos, se não tiver amor, será como sino que ressoa. Ainda que tenha o dom de profecia, conheca todos os mistérios, tenha fé que mova montanhas, sem amor, nada e. Ainda que de aos pobres tudo o que possui e entregue o corpo para ser queimado, sem amor, nada disso vale.
 
-Depois ele aterriza. O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha. Não maltrata, não procura seus interesses, não se irá facilmente, não guarda rancor. O amor não se alegra com a injustiça, mas se alegra com a verdade. Tudo sofre, tudo cre, tudo espera, tudo suporta. Repare que cada palavra ali é verbo ou comportamento. O amor não é uma sensação. O amor é habito.
+Depois ele aterriza. O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha. Não maltrata, não procura seus interesses, não se irá facilmente, não guarda rancor. O amor não se alegra com a injustiça, mas se alegra com a verdade. Tudo sofre, tudo cre, tudo espera, tudo suporta. Repare que cada palavra ali e verbo ou comportamento. O amor não é uma sensação. O amor é habito.
 
 Amor não é filosofia, e prática. Amor e habito de ser paciente. Amor e habito de ser bondoso. Amor e habito de não guardar rancor. Sem habito, não é amor.
 
@@ -2995,7 +2995,7 @@ Você entendeu o amor errado a vida toda. Hoje pode começar a entender certo. A
   },
   {
     title: `Acorda, Pedrinho: o evangelho não é o que você faz, é o que Cristo fez`,
-    slug: `acorda-pedrinho-o-evangelho-não-e-o-que-você-faz`,
+    slug: `acorda-pedrinho-o-evangelho-nao-e-o-que-voce-faz`,
     excerpt: `Pedro queria morrer por Jesus antes de Jesus morrer por ele. Essa inversão de lógica destrói o evangelho. O caminho do reino começa pelo recebimento.`,
     bodyMarkdown: `Pedro estava convicto. Disse a Jesus que daria a própria vida pelo Senhor. Era sincero, era apaixonado, era leal. E ainda assim, antes que o galo cantasse, ele negou Jesus três vezes. Por que isso aconteceu? A resposta é mais profunda do que parece. Pedro não podia morrer por Jesus antes que Jesus morresse por ele. Ninguém pode fazer algo por Deus antes de receber o que Deus já fez por ele. O evangelho não é o que fazemos para Cristo. É o que Cristo fez por nos. E quem inverte essa ordem termina como Pedro: chorando amargamente.
 
@@ -3009,7 +3009,7 @@ Cada cena revela o mesmo padrão. Pedro confia em Pedro. Confia na sua paixão, 
 
 Lucas conta que prenderam Jesus, levaram-no para a casa do sumo sacerdote, e Pedro seguia de longe. Quando acenderam um fogo no patio, Pedro tomou lugar entre os que ali estavam. Uma empregada o reconheceu. Pedro negou. Outro o identificou. Negou de novo. Uma hora depois, alguém afirmou que ele era galileu, que estava com Jesus. Pedro insistiu na negação. E enquanto ainda falava, o galo cantou. E o Senhor voltou-se e fixou os olhos em Pedro. Pedro saiu dali e chorou amargamente.
 
-Esse e o ponto mais baixo do apóstolo. O homem que jurou morrer por Jesus, que sacou a espada para defende-lo, que afirmou amor mais profundo que o de qualquer outro discípulo, agora nega três vezes que sequer o conhece. E não foi por covardia simples. Foi por confiar na própria paixão em vez do amor que recebia.
+Esse é o ponto mais baixo do apóstolo. O homem que jurou morrer por Jesus, que sacou a espada para defende-lo, que afirmou amor mais profundo que o de qualquer outro discípulo, agora nega três vezes que sequer o conhece. E não foi por covardia simples. Foi por confiar na própria paixão em vez do amor que recebia.
 
 ## O retorno ao mar
 
@@ -3029,7 +3029,7 @@ Três negações, três perguntas, três confirmações. E em cada uma, Jesus o 
 
 ## A nova identidade
 
-Jesus chamou aqueles homens de filhos. Filhos, vocês tem alguma coisa para comer? Repare. Ele não chama de covardes, embora tenham fugido. Não chama de traidores, embora tenham negado. Não chama de incredulos, embora tenham duvidado. Chama de filhos. Porque os erros deles não definiam quem eles eram. A paternidade de Deus apontava de quem eles eram. Você e idem ao Pai. Identidade e a quem você é idêntico. Para saber quem você é, veja a quem você se assemelha.
+Jesus chamou aqueles homens de filhos. Filhos, vocês tem alguma coisa para comer? Repare. Ele não chama de covardes, embora tenham fugido. Não chama de traidores, embora tenham negado. Não chama de incredulos, embora tenham duvidado. Chama de filhos. Porque os erros deles não definiam quem eles eram. A paternidade de Deus apontava de quem eles eram. Você e idem ao Pai. Identidade é a quem você é idêntico. Para saber quem você é, veja a quem você se assemelha.
 
 ## Por que Jesus pede algo a você
 
@@ -3050,9 +3050,9 @@ Você já teve uma fogueira de vergonha. Todo cristão já teve. Foi onde você 
   },
   {
     title: `Termômetro ou termostato: que tipo de cristão você é`,
-    slug: `termômetro-ou-termostato`,
+    slug: `termometro-ou-termostato`,
     excerpt: `Termometros refletem a temperatura do ambiente. Termostatos a determinam. Zaqueu não deixou a multidão decidir o que ele faria. E você?`,
-    bodyMarkdown: `Existe uma diferença simples entre dois aparelhos parecidos que muda completamente como você vive. O termômetro mede a temperatura do ambiente. Ele reflete o que está acontecendo ao redor. Quando o lugar esquenta, ele sobe. Quando o lugar esfria, ele desce. Já o termostato faz o oposto. Ele determina a temperatura. Ele não se rende ao ambiente, ele transforma o ambiente. E todo cristão precisa decidir, no dia a dia, qual desses dois ele é. Você reflete o que está ao redor ou você muda o que está ao redor?
+    bodyMarkdown: `Existe uma diferença simples entre dois aparelhos parecidos que muda completamente como você vive. O termômetro mede a temperatura do ambiente. Ele reflete o que está acontecendo ao redor. Quando o lugar esquenta, ele sobe. Quando o lugar esfria, ele desce. Já o termostato faz o oposto. Ele determina a temperatura. Ele não se rende ao ambiente, ele transforma o ambiente. E todo cristão precisa decidir, no dia a dia, qual desses dois ele e. Você reflete o que está ao redor ou você muda o que está ao redor?
 
 ## A historia de um homem baixo na arvore
 
@@ -3072,9 +3072,9 @@ Quarto, sua mente foi convertida e suas atitudes acompanharam. Não houve uma f�
 
 ## A advertência de Romanos 12
 
-Paulo escreve em Romanos 12 com a mesma lógica do termostato. Suplico-lhes que entreguem o seu corpo a Deus, por causa de tudo que ele fez por vocês. Que seja um sacrifício vivo e santo, do tipo que Deus considera agradável. Essa é a verdadeira forma de adora-lo. Não imitem o comportamento e os costumes deste mundo, mas deixem que Deus os transforme por meio de uma mudança em seu modo de pensar, a fim de que experimentem a boa, agradável e perfeita vontade de Deus para vocês.
+Paulo escreve em Romanos 12 com a mesma lógica do termostato. Suplico-lhes que entreguem o seu corpo a Deus, por causa de tudo que ele fez por vocês. Que seja um sacrifício vivo e santo, do tipo que Deus considera agradável. Essa é a verdadeira forma de adora-lo. Não imitem o comportamento é os costumes deste mundo, mas deixem que Deus os transforme por meio de uma mudança em seu modo de pensar, a fim de que experimentem a boa, agradável e perfeita vontade de Deus para vocês.
 
-A imagem aqui é direta. O mundo tem temperatura. Tem cultura, comportamento, valores, prioridades, opiniões. Se você é termômetro, você reflete tudo isso. Você sobe quando o mundo sobe, desce quando o mundo desce. Mas Paulo proibe a conformação. O cristão não se molda ao mundo, ele é moldado pela renovação da mente. E quando a mente e renovada, ele passa a operar como termostato. Ele estabelece a temperatura do reino onde quer que esteja.
+A imagem aqui e direta. O mundo tem temperatura. Tem cultura, comportamento, valores, prioridades, opiniões. Se você é termômetro, você reflete tudo isso. Você sobe quando o mundo sobe, desce quando o mundo desce. Mas Paulo proibe a conformação. O cristão não se molda ao mundo, ele e moldado pela renovação da mente. E quando a mente e renovada, ele passa a operar como termostato. Ele estabelece a temperatura do reino onde quer que esteja.
 
 ## A honestidade na auto-avaliação
 
@@ -3115,11 +3115,11 @@ Você hoje está refletindo o ambiente onde esta, ou está determinando o ambien
     title: `Falsos deuses: o bezerro de ouro que você coloca no lugar de Deus`,
     slug: `falsos-deuses-bezerro-de-ouro`,
     excerpt: `Quando o sacerdote demora, o povo derrete ouro. Todo coração tem um lugar de Deus. Se Deus não reina nele, alguma coisa reina.`,
-    bodyMarkdown: `Existe um vazio na alma humana que só Deus preenche. Quando ele não está lá, alguma coisa entra no lugar. Toda vez. Sem exceção. E pior, quando aquilo que ocupa o lugar de Deus desaparece, você não volta automaticamente para ele. Você procura outro substituto. E o ciclo se repete. Esse e o problema dos bezerros de ouro. E e mais frequente do que você imagina, até em corações que se dizem cristãos. A pergunta crua e: se Deus tirar de você o que hoje você coloca no lugar dele, o que você coloca em seguida?
+    bodyMarkdown: `Existe um vazio na alma humana que só Deus preenche. Quando ele não está lá, alguma coisa entra no lugar. Toda vez. Sem exceção. E pior, quando aquilo que ocupa o lugar de Deus desaparece, você não volta automaticamente para ele. Você procura outro substituto. E o ciclo se repete. Esse é o problema dos bezerros de ouro. E e mais frequente do que você imagina, até em corações que se dizem cristãos. A pergunta crua e: se Deus tirar de você o que hoje você coloca no lugar dele, o que você coloca em seguida?
 
 ## O desejo original de Deus com o povo
 
-Em Exodo 19, depois de tirar o povo do Egito, Deus expressa o seu desejo a Moisés. Se me obedecerem e cumprirem minha aliança, serão meu tesouro especial dentre todos os povos da terra, pois toda a terra me pertence. Serão meu reino de sacerdotes, minha nação santa. Esta e a mensagem que você deve transmitir ao povo de Israel.
+Em Exodo 19, depois de tirar o povo do Egito, Deus expressa o seu desejo a Moisés. Se me obedecerem e cumprirem minha aliança, serão meu tesouro especial dentre todos os povos da terra, pois toda a terra me pertence. Serão meu reino de sacerdotes, minha nação santa. Esta é a mensagem que você deve transmitir ao povo de Israel.
 
 A frase chave e reino de sacerdotes. O desejo de Deus não é ter um reino com sacerdotes, e ter um reino de sacerdotes. A diferença é enorme. No primeiro modelo, alguns falam com Deus em nome dos outros. No segundo, todos falam com Deus diretamente. Deus queria intimidade direta com cada pessoa. Sem intermediarios humanos. Sem cabo de comunicação via terceiros.
 
@@ -3127,7 +3127,7 @@ A frase chave e reino de sacerdotes. O desejo de Deus não é ter um reino com s
 
 Quando Deus desce no monte com trovoes, raios, fumaça é som de trombeta, em Exodo 20, o povo recua tremendo. Disseram a Moisés: fale você conosco e ouviremos. Mas não deixe que Deus nos fale diretamente, pois morreriamos. O povo rejeitou a oferta. Eles preferiram um intermediario. Vai você, Moisés, até a presença de Deus. Nos esperamos aqui em baixo. Não queremos ter relacionamento com Deus. Queremos alguém que tenha esse relacionamento e nos conte como foi.
 
-Por que? Porque toda vez que chegamos na presença de Deus, alguma coisa morre dentro de nos. E a alma não gosta de morrer. Ela prefere viver em uma religião confortável, onde alguém mais sobe até Deus é desce com mensagem. Ali existe ilusão de fé sem o custo da intimidade.
+Por que? Porque toda vez que chegamos na presença de Deus, alguma coisa morre dentro de nos. E a alma não gosta de morrer. Ela prefere viver em uma religião confortável, onde alguém mais sobe até Deus e desce com mensagem. Ali existe ilusão de fé sem o custo da intimidade.
 
 ## O que acontece quando o sacerdote demora
 
@@ -3137,7 +3137,7 @@ Arão pede que tirem as argolas de ouro das orelhas. Recebe o ouro, derrete e da
 
 ## A pergunta que mata
 
-Aqui está a pergunta que você precisa fazer para o seu coração. Se Deus tirar de você o seu Moisés, o seu sacerdote, qual bezerro de ouro você coloca no lugar dele? Se Deus tirar a pessoa que hoje e usada por Deus para falar com você, o que você coloca no lugar? Se a pessoa que ocupa o lugar de Deus no seu coração é dinheiro, e o dinheiro acaba, o que você coloca no lugar? Se e sexo e o sexo desaparece, o que você coloca no lugar? Se e relacionamento e o relacionamento termina, o que você coloca no lugar? Se e trabalho e o trabalho some, o que você coloca no lugar? Se e familia e a familia se dispersa, o que você coloca no lugar? Se são seus planos, seus sonhos, e eles fracassam, o que você coloca no lugar?
+Aqui está a pergunta que você precisa fazer para o seu coração. Se Deus tirar de você o seu Moisés, o seu sacerdote, qual bezerro de ouro você coloca no lugar dele? Se Deus tirar a pessoa que hoje e usada por Deus para falar com você, o que você coloca no lugar? Se a pessoa que ocupa o lugar de Deus no seu coração é dinheiro, e o dinheiro acaba, o que você coloca no lugar? Se e sexo e o sexo desaparece, o que você coloca no lugar? Se e relacionamento é o relacionamento termina, o que você coloca no lugar? Se e trabalho e o trabalho some, o que você coloca no lugar? Se e familia é a familia se dispersa, o que você coloca no lugar? Se são seus planos, seus sonhos, e eles fracassam, o que você coloca no lugar?
 
 A resposta dessa sequência revela quem governa de verdade o seu coração. Se você deposita sua alegria em qualquer dessas coisas, e elas faltam, sua alegria acaba. Porque essas coisas podem acabar. Essas coisas podem te falhar. Deus não acaba e não falha.
 
@@ -3149,9 +3149,9 @@ O que aconteceu na maioria das igrejas modernas? Voltamos ao modelo de Exodo 20.
 
 ## A boa notícia de Apocalipse
 
-Apocalipse 5 traz o desfecho. E entoavam um cântico novo com estas palavras: tu és digno de receber o livro, abrir os selos e lê-lo. Pois foste sacrificado e com teu sangue compraste para Deus pessoas de toda tribo, lingua, povo e nação. Tu fizeste delas um reino de sacerdotes para nosso Deus, e elas reinarão sobre a terra.
+Apocalipse 5 traz o desfecho. E entoavam um cântico novo com estas palavras: tu és digno de receber o livro, abrir os selos e lê-lo. Pois foste sacrificado é com teu sangue compraste para Deus pessoas de toda tribo, lingua, povo é nação. Tu fizeste delas um reino de sacerdotes para nosso Deus, e elas reinarão sobre a terra.
 
-O sonho de Exodo 19 se cumpriu em Cristo. O sangue de Jesus comprou para Deus pessoas de toda tribo, lingua, povo e nação. E Deus fez delas o reino de sacerdotes que sempre quis. Quem foi alcançado pelo sangue do Cordeiro se tornou sacerdote. Você não está na igreja para ouvir um sacerdote. Você esta numa reunião de sacerdotes. Cada um com acesso direto. Cada um responsável pela própria intimidade com Deus.
+O sonho de Exodo 19 se cumpriu em Cristo. O sangue de Jesus comprou para Deus pessoas de toda tribo, lingua, povo é nação. E Deus fez delas o reino de sacerdotes que sempre quis. Quem foi alcançado pelo sangue do Cordeiro se tornou sacerdote. Você não está na igreja para ouvir um sacerdote. Você esta numa reunião de sacerdotes. Cada um com acesso direto. Cada um responsável pela própria intimidade com Deus.
 
 ## A pergunta que não pode ficar sem resposta
 
@@ -3170,13 +3170,13 @@ Você e sacerdote. Sacerdote tem acesso. Sacerdote não precisa de intermediario
   },
   {
     title: `O repartir do pão: o sentido perdido da Santa Ceia`,
-    slug: `o-repartir-do-pão-o-sentido-da-ceia`,
+    slug: `o-repartir-do-pao-o-sentido-da-ceia`,
     excerpt: `O destaque da ceia não é o comer, e o repartir. Comer anuncia que Cristo morreu. Repartir anuncia que Cristo está vivo no corpo dele.`,
     bodyMarkdown: `Antes de começar, uma observação. O que você vai ler é fruto de muito estudo, pesquisa e reflexão bíblica. E não é uma opinião isolada, esta linha de leitura e defendida por estudiosos serios e fieis a Escritura. Se você discorda, vamos sentar com a Bíblia aberta para conversar. E assim que crescemos. Mas a tese central precisa ser dita com clareza. A Santa Ceia foi distorcida em muitas igrejas. O que era um momento de comunhão virou um exame moralista. É o que era um anuncio público do corpo vivo de Cristo virou um ritual privado fechado em si mesmo. Voltemos a fonte.
 
 ## O texto base de Paulo
 
-1 Corintios 11 traz o registro mais detalhado da ceia no Novo Testamento. Pois eu lhes transmiti aquilo que recebi do Senhor. Na noite em que o Senhor Jesus foi traido, ele tomou o pão, agradeceu a Deus, partiu-o é disse: este e meu corpo, que é entregue por vocês. Façam isto em memoria de mim. Da mesma forma, depois da ceia, tomou o calice e disse: este calice e a nova aliança, confirmada com meu sangue. Façam isto em memoria de mim, sempre que o beberem. Porque cada vez que vocês comem desse pão é bebem desse calice, anunciam a morte do Senhor até que ele venha.
+1 Corintios 11 traz o registro mais detalhado da ceia no Novo Testamento. Pois eu lhes transmiti aquilo que recebi do Senhor. Na noite em que o Senhor Jesus foi traido, ele tomou o pão, agradeceu a Deus, partiu-o é disse: este é meu corpo, que e entregue por vocês. Façam isto em memoria de mim. Da mesma forma, depois da ceia, tomou o calice e disse: este calice e a nova aliança, confirmada com meu sangue. Façam isto em memoria de mim, sempre que o beberem. Porque cada vez que vocês comem desse pão é bebem desse calice, anunciam a morte do Senhor até que ele venha.
 
 ## A distorção moderna
 
@@ -3186,17 +3186,17 @@ Pior, a ceia passou a ser tratada como se fosse uma fonte de poder místico. Com
 
 ## O destaque que ninguém ve
 
-Olhe de novo para o texto. Ele tomou o pão, agradeceu a Deus, partiu-o é disse: este e meu corpo. O destaque grande não é o comer. E o partir. Por que? Porque o objetivo do partir e ter comunhão. Quando você parte, você divide. Quando você divide, você reparte. Quando você reparte, você constroi corpo. Sem repartir, não ha corpo.
+Olhe de novo para o texto. Ele tomou o pão, agradeceu a Deus, partiu-o é disse: este é meu corpo. O destaque grande não é o comer. E o partir. Por que? Porque o objetivo do partir e ter comunhão. Quando você parte, você divide. Quando você divide, você reparte. Quando você reparte, você constroi corpo. Sem repartir, não ha corpo.
 
 O versículo 26 confirma. Cada vez que vocês comem desse pão é bebem desse calice, anunciam a morte do Senhor até que ele venha. Comer e o anuncio que Jesus morreu por nos. Mas o partir e o anuncio que o corpo está vivo. Que Cristo continua vivo na igreja, que é o seu corpo. Quem não reparte, não anuncia.
 
-## O que é comer indignamente
+## O que e comer indignamente
 
 Aqui está a passagem que mais foi mal interpretada. Paulo continua: examinem-se antes de comer do pão é beber do calice. Quem come do pão ou bebê do calice do Senhor indignamente e culpado de pecar contra o corpo é o sangue do Senhor. Pois, se comem do pão ou bebem do calice sem honrar o corpo de Cristo, comem e bebem julgamento contra si mesmos. Por isso muitos de vocês estão fracos e doentes, e alguns até adormeceram.
 
 Quem e o corpo de Cristo? A igreja. E como se honrava o corpo na prática corintia? Repartindo. Acontece que em Corinto, na ceia, alguns chegavam com fartura e ficavam até bebados, enquanto outros ficavam doentes e morriam por não terem o que comer. A ceia era uma refeição real, com comida real, e tinha pessoas com tudo e pessoas com nada na mesma reunião. Comer indignamente, no contexto, e comer sem dividir. E comer sem honrar o corpo. E enchera barriga enquanto o irmão passa fome ao lado.
 
-Em algumas igrejas, você não pode tomar a ceia porque está em pecado. Mas aí vem a pergunta. Que recado damos quando tomamos a ceia? Que não temos pecado? Quem não tem pecado? A lógica do exame se inverte. Você não toma a ceia porque é perfeito. Você toma a ceia porque foi perdoado. E a forma de honrar o corpo não é fingir limpeza, e dividir o pão com o irmão.
+Em algumas igrejas, você não pode tomar a ceia porque está em pecado. Mas aí vem a pergunta. Que recado damos quando tomamos a ceia? Que não temos pecado? Quem não tem pecado? A lógica do exame se inverte. Você não toma a ceia porque e perfeito. Você toma a ceia porque foi perdoado. E a forma de honrar o corpo não é fingir limpeza, e dividir o pão com o irmão.
 
 ## A finalidade do propósito
 
@@ -3206,7 +3206,7 @@ Comer e o anuncio que Jesus morreu por nos. Repartir e o anuncio que o corpo de 
 
 ## A ceia como convite para os olhos
 
-Existe uma dimensão da ceia que é raramente explorada. A ceia e um convite para os olhos. Olhar para vários lugares ao mesmo tempo.
+Existe uma dimensão da ceia que e raramente explorada. A ceia é um convite para os olhos. Olhar para vários lugares ao mesmo tempo.
 
 Olhar para tras. Em memoria de mim, disse Jesus. Olhe para a cruz. Olhe para o que ele fez ali. O sangue que correu, o corpo que foi entregue, o brado que foi dado, à vontade que se entregou.
 
@@ -3220,7 +3220,7 @@ Olhar para dentro. Examine-se. Você é parte dessa comunhão? Você é parte de
 
 ## A prática de olhos abertos
 
-Cada vez que você toma a ceia de olhos fechados, você está seguindo o costume errado. A ceia e para ser tomada de olhos abertos. Olhando para tras, para frente, para cima, em volta e para dentro. Os olhos fechados respondem ao individualismo. Os olhos abertos respondem a comunhão.
+Cada vez que você toma a ceia de olhos fechados, você está seguindo o costume errado. A ceia é para ser tomada de olhos abertos. Olhando para tras, para frente, para cima, em volta e para dentro. Os olhos fechados respondem ao individualismo. Os olhos abertos respondem a comunhão.
 
 A ceia deixou de ser ritual privado e voltou a ser declaração pública. E a declaração é dupla. Cristo morreu por mim, por isso como. Cristo está vivo no corpo dele, por isso reparto. Quem só come e não reparte ainda não entendeu o sentido completo. Quem reparte sem entender porque está repartindo, esta apenas distribuindo pão.
 
@@ -3228,7 +3228,7 @@ A ceia deixou de ser ritual privado e voltou a ser declaração pública. E a de
 
 E agora, como corpo, vamos repartir de forma simbólica aquilo que devemos repartir todos os dias. A ceia não é o ato isolado. E a memoria condensada de uma vida inteira de partilha. Você vive partindo o que tem. Você vive dividindo o que recebeu. Você vive servindo o corpo do qual é parte. A ceia simboliza isso de domingo. A semana realiza.
 
-Quando o irmão ao lado não tem, você divide. Quando alguém chora, você abraca. Quando alguém precisa, você visita. Quando o corpo cresce, você serve. É isso é celebrar a ceia em espírito e em verdade. O Senhor Jesus, na noite em que foi traido, tomou o pão, partiu e disse: façam isso em memoria de mim. A pergunta para você é simples. Você está partindo, ou você só está comendo?`,
+Quando o irmão ao lado não tem, você divide. Quando alguém chora, você abraca. Quando alguém precisa, você visita. Quando o corpo cresce, você serve. É isso e celebrar a ceia em espírito é em verdade. O Senhor Jesus, na noite em que foi traido, tomou o pão, partiu e disse: façam isso em memoria de mim. A pergunta para você é simples. Você está partindo, ou você só está comendo?`,
     categorySlug: `eclesiologia`,
     tags: ["santa-ceia", "comunhão", "igreja", "corpo-de-cristo", "compartilhar"],
     source: `30_o_repartir_do_p_ao.txt`,
@@ -3241,19 +3241,19 @@ Quando o irmão ao lado não tem, você divide. Quando alguém chora, você abra
 
 ## A cena do lava-pés
 
-João 13 abre com uma cena densa. Antes da Festa da Páscoa, sabendo Jesus que era chegada a sua hora de passar deste mundo para o Pai, tendo amado os seus que estavam no mundo, amou-os até o fim. Durante a ceia, tendo o diabo posto no coração de Judas que traisse Jesus, sabendo Jesus que o Pai tinha confiado tudo as suas mãos, é que ele tinha vindo de Deus é voltava para Deus, levantou-se da ceia, tirou a vestimenta de cima e, pegando uma toalha, cingiu-se com ela.
+João 13 abre com uma cena densa. Antes da Festa da Páscoa, sabendo Jesus que era chegada a sua hora de passar deste mundo para o Pai, tendo amado os seus que estavam no mundo, amou-os até o fim. Durante a ceia, tendo o diabo posto no coração de Judas que traisse Jesus, sabendo Jesus que o Pai tinha confiado tudo as suas mãos, é que ele tinha vindo de Deus e voltava para Deus, levantou-se da ceia, tirou a vestimenta de cima e, pegando uma toalha, cingiu-se com ela.
 
 Em seguida, Jesus pós agua numa bacia e começou a lavar os pés dos discípulos. Pedro questionou. Vai lavar os meus pés, Senhor? Jesus respondeu que aquilo seria entendido depois. Pedro recusou. O Senhor nunca lavara os meus pés. Ao que Jesus respondeu: se eu não lavar, você não terá parte comigo. Pedro então se entregou: não somente os pés, mas também as mãos e a cabeça.
 
-Depois de terminar, Jesus voltou à mesa e perguntou. Vocês compreendem o que eu lhes fiz? Vocês me chamam de Mestre e de Senhor, e fazem bem, porque eu o sou. Ora, se eu, sendo Senhor é Mestre, lavei os pés de vocês, também vocês devem lavar os pés uns dos outros.
+Depois de terminar, Jesus voltou à mesa e perguntou. Vocês compreendem o que eu lhes fiz? Vocês me chamam de Mestre é de Senhor, e fazem bem, porque eu o sou. Ora, se eu, sendo Senhor é Mestre, lavei os pés de vocês, também vocês devem lavar os pés uns dos outros.
 
 ## O contexto que muda tudo
 
 A cena e mais radical do que parece a primeira vista. Naquele tempo, lavar pés era trabalho do escravo da casa. Quando os convidados chegavam, o escravo os recebia e lavava os pés empoeirados antes de eles se sentarem para a refeição. Como Jesus é os discípulos estavam jantando sem escravo, nenhum deles tinha lavado os pés. E pior, antes desse momento, os discípulos estavam discutindo qual deles era o maior. Nenhum se ofereceu para fazer o trabalho do escravo, porque cada um se considerava grande demais para isso.
 
-Foi nesse contexto que Jesus se levantou, tirou a vestimenta, pegou a toalha e fez o trabalho do escravo. Cada gesto tinha significado. Cada minuto era uma aula. E ela foi sustentada por uma frase decisiva no versículo 3. Sabendo Jesus que o Pai tinha confiado tudo as suas mãos, é que ele tinha vindo de Deus é voltava para Deus.
+Foi nesse contexto que Jesus se levantou, tirou a vestimenta, pegou a toalha e fez o trabalho do escravo. Cada gesto tinha significado. Cada minuto era uma aula. E ela foi sustentada por uma frase decisiva no versículo 3. Sabendo Jesus que o Pai tinha confiado tudo as suas mãos, é que ele tinha vindo de Deus e voltava para Deus.
 
-Jesus sabia quem ele era. Por isso não tinha medo de servir. Quem não sabe quem é, tem medo de fazer o trabalho do menor, porque acha que aquilo vai diminuir a sua identidade. Quem sabe quem é, faz o trabalho de qualquer um sem perder nada.
+Jesus sabia quem ele era. Por isso não tinha medo de servir. Quem não sabe quem e, tem medo de fazer o trabalho do menor, porque acha que aquilo vai diminuir a sua identidade. Quem sabe quem e, faz o trabalho de qualquer um sem perder nada.
 
 ## A mentalidade de orfandade
 
@@ -3263,11 +3263,11 @@ Quando alguém não entendeu sua paternidade em Deus, tudo o que ele faz e para 
 
 ## Primeiro motivo: honramos porque sabemos quem somos
 
-João 13 destaca: sabendo este que o Pai tinha confiado tudo as suas mãos, é que ele tinha vindo de Deus é voltava para Deus, levantou-se da ceia. A ordem das ideias importa. Primeiro, Jesus sabia. Depois, ele agiu. O conhecimento da identidade veio antes do gesto de servir.
+João 13 destaca: sabendo este que o Pai tinha confiado tudo as suas mãos, é que ele tinha vindo de Deus e voltava para Deus, levantou-se da ceia. A ordem das ideias importa. Primeiro, Jesus sabia. Depois, ele agiu. O conhecimento da identidade veio antes do gesto de servir.
 
-Quando você sabe quem é, você não se importa de fazer o papel do menor. Porque nada que você faça pode alterar quem você é. A ação não define a identidade quando a identidade já foi definida em outro lugar. Mas se você ainda está tentando definir sua identidade pela sua ação, você vai brigar por posições, vai temer humilhação, vai recusar o trabalho simples, vai medir tudo pelo que aparenta.
+Quando você sabe quem e, você não se importa de fazer o papel do menor. Porque nada que você faça pode alterar quem você é. A ação não define a identidade quando a identidade já foi definida em outro lugar. Mas se você ainda está tentando definir sua identidade pela sua ação, você vai brigar por posições, vai temer humilhação, vai recusar o trabalho simples, vai medir tudo pelo que aparenta.
 
-Existe uma falsa honra que precisa ser exposta. A falsa honra e o network. Eu invisto nessa pessoa porque ela vai ser importante para onde eu quero chegar. Eu honro você porque você tem algo que eu quero. Isso não é honra bíblica, e calculo político disfarçado de relacionamento.
+Existe uma falsa honra que precisa ser exposta. A falsa honra é o network. Eu invisto nessa pessoa porque ela vai ser importante para onde eu quero chegar. Eu honro você porque você tem algo que eu quero. Isso não é honra bíblica, e calculo político disfarçado de relacionamento.
 
 A verdadeira honra diz: eu vou honrar você independentemente de quem você é, porque eu te honro não pelo que você é, mas por quem eu sou. Honra não depende de quem está na minha frente. Honra depende de quem está dentro de mim. Quem reconhece o titulo de filho de Deus, para de competir por posições humanas.
 
@@ -3295,14 +3295,14 @@ E quando essa cultura entra na sua casa, no seu casamento, na sua amizade, no se
 
 ## A pergunta para você
 
-Onde você está na cultura da honra? Você honra ou você desonra? Você levanta ou você diminui? Você serve ou você manda? Você trata pelas circunstancias ou pela identidade em Cristo? Se você reconhece padrão de desonra na sua vida, a chave não é tentar mudar comportamento por força de vontade. A chave e descer mais fundo na sua identidade em Deus. Quem sabe quem é, honra. Quem não sabe ainda, compete. Pegue a toalha. Lave pés. Sirva o menor. Você não perde nada quando faz isso, porque você já recebeu tudo.`,
+Onde você está na cultura da honra? Você honra ou você desonra? Você levanta ou você diminui? Você serve ou você manda? Você trata pelas circunstancias ou pela identidade em Cristo? Se você reconhece padrão de desonra na sua vida, a chave não é tentar mudar comportamento por força de vontade. A chave e descer mais fundo na sua identidade em Deus. Quem sabe quem e, honra. Quem não sabe ainda, compete. Pegue a toalha. Lave pés. Sirva o menor. Você não perde nada quando faz isso, porque você já recebeu tudo.`,
     categorySlug: `vida-crista`,
     tags: ["honra", "identidade", "servir", "humildade", "carater"],
     source: `31_cultura_da_honra.txt`,
   },
   {
     title: `Seja inteiro: só reparte quem está completo`,
-    slug: `seja-inteiro-só-reparte-quem-esta-completo`,
+    slug: `seja-inteiro-so-reparte-quem-esta-completo`,
     excerpt: `Você não consegue dividir o que ainda não recebeu. Você não consegue partir o que ainda não esta inteiro em Deus.`,
     bodyMarkdown: `O dicionario define inteiro como completo, apresentado na sua totalidade, completamente preenchido. Quando Jesus tomou o pão na noite em que foi traido, ele agradeceu a Deus, partiu e deu. Mas o pão já estava inteiro antes de ser partido. Só consegue partir quem já esta inteiro. Só consegue repartir quem está completo. E muito cristão tenta dividir o que ainda não recebeu, tenta entregar o que ainda não foi enchido por Deus. O resultado e cansaco, frustração é ministério sem fruto duradouro. A questão não é sobre quanto você divide, e sobre quão inteiro você esta antes de dividir.
 
@@ -3330,11 +3330,11 @@ Terceira pergunta: o que mais te incomoda no mundo é na religião? Liste uma ou
 
 ## Apocalipse é a igreja morna
 
-Apocalipse 3 fala da igreja de Laodiceia. Sei de tudo o que você faz. Você não é frio nem quente. Desejaria que fosse um ou outro. Mas, porque é como agua morna, nem quente nem fria, eu o vomitarei de minha boca. Cristo prefere você frio do que morno. Frio admite que está longe e pode ser aquecido. Morno acha que está tudo certo e não se mexe.
+Apocalipse 3 fala da igreja de Laodiceia. Sei de tudo o que você faz. Você não é frio nem quente. Desejaria que fosse um ou outro. Mas, porque e como agua morna, nem quente nem fria, eu o vomitarei de minha boca. Cristo prefere você frio do que morno. Frio admite que está longe e pode ser aquecido. Morno acha que está tudo certo e não se mexe.
 
 Precisamos servir para alguma coisa. Quem não serve para nada, não serve para nada. Não precisa ser algo impressionante. Não precisa ser palco, não precisa ser microfone, não precisa ser titulo. Mas precisa ser algo. E como saber com o que servir se você não tem aparentemente nenhum talento espetacular? Faça quatro perguntas.
 
-Quais são as suas habilidades? Mesmo as simples. Cozinhar, organizar, consolar, escutar, escrever, ensinar, dirigir, dirigir bem, calcular, reparar coisas, conversar com crianças. Tudo isso é habilidade que pode ser convertida em serviço.
+Quais são as suas habilidades? Mesmo as simples. Cozinhar, organizar, consolar, escutar, escrever, ensinar, dirigir, dirigir bem, calcular, reparar coisas, conversar com crianças. Tudo isso e habilidade que pode ser convertida em serviço.
 
 Quais são os seus incomodos? O que te tira o sono na vida da igreja, da sua cidade, da sua comunidade? Esse incômodo e mapa.
 
@@ -3344,7 +3344,7 @@ O que Deus deu a você é você não está repartindo? Quanto conhecimento, quan
 
 ## A teologia do partir
 
-Voltemos ao pão. Paulo escreve em 1 Corintios 11: pois eu lhes transmiti aquilo que recebi do Senhor. Na noite em que o Senhor Jesus foi traido, ele tomou o pão, agradeceu a Deus, partiu-o é disse: este e meu corpo, que é entregue por vocês. Façam isto em memoria de mim. Repare na sequência. Tomou. Agradeceu. Partiu. Deu. Sem o pão inteiro, não ha nada para partir. Sem agradecer ao Pai, o partir virá esforco mecânico. Sem partir, não existe entrega. Sem entrega, não existe ceia.
+Voltemos ao pão. Paulo escreve em 1 Corintios 11: pois eu lhes transmiti aquilo que recebi do Senhor. Na noite em que o Senhor Jesus foi traido, ele tomou o pão, agradeceu a Deus, partiu-o é disse: este é meu corpo, que e entregue por vocês. Façam isto em memoria de mim. Repare na sequência. Tomou. Agradeceu. Partiu. Deu. Sem o pão inteiro, não ha nada para partir. Sem agradecer ao Pai, o partir virá esforco mecânico. Sem partir, não existe entrega. Sem entrega, não existe ceia.
 
 Jesus diz no versículo 23 que deu porque recebeu. Ele transmitiu o que recebeu do Senhor. Se você não da a mensagem que recebeu, está dizendo que não recebeu. Todo mundo tem algo para dar, porque todo mundo recebeu algo da parte de Deus. Quem não reparte, não anuncia. Quem não anuncia, não representa o corpo vivo.
 
@@ -3356,20 +3356,20 @@ Você esta inteiro quando o que você recebe não para em você. Quando passa po
 
 ## A prática do dia
 
-Hoje, antes de pedir mais, agradeca pelo que já recebeu. Antes de reclamar do que falta, reparta o que já tem. Antes de acumular para o futuro, divida com o presente. Só reparte quem está inteiro. E você esta inteiro em Cristo. Pegue o pão da sua vida, agradeca, parta, de. Esse e o ritmo do reino. Esse e o convite da ceia. Essa e a forma de adorar.`,
+Hoje, antes de pedir mais, agradeca pelo que já recebeu. Antes de reclamar do que falta, reparta o que já tem. Antes de acumular para o futuro, divida com o presente. Só reparte quem está inteiro. E você esta inteiro em Cristo. Pegue o pão da sua vida, agradeca, parta, de. Esse é o ritmo do reino. Esse é o convite da ceia. Essa é a forma de adorar.`,
     categorySlug: `vida-crista`,
     tags: ["propósito", "missão", "submissão", "discipulado", "servir"],
     source: `32_seja_integro.txt`,
   },
   {
-    title: `Escute a voz de Deus é seja quem você nasceu para ser`,
-    slug: `escute-a-voz-de-deus-seja-quem-você-nasceu`,
+    title: `Escute a voz de Deus e seja quem você nasceu para ser`,
+    slug: `escute-a-voz-de-deus-seja-quem-voce-nasceu`,
     excerpt: `Quando você tenta ser o que não nasceu para ser, você é como um controle remoto tentando pregar prego. O sucesso e impossível.`,
-    bodyMarkdown: `Existem duas razões pelas quais a maioria dos cristãos não se torna quem Deus chamou para serem. A primeira e a insatisfação. A segunda e a falta de fé nas promessas de Deus. Tentamos copiar modelos. Imitamos vozes que não são nossas. Vestimos roupas espirituais que não foram feitas para o nosso corpo. E quando isso acontece, o resultado e o cansaço de uma vida vivida fora do design. Você nasceu para ser alguém específico. E até você escutar a voz de Deus sobre isso, você vai continuar tentando ser tudo, menos você.
+    bodyMarkdown: `Existem duas razões pelas quais a maioria dos cristãos não se torna quem Deus chamou para serem. A primeira é a insatisfação. A segunda é a falta de fé nas promessas de Deus. Tentamos copiar modelos. Imitamos vozes que não são nossas. Vestimos roupas espirituais que não foram feitas para o nosso corpo. E quando isso acontece, o resultado é o cansaço de uma vida vivida fora do design. Você nasceu para ser alguém específico. E até você escutar a voz de Deus sobre isso, você vai continuar tentando ser tudo, menos você.
 
 ## Primeira razão: a insatisfação
 
-A insatisfação foi à porta de entrada do diabo na historia humana. No céu, ele cobicou ser semelhante a Deus é arrastou um terco dos anjos com ele. No jardim, soprou na mulher a mesma trajetoria, dizendo que se ela comesse do fruto seria como Deus. No deserto, fez a mesma tentativa com Jesus, dizendo se você é o Filho de Deus, faça isso, faça aquilo. A arma do inimigo e antiga. Ele não tem criatividade. Ele sempre repete.
+A insatisfação foi à porta de entrada do diabo na historia humana. No céu, ele cobicou ser semelhante a Deus e arrastou um terco dos anjos com ele. No jardim, soprou na mulher a mesma trajetoria, dizendo que se ela comesse do fruto seria como Deus. No deserto, fez a mesma tentativa com Jesus, dizendo se você é o Filho de Deus, faça isso, faça aquilo. A arma do inimigo e antiga. Ele não tem criatividade. Ele sempre repete.
 
 Quando o inimigo destrói sua identidade, ele destrói seu propósito. Adão tinha propósito no jardim. Era para dominar, multiplicar, governar. Mas perdeu propósito quando perdeu identidade. Foi expulso, começou a trabalhar com suor, viu o filho matar o irmão, e a humanidade entrou num ciclo de orfandade. Jesus, pelo contrário, recusou ouvir o diabo no deserto e saiu pregando o reino. A diferença entre os dois e a voz que escolheram escutar.
 
@@ -3426,15 +3426,15 @@ Você está sendo você, ou está sendo a versão do que outros esperam? Você e
   },
   {
     title: `Se você é Deus: três atitudes diante da cruz que decidem a salvação`,
-    slug: `se-você-e-deus-três-atitudes-diante-da-cruz`,
+    slug: `se-voce-e-deus-tres-atitudes-diante-da-cruz`,
     excerpt: `Três homens estavam na cruz. Três encontros com Jesus. Apenas um foi salvo. A diferença não foi a vida que viveram, foi a postura no momento final.`,
-    bodyMarkdown: `Por que algumas pessoas encontram com Jesus é são salvas, e outras encontram com Jesus é continuam perdidas? Essa pergunta atravessa a Bíblia inteira, mas em nenhum lugar ela é tão comprimida quanto em Lucas 23. Três homens crucificados lado a lado. O do meio era o Cristo. Os outros dois eram malfeitores. Cada um tinha a mesma proximidade física com Jesus. Cada um ouviu as mesmas palavras. Cada um teve a mesma oportunidade. Mas o resultado foi diferente. Um foi salvo. O outro não. E a Bíblia conta tudo em poucos versículos para que você é eu pudessemos entender qual atitude diante da cruz nos coloca de qual lado da eternidade.
+    bodyMarkdown: `Por que algumas pessoas encontram com Jesus e são salvas, e outras encontram com Jesus e continuam perdidas? Essa pergunta atravessa a Bíblia inteira, mas em nenhum lugar ela é tão comprimida quanto em Lucas 23. Três homens crucificados lado a lado. O do meio era o Cristo. Os outros dois eram malfeitores. Cada um tinha a mesma proximidade física com Jesus. Cada um ouviu as mesmas palavras. Cada um teve a mesma oportunidade. Mas o resultado foi diferente. Um foi salvo. O outro não. E a Bíblia conta tudo em poucos versículos para que você é eu pudessemos entender qual atitude diante da cruz nos coloca de qual lado da eternidade.
 
 ## A cena do calvario
 
 Lucas 23, a partir do versículo 32, descreve a cena. Também eram levados outros dois, malfeitores, para serem executados com Jesus. Quando chegaram ao Calvario, ali o crucificaram, junto com os malfeitores, um a sua direita, outro a sua esquerda. Jesus dizia: Pai, perdoa-lhes, porque não sabem o que fazem.
 
-O povo observava tudo. As autoridades zombavam: salvou os outros, salve a si mesmo se e o Cristo de Deus, o escolhido. Os soldados zombavam também, oferecendo vinagre, dizendo: se você é o rei dos judeus, salve a si mesmo. Acima de Jesus estava a inscrição: este e o Rei dos Judeus.
+O povo observava tudo. As autoridades zombavam: salvou os outros, salve a si mesmo se e o Cristo de Deus, o escolhido. Os soldados zombavam também, oferecendo vinagre, dizendo: se você é o rei dos judeus, salve a si mesmo. Acima de Jesus estava a inscrição: este é o Rei dos Judeus.
 
 Um dos malfeitores blasfemava: você não é o Cristo? Salve a si mesmo e a nos também. Mas o outro o repreendeu: você nem ao menos teme a Deus, estando sob a mesma sentenca? A nossa punição é justa, porque estamos recebendo o castigo que merecemos, mas este não fez mal nenhum. E acrescentou: Jesus, lembre-se de mim quando você vier no seu Reino. Jesus respondeu: em verdade lhe digo que hoje você estara comigo no paraiso.
 
@@ -3442,19 +3442,19 @@ Três atitudes. Três encontros com Jesus. Três destinos diferentes.
 
 ## Primeira atitude: o soldado romano confortável
 
-A primeira atitude vem das autoridades e dos soldados. Eles estão em pé, confortáveis, observando. Não estão crucificados. Não tem desespero pessoal. Eles olham para Jesus é dizem: se você é Deus, não deveria estar nessa situação. Salve-se. Faça um milagre. Prove. Atende ao meu pré-requisito mental do que é ser Deus.
+A primeira atitude vem das autoridades e dos soldados. Eles estão em pé, confortáveis, observando. Não estão crucificados. Não tem desespero pessoal. Eles olham para Jesus e dizem: se você é Deus, não deveria estar nessa situação. Salve-se. Faça um milagre. Prove. Atende ao meu pré-requisito mental do que e ser Deus.
 
-Aqui esta o problema. Quando você define quem Deus é, você está no papel de criador. Você decide que características Deus precisa ter para ser Deus. Você determina que coisas ele pode ou não pode fazer. Você estabelece que para ele ser Deus, precisa caber nos seus criterios. E se ele cabe nos seus criterios, você é maior que ele. Você não está adorando, você está supervisionando.
+Aqui esta o problema. Quando você define quem Deus e, você está no papel de criador. Você decide que características Deus precisa ter para ser Deus. Você determina que coisas ele pode ou não pode fazer. Você estabelece que para ele ser Deus, precisa caber nos seus criterios. E se ele cabe nos seus criterios, você é maior que ele. Você não está adorando, você está supervisionando.
 
 Pense num astronauta que vai conhecer um país novo. Ele não chega ao país e diz como o país deve funcionar. Ele se submete a cultura local, aprende, observa, respeita. Quando você chega diante de Deus determinando o que Deus precisa ser, você não está diante de Deus, você está tentando criar Deus a sua imagem. Aí você virá o deus dessa relação.
 
-E o homem só tem encontro real com esse Deus se ele desejar que você o encontre. Pense em Romeu e Julieta. Só sabemos sobre eles o que Shakespeare escreveu sobre eles. Ele e o autor. Da para saber sobre Romeu e Julieta apenas o que está no livro. Não da para acrescentar nada do lado de fora do livro. Da mesma forma, Deus é autor da realidade. Só da para conhecer o que ele revelou. E ele se revelou de modo definitivo quando entrou na própria historia que escreveu, nascendo na barriga de uma mulher e morrendo numa cruz.
+E o homem só tem encontro real com esse Deus se ele desejar que você o encontre. Pense em Romeu e Julieta. Só sabemos sobre eles o que Shakespeare escreveu sobre eles. Ele é o autor. Da para saber sobre Romeu e Julieta apenas o que está no livro. Não da para acrescentar nada do lado de fora do livro. Da mesma forma, Deus e autor da realidade. Só da para conhecer o que ele revelou. E ele se revelou de modo definitivo quando entrou na própria historia que escreveu, nascendo na barriga de uma mulher e morrendo numa cruz.
 
 ## Segunda atitude: o ladrão que pede solução
 
 A segunda atitude vem do primeiro malfeitor. Ele está crucificado, sentindo a dor, vendo a morte chegar. Mas o pedido dele e de outra natureza. Você não é o Cristo? Salve a si mesmo e a nos também. Note a frase. Salve-nos dessa situação. Ele não quer mudança de vida, quer mudança de circunstancia. Não quer ser perdoado, quer ser livrado.
 
-Compare. O soldado romano dizia: salve-se dessa situação. O primeiro ladrão diz: me salve dessa situação. As duas atitudes são parecidas, mas com pequena variação. Em ambas, Deus é ferramenta para um fim pessoal. Em ambas, Deus precisa cumprir uma demanda específica para ser aceito. Se você é Deus, resolve esse problema para mim. Se você é Deus, me da isso, me da aquilo. Se você é Deus, faz acontecer o que eu quero.
+Compare. O soldado romano dizia: salve-se dessa situação. O primeiro ladrão diz: me salve dessa situação. As duas atitudes são parecidas, mas com pequena variação. Em ambas, Deus e ferramenta para um fim pessoal. Em ambas, Deus precisa cumprir uma demanda específica para ser aceito. Se você é Deus, resolve esse problema para mim. Se você é Deus, me da isso, me da aquilo. Se você é Deus, faz acontecer o que eu quero.
 
 Nesse caso, você está colocando Deus como seu servo. A finalidade da sua vida é o deus da sua vida. Se a finalidade e seu casamento, seu casamento e seu deus. Se a finalidade e sua carreira, sua carreira e seu deus. Se a finalidade e sua saude, sua saude e seu deus. Você vai a Cristo apenas se Cristo for instrumento da finalidade que já e seu deus. Você e o deus, Cristo é o servo.
 
@@ -3464,11 +3464,11 @@ Por que Deus não resolve e faz tudo o que você quer? Porque se Deus fizesse tu
 
 O segundo ladrão tem outra postura. Primeiro, ele temeu a Deus. Você nem ao menos teme a Deus, estando sob a mesma sentenca? Segundo, ele reconheceu a própria culpa. A nossa punição é justa, porque estamos recebendo o castigo que merecemos. Terceiro, ele reconheceu a inocência de Jesus. Mas este não fez mal nenhum. Quarto, ele apelou para a misericórdia. Jesus, lembre-se de mim quando você vier no seu Reino.
 
-Repare na composição desse pedido. Ele não pede pra ser tirado da cruz. Não pede para escapar da morte. Não pede solução circunstancial. Pede para ser lembrado. Pede mercia. Pede que Jesus, no momento certo, no reino certo, se lembre dele. E o pedido e baseado em quem Jesus é, não em quem ele é.
+Repare na composição desse pedido. Ele não pede pra ser tirado da cruz. Não pede para escapar da morte. Não pede solução circunstancial. Pede para ser lembrado. Pede mercia. Pede que Jesus, no momento certo, no reino certo, se lembre dele. E o pedido e baseado em quem Jesus e, não em quem ele e.
 
 Existem três falas tipicas no mundo religioso, e o segundo ladrão desmonta todas.
 
-A fala do religioso: ele é mal, ele não merece, puna-o. Era a fala do soldado e dos religiosos.
+A fala do religioso: ele e mal, ele não merece, puna-o. Era a fala do soldado e dos religiosos.
 
 A fala da libertinagem: eu não sou mau, eu mereco, me premie. Era a fala do primeiro ladrão.
 
@@ -3490,13 +3490,13 @@ Morrer com Cristo. Quando renunciamos o pecado, morremos com ele. Quando Jesus m
 
 Ressuscitar com Cristo. Se ressuscitamos com ele, andamos como ele. Somos nova criatura. As coisas antigas passaram, eis que tudo e novo.
 
-Reinar com Cristo. Se morremos com ele é ressuscitamos com ele, estamos reinando com ele. Mas o que é reinar?
+Reinar com Cristo. Se morremos com ele e ressuscitamos com ele, estamos reinando com ele. Mas o que e reinar?
 
 ## Reinar pelos olhos do reino
 
 O mundo entende reinar como salvar a si mesmo, viver para si, ser servido, ter coisas boas para dizer que é bom, fazer o que quiser. Era a visão que zombava na cruz. Os zombadores não entendiam que o Filho do Homem estava reinando justamente naquele momento, na cruz.
 
-Mas reinar no reino de Deus é diferente. Não é ter poder para se salvar, porque você já foi salvo. E ter poder para perder a vida para que outros sejam salvos. Estar na cruz é o maior simbolo de ser rei segundo o reino de Deus. Reinar em Cristo é renuncia até de coisas licitas. Assistir um filme não é pecado, em si. Mas Deus pode pedir para você renunciar esse tempo para que outras vidas sejam salvas. Reinar e estar livre para morrer. Reinar e estar livre para entregar sua vida por outros.
+Mas reinar no reino de Deus e diferente. Não é ter poder para se salvar, porque você já foi salvo. E ter poder para perder a vida para que outros sejam salvos. Estar na cruz é o maior simbolo de ser rei segundo o reino de Deus. Reinar em Cristo e renuncia até de coisas licitas. Assistir um filme não é pecado, em si. Mas Deus pode pedir para você renunciar esse tempo para que outras vidas sejam salvas. Reinar e estar livre para morrer. Reinar e estar livre para entregar sua vida por outros.
 
 Costumamos orar: Senhor, nos entregue esse estado, nos entregue os perdidos. A oração certa e o oposto: Senhor, nos entregue para esse país, nos entregue para os perdidos. Somos nos que devemos ser entregues como sacrifício vivo.
 
@@ -3515,7 +3515,7 @@ Hoje a salvação chegou a esta casa. Foi o que Jesus disse para Zaqueu. Foi o q
   },
   {
     title: `O lugar do homem abençoado: por que alguns veem o bem e outros não`,
-    slug: `o-lugar-do-homem-abençoado`,
+    slug: `o-lugar-do-homem-abencoado`,
     excerpt: `Existe uma diferença nitida entre o homem que confia em si mesmo é o que confia no Senhor. Um não ve quando vem o bem. O outro não teme quando vem o calor.`,
     bodyMarkdown: `Existem dois tipos de homens diante de Deus. A Bíblia, em Jeremias 17, faz uma distinção tão clara que não deixa espaco para meio-termo. Maldito o homem que confia no homem, faz da carne mortal o seu braço é aparta o seu coração do Senhor. Bendito o homem que confia no Senhor é cuja esperança é o Senhor. As duas vidas, descritas em poucos versículos, divergem em tudo. Aparência, frutos, reação a crise, percepção do bem que passa, capacidade de amar, alegria interior. E não se trata de salvos versus perdidos. Trata-se de cristãos vivendo de duas formas diferentes diante das promessas de Deus. Você está em qual desses lugares?
 
@@ -3535,13 +3535,13 @@ O versículo 6 de Jeremias 17 diz que o homem confiado em si será como arbusto 
 
 Aqueles que confiam em si mesmos costumam ser muito orgulhosos. O orgulho faz com que despreze os outros que estão ao seu redor. Tornam-se incapazes de enxergar coisas boas debaixo do nariz. Não reconhecem o conjuge como benção. Não reconhecem os filhos como herança. Não valorizam auxiliares e cooperadores, e por isso os perdem. E essas mesmas pessoas se tornam benção na vida de outros que sabem reconhecer.
 
-Por que não percebem o bem? Porque, como confiam no próprio esforco, não tem capacidade de enxergar a benção que vem do Senhor. Para eles, o bem e recompensa do esforco próprio. Como se julgam merecedores, não costumam ser gratos por nada e por ninguém. E gente que sempre acha que os outros estão no lucro com eles, é que eles mesmos mereciam gente melhor do lado.
+Por que não percebem o bem? Porque, como confiam no próprio esforco, não tem capacidade de enxergar a benção que vem do Senhor. Para eles, o bem e recompensa do esforco próprio. Como se julgam merecedores, não costumam ser gratos por nada é por ninguém. E gente que sempre acha que os outros estão no lucro com eles, é que eles mesmos mereciam gente melhor do lado.
 
 De forma oposta, aqueles que confiam na graça, no favor imerecido, são sempre gratos. E por isso percebem a benção quando ela vem. Sabem que possuem muito mais do que merecem, por isso são gratos e alegres. A diferença entre ver o bem e não ver o bem não está no bem que passa, esta nos olhos que olham.
 
 ## O arbusto solitario no deserto
 
-A imagem do arbusto solitario no deserto e sombria. Um arbusto solitario nos fala de alguém amargurado, ressentido. Sua aparência e de alguém fraco, envelhecido, cansado, desfigurado. Esta e a descrição de Deus de alguém que confia em si mesmo. Terminar a vida sozinho e amargurado é sinal de maldição.
+A imagem do arbusto solitario no deserto e sombria. Um arbusto solitario nos fala de alguém amargurado, ressentido. Sua aparência é de alguém fraco, envelhecido, cansado, desfigurado. Esta é a descrição de Deus de alguém que confia em si mesmo. Terminar a vida sozinho e amargurado é sinal de maldição.
 
 Viver sozinho é ruim, mas viver no deserto fala de alguém que não desfruta do orvalho da graça sobre si. Por isso não produz fruto. E triste quando tudo o que resta e a sequidão de estio. Esse arbusto pode até parecer firme em momentos, pode resistir um tempo, mas não tem ribeiro próximo, não tem agua subterranea, não tem reserva. Quando o calor verdadeiro vem, seca.
 
@@ -3551,13 +3551,13 @@ A imagem do bênção é de uma arvore plantada junto a correntes de agua, que e
 
 Veja a diferença radical. O homem debaixo de maldição não ve quando vem o bem. O homem abençoado não teme nem quando vem o calor da tribulação. Os anos de calor e tribulação vem mesmo para o homem abençoado. Mas ele não teme a seca, não teme o calor, e continua a dar fruto.
 
-O homem abençoado e como a arvore que está sempre verde. Significa que parece sempre mais jovem, vive cheio de entusiasmo e dinamismo. O texto diz que no tempo da seca ele não se perturba. Significa que ele não tem ataques de pânico, não vive sob estresse e medo. Um ano de seca resulta em pouca colheita, inflação alta, desemprego. Outra palavra para isso é crise financeira moderna.
+O homem abençoado e como a arvore que está sempre verde. Significa que parece sempre mais jovem, vive cheio de entusiasmo e dinamismo. O texto diz que no tempo da seca ele não se perturba. Significa que ele não tem ataques de pânico, não vive sob estresse e medo. Um ano de seca resulta em pouca colheita, inflação alta, desemprego. Outra palavra para isso e crise financeira moderna.
 
-Em tempos assim, o homem abençoado permanece em paz, cheio de descanso, porque a promessa de Deus é que mesmo nessas epocas ele não deixa de dar fruto. Tudo isso é assim porque ele confia no Senhor.
+Em tempos assim, o homem abençoado permanece em paz, cheio de descanso, porque a promessa de Deus é que mesmo nessas epocas ele não deixa de dar fruto. Tudo isso e assim porque ele confia no Senhor.
 
 ## Um crente pode ficar sob maldição?
 
-Pergunta importante. A resposta é sim. Existem crentes que preferem depender de si mesmos em vez de confiar no Senhor. Eles dependem de Jesus para ser salvos, mas depois assumem para si a responsabilidade pelo sucesso na familia, financas e ministério. Todo crente foi liberto da maldição da lei. Mas quando rejeita a graça de Deus é resolve depender das próprias obras para ser abençoado, volta a cair na maldição da lei. Isso não significa que perdeu a salvação. Significa apenas que confia em si mesmo para ser abençoado.
+Pergunta importante. A resposta é sim. Existem crentes que preferem depender de si mesmos em vez de confiar no Senhor. Eles dependem de Jesus para ser salvos, mas depois assumem para si a responsabilidade pelo sucesso na familia, financas e ministério. Todo crente foi liberto da maldição da lei. Mas quando rejeita a graça de Deus e resolve depender das próprias obras para ser abençoado, volta a cair na maldição da lei. Isso não significa que perdeu a salvação. Significa apenas que confia em si mesmo para ser abençoado.
 
 Paulo escreve em Galatas 5 versículo 4: de Cristo vocês se desligaram, vocês que procuram justificar-se na lei, da graça decairam. Decair da graça não significa cair no pecado, significa cair na lei. Cair na lei significa confiar nas próprias obras e obediência para ser abençoado. Se você volta ao sistema da lei, fica sujeito a maldição decorrente da quebra da lei.
 
@@ -3571,7 +3571,7 @@ A maioria das pessoas pensa que será amaldiçoada quando peca. A verdade é que
 
 ## Quem pode ser abençoado
 
-Davi diz em Romanos 4 que abençoado e o homem a quem Deus atribui justiça independentemente de obras. Bem-aventurados aqueles cujas iniquidades são perdoadas e cujos pecados são cobertos. Bem-aventurado o homem a quem o Senhor jamais imputara pecado.
+Davi diz em Romanos 4 que abençoado é o homem a quem Deus atribui justiça independentemente de obras. Bem-aventurados aqueles cujas iniquidades são perdoadas e cujos pecados são cobertos. Bem-aventurado o homem a quem o Senhor jamais imputara pecado.
 
 A Palavra de Deus não diz que o homem abençoado não peca. A Bíblia diz que mesmo quando ele peca, esse pecado não lhe e imputado. Mesmo quando peca, o pecado não é colocado na sua conta. Por que? Porque todos os seus pecados já foram punidos na cruz do Calvario. Por isso dizemos que o crente continua sendo justo mesmo quando peca. Ele recebeu o dom da justiça. Tem posição de justo diante de Deus.
 
@@ -3579,22 +3579,22 @@ Saber que Deus não nos imputa mais o pecado vai nos fazer correr para pecar? Cl
 
 ## A pergunta de auto-exame
 
-Faça três perguntas honestas para o seu coração. Por que algumas pessoas percebem o bem que vem e outras não? Mesmo quando peca, por que o pecado não é colocado na sua conta? Somos justificados somente pela fé, e por isso o justo vive pela fé. Fé em que? Se você respondeu que é fé nas suas obras, você voltou para a lei. Se você respondeu que é fé na obra consumada de Cristo, você está no lugar do homem abençoado. E desse lugar, você ve o bem quando passa. Você não teme o calor quando vem. E você continua a dar fruto, mesmo no ano de seca.`,
+Faça três perguntas honestas para o seu coração. Por que algumas pessoas percebem o bem que vem e outras não? Mesmo quando peca, por que o pecado não é colocado na sua conta? Somos justificados somente pela fé, e por isso o justo vive pela fé. Fé em que? Se você respondeu que e fé nas suas obras, você voltou para a lei. Se você respondeu que e fé na obra consumada de Cristo, você está no lugar do homem abençoado. E desse lugar, você ve o bem quando passa. Você não teme o calor quando vem. E você continua a dar fruto, mesmo no ano de seca.`,
     categorySlug: `vida-crista`,
     tags: ["graça", "fé", "lei", "bênção", "confiar-em-deus"],
     source: `35_o_lugar_do_homem_abencoado.txt`,
   },
   {
     title: `O que é o reino de Deus é a sua justiça`,
-    slug: `o-que-e-o-reino-de-deus-e-sua-justiça`,
+    slug: `o-que-e-o-reino-de-deus-e-sua-justica`,
     excerpt: `Jesus mandou buscar o reino de Deus em primeiro lugar. Mas o que é exatamente esse reino? Justiça, paz e alegria no Espírito Santo.`,
-    bodyMarkdown: `Algumas pessoas dizem que devemos buscar o reino de Deus. E correto, e mandamento direto de Jesus em Mateus 6 versículo 33. Buscai, pois, em primeiro lugar, o seu reino e a sua justiça, e todas estas coisas vos serão acrescentadas. Mas o que é esse reino? Quando você ouve a expressão reino de Deus, o que vem a sua cabeça? E provável que tenha imagens vagas. E nesse vacuo de definição que muito cristão passa a vida inteira buscando algo que não consegue identificar com clareza. Hoje e dia de fechar essa lacuna. O reino de Deus tem características. Esta nas suas relações, no seu carater, na sua paz interior, na sua alegria diante de tudo.
+    bodyMarkdown: `Algumas pessoas dizem que devemos buscar o reino de Deus. E correto, e mandamento direto de Jesus em Mateus 6 versículo 33. Buscai, pois, em primeiro lugar, o seu reino é a sua justiça, e todas estas coisas vos serão acrescentadas. Mas o que é esse reino? Quando você ouve a expressão reino de Deus, o que vem a sua cabeça? E provável que tenha imagens vagas. E nesse vacuo de definição que muito cristão passa a vida inteira buscando algo que não consegue identificar com clareza. Hoje e dia de fechar essa lacuna. O reino de Deus tem características. Esta nas suas relações, no seu carater, na sua paz interior, na sua alegria diante de tudo.
 
 ## O versículo base
 
 Romanos 14 versículo 17 e o ponto de partida. Porque o reino de Deus não é comida nem bebida, mas justiça, paz e alegria no Espírito Santo. Existia um conflito na igreja de Roma. Os homens identificavam os filhos de Deus pelo tipo de comida que comiam. Quem comia certos alimentos era considerado não digno do reino. Levitico 11 listava categorias de alimentos puros e impuros. E aquele rigorismo, já superado em Cristo, continuava confundindo a igreja primitiva.
 
-Paulo então redefine. O reino não é marcado pela dieta nem pelo vestuario. E marcado por três coisas: justiça, paz e alegria no Espírito Santo. E os sinais do reino na vida de uma pessoa aparecem no modo como ela trata as outras, e não no modo como ela come, bebê ou se veste. Se em vez de brigas e contendas, ela promove paz, ela é pacificadora. Como tal, será chamada filha de Deus, conforme Mateus 5 versículo 9. Aquele que promove paz no poder do Espírito Santo, e não aquele que se preocupa com discursos e aparências externas, mostra que o reino de Deus está dentro dele.
+Paulo então redefine. O reino não é marcado pela dieta nem pelo vestuario. E marcado por três coisas: justiça, paz e alegria no Espírito Santo. E os sinais do reino na vida de uma pessoa aparecem no modo como ela trata as outras, e não no modo como ela come, bebê ou se veste. Se em vez de brigas e contendas, ela promove paz, ela e pacificadora. Como tal, será chamada filha de Deus, conforme Mateus 5 versículo 9. Aquele que promove paz no poder do Espírito Santo, e não aquele que se preocupa com discursos e aparências externas, mostra que o reino de Deus está dentro dele.
 
 ## A primeira marca: a justiça de Deus
 
@@ -3602,11 +3602,11 @@ Para entender o reino, primeiro precisamos definir a justiça que Paulo menciona
 
 Pecado, segundo a Bíblia, e a transgressão dos mandamentos de Deus. 1 João 3 versículo 4: todo aquele que prática o pecado também transgride a lei, porque o pecado é a transgressão da lei. Pecado e ato. Cada um e tentado quando atraido pelo próprio desejo, conforme Tiago 1.
 
-Definimos o que é pecado. Qual a consequência? Romanos 6 versículo 23: o salario do pecado é a morte, mas o dom gratuito de Deus é a vida eterna por meio de Cristo Jesus, nosso Senhor. A consequência da transgressão é a morte. Mas, por causa de Jesus, não merecemos mais essa morte.
+Definimos o que e pecado. Qual a consequência? Romanos 6 versículo 23: o salario do pecado é a morte, mas o dom gratuito de Deus é a vida eterna por meio de Cristo Jesus, nosso Senhor. A consequência da transgressão é a morte. Mas, por causa de Jesus, não merecemos mais essa morte.
 
 Como Jesus se colocou no nosso lugar? 2 Corintios 5 versículo 21 explica. Aquele que não conheceu pecado, ele o fez pecado por nos, para que nele fossemos feitos justiça de Deus. Jesus, sem nenhum pecado, assumiu o seu pecado é o meu, e aceitou a morte na cruz como pagamento. Pela lei de Deus, eu deveria ser morto pelos meus pecados. Mas Jesus, diante do Juiz, se colocou como oferta no meu lugar.
 
-Romanos 3 versículo 21 sintetiza: agora, sem lei, se manifestou a justiça de Deus, testemunhada pela lei e pelos profetas. Justiça de Deus mediante a fé em Jesus Cristo, para todos e sobre todos os que creem, porque não ha distinção. A justiça de Deus agora é Jesus na cruz. Todo aquele que cre em Cristo Jesus toma posse dessa justiça.
+Romanos 3 versículo 21 sintetiza: agora, sem lei, se manifestou a justiça de Deus, testemunhada pela lei e pelos profetas. Justiça de Deus mediante a fé em Jesus Cristo, para todos é sobre todos os que creem, porque não ha distinção. A justiça de Deus agora é Jesus na cruz. Todo aquele que cre em Cristo Jesus toma posse dessa justiça.
 
 Você e salvo agora pelo que Jesus fez. Mas a salvação em si e tema de outra reflexão. O que importa para esta passagem é que você entendeu: a justiça de Deus é Jesus morto na cruz por nos. Só tomamos posse dessa graça quando acreditamos no que Cristo fez.
 
@@ -3632,9 +3632,9 @@ Habacuque 3 versículo 17 mostra essa alegria em forma extrema. Ainda que a figu
 
 ## A pergunta de Mateus 6
 
-Mateus 6 versículo 33 traz a famosa promessa. Buscai em primeiro lugar o reino de Deus é a sua justiça, e todas estas coisas vos serão acrescentadas. Repare que ela fala em ser acrescentadas. Não em ser principal. As coisas materiais, financeiras, relacionais, são acrescentadas. O principal é o reino. Quando você inverte essa ordem, busca o que é secundario primeiro e descobre que o secundario não satisfaz, além de afastar você do principal.
+Mateus 6 versículo 33 traz a famosa promessa. Buscai em primeiro lugar o reino de Deus é a sua justiça, e todas estas coisas vos serão acrescentadas. Repare que ela fala em ser acrescentadas. Não em ser principal. As coisas materiais, financeiras, relacionais, são acrescentadas. O principal é o reino. Quando você inverte essa ordem, busca o que e secundario primeiro e descobre que o secundario não satisfaz, além de afastar você do principal.
 
-Os sinais do reino de Deus na vida de uma pessoa, repetimos, são a justiça, a paz e a alegria no Espírito Santo. Você está vivendo dentro do reino quando esses três sinais aparecem. Esta vivendo fora dele quando os três estão distantes.
+Os sinais do reino de Deus na vida de uma pessoa, repetimos, são a justiça, a paz é a alegria no Espírito Santo. Você está vivendo dentro do reino quando esses três sinais aparecem. Esta vivendo fora dele quando os três estão distantes.
 
 ## A vida prática do reino
 
@@ -3653,13 +3653,13 @@ Você não precisa carregar a religião das comidas e bebidas. Você não precis
   },
   {
     title: `Qual e o préço da salvação? A resposta que muitos teimam em rejeitar`,
-    slug: `qual-e-o-préço-da-salvação`,
+    slug: `qual-e-o-preco-da-salvacao`,
     excerpt: `Quando alguém diz que está pagando o préço para ir para o céu, anula o préço que Jesus já pagou. A salvação não é merecimento, é dom.`,
     bodyMarkdown: `Eu ouvi uma frase recentemente que me incomodou profundamente. Uma pessoa dizia que estava pagando o préço para ir para o céu. Estava se esforcando, sofrendo, lutando, fazendo tudo certo, exatamente para conquistar a salvação. Você talvez já tenha ouvido frases parecidas em circulos cristãos. Ou talvez já tenha pensado assim. Mas precisamos de coragem para encarar o que essa frase implica. Quando alguém diz que está pagando o préço para receber a salvação, anula o préço que Jesus já pagou. Não recebemos salvação pelo que fazemos, mas pelo que Cristo fez. E essa diferença não é detalhe teológico secundario. E o coração do evangelho.
 
 ## A justiça que vem pela fé
 
-Filipenses 3 versículo 9 é direto. E ser achado nele, não tendo justiça própria que procede de lei, mas a que é mediante a fé em Cristo, a justiça que procede de Deus, baseada na fé. Paulo, que conhecia a lei como ninguém, declara que abandonou a própria justiça. Ele não confiava mais no que cumpria. Confiava no que Cristo cumpriu por ele. A frase justiça própria entra para a lista das coisas que Paulo considerava esterco diante do conhecimento de Cristo.
+Filipenses 3 versículo 9 é direto. E ser achado nele, não tendo justiça própria que procede de lei, mas a que e mediante a fé em Cristo, a justiça que procede de Deus, baseada na fé. Paulo, que conhecia a lei como ninguém, declara que abandonou a própria justiça. Ele não confiava mais no que cumpria. Confiava no que Cristo cumpriu por ele. A frase justiça própria entra para a lista das coisas que Paulo considerava esterco diante do conhecimento de Cristo.
 
 Efesios 2 versículo 8 fecha o argumento. Porque pela graça sois salvos por meio da fé, e isto não vem de vos, é dom de Deus. Repare em cada palavra. Pela graça, não pelo merito. Por meio da fé, não por meio da obra. Não vem de vos, você não produziu. E dom, você recebe sem pagar. Quatro afirmações que demolem qualquer lógica de salvação por esforco.
 
@@ -3671,27 +3671,27 @@ E se eu acredito no meu sacrifício em vez do sacrifício de Cristo, como posso 
 
 ## A oferta de graça em Apocalipse
 
-Jesus nunca cobraria do homem o préço que ele já pagou. Apocalipse 22 versículo 17 mostra. E o Espírito e a noiva dizem: vem. E quem ouve, diga: vem. E quem tem sede, venha. E quem quiser, receba de graça a agua da vida. Note as palavras. De graça. Quem quiser. Sem cobrança. Sem requisito de pré-pagamento. Sem moeda exigida.
+Jesus nunca cobraria do homem o préço que ele já pagou. Apocalipse 22 versículo 17 mostra. E o Espírito é a noiva dizem: vem. E quem ouve, diga: vem. E quem tem sede, venha. E quem quiser, receba de graça a agua da vida. Note as palavras. De graça. Quem quiser. Sem cobrança. Sem requisito de pré-pagamento. Sem moeda exigida.
 
 Você talvez pergunte: então a salvação é mesmo de graça? Sim. Outra pergunta inevitável surge: quer dizer que posso fazer o que quiser? Sim, você pode fazer tudinho. A resposta surpreende, mas e bíblica. Você não se santifica para ser salvo. Você e salvo, e por isso se santifica. A santidade não é ingrediente da salvação, é fruto dela.
 
-## A natureza nova de quem é nascido de novo
+## A natureza nova de quem e nascido de novo
 
-1 João 3 versículo 9 explica como isso funciona. Todo aquele que é nascido de Deus não vive na prática de pecado, pois o que permanece nele e a divina semente. Ora, esse não pode viver pecando, porque é nascido de Deus. Note a expressão não vive na prática de pecado. Não significa que não peca, todos pecam. Significa que o pecado deixa de ser a lógica governante. A vida toma outro rumo.
+1 João 3 versículo 9 explica como isso funciona. Todo aquele que e nascido de Deus não vive na prática de pecado, pois o que permanece nele e a divina semente. Ora, esse não pode viver pecando, porque e nascido de Deus. Note a expressão não vive na prática de pecado. Não significa que não peca, todos pecam. Significa que o pecado deixa de ser a lógica governante. A vida toma outro rumo.
 
 Quando o Espírito habita em você, você não corre mais para o pecado pelo prazer, você foge dele pelo descontentamento. Por que? Porque a divina semente em você produz fome de outras coisas. Você começa a sentir prazer onde antes não sentia, na oração, na palavra, no serviço, na santidade. E descobre que o pecado não é mais o que parecia ser. Ele perde o brilho.
 
 ## A graça anulada pela lei
 
-Quando você diz que cumpre toda a lei, você anula a graça de Cristo. Quando Jesus diz que está consumado, e porque ele cumpriu toda a lei e a entregou. A vida sob a lei termina ali, na cruz. Quem volta para a lei como meio de salvação está voltando ao sistema antigo. Esta dizendo que a cruz não foi suficiente.
+Quando você diz que cumpre toda a lei, você anula a graça de Cristo. Quando Jesus diz que está consumado, e porque ele cumpriu toda a lei é a entregou. A vida sob a lei termina ali, na cruz. Quem volta para a lei como meio de salvação está voltando ao sistema antigo. Esta dizendo que a cruz não foi suficiente.
 
-Eu sou salvo e alcanco Deus por causa de Jesus. Não pelo que eu faco, mas pelo que Jesus fez. Repita isso quantas vezes for necessário até seu coração acreditar. Não pelo que eu faco. Pelo que Jesus fez. Cada esforco próprio sustentado como meritorio precisa ser arrancado. Cada confiança pessoal precisa ser deslocada para Cristo. Esse e o trabalho diário da fé.
+Eu sou salvo e alcanco Deus por causa de Jesus. Não pelo que eu faco, mas pelo que Jesus fez. Repita isso quantas vezes for necessário até seu coração acreditar. Não pelo que eu faco. Pelo que Jesus fez. Cada esforco próprio sustentado como meritorio precisa ser arrancado. Cada confiança pessoal precisa ser deslocada para Cristo. Esse é o trabalho diário da fé.
 
 ## A formula simples de Romanos 10
 
-Romanos 10 versículo 9 e 10 da a formula. Se com tua boca confessares que Jesus é Senhor, e creres em teu coração que Deus o ressuscitou dentre os mortos, seras salvo. Porque com o coração se cre para a justiça, e com a boca se faz confissão para a salvação. Confissão com a boca, fé no coração. Esses são os elementos. Sem cobrança de prestação mensal. Sem cumprimento prévio de etapas religiosas. Sem comportamento exemplar como ingresso.
+Romanos 10 versículo 9 e 10 da a formula. Se com tua boca confessares que Jesus e Senhor, e creres em teu coração que Deus o ressuscitou dentre os mortos, seras salvo. Porque com o coração se cre para a justiça, e com a boca se faz confissão para a salvação. Confissão com a boca, fé no coração. Esses são os elementos. Sem cobrança de prestação mensal. Sem cumprimento prévio de etapas religiosas. Sem comportamento exemplar como ingresso.
 
-Mas isso não significa que a salvação seja barata. Foi caro. Caro para Cristo. O préço foi a vida do Filho de Deus. Foi sangue derramado, foi corpo dilacerado, foi a separação temporaria entre o Pai e o Filho na cruz. Foi o juiz aceitando que o próprio Filho fosse condenado para que o reu fosse perdoado. Esse foi o préço real da salvação. Mas o pagamento foi feito por outro. Você e o reu, você não paga, você recebe.
+Mas isso não significa que a salvação seja barata. Foi caro. Caro para Cristo. O préço foi a vida do Filho de Deus. Foi sangue derramado, foi corpo dilacerado, foi a separação temporaria entre o Pai é o Filho na cruz. Foi o juiz aceitando que o próprio Filho fosse condenado para que o reu fosse perdoado. Esse foi o préço real da salvação. Mas o pagamento foi feito por outro. Você e o reu, você não paga, você recebe.
 
 ## A reação certa diante da graça
 
@@ -3703,20 +3703,20 @@ Paulo escreveu em Romanos 12 versículo 1: rogo-vos, pois, irmãos, pelas miseri
 
 O que você está tentando pagar para Deus? O que você acredita que precisa fazer para que Deus te aceite? Que conduta você está carregando como fardo, certo de que se não fizer, vai perder a salvação? Pare. Solte o fardo. Deus não está cobrando, ele já recebeu o pagamento de Cristo. Você está tentando pagar uma divida que já foi quitada.
 
-A salvação é dom de Deus. Você a recebe pela fé. Sua santificação vem como fruto, não como condição. Sua obediência e resposta, não moeda. E sua vida ganha sentido novo quando você para de tentar comprar o que é gratuito. Vai e diz com a boca, cre no coração, recebe o dom, e vive em resposta. Esse e o evangelho. Essa e a salvação. Esse e o préço que Cristo pagou para que você não tenha que pagar nada.`,
+A salvação é dom de Deus. Você a recebe pela fé. Sua santificação vem como fruto, não como condição. Sua obediência e resposta, não moeda. E sua vida ganha sentido novo quando você para de tentar comprar o que e gratuito. Vai e diz com a boca, cre no coração, recebe o dom, e vive em resposta. Esse é o evangelho. Essa é a salvação. Esse é o préço que Cristo pagou para que você não tenha que pagar nada.`,
     categorySlug: `soteriologia`,
     tags: ["salvação", "graça", "fé", "evangelho", "cruz"],
     source: `37_o_preco_da_salvacao.txt`,
   },
   {
     title: `Os perigos da insatisfação é o poder da gratidão`,
-    slug: `perigos-da-insatisfação-e-ingratidão`,
+    slug: `perigos-da-insatisfacao-e-ingratidao`,
     excerpt: `A insatisfação foi o pecado original do diabo, depois da mulher, depois de muitos. A ingratidão aborta milagres. A gratidão os antecipa.`,
     bodyMarkdown: `A pouco tempo atrás eu vivia um momento de muitas frustações e comparações. Comecei a duvidar da certeza que tinha do ministério que Deus me confiou. Em meio a perguntas e comparações, perguntei a Deus qual era a sua vontade. E ele me respondeu em 1 Tessalonicenses 5 versículo 18. Em tudo, dai graças, porque esta é à vontade de Deus em Cristo Jesus para convosco. Em tudo. Não em algumas coisas favoráveis. Em tudo. E então eu perguntei o que sempre perguntamos quando levamos a serio essa palavra. Como posso dar graças? Os homens estão tentando me impedir? Estou em momento difícil. Como ser grato disso? E a Bíblia tem resposta. Começa em Lúcifer.
 
 ## A trajetoria de Lúcifer
 
-Isaias 14 versículo 12 ao 14 traz uma das passagens mais misteriosas da Bíblia. Como caiste do céu, o estrela da manhã, filho da alva. Como foste lançado por terra, tu que debilitavas as nações. Tu dizias no teu coração: eu subirei ao céu, acima das estrelas de Deus exaltarei o meu trono e no monte da congregação me assentarei. Subirei acima das mais altas nuvens e serei semelhante ao Altissimo.
+Isaias 14 versículo 12 ao 14 traz uma das passagens mais misteriosas da Bíblia. Como caiste do céu, o estrela da manhã, filho da alva. Como foste lançado por terra, tu que debilitavas as nações. Tu dizias no teu coração: eu subirei ao céu, acima das estrelas de Deus exaltarei o meu trono é no monte da congregação me assentarei. Subirei acima das mais altas nuvens e serei semelhante ao Altissimo.
 
 Ezequiel 28 versículo 13 ao 17 complementa. Estavas no Éden, jardim de Deus. De todas as pedras preciosas te cobrias, o sardio, o topazio, o diamante, o berilo, o onix, o jaspe, a safira, o carbunculo e a esmeralda. De ouro se te fizeram os engastes e os ornamentos. No dia em que foste criado, foram eles preparados. Tu eras querubim da guarda ungido, e te estabeleci. Permanecias no monte santo de Deus, no brilho das pedras andavas. Perfeito eras nos teus caminhos desde o dia em que foste criado, até que se achou iniquidade em ti.
 
@@ -3740,7 +3740,7 @@ Note. Lúcifer comparava sua posição com a de Deus. Lúcifer queria a posiçã
 
 Você talvez argumente: estou passando por momento ruim, coisas difíceis estão acontecendo. Devo ficar grato? Devo me conformar com isso? E aqui é preciso distinguir. Conformar e ser grato são coisas diferentes. Conformar e aceitar passivamente, sem reagir, sem orar, sem buscar mudança. Ser grato e enxergar a mão de Deus mesmo no que doi, e descansar que ele está agindo mesmo quando não parece.
 
-Romanos 8 versículo 28 traz a base. Sabemos que todas as coisas cooperam para o bem daqueles que amam a Deus, daqueles que são chamados segundo o seu propósito. Repare. Todas as coisas. Não algumas. Cooperam para o bem. Não algumas. Para os que amam a Deus. Esse e o filtro. Quem ama a Deus não precisa entender tudo o que está vivendo, basta saber que está sendo coordenado para um bem maior.
+Romanos 8 versículo 28 traz a base. Sabemos que todas as coisas cooperam para o bem daqueles que amam a Deus, daqueles que são chamados segundo o seu propósito. Repare. Todas as coisas. Não algumas. Cooperam para o bem. Não algumas. Para os que amam a Deus. Esse é o filtro. Quem ama a Deus não precisa entender tudo o que está vivendo, basta saber que está sendo coordenado para um bem maior.
 
 E em qual situação devo dar graças? Em todas. Habacuque 3 versículo 17 ao 19 já foi citado em outro estudo, mas merece nova leitura aqui. Ainda que a figueira não floresca, nem haja fruto na vide, o produto da oliveira minta, e os campos não produzam mantimento. As ovelhas sejam arrebatadas do aprisco e nos curais não haja gado. Todavia eu me alegro no Senhor, exulto no Deus da minha salvação. O Senhor Deus é a minha fortaleza, e faz os meus pés como os da corça, e me faz andar altaneiramente.
 
