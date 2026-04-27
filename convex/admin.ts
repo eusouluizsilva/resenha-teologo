@@ -227,12 +227,12 @@ export const listAllUsers = query({
       fnByUser.set(f.userId, list)
     }
 
-    // Conta aulas concluidas por estudante. progress.completed=true equivale
-    // a aula assistida ate o final + quiz aprovado (ou ainda em retry pending,
-    // que tambem mantem completed=true).
+    // Conta aulas que o aluno comecou a assistir (watchedSeconds > 0),
+    // independente de ter atingido o limiar de 95% do video ou de ter feito
+    // o quiz. Cada progress eh 1 aula tocada.
     const lessonsCompletedByStudent = new Map<string, number>()
     for (const p of allProgress) {
-      if (!p.completed) continue
+      if ((p.watchedSeconds ?? 0) <= 0) continue
       lessonsCompletedByStudent.set(
         p.studentId,
         (lessonsCompletedByStudent.get(p.studentId) ?? 0) + 1,
@@ -308,7 +308,11 @@ export const getUserDetail = query({
       .query('progress')
       .withIndex('by_studentId', (q) => q.eq('studentId', clerkId))
       .collect()
-    const lessonsCompleted = progressRecords.filter((p) => p.completed).length
+    // "Aulas assistidas" = qualquer aula tocada (watchedSeconds > 0),
+    // independente de quiz ou de atingir 95% do video.
+    const lessonsCompleted = progressRecords.filter(
+      (p) => (p.watchedSeconds ?? 0) > 0,
+    ).length
 
     const enrollmentsWithCourse = await Promise.all(
       enrollments.slice(0, 50).map(async (e) => {
