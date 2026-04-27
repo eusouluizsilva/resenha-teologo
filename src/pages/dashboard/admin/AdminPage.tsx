@@ -1,4 +1,5 @@
-import { Link, Navigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import {
@@ -6,6 +7,7 @@ import {
   DashboardSectionLabel,
 } from '@/components/dashboard/PageShell'
 import { brandPanelClass, cn } from '@/lib/brand'
+import { AllUsersModal } from './AllUsersModal'
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString('pt-BR', {
@@ -297,6 +299,7 @@ export function AdminPage() {
   const recentUsers = useQuery(api.admin.listRecentUsers, isAdmin ? {} : 'skip')
   const recentCourses = useQuery(api.admin.listRecentCourses, isAdmin ? {} : 'skip')
   const analytics = useQuery(api.admin.getAnalytics, isAdmin ? { days: 30 } : 'skip')
+  const [showAllUsers, setShowAllUsers] = useState(false)
 
   if (isAdmin === undefined) {
     return (
@@ -403,8 +406,25 @@ export function AdminPage() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <DashboardSectionLabel>Usuários recentes</DashboardSectionLabel>
-              <div className={cn('mt-4 divide-y divide-white/6', brandPanelClass)}>
+              <div className="flex items-end justify-between gap-3">
+                <DashboardSectionLabel>Usuários recentes</DashboardSectionLabel>
+                <button
+                  type="button"
+                  onClick={() => setShowAllUsers(true)}
+                  className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F2BD8A] transition hover:text-[#F37E20]"
+                >
+                  Ver todos →
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAllUsers(true)}
+                className={cn(
+                  'mt-4 block w-full divide-y divide-white/6 text-left transition hover:border-[#F37E20]/35',
+                  brandPanelClass,
+                )}
+                aria-label="Ver todos os usuários"
+              >
                 {recentUsers === undefined || recentUsers.length === 0 ? (
                   <p className="p-5 text-sm text-white/42">Nenhum usuário ainda.</p>
                 ) : (
@@ -422,17 +442,7 @@ export function AdminPage() {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        {u.handle ? (
-                          <Link
-                            to={`/${u.handle}`}
-                            target="_blank"
-                            className="text-sm font-medium text-white hover:text-[#F2BD8A]"
-                          >
-                            {u.name}
-                          </Link>
-                        ) : (
-                          <p className="text-sm font-medium text-white">{u.name}</p>
-                        )}
+                        <p className="truncate text-sm font-medium text-white">{u.name}</p>
                         <p className="truncate text-xs text-white/42">{u.email}</p>
                       </div>
                       <span className="flex-shrink-0 text-xs text-white/36">
@@ -441,7 +451,7 @@ export function AdminPage() {
                     </div>
                   ))
                 )}
-              </div>
+              </button>
             </div>
 
             <div>
@@ -485,6 +495,7 @@ export function AdminPage() {
           </div>
         </>
       )}
+      {showAllUsers && <AllUsersModal onClose={() => setShowAllUsers(false)} />}
     </DashboardPageShell>
   )
 }

@@ -199,6 +199,170 @@ export const listRecentUsers = query({
   },
 })
 
+// Lista TODOS os usuários cadastrados na plataforma. Usado pelo modal "Todos
+// os usuários" no admin. Inclui as funções ativas (aluno/criador/instituição)
+// para o admin filtrar/ordenar visualmente sem N+1. Multi-tenant N/A: admin
+// vê tudo.
+export const listAllUsers = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    const users = await ctx.db.query('users').order('desc').collect()
+    const allFunctions = await ctx.db.query('userFunctions').collect()
+
+    const fnByUser = new Map<string, string[]>()
+    for (const f of allFunctions) {
+      const list = fnByUser.get(f.userId) ?? []
+      list.push(f.function)
+      fnByUser.set(f.userId, list)
+    }
+
+    return users.map((u) => ({
+      _id: u._id,
+      clerkId: u.clerkId,
+      name: u.name,
+      email: u.email,
+      avatarUrl: u.avatarUrl,
+      handle: u.handle,
+      country: u.country ?? null,
+      city: u.city ?? null,
+      state: u.state ?? null,
+      createdAt: u._creationTime,
+      functions: fnByUser.get(u.clerkId) ?? [],
+    }))
+  },
+})
+
+// Detalhes completos de um usuário para o admin: cadastros (matrículas,
+// cursos criados, posts publicados, certificados, doações, instituições).
+// Usado no painel de detalhe dentro do modal de usuários. Limita a 50 itens
+// por categoria para não estourar payload em usuários muito ativos.
+export const getUserDetail = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    await requireAdmin(ctx)
+
+    const user = await ctx.db.get(userId)
+    if (!user) {
+      throw new Error('Usuário não encontrado')
+    }
+
+    const clerkId = user.clerkId
+
+    const functions = await ctx.db
+      .query('userFunctions')
+      .withIndex('by_userId', (q) => q.eq('userId', clerkId))
+      .collect()
+
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_studentId', (q) => q.eq('studentId', clerkId))
+      .collect()
+
+    const enrollmentsWithCourse = await Promise.all(
+      enrollments.slice(0, 50).map(async (e) => {
+        const course = await ctx.db.get(e.courseId)
+        return {
+          _id: e._id,
+          courseId: e.courseId,
+          courseTitle: course?.title ?? 'Curso removido',
+          courseSlug: course?.slug ?? null,
+          enrolledAt: e._creationTime,
+          completedAt: e.completedAt ?? null,
+          certificateIssued: e.certificateIssued,
+          finalScore: e.finalScore ?? null,
+        }
+      }),
+    )
+
+    const ownedCourses = await ctx.db
+      .query('courses')
+      .withIndex('by_creatorId', (q) => q.eq('creatorId', clerkId))
+      .collect()
+
+    const ownedCoursesShape = ownedCourses.slice(0, 50).map((c) => ({
+      _id: c._id,
+      title: c.title,
+      slug: c.slug ?? null,
+      isPublished: c.isPublished,
+      totalLessons: c.totalLessons,
+      totalStudents: c.totalStudents,
+      createdAt: c._creationTime,
+    }))
+
+    const posts = await ctx.db
+      .query('posts')
+      .withIndex('by_author', (q) => q.eq('authorUserId', clerkId))
+      .collect()
+
+    const postsShape = posts.slice(0, 50).map((p) => ({
+      _id: p._id,
+      title: p.title,
+      slug: p.slug,
+      status: p.status,
+      publishedAt: p.publishedAt ?? null,
+      viewCount: p.viewCount,
+      likeCount: p.likeCount,
+    }))
+
+    // donations não tem índice por studentId (doador). Filtra full-table; em
+    // escala atual é aceitável. Se ficar pesado, adicionar by_studentId no schema.
+    const donations = await ctx.db
+      .query('donations')
+      .filter((q) => q.eq(q.field('studentId'), clerkId))
+      .collect()
+
+    const donationsShape = donations.slice(0, 50).map((d) => ({
+      _id: d._id,
+      amountCents: d.amountCents,
+      status: d.status,
+      createdAt: d._creationTime,
+    }))
+
+    const totalDonatedCents = donations
+      .filter((d) => d.status === 'completed')
+      .reduce((acc, d) => acc + d.amountCents, 0)
+
+    const certificatesCount = enrollments.filter((e) => e.certificateIssued).length
+
+    return {
+      user: {
+        _id: user._id,
+        clerkId: user.clerkId,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl ?? null,
+        handle: user.handle ?? null,
+        bio: user.bio ?? null,
+        country: user.country ?? null,
+        city: user.city ?? null,
+        state: user.state ?? null,
+        denomination: user.denomination ?? null,
+        churchName: user.churchName ?? null,
+        churchRole: user.churchRole ?? null,
+        createdAt: user._creationTime,
+        isPremium: user.isPremium ?? false,
+      },
+      functions: functions.map((f) => ({ function: f.function, enabledAt: f.enabledAt })),
+      counts: {
+        enrollments: enrollments.length,
+        ownedCourses: ownedCourses.length,
+        posts: posts.length,
+        publishedPosts: posts.filter((p) => p.status === 'published').length,
+        donations: donations.length,
+        completedDonations: donations.filter((d) => d.status === 'completed').length,
+        certificates: certificatesCount,
+        totalDonatedCents,
+      },
+      enrollments: enrollmentsWithCourse,
+      ownedCourses: ownedCoursesShape,
+      posts: postsShape,
+      donations: donationsShape,
+    }
+  },
+})
+
 // Lista os cursos mais recentes (últimos 30) com nome do professor dono.
 export const listRecentCourses = query({
   args: {},
