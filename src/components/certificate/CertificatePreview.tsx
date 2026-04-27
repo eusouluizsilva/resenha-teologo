@@ -284,7 +284,7 @@ export function CertificatePreview({
           <div
             style={{
               position: 'absolute',
-              top: '7.5%',
+              top: '9%',
               left: 0,
               right: 0,
               textAlign: 'center',
@@ -321,7 +321,7 @@ export function CertificatePreview({
           <div
             style={{
               position: 'absolute',
-              top: '17%',
+              top: '18%',
               left: '30%',
               right: '30%',
               height: '1.2cqw',
@@ -332,7 +332,7 @@ export function CertificatePreview({
           <p
             style={{
               position: 'absolute',
-              top: '19.5%',
+              top: '20.5%',
               left: 0,
               right: 0,
               textAlign: 'center',
@@ -350,7 +350,7 @@ export function CertificatePreview({
           <h2
             style={{
               position: 'absolute',
-              top: '23%',
+              top: '24%',
               left: 0,
               right: 0,
               textAlign: 'center',
@@ -369,7 +369,7 @@ export function CertificatePreview({
           <p
             style={{
               position: 'absolute',
-              top: '30%',
+              top: '31%',
               left: 0,
               right: 0,
               textAlign: 'center',
@@ -386,12 +386,12 @@ export function CertificatePreview({
           <p
             style={{
               position: 'absolute',
-              top: '36%',
+              top: '37%',
               left: 0,
               right: 0,
               textAlign: 'center',
               fontFamily: '"Pinyon Script", cursive',
-              fontSize: '6.2cqw',
+              fontSize: '6cqw',
               color: '#1B2430',
               margin: 0,
               lineHeight: 1.05,
@@ -428,7 +428,7 @@ export function CertificatePreview({
               textAlign: 'center',
               fontFamily: '"Cinzel", serif',
               fontWeight: 700,
-              fontSize: '2.1cqw',
+              fontSize: '2cqw',
               letterSpacing: '0.05em',
               color: '#1B2430',
               margin: 0,
@@ -439,62 +439,37 @@ export function CertificatePreview({
             {data.courseTitle.toUpperCase()}
           </h3>
 
-          {/* Linhas de detalhe + texto formal */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '63%',
-              left: 0,
-              right: 0,
-              textAlign: 'center',
-              padding: '0 10%',
-            }}
-          >
-            {detailLine && (
-              <p
-                style={{
-                  fontFamily: '"EB Garamond", serif',
-                  fontSize: '1.45cqw',
-                  color: '#3C3C3C',
-                  margin: 0,
-                }}
-              >
-                {detailLine},
-              </p>
-            )}
+          {/* Linha de detalhe (carga horaria + nota) */}
+          {detailLine && (
             <p
               style={{
+                position: 'absolute',
+                top: '60.5%',
+                left: 0,
+                right: 0,
+                textAlign: 'center',
                 fontFamily: '"EB Garamond", serif',
                 fontSize: '1.45cqw',
                 color: '#3C3C3C',
-                margin: '0.4cqw 0 0',
+                margin: 0,
+                padding: '0 10%',
               }}
             >
-              e fazendo jus a todas as honras e distinções inerentes,
+              {detailLine}
             </p>
-            <p
-              style={{
-                fontFamily: '"EB Garamond", serif',
-                fontSize: '1.45cqw',
-                color: '#3C3C3C',
-                margin: '0.2cqw 0 0',
-              }}
-            >
-              é-lhe conferido este diploma como testemunho público de aproveitamento.
-            </p>
-          </div>
+          )}
 
-          {/* Local e data por extenso */}
+          {/* Local e data por extenso (logo acima do brasao) */}
           <p
             style={{
               position: 'absolute',
-              top: '74%',
+              top: '64%',
               left: 0,
               right: 0,
               textAlign: 'center',
               fontFamily: '"EB Garamond", serif',
               fontStyle: 'italic',
-              fontSize: '1.35cqw',
+              fontSize: '1.3cqw',
               color: '#5A4A30',
               margin: 0,
               padding: '0 12%',
@@ -509,19 +484,22 @@ export function CertificatePreview({
               style={{
                 position: 'absolute',
                 bottom: '11%',
-                left: '11%',
-                width: '24%',
+                left: '8%',
+                width: '27%',
                 textAlign: 'center',
               }}
             >
               <p
                 style={{
                   fontFamily: '"Pinyon Script", cursive',
-                  fontSize: '2.6cqw',
+                  fontSize: '2.2cqw',
                   color: '#1B2430',
                   margin: 0,
                   lineHeight: 1,
                   paddingBottom: '0.4cqw',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
                 {data.creatorName}
@@ -555,18 +533,21 @@ export function CertificatePreview({
               position: 'absolute',
               bottom: '11%',
               left: '65%',
-              width: '24%',
+              width: '27%',
               textAlign: 'center',
             }}
           >
             <p
               style={{
                 fontFamily: '"Pinyon Script", cursive',
-                fontSize: '2.6cqw',
+                fontSize: '2.2cqw',
                 color: '#1B2430',
                 margin: 0,
                 lineHeight: 1,
                 paddingBottom: '0.4cqw',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               Luiz Carlos da Silva Junior
