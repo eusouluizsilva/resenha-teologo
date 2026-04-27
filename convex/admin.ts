@@ -491,6 +491,47 @@ export const listRecentCourses = query({
   },
 })
 
+// Top artigos do blog ordenados por leituras (viewCount). Volume baixo de
+// posts publicados (~50) permite ordenar em memória sem índice dedicado por
+// viewCount. Resolve o autor para exibir nome e handle no painel admin.
+export const listTopPosts = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    const published = await ctx.db
+      .query('posts')
+      .withIndex('by_status_publishedAt', (q) => q.eq('status', 'published'))
+      .collect()
+
+    const top = published
+      .sort((a, b) => b.viewCount - a.viewCount)
+      .slice(0, 10)
+
+    return await Promise.all(
+      top.map(async (p) => {
+        const author = await ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', p.authorUserId))
+          .unique()
+        return {
+          _id: p._id,
+          title: p.title,
+          slug: p.slug,
+          categorySlug: p.categorySlug,
+          publishedAt: p.publishedAt,
+          viewCount: p.viewCount,
+          likeCount: p.likeCount,
+          commentCount: p.commentCount,
+          shareCount: p.shareCount,
+          authorName: author?.name ?? 'Autor',
+          authorHandle: author?.handle,
+        }
+      }),
+    )
+  },
+})
+
 // Apaga em cascata todos os dados associados a um clerkId. Usado pelo dono da
 // plataforma para remover contas de teste ou banidas. Internal: nao expor ao
 // cliente. Rodar via `npx convex run admin:deleteUserCascade '{"clerkId":"..."}'`.

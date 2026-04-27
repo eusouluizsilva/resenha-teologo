@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import {
@@ -298,6 +298,7 @@ export function AdminPage() {
   const stats = useQuery(api.admin.getStats, isAdmin ? {} : 'skip')
   const recentUsers = useQuery(api.admin.listRecentUsers, isAdmin ? {} : 'skip')
   const recentCourses = useQuery(api.admin.listRecentCourses, isAdmin ? {} : 'skip')
+  const topPosts = useQuery(api.admin.listTopPosts, isAdmin ? {} : 'skip')
   const analytics = useQuery(api.admin.getAnalytics, isAdmin ? { days: 30 } : 'skip')
   const [showAllUsers, setShowAllUsers] = useState(false)
 
@@ -401,6 +402,86 @@ export function AdminPage() {
                 href="https://business.facebook.com/events_manager2/list/pixel/1884382392256153/overview"
                 badge="1884382392256153"
               />
+            </div>
+          </div>
+
+          <div>
+            <DashboardSectionLabel>Top artigos do blog</DashboardSectionLabel>
+            <p className="mt-1 text-xs text-white/42">
+              Ordenado por leituras totais. Cada leitura é deduplicada por sessão.
+            </p>
+            <div className={cn('mt-4 divide-y divide-white/6', brandPanelClass)}>
+              {topPosts === undefined ? (
+                <div className="flex items-center justify-center p-10">
+                  <div className="h-6 w-6 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+                </div>
+              ) : topPosts.length === 0 ? (
+                <p className="p-5 text-sm text-white/42">Nenhum artigo publicado ainda.</p>
+              ) : (
+                topPosts.map((p, i) => {
+                  const articleHref = p.authorHandle
+                    ? `/blog/${p.authorHandle}/${p.slug}`
+                    : null
+                  const titleNode = (
+                    <p className="truncate text-sm font-medium text-white">
+                      {p.title}
+                    </p>
+                  )
+                  return (
+                    <div key={p._id} className="flex items-center gap-4 p-4">
+                      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.04] font-mono text-xs font-semibold text-white/56">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        {articleHref ? (
+                          <Link
+                            to={articleHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block hover:underline"
+                          >
+                            {titleNode}
+                          </Link>
+                        ) : (
+                          titleNode
+                        )}
+                        <div className="mt-1 flex flex-wrap gap-3 text-[11px] text-white/42">
+                          <span>por {p.authorName}</span>
+                          <span className="text-white/24">·</span>
+                          <span>{p.categorySlug.replace(/-/g, ' ')}</span>
+                          {p.publishedAt && (
+                            <>
+                              <span className="text-white/24">·</span>
+                              <span>{formatDate(p.publishedAt)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-shrink-0 items-center gap-4 font-mono text-[11px] text-white/64">
+                        <span title="Leituras" className="flex items-center gap-1">
+                          <svg className="h-3.5 w-3.5 text-white/36" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="font-semibold text-white">{formatNumber(p.viewCount)}</span>
+                        </span>
+                        <span title="Curtidas" className="flex items-center gap-1">
+                          <svg className="h-3.5 w-3.5 text-white/36" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                          </svg>
+                          {formatNumber(p.likeCount)}
+                        </span>
+                        <span title="Comentários" className="flex items-center gap-1">
+                          <svg className="h-3.5 w-3.5 text-white/36" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                          </svg>
+                          {formatNumber(p.commentCount)}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
 
