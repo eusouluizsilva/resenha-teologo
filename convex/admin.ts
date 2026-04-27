@@ -274,6 +274,7 @@ export const listAllUsers = query({
         enrollmentsCount: enrolled.length,
         enrolledCourses: enrolled,
         lessonsCompletedCount: lessonsCompletedByStudent.get(u.clerkId) ?? 0,
+        isPremium: u.isPremium ?? false,
       }
     })
   },

@@ -334,10 +334,40 @@ function UserDetail({
   )
 }
 
+type SortKey =
+  | 'recent'
+  | 'oldest'
+  | 'lessons'
+  | 'enrollments'
+  | 'courses'
+  | 'name'
+
+type RoleFilter = 'all' | 'aluno' | 'criador' | 'instituicao' | 'premium' | 'none'
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'recent', label: 'Mais recentes' },
+  { value: 'oldest', label: 'Mais antigos' },
+  { value: 'lessons', label: 'Mais aulas assistidas' },
+  { value: 'enrollments', label: 'Mais matrículas' },
+  { value: 'courses', label: 'Mais cursos criados' },
+  { value: 'name', label: 'Nome (A-Z)' },
+]
+
+const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'aluno', label: 'Alunos' },
+  { value: 'criador', label: 'Professores' },
+  { value: 'instituicao', label: 'Instituições' },
+  { value: 'premium', label: 'Premium' },
+  { value: 'none', label: 'Sem função' },
+]
+
 export function AllUsersModal({ onClose }: { onClose: () => void }) {
   const users = useQuery(api.admin.listAllUsers, {})
   const backfill = useMutation(api.admin.backfillAdminEnrollments)
   const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<SortKey>('recent')
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [selectedId, setSelectedId] = useState<Id<'users'> | null>(null)
   const [backfillState, setBackfillState] = useState<
     | { status: 'idle' }
@@ -385,14 +415,41 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
   const filtered = useMemo(() => {
     if (!users) return []
     const q = search.trim().toLowerCase()
-    if (!q) return users
-    return users.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        (u.handle ?? '').toLowerCase().includes(q),
-    )
-  }, [users, search])
+    let list = users.filter((u) => {
+      if (q) {
+        const matchesSearch =
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          (u.handle ?? '').toLowerCase().includes(q)
+        if (!matchesSearch) return false
+      }
+      if (roleFilter === 'all') return true
+      if (roleFilter === 'premium') return u.isPremium
+      if (roleFilter === 'none') return u.functions.length === 0
+      return u.functions.includes(roleFilter)
+    })
+
+    list = [...list].sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return b.createdAt - a.createdAt
+        case 'oldest':
+          return a.createdAt - b.createdAt
+        case 'lessons':
+          return b.lessonsCompletedCount - a.lessonsCompletedCount
+        case 'enrollments':
+          return b.enrollmentsCount - a.enrollmentsCount
+        case 'courses':
+          return b.ownedCoursesCount - a.ownedCoursesCount
+        case 'name':
+          return a.name.localeCompare(b.name, 'pt-BR')
+        default:
+          return 0
+      }
+    })
+
+    return list
+  }, [users, search, sortBy, roleFilter])
 
   return (
     <div
@@ -474,14 +531,58 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
                   )}
                 </div>
               </div>
-              <div className="mb-4">
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por nome, email ou handle"
-                  className={brandInputClass}
-                />
+              <div className="mb-4 space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar por nome, email ou handle"
+                    className={cn(brandInputClass, 'flex-1')}
+                  />
+                  <label className="relative flex-shrink-0 sm:w-64">
+                    <span className="sr-only">Ordenar por</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortKey)}
+                      className={cn(brandInputClass, 'cursor-pointer pr-9 appearance-none')}
+                    >
+                      {SORT_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value} className="bg-[#151B23] text-white">
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/52">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </label>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {ROLE_FILTERS.map((f) => {
+                    const active = roleFilter === f.value
+                    return (
+                      <button
+                        key={f.value}
+                        type="button"
+                        onClick={() => setRoleFilter(f.value)}
+                        className={cn(
+                          'rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] transition',
+                          active
+                            ? 'border-[#F37E20] bg-[#F37E20]/14 text-[#F2BD8A]'
+                            : 'border-white/10 bg-white/[0.03] text-white/52 hover:border-white/20 hover:text-white/82',
+                        )}
+                      >
+                        {f.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {users && (search || roleFilter !== 'all') && (
+                  <p className="text-[11px] text-white/42">
+                    Exibindo {filtered.length} de {users.length} usuários.
+                  </p>
+                )}
               </div>
 
               {users === undefined ? (
