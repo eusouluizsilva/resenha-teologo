@@ -1,42 +1,12 @@
 import { v } from 'convex/values'
 import { internalMutation, mutation, query } from './_generated/server'
-import type { MutationCtx } from './_generated/server'
 import { ensureIdentityMatches, requireIdentity } from './lib/auth'
-import { autoEnrollUserInAdminCourses } from './lib/autoEnroll'
-
-const DEFAULT_FOLLOW_HANDLE = 'resenhadoteologo'
-
-// Todo novo cadastro passa a seguir automaticamente o perfil oficial
-// @resenhadoteologo. Idempotente: nao duplica se ja segue.
-async function autoFollowDefaultProfile(ctx: MutationCtx, newUserClerkId: string) {
-  const target = await ctx.db
-    .query('users')
-    .withIndex('by_handle', (q) => q.eq('handle', DEFAULT_FOLLOW_HANDLE))
-    .unique()
-  if (!target) return
-  if (target.clerkId === newUserClerkId) return
-
-  const already = await ctx.db
-    .query('profileFollows')
-    .withIndex('by_pair', (q) =>
-      q.eq('followerUserId', newUserClerkId).eq('authorUserId', target.clerkId),
-    )
-    .unique()
-  if (already) return
-
-  await ctx.db.insert('profileFollows', {
-    followerUserId: newUserClerkId,
-    authorUserId: target.clerkId,
-    notifyArticles: true,
-    notifyCourses: true,
-    notifyLessons: false,
-    emailDigest: false,
-    createdAt: Date.now(),
-  })
-  await ctx.db.patch(target._id, {
-    followerCount: (target.followerCount ?? 0) + 1,
-  })
-}
+import {
+  OFFICIAL_HANDLE,
+  autoEnrollUserInOfficialCourses,
+  autoFollowOfficial,
+  getOfficialUser,
+} from './lib/autoEnroll'
 
 export const getByClerkId = query({
   args: { clerkId: v.string() },
@@ -106,8 +76,8 @@ export const upsert = mutation({
       phoneCountry: args.phoneCountry,
       totalDonationsReceived: 0,
     })
-    await autoFollowDefaultProfile(ctx, args.clerkId)
-    await autoEnrollUserInAdminCourses(ctx, args.clerkId)
+    await autoFollowOfficial(ctx, args.clerkId)
+    await autoEnrollUserInOfficialCourses(ctx, args.clerkId)
     return newId
   },
 })
@@ -175,8 +145,8 @@ export const syncFromWebhook = internalMutation({
         avatarUrl: args.avatarUrl,
         totalDonationsReceived: 0,
       })
-      await autoFollowDefaultProfile(ctx, args.clerkId)
-      await autoEnrollUserInAdminCourses(ctx, args.clerkId)
+      await autoFollowOfficial(ctx, args.clerkId)
+      await autoEnrollUserInOfficialCourses(ctx, args.clerkId)
       return
     }
     await ctx.db.patch(existing._id, {
@@ -193,11 +163,8 @@ export const syncFromWebhook = internalMutation({
 export const backfillResenhaFollows = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const target = await ctx.db
-      .query('users')
-      .withIndex('by_handle', (q) => q.eq('handle', DEFAULT_FOLLOW_HANDLE))
-      .unique()
-    if (!target) throw new Error(`Perfil @${DEFAULT_FOLLOW_HANDLE} nao encontrado`)
+    const target = await getOfficialUser(ctx)
+    if (!target) throw new Error(`Perfil @${OFFICIAL_HANDLE} nao encontrado`)
 
     const allUsers = await ctx.db.query('users').collect()
     const now = Date.now()

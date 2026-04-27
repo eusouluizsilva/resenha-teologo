@@ -4,7 +4,8 @@ import type { Id } from './_generated/dataModel'
 import { requireAdmin } from './lib/auth'
 import {
   autoEnrollAllUsersInCourse,
-  autoEnrollUserInAdminCourses,
+  autoEnrollUserInOfficialCourses,
+  autoFollowOfficial,
 } from './lib/autoEnroll'
 
 // Verifica se o usuário atual é admin da plataforma. Usado pelo front para
@@ -392,10 +393,11 @@ export const getUserDetail = query({
   },
 })
 
-// Backfill: matricula todos os usuarios em todos os cursos publicados pelo
-// admin. Idempotente. Usado pelo botao "Sincronizar matriculas" no painel
-// admin para garantir consistencia apos publicar cursos novos ou apos
-// usuarios criados antes do auto-enroll existir. Tambem disparavel via:
+// Backfill: para cada usuario da plataforma, garante (a) seguir o perfil
+// oficial @resenhadoteologo e (b) estar matriculado em todos os cursos
+// publicos publicados pelo perfil oficial. Idempotente. Usado pelo botao
+// "Sincronizar agora" no modal de usuarios para retroagir a regra automatica.
+// Tambem disparavel via:
 //   npx convex run --prod admin:backfillAdminEnrollments '{}'
 export const backfillAdminEnrollments = mutation({
   args: {},
@@ -403,17 +405,19 @@ export const backfillAdminEnrollments = mutation({
     await requireAdmin(ctx)
 
     const allUsers = await ctx.db.query('users').collect()
-    let totalCreated = 0
+    let enrollmentsCreated = 0
+    let followsCreated = 0
     let usersTouched = 0
     for (const u of allUsers) {
-      const created = await autoEnrollUserInAdminCourses(ctx, u.clerkId)
-      if (created > 0) {
-        totalCreated += created
-        usersTouched += 1
-      }
+      const enrolled = await autoEnrollUserInOfficialCourses(ctx, u.clerkId)
+      const followed = await autoFollowOfficial(ctx, u.clerkId)
+      if (enrolled > 0 || followed) usersTouched += 1
+      enrollmentsCreated += enrolled
+      if (followed) followsCreated += 1
     }
     return {
-      totalEnrollmentsCreated: totalCreated,
+      totalEnrollmentsCreated: enrollmentsCreated,
+      totalFollowsCreated: followsCreated,
       usersWithNewEnrollments: usersTouched,
     }
   },

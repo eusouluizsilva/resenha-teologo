@@ -277,7 +277,7 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
   const [backfillState, setBackfillState] = useState<
     | { status: 'idle' }
     | { status: 'running' }
-    | { status: 'done'; created: number; users: number }
+    | { status: 'done'; enrollments: number; follows: number; users: number }
     | { status: 'error'; message: string }
   >({ status: 'idle' })
 
@@ -287,7 +287,8 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
       const result = await backfill()
       setBackfillState({
         status: 'done',
-        created: result.totalEnrollmentsCreated,
+        enrollments: result.totalEnrollmentsCreated,
+        follows: result.totalFollowsCreated,
         users: result.usersWithNewEnrollments,
       })
     } catch (err) {
@@ -372,11 +373,12 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
               <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-white">
-                    Matrícula automática nos cursos do admin
+                    Matrícula e follow automáticos no @resenhadoteologo
                   </p>
                   <p className="mt-0.5 text-xs text-white/52">
-                    Novos usuários e novos cursos publicados são sincronizados
-                    automaticamente. Use o botão para forçar a sincronização agora.
+                    Todo cadastro novo já entra matriculado nos cursos do perfil
+                    oficial e passa a seguir o perfil. Use o botão para
+                    sincronizar usuários e cursos antigos.
                   </p>
                 </div>
                 <div className="flex flex-shrink-0 flex-col items-stretch gap-2 sm:items-end">
@@ -397,9 +399,9 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
                   </button>
                   {backfillState.status === 'done' && (
                     <p className="text-[11px] text-emerald-300/80">
-                      {backfillState.created === 0
+                      {backfillState.enrollments === 0 && backfillState.follows === 0
                         ? 'Tudo já sincronizado.'
-                        : `${backfillState.created} matrículas criadas em ${backfillState.users} usuários.`}
+                        : `${backfillState.enrollments} matrículas e ${backfillState.follows} follows criados em ${backfillState.users} usuários.`}
                     </p>
                   )}
                   {backfillState.status === 'error' && (
