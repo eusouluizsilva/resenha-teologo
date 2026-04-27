@@ -225,10 +225,19 @@ http.route({
             status: string
             current_period_end?: number
             cancel_at_period_end?: boolean
-            items: { data: Array<{ price: { id: string } }> }
+            items: {
+              data: Array<{
+                price: { id: string }
+                current_period_end?: number
+              }>
+            }
             metadata?: { clerkUserId?: string; plan?: string }
           }
-          const priceId = sub.items?.data?.[0]?.price?.id
+          const item = sub.items?.data?.[0]
+          const priceId = item?.price?.id
+          // Stripe API 2025-08-27 moveu current_period_end pra subscription_item.
+          // Mantemos fallback no root pra compat com versões anteriores.
+          const periodEnd = item?.current_period_end ?? sub.current_period_end ?? 0
           if (!priceId) {
             console.warn('[stripe-webhook] subscription sem priceId', sub.id)
             break
@@ -263,7 +272,7 @@ http.route({
             stripeSubscriptionId: sub.id,
             stripePriceId: priceId,
             status: finalStatus,
-            currentPeriodEnd: (sub.current_period_end ?? 0) * 1000,
+            currentPeriodEnd: periodEnd * 1000,
             cancelAtPeriodEnd: sub.cancel_at_period_end,
           })
           break
