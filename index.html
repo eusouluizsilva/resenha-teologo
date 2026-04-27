@@ -50,6 +50,54 @@
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="google-adsense-account" content="ca-pub-9994183447004404" />
 
+    <!--
+      AdSense + Consent Mode v2.
+      Stub inline define o consent default ANTES de adsbygoogle.js carregar
+      para LGPD compliance (anuncios servem como NPA ate o usuario aceitar).
+      Idempotencia: o stub seta __rdtConsentReady e __rdtAdsReady, que
+      src/lib/consent.ts e src/lib/ads.ts checam para virar no-op.
+      O publisher ID e duplicado em VITE_ADSENSE_PUBLISHER_ID; se mudar, mude nos dois.
+    -->
+    <script>
+      (function () {
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = window.gtag || gtag;
+        window.gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'granted',
+          wait_for_update: 500
+        });
+        try {
+          var raw = localStorage.getItem('rdt_cookie_consent_v1');
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.choice === 'all') {
+              window.gtag('consent', 'update', {
+                ad_storage: 'granted',
+                ad_user_data: 'granted',
+                ad_personalization: 'granted',
+                analytics_storage: 'granted'
+              });
+            } else if (parsed && parsed.choice === 'essential') {
+              window.gtag('consent', 'update', {
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                analytics_storage: 'denied'
+              });
+            }
+          }
+        } catch (e) {}
+        window.adsbygoogle = window.adsbygoogle || [];
+        window.__rdtConsentReady = true;
+        window.__rdtAdsReady = true;
+      })();
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9994183447004404" crossorigin="anonymous"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
