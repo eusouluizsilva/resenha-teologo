@@ -24,6 +24,8 @@ type PreviewData = {
   completedAt: number
   finalScore?: number
   verificationCode: string
+  totalDurationSeconds?: number
+  lessonsCount?: number
 }
 
 export function CertificadosPage() {
@@ -97,7 +99,7 @@ export function CertificadosPage() {
       ) : (
         <div className="space-y-4">
           {data.map((row) => {
-            const { enrollment, course, studentName, creatorName } = row
+            const { enrollment, course, studentName, creatorName, totalDurationSeconds, publishedLessonsCount } = row
             if (!course) return null
 
             const verificationCode = deriveVerificationCode(enrollment._id)
@@ -109,6 +111,8 @@ export function CertificadosPage() {
                 completedAt: enrollment.completedAt ?? Date.now(),
                 finalScore: enrollment.finalScore,
                 verificationCode,
+                totalDurationSeconds,
+                lessonsCount: publishedLessonsCount,
               })
             }
 

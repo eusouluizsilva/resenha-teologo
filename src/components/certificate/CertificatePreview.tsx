@@ -1,11 +1,12 @@
-// Preview HTML do certificado, no mesmo layout do PDF gerado em
-// src/lib/certificate.ts. Permite ao aluno ver o diploma em tela antes de
-// baixar e imprimir direto pelo navegador. Em @media print, esconde toda a
-// UI ao redor (header, botoes) e imprime apenas a area do certificado.
+// Preview HTML do certificado, espelhando o layout do PDF gerado em
+// src/lib/certificate.ts (estilo diploma academico de seminario teologico).
+// Permite ao aluno visualizar o diploma em tela antes de baixar e imprimir.
+// Em @media print, esconde toda a UI ao redor (header, botoes) e imprime
+// apenas a area do certificado.
 
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
-import { downloadCertificatePdf } from '@/lib/certificate'
+import { downloadCertificatePdf, formatCourseHours } from '@/lib/certificate'
 
 type CertificateData = {
   studentName: string
@@ -14,6 +15,8 @@ type CertificateData = {
   completedAt: number
   finalScore?: number
   verificationCode: string
+  totalDurationSeconds?: number
+  lessonsCount?: number
 }
 
 function formatDate(ts: number): string {
@@ -26,6 +29,85 @@ function formatDate(ts: number): string {
 
 const SERIF = '"Times New Roman", Times, serif'
 
+function CornerDiamond({
+  position,
+}: {
+  position: 'tl' | 'tr' | 'bl' | 'br'
+}) {
+  const style: React.CSSProperties = { position: 'absolute' }
+  if (position === 'tl') {
+    style.top = '2.5%'
+    style.left = '1.7%'
+  } else if (position === 'tr') {
+    style.top = '2.5%'
+    style.right = '1.7%'
+  } else if (position === 'bl') {
+    style.bottom = '3.5%'
+    style.left = '1.7%'
+  } else {
+    style.bottom = '3.5%'
+    style.right = '1.7%'
+  }
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      width="12"
+      height="12"
+      style={style}
+      aria-hidden
+    >
+      <polygon points="6,1 11,6 6,11 1,6" fill="#B8902B" />
+    </svg>
+  )
+}
+
+function GoldSeal() {
+  // Selo dourado concentrico com monograma RDT, espelha drawGoldSeal do PDF.
+  return (
+    <svg viewBox="0 0 100 100" width="84" height="84" aria-hidden>
+      <defs>
+        <radialGradient id="seal-fill" cx="35%" cy="35%" r="70%">
+          <stop offset="0%" stopColor="#F4D77A" />
+          <stop offset="55%" stopColor="#D4AF37" />
+          <stop offset="100%" stopColor="#9C7A1F" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="none" stroke="#B8902B" strokeWidth="1.6" />
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#B8902B" strokeWidth="0.5" />
+      <circle cx="50" cy="50" r="38" fill="url(#seal-fill)" />
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#8B6914" strokeWidth="0.7" />
+      {Array.from({ length: 16 }).map((_, i) => {
+        const angle = (i / 16) * Math.PI * 2
+        const px = 50 + Math.cos(angle) * 46.2
+        const py = 50 + Math.sin(angle) * 46.2
+        return <circle key={i} cx={px} cy={py} r="0.9" fill="#B8902B" />
+      })}
+      <text
+        x="50"
+        y="55"
+        textAnchor="middle"
+        fontFamily={SERIF}
+        fontWeight="700"
+        fontSize="20"
+        fill="#4B370F"
+      >
+        RDT
+      </text>
+      <text
+        x="50"
+        y="68"
+        textAnchor="middle"
+        fontFamily={SERIF}
+        fontStyle="italic"
+        fontSize="7"
+        fill="#5F4614"
+      >
+        {new Date().getFullYear()}
+      </text>
+    </svg>
+  )
+}
+
 export function CertificatePreview({
   data,
   onClose,
@@ -36,13 +118,14 @@ export function CertificatePreview({
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const verifyUrl = `https://resenhadoteologo.com/verificar/${data.verificationCode}`
+  const hoursLabel = formatCourseHours(data.totalDurationSeconds)
 
   useEffect(() => {
     let cancelled = false
     QRCode.toDataURL(verifyUrl, {
       margin: 1,
       width: 256,
-      color: { dark: '#1E2430', light: '#F7F5F2' },
+      color: { dark: '#1E2430', light: '#FAF7F0' },
     })
       .then((url) => {
         if (!cancelled) setQrUrl(url)
@@ -77,6 +160,20 @@ export function CertificatePreview({
       setIsDownloading(false)
     }
   }
+
+  // Linha composta de carga horaria + nota final, igual ao PDF.
+  const detailParts: string[] = []
+  if (hoursLabel) {
+    const lessonsPart =
+      data.lessonsCount && data.lessonsCount > 0
+        ? `, distribuídas em ${data.lessonsCount} ${data.lessonsCount === 1 ? 'aula' : 'aulas'}`
+        : ''
+    detailParts.push(`com carga horária de ${hoursLabel}${lessonsPart}`)
+  }
+  if (data.finalScore !== undefined) {
+    detailParts.push(`e média final de ${Math.round(data.finalScore)}%`)
+  }
+  const detailLine = detailParts.join(' ')
 
   return (
     <div
@@ -156,55 +253,87 @@ export function CertificatePreview({
           style={{ aspectRatio: '297 / 210' }}
         >
           <div
-            className="relative h-full w-full bg-[#F7F5F2] text-[#111827]"
+            className="relative h-full w-full overflow-hidden bg-[#FAF7F0] text-[#111827]"
             style={{ fontFamily: SERIF }}
           >
-            <div className="absolute inset-2 border-[1.5px] border-[#1E2430]" />
-            <div className="absolute inset-3 border border-[#1E2430]" />
-            <div className="absolute left-3 right-3 top-3 h-1.5 bg-[#F37E20]" />
+            {/* Marca dagua: logo centralizada com baixa opacidade */}
+            <img
+              src="/logos/LOGO ICONE PRETA.png"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none"
+              style={{ width: '46%', opacity: 0.05 }}
+            />
 
-            <div className="relative flex h-full w-full flex-col items-center px-16 pt-10 pb-10">
-              <img
-                src="/logos/LOGO ICONE PRETA.png"
-                alt=""
-                className="h-16 object-contain"
-              />
+            {/* Borda decorativa tripla (escura grossa, escura fina, dourada fina) */}
+            <div className="pointer-events-none absolute inset-[2.7%] border-[1.6px] border-[#1E2430]" />
+            <div className="pointer-events-none absolute inset-[3.6%] border border-[#1E2430]" />
+            <div
+              className="pointer-events-none absolute inset-[4.3%] border"
+              style={{ borderColor: '#B8902B', borderWidth: '0.6px' }}
+            />
 
-              <p className="mt-3 text-center text-[20px] font-bold tracking-wide text-[#1E2430]">
+            <CornerDiamond position="tl" />
+            <CornerDiamond position="tr" />
+            <CornerDiamond position="bl" />
+            <CornerDiamond position="br" />
+
+            {/* Conteudo */}
+            <div className="relative flex h-full w-full flex-col items-center px-[8%] pt-[5%] pb-[5%]">
+              <p className="text-center text-[22px] font-bold tracking-[0.04em] text-[#1E2430]">
                 RESENHA DO TEÓLOGO
               </p>
+              <p className="mt-1.5 text-center text-[12px] italic text-[#7A6432]">
+                Sola Scriptura · Soli Deo Gloria
+              </p>
 
-              <span className="mt-3 inline-block h-[6px] w-[6px] rounded-full bg-[#F37E20]" />
+              {/* Linha decorativa dourada com bullet central */}
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <span className="block h-[1px] w-[120px] bg-[#B8902B]" />
+                <span className="block h-[6px] w-[6px] rounded-full bg-[#B8902B]" />
+                <span className="block h-[1px] w-[120px] bg-[#B8902B]" />
+              </div>
 
-              <p className="mt-3 text-[15px] italic text-[#5A5A5A]">
+              <p className="mt-5 text-center text-[15px] italic uppercase tracking-[0.18em] text-[#5A5040]">
                 Certificado de Conclusão
               </p>
 
-              <p className="mt-7 text-[16px] text-[#3C3C3C]">Certificamos que</p>
+              <p className="mt-7 text-[14px] text-[#3C3C3C]">
+                Conferimos o presente certificado a
+              </p>
 
-              <p className="mt-3 text-center text-[44px] font-bold leading-tight text-[#111827]">
+              <p className="mt-4 text-center text-[44px] font-bold leading-tight text-[#111827]">
                 {data.studentName || 'Aluno'}
               </p>
 
-              <span className="mt-2 block h-[1.5px] w-[60%] bg-[#F37E20]" />
+              <span
+                className="mt-2 block h-[1.5px]"
+                style={{ width: '60%', backgroundColor: '#B8902B' }}
+              />
 
-              <p className="mt-5 text-[15px] text-[#3C3C3C]">
-                concluiu com aproveitamento o curso
+              <p className="mt-5 text-[14px] text-[#3C3C3C]">
+                pelo aproveitamento e dedicação demonstrados no curso de
               </p>
 
               <p className="mt-3 max-w-[88%] text-center text-[26px] font-bold leading-snug text-[#1E2430]">
                 {data.courseTitle}
               </p>
 
-              {data.finalScore !== undefined && (
-                <p className="mt-3 text-[14px] text-[#3C3C3C]">
-                  Média final: {Math.round(data.finalScore)}%
+              {detailLine && (
+                <p className="mt-3 max-w-[80%] text-center text-[13px] italic text-[#5A5040]">
+                  {detailLine}
                 </p>
               )}
 
+              {/* Selo dourado centralizado embaixo */}
+              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '14%' }}>
+                <GoldSeal />
+              </div>
+
+              {/* Assinatura do professor (esquerda) */}
               {data.creatorName && (
-                <div className="absolute" style={{ left: '12%', bottom: '14%' }}>
-                  <div className="h-px w-[200px] bg-[#1E2430]" />
+                <div className="absolute" style={{ left: '10%', bottom: '11%' }}>
+                  <div className="h-[1px] w-[200px] bg-[#1E2430]" />
                   <p className="mt-1.5 w-[200px] text-center text-[13px] italic text-[#1E2430]">
                     {data.creatorName}
                   </p>
@@ -214,27 +343,30 @@ export function CertificatePreview({
                 </div>
               )}
 
+              {/* QR Code (direita) */}
               {qrUrl && (
-                <img
-                  src={qrUrl}
-                  alt=""
-                  className="absolute h-[90px] w-[90px]"
-                  style={{ right: '7%', bottom: '10%' }}
-                />
+                <div className="absolute" style={{ right: '8%', bottom: '9%' }}>
+                  <p className="text-center text-[8.5px] uppercase tracking-[0.16em] text-[#7A6432]">
+                    Verificar
+                  </p>
+                  <img
+                    src={qrUrl}
+                    alt=""
+                    className="mt-1 h-[88px] w-[88px]"
+                  />
+                </div>
               )}
 
+              {/* Rodape: data + codigo (centralizado bem embaixo) */}
               <div
-                className="absolute text-left text-[#5A5A5A]"
-                style={{ left: '7%', bottom: '10%' }}
+                className="absolute left-1/2 -translate-x-1/2 text-center"
+                style={{ bottom: '3%', width: '60%' }}
               >
-                <p className="text-[12px]">
+                <p className="text-[11.5px] italic text-[#5A5040]">
                   Emitido em {formatDate(data.completedAt)}
                 </p>
-                <p className="mt-1 text-[10.5px] text-[#828282]">
-                  Código: {data.verificationCode}
-                </p>
-                <p className="mt-0.5 text-[9.5px] text-[#787878]">
-                  Verifique em resenhadoteologo.com/verificar/{data.verificationCode}
+                <p className="mt-0.5 text-[8.5px] text-[#8C826E]">
+                  Código de autenticidade: {data.verificationCode} · resenhadoteologo.com/verificar/{data.verificationCode}
                 </p>
               </div>
             </div>
