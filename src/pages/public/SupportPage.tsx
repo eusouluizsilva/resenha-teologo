@@ -3,10 +3,27 @@
 // compartilhado depois sem precisar de login. Quando Stripe/Pix estiverem
 // integrados, esta pagina recebe o widget de pagamento.
 
+import { useState } from 'react'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { useSeo } from '@/lib/seo'
 
+const PIX_KEY_RAW = '10532024745'
+const PIX_KEY_DISPLAY = '105.320.247-45'
+const PIX_RECIPIENT = 'Luiz Carlos da Silva Junior'
+
 export function SupportPage() {
+  const [copied, setCopied] = useState(false)
+
+  async function copyPixKey() {
+    try {
+      await navigator.clipboard.writeText(PIX_KEY_RAW)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   useSeo({
     title: 'Apoiar | Resenha do Teólogo',
     description:
@@ -38,10 +55,49 @@ export function SupportPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
                 Pix
               </p>
-              <p className="mt-3 text-sm leading-6 text-white/72">
-                Em breve disponibilizaremos chave Pix dedicada para doações. Enquanto isso,
-                escreva para o email abaixo que enviamos os dados.
-              </p>
+              <div className="mt-4 space-y-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/42">
+                    Tipo de chave
+                  </p>
+                  <p className="mt-1 text-sm text-white/82">CPF</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/42">
+                    Chave
+                  </p>
+                  <p className="mt-1 font-display text-lg font-bold tracking-wide text-white">
+                    {PIX_KEY_DISPLAY}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/42">
+                    Favorecido
+                  </p>
+                  <p className="mt-1 text-sm text-white/82">{PIX_RECIPIENT}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyPixKey}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#F37E20]/30 bg-[#F37E20]/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#F2BD8A] transition hover:border-[#F37E20]/50 hover:bg-[#F37E20]/16 hover:text-white"
+                >
+                  {copied ? (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Chave copiada
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h6a2 2 0 002-2M8 5a2 2 0 012-2h6a2 2 0 012 2m0 0h2a2 2 0 012 2v3" />
+                      </svg>
+                      Copiar chave
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             <div className="rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
