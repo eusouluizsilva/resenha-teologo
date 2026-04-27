@@ -279,6 +279,8 @@ export function CertificatePreview({
           ref={certRef}
           className="certificate-print-area shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
           style={containerStyle}
+          spellCheck={false}
+          translate="no"
         >
           {/* Cabecalho institucional */}
           <div
@@ -483,8 +485,8 @@ export function CertificatePreview({
             <div
               style={{
                 position: 'absolute',
-                bottom: '11%',
-                left: '8%',
+                bottom: '12%',
+                left: '7%',
                 width: '27%',
                 textAlign: 'center',
               }}
@@ -492,7 +494,7 @@ export function CertificatePreview({
               <p
                 style={{
                   fontFamily: '"Pinyon Script", cursive',
-                  fontSize: '2.2cqw',
+                  fontSize: '1.85cqw',
                   color: '#1B2430',
                   margin: 0,
                   lineHeight: 1,
@@ -516,7 +518,7 @@ export function CertificatePreview({
                 style={{
                   fontFamily: '"EB Garamond", serif',
                   fontStyle: 'italic',
-                  fontSize: '1.05cqw',
+                  fontSize: '1cqw',
                   color: '#5A4A30',
                   margin: '0.4cqw 0 0',
                   letterSpacing: '0.02em',
@@ -531,8 +533,8 @@ export function CertificatePreview({
           <div
             style={{
               position: 'absolute',
-              bottom: '11%',
-              left: '65%',
+              bottom: '12%',
+              left: '60%',
               width: '27%',
               textAlign: 'center',
             }}
@@ -540,7 +542,7 @@ export function CertificatePreview({
             <p
               style={{
                 fontFamily: '"Pinyon Script", cursive',
-                fontSize: '2.2cqw',
+                fontSize: '1.85cqw',
                 color: '#1B2430',
                 margin: 0,
                 lineHeight: 1,
@@ -564,7 +566,7 @@ export function CertificatePreview({
               style={{
                 fontFamily: '"EB Garamond", serif',
                 fontStyle: 'italic',
-                fontSize: '1.05cqw',
+                fontSize: '1cqw',
                 color: '#5A4A30',
                 margin: '0.4cqw 0 0',
                 letterSpacing: '0.02em',
@@ -579,9 +581,9 @@ export function CertificatePreview({
             <div
               style={{
                 position: 'absolute',
-                bottom: '8%',
-                right: '5%',
-                width: '7.5cqw',
+                bottom: '10%',
+                right: '4%',
+                width: '6.5cqw',
                 textAlign: 'center',
               }}
             >
@@ -599,9 +601,9 @@ export function CertificatePreview({
               <p
                 style={{
                   fontFamily: '"EB Garamond", serif',
-                  fontSize: '0.85cqw',
+                  fontSize: '0.7cqw',
                   color: '#5A4A30',
-                  margin: '0.3cqw 0 0',
+                  margin: '0.2cqw 0 0',
                   letterSpacing: '0.05em',
                 }}
               >
@@ -610,23 +612,6 @@ export function CertificatePreview({
             </div>
           )}
 
-          {/* Rodape de verificacao */}
-          <p
-            style={{
-              position: 'absolute',
-              bottom: '2.6%',
-              left: 0,
-              right: 0,
-              textAlign: 'center',
-              fontFamily: '"EB Garamond", serif',
-              fontSize: '0.95cqw',
-              color: '#5A4A30',
-              margin: 0,
-              fontStyle: 'italic',
-            }}
-          >
-            Verifique a autenticidade em resenhadoteologo.com/verificar/{data.verificationCode}
-          </p>
         </div>
       </div>
     </div>
