@@ -146,8 +146,9 @@ function UserDetail({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         <CountTile label="Matrículas" value={String(counts.enrollments)} />
+        <CountTile label="Aulas assistidas" value={String(counts.lessonsCompleted)} />
         <CountTile label="Certificados" value={String(counts.certificates)} />
         <CountTile label="Cursos criados" value={String(counts.ownedCourses)} />
         <CountTile label="Artigos" value={`${counts.publishedPosts}/${counts.posts}`} />
@@ -492,6 +493,10 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
                         <span>
                           <strong className="font-semibold text-white/72">{u.enrollmentsCount}</strong>{' '}
                           {u.enrollmentsCount === 1 ? 'matrícula' : 'matrículas'}
+                        </span>
+                        <span>
+                          <strong className="font-semibold text-white/72">{u.lessonsCompletedCount}</strong>{' '}
+                          {u.lessonsCompletedCount === 1 ? 'aula assistida' : 'aulas assistidas'}
                         </span>
                         {u.enrolledCourses.length > 0 && (
                           <span className="line-clamp-1 min-w-0 max-w-full text-white/42">

@@ -218,12 +218,25 @@ export const listAllUsers = query({
     const allFunctions = await ctx.db.query('userFunctions').collect()
     const allCourses = await ctx.db.query('courses').collect()
     const allEnrollments = await ctx.db.query('enrollments').collect()
+    const allProgress = await ctx.db.query('progress').collect()
 
     const fnByUser = new Map<string, string[]>()
     for (const f of allFunctions) {
       const list = fnByUser.get(f.userId) ?? []
       list.push(f.function)
       fnByUser.set(f.userId, list)
+    }
+
+    // Conta aulas concluidas por estudante. progress.completed=true equivale
+    // a aula assistida ate o final + quiz aprovado (ou ainda em retry pending,
+    // que tambem mantem completed=true).
+    const lessonsCompletedByStudent = new Map<string, number>()
+    for (const p of allProgress) {
+      if (!p.completed) continue
+      lessonsCompletedByStudent.set(
+        p.studentId,
+        (lessonsCompletedByStudent.get(p.studentId) ?? 0) + 1,
+      )
     }
 
     const courseById = new Map<string, { title: string; slug: string | null }>()
@@ -259,6 +272,7 @@ export const listAllUsers = query({
         ownedCoursesCount: ownedByCreator.get(u.clerkId) ?? 0,
         enrollmentsCount: enrolled.length,
         enrolledCourses: enrolled,
+        lessonsCompletedCount: lessonsCompletedByStudent.get(u.clerkId) ?? 0,
       }
     })
   },
@@ -289,6 +303,12 @@ export const getUserDetail = query({
       .query('enrollments')
       .withIndex('by_studentId', (q) => q.eq('studentId', clerkId))
       .collect()
+
+    const progressRecords = await ctx.db
+      .query('progress')
+      .withIndex('by_studentId', (q) => q.eq('studentId', clerkId))
+      .collect()
+    const lessonsCompleted = progressRecords.filter((p) => p.completed).length
 
     const enrollmentsWithCourse = await Promise.all(
       enrollments.slice(0, 50).map(async (e) => {
@@ -383,6 +403,7 @@ export const getUserDetail = query({
         donations: donations.length,
         completedDonations: donations.filter((d) => d.status === 'completed').length,
         certificates: certificatesCount,
+        lessonsCompleted,
         totalDonatedCents,
       },
       enrollments: enrollmentsWithCourse,
