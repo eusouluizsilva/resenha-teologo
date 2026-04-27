@@ -92,10 +92,7 @@ const iconSearch = (
   </svg>
 )
 
-// Flag para reexibir rotas de Instituição quando elas saírem de placeholder.
-// Hoje esconde Membros/Cursos institucionais/Relatórios da sidebar, mas as
-// rotas continuam registradas em App.tsx para quem tem a função ativa.
-const SHOW_INSTITUTION_NAV = false
+const SHOW_INSTITUTION_NAV = true
 
 type NavItemMaybeAdmin = NavItem & { adminOnly?: boolean }
 type NavGroupExt = { label: string; fn: UserFunction; items: NavItemMaybeAdmin[] }
