@@ -462,6 +462,59 @@ export const backfillEnrollmentsForCourse = internalMutation({
   },
 })
 
+// Broadcast de notificacao in-app (sininho) para todos os usuarios. Idempotencia
+// por dedupeKey: marcamos a notificacao com link `${baseLink}?bk=<dedupeKey>` e
+// pulamos quem ja tiver recebido, para o admin poder rerodar sem duplicar.
+// Rodar via:
+//   npx convex run --prod admin:broadcastNotification \
+//     '{"title":"...","body":"...","link":"/dashboard/perfil","dedupeKey":"perfil_publico_v1"}'
+export const broadcastNotification = mutation({
+  args: {
+    title: v.string(),
+    body: v.optional(v.string()),
+    link: v.optional(v.string()),
+    dedupeKey: v.string(),
+  },
+  handler: async (ctx, { title, body, link, dedupeKey }) => {
+    await requireAdmin(ctx)
+
+    const allUsers = await ctx.db.query('users').collect()
+    const finalLink = link
+      ? `${link}${link.includes('?') ? '&' : '?'}bk=${dedupeKey}`
+      : undefined
+
+    let inserted = 0
+    let skipped = 0
+    const now = Date.now()
+
+    for (const u of allUsers) {
+      if (finalLink) {
+        const existing = await ctx.db
+          .query('notifications')
+          .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
+          .filter((q) => q.eq(q.field('link'), finalLink))
+          .first()
+        if (existing) {
+          skipped += 1
+          continue
+        }
+      }
+
+      await ctx.db.insert('notifications', {
+        userId: u.clerkId,
+        kind: 'generic',
+        title,
+        body,
+        link: finalLink,
+        createdAt: now,
+      })
+      inserted += 1
+    }
+
+    return { totalUsers: allUsers.length, inserted, skipped }
+  },
+})
+
 // Lista os cursos mais recentes (últimos 30) com nome do professor dono.
 export const listRecentCourses = query({
   args: {},
