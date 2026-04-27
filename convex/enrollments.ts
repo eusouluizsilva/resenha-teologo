@@ -268,11 +268,30 @@ export const listCertificates = query({
               .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
               .unique()
           : null
+
+        // Carga horaria do curso = soma das duracoes das aulas publicadas.
+        // Usada no certificado estilo diploma academico.
+        let totalDurationSeconds = 0
+        let publishedLessonsCount = 0
+        if (course) {
+          const lessons = await ctx.db
+            .query('lessons')
+            .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
+            .collect()
+          for (const l of lessons) {
+            if (!l.isPublished) continue
+            publishedLessonsCount += 1
+            totalDurationSeconds += l.durationSeconds ?? 0
+          }
+        }
+
         return {
           enrollment,
           course,
           studentName: student?.name ?? '',
           creatorName: creator?.name ?? '',
+          totalDurationSeconds,
+          publishedLessonsCount,
         }
       })
     )

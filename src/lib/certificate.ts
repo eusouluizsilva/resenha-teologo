@@ -1,8 +1,12 @@
-// Gerador de certificado em PDF. Usa jsPDF client-side para que o aluno possa
-// baixar imediatamente sem depender de action do servidor. Layout A4 paisagem
-// com selo do logo no topo, borda editorial dupla, nome do aluno em destaque,
-// curso, criador, linha de assinatura do professor, data e codigo de
-// verificacao com QR para conferir autenticidade em /verificar/<codigo>.
+// Gerador de certificado em PDF, estilo diploma academico de seminario
+// teologico (referencias: Princeton Theological Seminary, Westminster
+// Seminary, Reformed Theological Seminary). Layout A4 paisagem com:
+// - Borda decorativa dupla
+// - Marca dagua do livro aberto centralizada (opacidade baixa)
+// - Selo dourado circular com livro no centro
+// - Tipografia serif classica (Times)
+// - Linha de assinatura do professor + carga horaria total
+// - QR + codigo de verificacao
 
 import QRCode from 'qrcode'
 
@@ -13,6 +17,8 @@ type CertificateData = {
   completedAt: number
   finalScore?: number
   verificationCode: string
+  totalDurationSeconds?: number
+  lessonsCount?: number
 }
 
 function formatDate(ts: number): string {
@@ -23,9 +29,17 @@ function formatDate(ts: number): string {
   }).format(new Date(ts))
 }
 
-// Cache em modulo: a logo nao muda entre downloads na mesma sessao.
-let logoDataUrlPromise: Promise<string | null> | null = null
+export function formatCourseHours(seconds: number | undefined): string | null {
+  if (!seconds || seconds <= 0) return null
+  const totalMinutes = Math.round(seconds / 60)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (hours === 0) return `${minutes} minutos`
+  if (minutes === 0) return hours === 1 ? '1 hora' : `${hours} horas`
+  return `${hours}h ${minutes}min`
+}
 
+let logoDataUrlPromise: Promise<string | null> | null = null
 async function loadLogoDataUrl(): Promise<string | null> {
   if (logoDataUrlPromise) return logoDataUrlPromise
   logoDataUrlPromise = (async () => {
@@ -47,7 +61,6 @@ async function loadLogoDataUrl(): Promise<string | null> {
 }
 
 export async function downloadCertificatePdf(data: CertificateData) {
-  // jsPDF é ~400KB minificado, dynamic-import evita carregar no bundle inicial.
   const { default: jsPDF } = await import('jspdf')
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -58,104 +71,150 @@ export async function downloadCertificatePdf(data: CertificateData) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
 
-  // Fundo bege editorial
-  doc.setFillColor(247, 245, 242) // #F7F5F2
+  // Fundo pergaminho creme
+  doc.setFillColor(250, 247, 240) // #FAF7F0
   doc.rect(0, 0, pageW, pageH, 'F')
 
-  // Borda externa dupla
-  doc.setDrawColor(30, 36, 48) // #1E2430
-  doc.setLineWidth(1.2)
-  doc.rect(8, 8, pageW - 16, pageH - 16)
-  doc.setLineWidth(0.3)
-  doc.rect(11, 11, pageW - 22, pageH - 22)
-
-  // Barra laranja superior fina
-  doc.setFillColor(243, 126, 32) // #F37E20
-  doc.rect(11, 11, pageW - 22, 2.5, 'F')
-
-  // Selo: logo da plataforma centralizado no topo
+  // Marca dagua: livro aberto centralizado, opacidade baixa
   const logoDataUrl = await loadLogoDataUrl()
   if (logoDataUrl) {
-    const sealSize = 22
-    doc.addImage(
-      logoDataUrl,
-      'PNG',
-      (pageW - sealSize) / 2,
-      20,
-      sealSize,
-      sealSize,
-    )
+    // jsPDF v2/v4 GState para opacidade. Compativel via cast em runtime.
+    type GStateCtor = new (opts: { opacity: number }) => unknown
+    const docAny = doc as unknown as {
+      GState?: GStateCtor
+      setGState?: (g: unknown) => void
+    }
+    if (docAny.GState && docAny.setGState) {
+      docAny.setGState(new docAny.GState({ opacity: 0.05 }))
+      const wmSize = 130
+      doc.addImage(
+        logoDataUrl,
+        'PNG',
+        (pageW - wmSize) / 2,
+        (pageH - wmSize) / 2,
+        wmSize,
+        wmSize,
+      )
+      docAny.setGState(new docAny.GState({ opacity: 1 }))
+    }
   }
 
-  // Marca textual sob o selo
+  // Borda decorativa: tripla com cantos ornamentados
+  doc.setDrawColor(30, 36, 48) // #1E2430
+  doc.setLineWidth(1.4)
+  doc.rect(8, 8, pageW - 16, pageH - 16)
+  doc.setLineWidth(0.4)
+  doc.rect(11, 11, pageW - 22, pageH - 22)
+  doc.setDrawColor(184, 144, 43) // ouro #B8902B
+  doc.setLineWidth(0.25)
+  doc.rect(13, 13, pageW - 26, pageH - 26)
+
+  // Cantos: ornamentos pequenos
+  drawCornerOrnament(doc, 13, 13, 1)
+  drawCornerOrnament(doc, pageW - 13, 13, 2)
+  drawCornerOrnament(doc, 13, pageH - 13, 3)
+  drawCornerOrnament(doc, pageW - 13, pageH - 13, 4)
+
+  // Marca textual no topo (em cima do selo, centralizada)
   doc.setTextColor(30, 36, 48)
   doc.setFont('times', 'bold')
-  doc.setFontSize(13)
-  doc.text('RESENHA DO TEÓLOGO', pageW / 2, 50, { align: 'center' })
+  doc.setFontSize(18)
+  doc.text('RESENHA DO TEÓLOGO', pageW / 2, 26, { align: 'center' })
 
-  // Separador pontilhado (ponto simulado)
-  doc.setFillColor(243, 126, 32)
-  doc.circle(pageW / 2, 56, 0.8, 'F')
-
-  // Título principal
   doc.setFont('times', 'italic')
-  doc.setFontSize(12)
-  doc.setTextColor(90, 90, 90)
-  doc.text('Certificado de Conclusão', pageW / 2, 66, { align: 'center' })
+  doc.setFontSize(9)
+  doc.setTextColor(120, 100, 60)
+  doc.text(
+    'Sola Scriptura · Soli Deo Gloria',
+    pageW / 2,
+    32,
+    { align: 'center' },
+  )
 
-  // Texto introdutório
-  doc.setFont('times', 'normal')
+  // Linha decorativa abaixo do nome da instituicao
+  doc.setDrawColor(184, 144, 43)
+  doc.setLineWidth(0.6)
+  doc.line(pageW / 2 - 50, 36, pageW / 2 + 50, 36)
+  doc.setFillColor(184, 144, 43)
+  doc.circle(pageW / 2, 36, 0.9, 'F')
+
+  // Titulo
+  doc.setFont('times', 'italic')
   doc.setFontSize(13)
-  doc.setTextColor(60, 60, 60)
-  doc.text('Certificamos que', pageW / 2, 80, { align: 'center' })
+  doc.setTextColor(90, 80, 60)
+  doc.text('CERTIFICADO DE CONCLUSÃO', pageW / 2, 46, { align: 'center' })
 
-  // Nome do aluno
+  // Texto introdutorio
+  doc.setFont('times', 'normal')
+  doc.setFontSize(12)
+  doc.setTextColor(60, 60, 60)
+  doc.text(
+    'Conferimos o presente certificado a',
+    pageW / 2,
+    62,
+    { align: 'center' },
+  )
+
+  // Nome do aluno em destaque
   doc.setFont('times', 'bold')
-  doc.setFontSize(30)
+  doc.setFontSize(34)
   doc.setTextColor(17, 24, 39)
-  doc.text(data.studentName || 'Aluno', pageW / 2, 98, { align: 'center' })
+  doc.text(data.studentName || 'Aluno', pageW / 2, 80, { align: 'center' })
 
   // Linha sob o nome
-  doc.setDrawColor(243, 126, 32)
-  doc.setLineWidth(0.6)
-  const nameWidth = Math.min(pageW - 80, 180)
-  doc.line((pageW - nameWidth) / 2, 102, (pageW + nameWidth) / 2, 102)
+  doc.setDrawColor(184, 144, 43)
+  doc.setLineWidth(0.5)
+  const nameWidth = Math.min(pageW - 100, 200)
+  doc.line((pageW - nameWidth) / 2, 84, (pageW + nameWidth) / 2, 84)
 
   // Texto do curso
   doc.setFont('times', 'normal')
-  doc.setFontSize(13)
+  doc.setFontSize(12)
   doc.setTextColor(60, 60, 60)
-  doc.text('concluiu com aproveitamento o curso', pageW / 2, 114, { align: 'center' })
+  doc.text(
+    'pelo aproveitamento e dedicação demonstrados no curso de',
+    pageW / 2,
+    96,
+    { align: 'center' },
+  )
 
   // Nome do curso
   doc.setFont('times', 'bold')
-  doc.setFontSize(18)
+  doc.setFontSize(20)
   doc.setTextColor(30, 36, 48)
-  const wrappedTitle = doc.splitTextToSize(data.courseTitle, pageW - 60)
-  doc.text(wrappedTitle, pageW / 2, 128, { align: 'center' })
+  const wrappedTitle = doc.splitTextToSize(data.courseTitle, pageW - 80)
+  doc.text(wrappedTitle, pageW / 2, 110, { align: 'center' })
 
   const titleLineCount = Array.isArray(wrappedTitle) ? wrappedTitle.length : 1
-  const afterTitleY = 128 + titleLineCount * 8
+  const afterTitleY = 110 + titleLineCount * 8
 
-  // Nota final
+  // Carga horaria + nota
+  const hoursLabel = formatCourseHours(data.totalDurationSeconds)
+  const lines: string[] = []
+  if (hoursLabel) {
+    const lessonsPart = data.lessonsCount && data.lessonsCount > 0
+      ? `, distribuídas em ${data.lessonsCount} ${data.lessonsCount === 1 ? 'aula' : 'aulas'}`
+      : ''
+    lines.push(`com carga horária de ${hoursLabel}${lessonsPart}`)
+  }
   if (data.finalScore !== undefined) {
-    doc.setFont('times', 'normal')
-    doc.setFontSize(12)
-    doc.setTextColor(60, 60, 60)
-    doc.text(
-      `Média final: ${Math.round(data.finalScore)}%`,
-      pageW / 2,
-      afterTitleY + 6,
-      { align: 'center' },
-    )
+    lines.push(`e média final de ${Math.round(data.finalScore)}%`)
+  }
+  if (lines.length > 0) {
+    doc.setFont('times', 'italic')
+    doc.setFontSize(11)
+    doc.setTextColor(80, 70, 50)
+    doc.text(lines.join(' '), pageW / 2, afterTitleY + 6, { align: 'center' })
   }
 
-  // Linha de assinatura do professor (centralizada acima do rodape, na lateral
-  // esquerda para nao colidir com o QR a direita).
+  // Selo dourado embaixo no centro
+  drawGoldSeal(doc, pageW / 2, pageH - 50, 18)
+
+  // Linha de assinatura do professor (esquerda)
   if (data.creatorName) {
-    const sigCenterX = pageW / 2 - 40
-    const sigY = pageH - 50
-    const sigWidth = 70
+    const sigCenterX = 70
+    const sigY = pageH - 38
+    const sigWidth = 75
     doc.setDrawColor(30, 36, 48)
     doc.setLineWidth(0.4)
     doc.line(sigCenterX - sigWidth / 2, sigY, sigCenterX + sigWidth / 2, sigY)
@@ -167,41 +226,45 @@ export async function downloadCertificatePdf(data: CertificateData) {
 
     doc.setFont('times', 'normal')
     doc.setFontSize(8.5)
-    doc.setTextColor(120, 120, 120)
-    doc.text('Professor responsável', sigCenterX, sigY + 10, { align: 'center' })
+    doc.setTextColor(120, 110, 90)
+    doc.text('Professor responsável', sigCenterX, sigY + 9, { align: 'center' })
   }
 
-  // QR Code apontando para a URL de verificação (ancorado à direita do rodapé)
+  // QR Code (direita do rodape)
   const verifyUrl = `https://resenhadoteologo.com/verificar/${data.verificationCode}`
   const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
     margin: 1,
     width: 256,
-    color: { dark: '#1E2430', light: '#F7F5F2' },
+    color: { dark: '#1E2430', light: '#FAF7F0' },
   })
-  const qrSize = 26
-  const qrX = pageW - 20 - qrSize
-  const qrY = pageH - 20 - qrSize
+  const qrSize = 22
+  const qrX = pageW - 22 - qrSize
+  const qrY = pageH - 22 - qrSize
   doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize)
 
-  // Rodapé: data + código de verificação
-  const footerY = pageH - 28
-
   doc.setFont('times', 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(120, 110, 90)
+  doc.text('Verificar', qrX + qrSize / 2, qrY - 2, { align: 'center' })
+
+  // Rodape: data + codigo (centro)
+  doc.setFont('times', 'italic')
   doc.setFontSize(10)
-  doc.setTextColor(90, 90, 90)
-  doc.text(`Emitido em ${formatDate(data.completedAt)}`, 20, footerY)
-
-  doc.setFontSize(9)
-  doc.setTextColor(130, 130, 130)
-  doc.text(`Código: ${data.verificationCode}`, 20, footerY + 6)
-
-  // URL de verificação (à esquerda do QR)
-  doc.setFontSize(8.5)
-  doc.setTextColor(120, 120, 120)
+  doc.setTextColor(80, 70, 50)
   doc.text(
-    `Verifique em resenhadoteologo.com/verificar/${data.verificationCode}`,
-    20,
-    footerY + 12,
+    `Emitido em ${formatDate(data.completedAt)}`,
+    pageW / 2,
+    pageH - 22,
+    { align: 'center' },
+  )
+  doc.setFont('times', 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(140, 130, 110)
+  doc.text(
+    `Código de autenticidade: ${data.verificationCode} · resenhadoteologo.com/verificar/${data.verificationCode}`,
+    pageW / 2,
+    pageH - 17,
+    { align: 'center' },
   )
 
   const safeCourse = (data.courseTitle || 'curso')
@@ -209,6 +272,74 @@ export async function downloadCertificatePdf(data: CertificateData) {
     .replace(/\s+/g, '-')
     .slice(0, 40)
   doc.save(`certificado-${safeCourse}.pdf`)
+}
+
+function drawCornerOrnament(
+  doc: import('jspdf').jsPDF,
+  x: number,
+  y: number,
+  corner: 1 | 2 | 3 | 4,
+) {
+  // Pequeno losango dourado em cada canto interno da borda
+  doc.setFillColor(184, 144, 43)
+  doc.setDrawColor(184, 144, 43)
+  const dx = corner === 2 || corner === 4 ? -3 : 3
+  const dy = corner === 3 || corner === 4 ? -3 : 3
+  // Diamante: 4 triangulos formando rombo
+  const cx = x + dx
+  const cy = y + dy
+  doc.triangle(cx - 1.4, cy, cx, cy - 1.4, cx + 1.4, cy, 'F')
+  doc.triangle(cx - 1.4, cy, cx, cy + 1.4, cx + 1.4, cy, 'F')
+}
+
+function drawGoldSeal(
+  doc: import('jspdf').jsPDF,
+  cx: number,
+  cy: number,
+  radius: number,
+) {
+  // Aneis externos
+  doc.setDrawColor(184, 144, 43)
+  doc.setLineWidth(0.8)
+  doc.circle(cx, cy, radius)
+  doc.setLineWidth(0.25)
+  doc.circle(cx, cy, radius - 1.4)
+
+  // Disco interno em ouro mais escuro (efeito relevo)
+  doc.setFillColor(212, 175, 55) // #D4AF37 ouro brilhante
+  doc.circle(cx, cy, radius - 2.6, 'F')
+
+  // Anel interno fino mais escuro
+  doc.setDrawColor(139, 105, 20) // #8B6914
+  doc.setLineWidth(0.4)
+  doc.circle(cx, cy, radius - 2.6)
+
+  // Ponteado decorativo no anel externo
+  const dots = 16
+  doc.setFillColor(184, 144, 43)
+  for (let i = 0; i < dots; i += 1) {
+    const angle = (i / dots) * Math.PI * 2
+    const px = cx + Math.cos(angle) * (radius - 0.7)
+    const py = cy + Math.sin(angle) * (radius - 0.7)
+    doc.circle(px, py, 0.35, 'F')
+  }
+
+  // Texto central: monograma RDT
+  doc.setFont('times', 'bold')
+  doc.setFontSize(13)
+  doc.setTextColor(75, 55, 15)
+  doc.text('RDT', cx, cy + 1.5, { align: 'center' })
+
+  // Texto pequeno embaixo: ano
+  doc.setFont('times', 'italic')
+  doc.setFontSize(6)
+  doc.setTextColor(95, 70, 20)
+  doc.text(
+    String(new Date().getFullYear()),
+    cx,
+    cy + 5.5,
+    { align: 'center' },
+  )
 }
 
 export function deriveVerificationCode(enrollmentId: string): string {
