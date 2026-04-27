@@ -52,7 +52,7 @@ export function FinanceiroPage() {
           </p>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[
             {
               label: 'Total acumulado',

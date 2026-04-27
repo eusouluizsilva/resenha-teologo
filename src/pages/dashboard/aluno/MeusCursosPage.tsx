@@ -121,7 +121,7 @@ export function MeusCursosPage() {
       }
     >
       {isLoading ? (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className={cn('animate-pulse overflow-hidden', brandPanelClass)}>
               <div className="aspect-video w-full bg-white/6" />
@@ -167,7 +167,7 @@ export function MeusCursosPage() {
             ))}
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {data.map((item: NonNullable<typeof data>[number]) => {
               if (!item) return null
               return (

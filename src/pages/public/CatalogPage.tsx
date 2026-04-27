@@ -376,7 +376,7 @@ export function CatalogPage() {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className={cn('animate-pulse overflow-hidden', brandPanelClass)}>
                 <div className="aspect-video w-full bg-white/6" />
@@ -404,7 +404,7 @@ export function CatalogPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {filteredCourses.map((course) => (
               <CourseCard key={course._id} course={course} />
             ))}

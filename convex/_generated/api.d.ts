@@ -33,6 +33,7 @@ import type * as lessonMaterials from "../lessonMaterials.js";
 import type * as lessonTimestamps from "../lessonTimestamps.js";
 import type * as lessons from "../lessons.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_autoEnroll from "../lib/autoEnroll.js";
 import type * as lib_slug from "../lib/slug.js";
 import type * as modules from "../modules.js";
 import type * as notebooks from "../notebooks.js";
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   lessonTimestamps: typeof lessonTimestamps;
   lessons: typeof lessons;
   "lib/auth": typeof lib_auth;
+  "lib/autoEnroll": typeof lib_autoEnroll;
   "lib/slug": typeof lib_slug;
   modules: typeof modules;
   notebooks: typeof notebooks;
