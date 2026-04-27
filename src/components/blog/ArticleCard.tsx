@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/brand'
+import { VerifiedBadge } from '@/components/VerifiedBadge'
 
 export type ArticleCardData = {
   _id: string
@@ -70,8 +71,10 @@ export function ArticleCard({
           <h3 className="mt-1 line-clamp-2 font-display text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#7A4A14]">
             {article.title}
           </h3>
-          <p className="mt-1 truncate text-xs text-[#6B7280]">
-            {authorLabel} · {formatDate(article.publishedAt)}
+          <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-xs text-[#6B7280]">
+            <span className="truncate">{authorLabel}</span>
+            <VerifiedBadge handle={article.author.handle} size="xs" />
+            <span className="flex-shrink-0">· {formatDate(article.publishedAt)}</span>
           </p>
         </div>
       </Link>
@@ -136,7 +139,10 @@ export function ArticleCard({
               </div>
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#111827]">{authorLabel}</p>
+              <p className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-[#111827]">
+                <span className="truncate">{authorLabel}</span>
+                <VerifiedBadge handle={article.author.handle} size="sm" />
+              </p>
               <p className="text-xs text-[#6B7280]">{formatDate(article.publishedAt)}</p>
             </div>
           </div>

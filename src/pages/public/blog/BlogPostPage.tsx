@@ -7,6 +7,7 @@ import { ArticleBody } from '@/components/blog/ArticleBody'
 import { ArticleReactions } from '@/components/blog/ArticleReactions'
 import { ArticleComments } from '@/components/blog/ArticleComments'
 import { FollowButton } from '@/components/blog/FollowButton'
+import { VerifiedBadge } from '@/components/VerifiedBadge'
 import { AdSlot } from '@/components/AdSlot'
 import { useArticleJsonLd, useBreadcrumbJsonLd, useSeo } from '@/lib/seo'
 
@@ -150,7 +151,10 @@ export function BlogPostPage() {
                   </div>
                 )}
                 <div>
-                  <p className="font-medium text-[#111827]">{authorLabel}</p>
+                  <p className="flex items-center gap-1.5 font-medium text-[#111827]">
+                    <span>{authorLabel}</span>
+                    <VerifiedBadge handle={post.author.handle} size="sm" />
+                  </p>
                   <p className="text-xs text-[#6B7280]">
                     {formatDate(post.publishedAt)} • {post.viewCount.toLocaleString('pt-BR')} leituras
                   </p>
@@ -162,7 +166,10 @@ export function BlogPostPage() {
                   {authorLabel.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-medium text-[#111827]">{authorLabel}</p>
+                  <p className="flex items-center gap-1.5 font-medium text-[#111827]">
+                    <span>{authorLabel}</span>
+                    <VerifiedBadge handle={post.author.handle} size="sm" />
+                  </p>
                   <p className="text-xs text-[#6B7280]">{formatDate(post.publishedAt)}</p>
                 </div>
               </div>
@@ -202,7 +209,10 @@ export function BlogPostPage() {
                   </div>
                 )}
                 <div>
-                  <p className="font-semibold text-[#111827]">{authorLabel}</p>
+                  <p className="flex items-center gap-1.5 font-semibold text-[#111827]">
+                    <span>{authorLabel}</span>
+                    <VerifiedBadge handle={post.author.handle} size="sm" />
+                  </p>
                   {post.author.bio && (
                     <p className="text-sm text-[#6B7280] line-clamp-2 max-w-md">{post.author.bio}</p>
                   )}

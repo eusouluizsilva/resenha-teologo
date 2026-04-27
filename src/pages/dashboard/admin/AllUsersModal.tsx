@@ -10,6 +10,7 @@ import {
   brandStatusPillClass,
   cn,
 } from '@/lib/brand'
+import { VerifiedBadge } from '@/components/VerifiedBadge'
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString('pt-BR', {
@@ -119,7 +120,10 @@ function UserDetail({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-xl font-bold text-white">{user.name}</h3>
+          <h3 className="flex items-center gap-1.5 font-display text-xl font-bold text-white">
+            <span className="truncate">{user.name}</span>
+            <VerifiedBadge handle={user.handle} size="md" />
+          </h3>
           <p className="truncate text-sm text-white/62">{user.email}</p>
           <p className="mt-1 text-xs text-white/42">
             Cadastrado em {formatDate(user.createdAt)}
@@ -449,7 +453,10 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-white">{u.name}</p>
+                          <p className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-white">
+                            <span className="truncate">{u.name}</span>
+                            <VerifiedBadge handle={u.handle} size="xs" />
+                          </p>
                           <p className="truncate text-xs text-white/42">{u.email}</p>
                         </div>
                         <div className="hidden flex-shrink-0 flex-wrap justify-end gap-1 sm:flex">

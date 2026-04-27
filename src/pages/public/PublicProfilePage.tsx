@@ -6,6 +6,7 @@ import { api } from '../../../convex/_generated/api'
 import { cn, brandPrimaryButtonClass, brandInputClass } from '@/lib/brand'
 import { FollowButton } from '@/components/blog/FollowButton'
 import { DonateButton } from '@/components/donate/DonateButton'
+import { VerifiedBadge } from '@/components/VerifiedBadge'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 const PROFILE_ORIGIN =
@@ -419,7 +420,10 @@ export function PublicProfilePage() {
             </div>
           )}
 
-          <h1 className="mt-5 font-display text-3xl font-bold text-white">{profile.name}</h1>
+          <h1 className="mt-5 flex items-center justify-center gap-2 font-display text-3xl font-bold text-white">
+            <span>{profile.name}</span>
+            <VerifiedBadge handle={profile.handle} size="lg" />
+          </h1>
           {profile.handle && (
             <p className="mt-1 text-sm text-white/42">@{profile.handle}</p>
           )}
