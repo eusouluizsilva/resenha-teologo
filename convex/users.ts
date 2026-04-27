@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { internalMutation, mutation, query } from './_generated/server'
 import type { MutationCtx } from './_generated/server'
 import { ensureIdentityMatches, requireIdentity } from './lib/auth'
+import { autoEnrollUserInAdminCourses } from './lib/autoEnroll'
 
 const DEFAULT_FOLLOW_HANDLE = 'resenhadoteologo'
 
@@ -106,6 +107,7 @@ export const upsert = mutation({
       totalDonationsReceived: 0,
     })
     await autoFollowDefaultProfile(ctx, args.clerkId)
+    await autoEnrollUserInAdminCourses(ctx, args.clerkId)
     return newId
   },
 })
@@ -174,6 +176,7 @@ export const syncFromWebhook = internalMutation({
         totalDonationsReceived: 0,
       })
       await autoFollowDefaultProfile(ctx, args.clerkId)
+      await autoEnrollUserInAdminCourses(ctx, args.clerkId)
       return
     }
     await ctx.db.patch(existing._id, {

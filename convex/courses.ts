@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
+import { autoEnrollAllUsersInCourse } from './lib/autoEnroll'
 import { toSlug } from './lib/slug'
 import { checkAndIssueCertificate } from './student'
 
@@ -131,6 +132,15 @@ export const update = mutation({
       updates.visibility = 'public'
     }
     await ctx.db.patch(id, updates)
+
+    // Auto-enroll: se o curso acabou de ser publicado pelo admin, matricula
+    // todos os usuarios existentes. autoEnrollAllUsersInCourse e idempotente
+    // e ignora cursos institucionais ou nao publicados, entao chamada e segura
+    // mesmo que o status nao tenha mudado.
+    const becamePublished = fields.isPublished === true && course.isPublished === false
+    if (becamePublished) {
+      await autoEnrollAllUsersInCourse(ctx, id)
+    }
   },
 })
 
@@ -167,6 +177,8 @@ export const publishWithLessons = mutation({
     const course = await ctx.db.get(id)
     if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
 
+    const wasPublished = course.isPublished
+
     // Publica o curso
     await ctx.db.patch(id, { isPublished: true })
 
@@ -180,6 +192,10 @@ export const publishWithLessons = mutation({
       if (!lesson.isPublished) {
         await ctx.db.patch(lesson._id, { isPublished: true })
       }
+    }
+
+    if (!wasPublished) {
+      await autoEnrollAllUsersInCourse(ctx, id)
     }
   },
 })

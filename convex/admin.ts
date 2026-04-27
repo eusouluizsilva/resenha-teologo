@@ -1,7 +1,11 @@
 import { v } from 'convex/values'
-import { internalMutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 import type { Id } from './_generated/dataModel'
 import { requireAdmin } from './lib/auth'
+import {
+  autoEnrollAllUsersInCourse,
+  autoEnrollUserInAdminCourses,
+} from './lib/autoEnroll'
 
 // Verifica se o usuário atual é admin da plataforma. Usado pelo front para
 // decidir se exibe a aba Admin. Retorna false (sem lançar) para usuários
@@ -200,9 +204,10 @@ export const listRecentUsers = query({
 })
 
 // Lista TODOS os usuários cadastrados na plataforma. Usado pelo modal "Todos
-// os usuários" no admin. Inclui as funções ativas (aluno/criador/instituição)
-// para o admin filtrar/ordenar visualmente sem N+1. Multi-tenant N/A: admin
-// vê tudo.
+// os usuários" no admin. Inclui as funções ativas, cursos criados e
+// matriculas (com nomes) numa unica resposta. Faz O(N) full-scan de
+// users/userFunctions/courses/enrollments e monta maps em memoria, evitando
+// N+1. Aceitavel na escala atual.
 export const listAllUsers = query({
   args: {},
   handler: async (ctx) => {
@@ -210,6 +215,8 @@ export const listAllUsers = query({
 
     const users = await ctx.db.query('users').order('desc').collect()
     const allFunctions = await ctx.db.query('userFunctions').collect()
+    const allCourses = await ctx.db.query('courses').collect()
+    const allEnrollments = await ctx.db.query('enrollments').collect()
 
     const fnByUser = new Map<string, string[]>()
     for (const f of allFunctions) {
@@ -218,19 +225,41 @@ export const listAllUsers = query({
       fnByUser.set(f.userId, list)
     }
 
-    return users.map((u) => ({
-      _id: u._id,
-      clerkId: u.clerkId,
-      name: u.name,
-      email: u.email,
-      avatarUrl: u.avatarUrl,
-      handle: u.handle,
-      country: u.country ?? null,
-      city: u.city ?? null,
-      state: u.state ?? null,
-      createdAt: u._creationTime,
-      functions: fnByUser.get(u.clerkId) ?? [],
-    }))
+    const courseById = new Map<string, { title: string; slug: string | null }>()
+    const ownedByCreator = new Map<string, number>()
+    for (const c of allCourses) {
+      courseById.set(c._id, { title: c.title, slug: c.slug ?? null })
+      ownedByCreator.set(c.creatorId, (ownedByCreator.get(c.creatorId) ?? 0) + 1)
+    }
+
+    const enrolledByStudent = new Map<string, { courseId: string; title: string }[]>()
+    for (const e of allEnrollments) {
+      const course = courseById.get(e.courseId)
+      if (!course) continue
+      const list = enrolledByStudent.get(e.studentId) ?? []
+      list.push({ courseId: e.courseId, title: course.title })
+      enrolledByStudent.set(e.studentId, list)
+    }
+
+    return users.map((u) => {
+      const enrolled = enrolledByStudent.get(u.clerkId) ?? []
+      return {
+        _id: u._id,
+        clerkId: u.clerkId,
+        name: u.name,
+        email: u.email,
+        avatarUrl: u.avatarUrl,
+        handle: u.handle,
+        country: u.country ?? null,
+        city: u.city ?? null,
+        state: u.state ?? null,
+        createdAt: u._creationTime,
+        functions: fnByUser.get(u.clerkId) ?? [],
+        ownedCoursesCount: ownedByCreator.get(u.clerkId) ?? 0,
+        enrollmentsCount: enrolled.length,
+        enrolledCourses: enrolled,
+      }
+    })
   },
 })
 
@@ -360,6 +389,45 @@ export const getUserDetail = query({
       posts: postsShape,
       donations: donationsShape,
     }
+  },
+})
+
+// Backfill: matricula todos os usuarios em todos os cursos publicados pelo
+// admin. Idempotente. Usado pelo botao "Sincronizar matriculas" no painel
+// admin para garantir consistencia apos publicar cursos novos ou apos
+// usuarios criados antes do auto-enroll existir. Tambem disparavel via:
+//   npx convex run --prod admin:backfillAdminEnrollments '{}'
+export const backfillAdminEnrollments = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    const allUsers = await ctx.db.query('users').collect()
+    let totalCreated = 0
+    let usersTouched = 0
+    for (const u of allUsers) {
+      const created = await autoEnrollUserInAdminCourses(ctx, u.clerkId)
+      if (created > 0) {
+        totalCreated += created
+        usersTouched += 1
+      }
+    }
+    return {
+      totalEnrollmentsCreated: totalCreated,
+      usersWithNewEnrollments: usersTouched,
+    }
+  },
+})
+
+// Backfill por curso: matricula todos os usuarios existentes em um curso
+// especifico (apenas se for de admin, publicado e publico). Util quando admin
+// quer forcar a sincronizacao de um curso novo. Internal: rodar via
+//   npx convex run --prod admin:backfillEnrollmentsForCourse '{"courseId":"..."}'
+export const backfillEnrollmentsForCourse = internalMutation({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, { courseId }) => {
+    const created = await autoEnrollAllUsersInCourse(ctx, courseId)
+    return { created }
   },
 })
 

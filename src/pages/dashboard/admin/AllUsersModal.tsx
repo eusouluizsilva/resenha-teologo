@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import {
@@ -271,8 +271,32 @@ function UserDetail({
 
 export function AllUsersModal({ onClose }: { onClose: () => void }) {
   const users = useQuery(api.admin.listAllUsers, {})
+  const backfill = useMutation(api.admin.backfillAdminEnrollments)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<Id<'users'> | null>(null)
+  const [backfillState, setBackfillState] = useState<
+    | { status: 'idle' }
+    | { status: 'running' }
+    | { status: 'done'; created: number; users: number }
+    | { status: 'error'; message: string }
+  >({ status: 'idle' })
+
+  async function runBackfill() {
+    setBackfillState({ status: 'running' })
+    try {
+      const result = await backfill()
+      setBackfillState({
+        status: 'done',
+        created: result.totalEnrollmentsCreated,
+        users: result.usersWithNewEnrollments,
+      })
+    } catch (err) {
+      setBackfillState({
+        status: 'error',
+        message: err instanceof Error ? err.message : 'Erro ao sincronizar',
+      })
+    }
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -345,6 +369,44 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
             <UserDetail userId={selectedId} onBack={() => setSelectedId(null)} />
           ) : (
             <>
+              <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white">
+                    Matrícula automática nos cursos do admin
+                  </p>
+                  <p className="mt-0.5 text-xs text-white/52">
+                    Novos usuários e novos cursos publicados são sincronizados
+                    automaticamente. Use o botão para forçar a sincronização agora.
+                  </p>
+                </div>
+                <div className="flex flex-shrink-0 flex-col items-stretch gap-2 sm:items-end">
+                  <button
+                    type="button"
+                    onClick={runBackfill}
+                    disabled={backfillState.status === 'running'}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F37E20] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-[#e06e10] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {backfillState.status === 'running' ? (
+                      <>
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Sincronizando
+                      </>
+                    ) : (
+                      'Sincronizar agora'
+                    )}
+                  </button>
+                  {backfillState.status === 'done' && (
+                    <p className="text-[11px] text-emerald-300/80">
+                      {backfillState.created === 0
+                        ? 'Tudo já sincronizado.'
+                        : `${backfillState.created} matrículas criadas em ${backfillState.users} usuários.`}
+                    </p>
+                  )}
+                  {backfillState.status === 'error' && (
+                    <p className="text-[11px] text-rose-300/80">{backfillState.message}</p>
+                  )}
+                </div>
+              </div>
               <div className="mb-4">
                 <input
                   type="search"
@@ -370,45 +432,64 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
                       key={u._id}
                       type="button"
                       onClick={() => setSelectedId(u._id)}
-                      className="flex w-full items-center gap-3 p-4 text-left transition hover:bg-white/[0.04]"
+                      className="flex w-full flex-col gap-3 p-4 text-left transition hover:bg-white/[0.04]"
                     >
-                      {u.avatarUrl ? (
-                        <img
-                          src={u.avatarUrl}
-                          alt={u.name}
-                          className="h-10 w-10 flex-shrink-0 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-xs font-semibold text-white/62">
-                          {u.name.slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-white">{u.name}</p>
-                        <p className="truncate text-xs text-white/42">{u.email}</p>
-                      </div>
-                      <div className="hidden flex-shrink-0 flex-wrap justify-end gap-1 sm:flex">
-                        {u.functions.length === 0 ? (
-                          <span className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/42">
-                            sem função
-                          </span>
+                      <div className="flex w-full items-center gap-3">
+                        {u.avatarUrl ? (
+                          <img
+                            src={u.avatarUrl}
+                            alt={u.name}
+                            className="h-10 w-10 flex-shrink-0 rounded-xl object-cover"
+                          />
                         ) : (
-                          u.functions.map((f) => (
-                            <span
-                              key={f}
-                              className="rounded-full border border-[#F37E20]/20 bg-[#F37E20]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[#F2BD8A]"
-                            >
-                              {functionLabel(f)}
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-xs font-semibold text-white/62">
+                            {u.name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-white">{u.name}</p>
+                          <p className="truncate text-xs text-white/42">{u.email}</p>
+                        </div>
+                        <div className="hidden flex-shrink-0 flex-wrap justify-end gap-1 sm:flex">
+                          {u.functions.length === 0 ? (
+                            <span className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/42">
+                              sem função
                             </span>
-                          ))
+                          ) : (
+                            u.functions.map((f) => (
+                              <span
+                                key={f}
+                                className="rounded-full border border-[#F37E20]/20 bg-[#F37E20]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[#F2BD8A]"
+                              >
+                                {functionLabel(f)}
+                              </span>
+                            ))
+                          )}
+                        </div>
+                        <span className="flex-shrink-0 text-xs text-white/36">
+                          {formatDate(u.createdAt)}
+                        </span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 flex-shrink-0 text-white/36">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-[3.25rem] text-[11px] text-white/52">
+                        {u.ownedCoursesCount > 0 && (
+                          <span>
+                            <strong className="font-semibold text-white/72">{u.ownedCoursesCount}</strong>{' '}
+                            {u.ownedCoursesCount === 1 ? 'curso criado' : 'cursos criados'}
+                          </span>
+                        )}
+                        <span>
+                          <strong className="font-semibold text-white/72">{u.enrollmentsCount}</strong>{' '}
+                          {u.enrollmentsCount === 1 ? 'matrícula' : 'matrículas'}
+                        </span>
+                        {u.enrolledCourses.length > 0 && (
+                          <span className="line-clamp-1 min-w-0 max-w-full text-white/42">
+                            {u.enrolledCourses.map((c) => c.title).join(' · ')}
+                          </span>
                         )}
                       </div>
-                      <span className="flex-shrink-0 text-xs text-white/36">
-                        {formatDate(u.createdAt)}
-                      </span>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 flex-shrink-0 text-white/36">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
                     </button>
                   ))}
                 </div>
