@@ -73,10 +73,12 @@ export function ensureIdentityMatches(identitySubject: string, expectedSubject: 
   }
 }
 
-// Lista de admins da plataforma. Por ora apenas o dono (Luiz). Usar email em vez
-// de clerkId facilita a migração/rotação de contas sem redeploy. Comparação é
-// case-insensitive para evitar falha por diferença de caixa.
-const ADMIN_EMAILS = ['hello@resenhadoteologo.com']
+// Lista de admins da plataforma. Hoje inclui a conta institucional
+// (hello@resenhadoteologo.com) e a conta pessoal do dono Luiz, usada no dia
+// a dia para criar cursos e artigos. Usar email em vez de clerkId facilita a
+// migração/rotação de contas sem redeploy. Comparação é case-insensitive para
+// evitar falha por diferença de caixa.
+const ADMIN_EMAILS = ['hello@resenhadoteologo.com', 'luizcdasilvajunior@gmail.com']
 
 export function isAdminEmail(email?: string | null) {
   if (!email) return false
