@@ -1,6 +1,7 @@
 import { httpRouter } from 'convex/server'
 import { httpAction } from './_generated/server'
 import { internal } from './_generated/api'
+import { planFromPriceId } from './stripe'
 
 // Convex runtime expõe `process.env` mas o tsconfig de functions às vezes
 // não carrega `@types/node`. Declaração local mínima resolve sem afetar build.
@@ -169,6 +170,164 @@ function timingSafeEqual(a: string, b: string): boolean {
   let result = 0
   for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i)
   return result === 0
+}
+
+// Webhook do Stripe: processa eventos de subscription pra manter
+// users.isPremium e a tabela subscriptions sincronizados.
+//
+// Configuração:
+// 1. Stripe Dashboard → Webhooks → Add endpoint
+//    URL: https://<convex-deployment>.convex.site/stripe
+// 2. Eventos: checkout.session.completed, customer.subscription.created,
+//    customer.subscription.updated, customer.subscription.deleted,
+//    invoice.payment_failed
+// 3. Copiar Signing Secret (whsec_...) para STRIPE_WEBHOOK_SECRET no Convex.
+http.route({
+  path: '/stripe',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    const secret = process.env.STRIPE_WEBHOOK_SECRET
+    if (!secret) {
+      console.error('[stripe-webhook] STRIPE_WEBHOOK_SECRET não configurado')
+      return new Response('Webhook não configurado', { status: 500 })
+    }
+
+    const sigHeader = request.headers.get('stripe-signature')
+    if (!sigHeader) return new Response('Stripe-Signature ausente', { status: 400 })
+
+    const body = await request.text()
+
+    const ok = await verifyStripeSignature(secret, sigHeader, body)
+    if (!ok) return new Response('Assinatura inválida', { status: 401 })
+
+    let event: { type: string; data: { object: Record<string, unknown> } }
+    try {
+      event = JSON.parse(body)
+    } catch {
+      return new Response('JSON inválido', { status: 400 })
+    }
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          // checkout.session.completed dispara antes do customer.subscription.created
+          // em alguns fluxos. Não tratamos aqui pra evitar duplicação. O update real
+          // de status acontece nos eventos customer.subscription.*.
+          break
+        }
+
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+        case 'customer.subscription.deleted': {
+          const sub = event.data.object as {
+            id: string
+            customer: string
+            status: string
+            current_period_end?: number
+            cancel_at_period_end?: boolean
+            items: { data: Array<{ price: { id: string } }> }
+            metadata?: { clerkUserId?: string; plan?: string }
+          }
+          const priceId = sub.items?.data?.[0]?.price?.id
+          if (!priceId) {
+            console.warn('[stripe-webhook] subscription sem priceId', sub.id)
+            break
+          }
+          const plan =
+            (sub.metadata?.plan as
+              | 'aluno_premium'
+              | 'criador_sem_ads'
+              | 'plano_igreja'
+              | undefined) ?? planFromPriceId(priceId)
+          if (!plan) {
+            console.warn('[stripe-webhook] price desconhecido', priceId)
+            break
+          }
+          let clerkUserId = sub.metadata?.clerkUserId
+          if (!clerkUserId) {
+            // Fallback: olha a subscription já gravada pra recuperar o userId.
+            clerkUserId = (await ctx.runQuery(internal.stripe.getUserIdBySubscriptionId, {
+              stripeSubscriptionId: sub.id,
+            })) ?? undefined
+          }
+          if (!clerkUserId) {
+            console.warn('[stripe-webhook] subscription sem clerkUserId', sub.id)
+            break
+          }
+          // Para deleted: marca o status como 'canceled' pra desligar isPremium.
+          const finalStatus = event.type === 'customer.subscription.deleted' ? 'canceled' : sub.status
+          await ctx.runMutation(internal.stripe.upsertFromWebhook, {
+            clerkUserId,
+            plan,
+            stripeCustomerId: sub.customer,
+            stripeSubscriptionId: sub.id,
+            stripePriceId: priceId,
+            status: finalStatus,
+            currentPeriodEnd: (sub.current_period_end ?? 0) * 1000,
+            cancelAtPeriodEnd: sub.cancel_at_period_end,
+          })
+          break
+        }
+
+        case 'invoice.payment_failed': {
+          // Apenas log; o evento customer.subscription.updated subsequente
+          // refletirá o status 'past_due' e desligará isPremium quando for o caso.
+          const inv = event.data.object as { subscription?: string; customer?: string }
+          console.warn('[stripe-webhook] payment_failed', inv.subscription, inv.customer)
+          break
+        }
+
+        default:
+          break
+      }
+    } catch (err) {
+      console.error('[stripe-webhook] erro processando evento', event.type, err)
+      return new Response('Erro interno', { status: 500 })
+    }
+
+    return new Response(null, { status: 204 })
+  }),
+})
+
+async function verifyStripeSignature(
+  secret: string,
+  sigHeader: string,
+  body: string,
+): Promise<boolean> {
+  // Header format: "t=<unix_ts>,v1=<hex_sig>[,v1=<hex_sig>...]"
+  const parts = sigHeader.split(',').map((p) => p.split('='))
+  const ts = parts.find(([k]) => k === 't')?.[1]
+  const sigs = parts.filter(([k]) => k === 'v1').map(([, v]) => v)
+  if (!ts || sigs.length === 0) return false
+
+  // Replay guard: 5 min.
+  const tsNum = Number(ts)
+  if (!Number.isFinite(tsNum) || Math.abs(Date.now() / 1000 - tsNum) > 300) return false
+
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const payload = encoder.encode(`${ts}.${body}`)
+  const signed = await crypto.subtle.sign('HMAC', key, payload)
+  const expected = bytesToHex(new Uint8Array(signed))
+
+  for (const sig of sigs) {
+    if (timingSafeEqual(sig, expected)) return true
+  }
+  return false
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  let out = ''
+  for (let i = 0; i < bytes.length; i++) {
+    out += bytes[i].toString(16).padStart(2, '0')
+  }
+  return out
 }
 
 export default http

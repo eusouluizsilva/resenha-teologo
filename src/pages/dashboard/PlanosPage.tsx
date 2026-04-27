@@ -1,6 +1,23 @@
+import { useState } from 'react'
+import { useAction, useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
+
+type StripePlanKey = 'aluno_premium' | 'criador_sem_ads' | 'plano_igreja'
+
+// Mapeamento dos planos da UI → planos no Stripe (definidos em convex/stripe.ts).
+// Plano free tem null porque não passa por checkout.
+const STRIPE_PLAN_BY_ID: Record<string, StripePlanKey | null> = {
+  gratuito: null,
+  premium: 'aluno_premium',
+  'criador-free': null,
+  'criador-sem-ads': 'criador_sem_ads',
+  'igreja-sem-ads': 'plano_igreja',
+  'instituicao-free': null,
+  'plano-igreja': 'plano_igreja',
+}
 
 function CheckIcon() {
   return (
@@ -62,10 +79,9 @@ const alunoPlans: Plan[] = [
       { label: 'Acesso prioritário a novidades', included: true },
       { label: 'Suporte por email', included: true },
     ],
-    badge: 'Em breve',
     highlight: true,
     ctaLabel: 'Assinar Premium',
-    available: false,
+    available: true,
   },
 ]
 
@@ -98,10 +114,9 @@ const criadorPlans: Plan[] = [
       { label: 'Marca pessoal mais forte', included: true },
       { label: 'Suporte prioritário', included: true },
     ],
-    badge: 'Em breve',
     highlight: true,
     ctaLabel: 'Assinar',
-    available: false,
+    available: true,
   },
   {
     id: 'igreja-sem-ads',
@@ -117,10 +132,9 @@ const criadorPlans: Plan[] = [
       { label: 'Painel de progresso coletivo', included: true },
       { label: 'Suporte dedicado', included: true },
     ],
-    badge: 'Em breve',
     highlight: true,
-    ctaLabel: 'Entrar em contato',
-    available: false,
+    ctaLabel: 'Assinar Plano Igreja',
+    available: true,
   },
 ]
 
@@ -155,14 +169,25 @@ const instituicaoPlans: Plan[] = [
       { label: 'Sem anúncios para membros', included: true },
       { label: 'Suporte dedicado', included: true },
     ],
-    badge: 'Em breve',
     highlight: true,
-    ctaLabel: 'Entrar em contato',
-    available: false,
+    ctaLabel: 'Assinar Plano Igreja',
+    available: true,
   },
 ]
 
-function PlanCard({ plan, current }: { plan: Plan; current: boolean }) {
+function PlanCard({
+  plan,
+  current,
+  onCheckout,
+  loading,
+}: {
+  plan: Plan
+  current: boolean
+  onCheckout: (plan: Plan) => void
+  loading: boolean
+}) {
+  const stripeKey = STRIPE_PLAN_BY_ID[plan.id]
+  const canCheckout = !current && plan.available && !!stripeKey
   return (
     <div
       className={cn(
@@ -205,17 +230,19 @@ function PlanCard({ plan, current }: { plan: Plan; current: boolean }) {
       </ul>
 
       <button
-        disabled={current || !plan.available}
+        type="button"
+        onClick={() => canCheckout && onCheckout(plan)}
+        disabled={!canCheckout || loading}
         className={cn(
           'mt-8 w-full rounded-[1.1rem] border px-5 py-3 text-sm font-semibold transition-all duration-200',
           current
             ? 'cursor-default border-white/8 bg-white/[0.03] text-white/30'
-            : plan.available
-              ? 'border-[#F37E20]/24 bg-[#F37E20]/10 text-[#F2BD8A] hover:bg-[#F37E20]/20'
+            : canCheckout
+              ? 'border-[#F37E20]/24 bg-[#F37E20]/10 text-[#F2BD8A] hover:bg-[#F37E20]/20 disabled:opacity-50'
               : 'cursor-not-allowed border-white/8 bg-white/[0.03] text-white/28',
         )}
       >
-        {current ? 'Plano atual' : plan.ctaLabel}
+        {current ? 'Plano atual' : loading ? 'Abrindo checkout...' : plan.ctaLabel}
       </button>
     </div>
   )
@@ -223,6 +250,10 @@ function PlanCard({ plan, current }: { plan: Plan; current: boolean }) {
 
 export function PlanosPage() {
   const { hasFunction } = useCurrentAppUser()
+  const subscription = useQuery(api.subscriptions.mine, {})
+  const createCheckout = useAction(api.stripe.createCheckoutSession)
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Prioriza criador sobre instituição sobre aluno quando o usuário tem
   // múltiplas funções ativas (planos do criador são os mais completos).
@@ -239,43 +270,96 @@ export function PlanosPage() {
         ? instituicaoPlans
         : alunoPlans
 
-  const currentPlanId =
-    primary === 'criador'
+  // Determina o plano atual com prioridade pra subscription ativa do Stripe.
+  // Quando subscription.status='active'/'trialing', o usuário está num plano pago.
+  const isActive =
+    subscription && (subscription.status === 'active' || subscription.status === 'trialing')
+
+  const currentPlanId = (() => {
+    if (isActive && subscription) {
+      if (subscription.plan === 'aluno_premium') return 'premium'
+      if (subscription.plan === 'criador_sem_ads') return 'criador-sem-ads'
+      if (subscription.plan === 'plano_igreja') {
+        return primary === 'criador' ? 'igreja-sem-ads' : 'plano-igreja'
+      }
+    }
+    return primary === 'criador'
       ? 'criador-free'
       : primary === 'instituicao'
         ? 'instituicao-free'
         : 'gratuito'
+  })()
+
+  async function handleCheckout(plan: Plan) {
+    const stripePlan = STRIPE_PLAN_BY_ID[plan.id]
+    if (!stripePlan) return
+    setError(null)
+    setLoadingPlan(plan.id)
+    try {
+      const origin = window.location.origin
+      const result = await createCheckout({
+        plan: stripePlan,
+        successUrl: `${origin}/dashboard/planos?status=success`,
+        cancelUrl: `${origin}/dashboard/planos?status=canceled`,
+      })
+      if (result?.url) {
+        window.location.href = result.url
+      } else {
+        throw new Error('Stripe não retornou URL de checkout')
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro ao iniciar checkout'
+      setError(msg)
+      setLoadingPlan(null)
+    }
+  }
 
   return (
     <DashboardPageShell
       eyebrow="Assinatura"
       title="Planos disponíveis"
-      description="Seu plano atual e as opções de upgrade. O pagamento online estará disponível em breve."
+      description="Seu plano atual e as opções de upgrade. Pagamento processado pelo Stripe."
       maxWidthClass="max-w-6xl"
     >
-      <div className="mb-6 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/8 p-4 text-sm leading-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
-          Em breve
-        </p>
-        <p className="mt-1 text-white/72">
-          A plataforma é gratuita por enquanto. O fluxo de assinatura paga (Stripe) será liberado nas próximas fases. Use o email abaixo se quiser garantir acesso antecipado.
-        </p>
-      </div>
+      {error && (
+        <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm leading-6 text-red-200">
+          {error}
+        </div>
+      )}
+
+      {isActive && subscription && (
+        <div className="mb-6 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/8 p-4 text-sm leading-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
+            Assinatura ativa
+          </p>
+          <p className="mt-1 text-white/72">
+            Próxima cobrança em{' '}
+            {new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-BR')}.
+            {subscription.cancelAtPeriodEnd ? ' Cancelamento agendado para o fim do período.' : ''}
+          </p>
+        </div>
+      )}
 
       <div className="mt-2 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
-          <PlanCard key={plan.id} plan={plan} current={plan.id === currentPlanId} />
+          <PlanCard
+            key={plan.id}
+            plan={plan}
+            current={plan.id === currentPlanId}
+            onCheckout={handleCheckout}
+            loading={loadingPlan === plan.id}
+          />
         ))}
       </div>
 
       <div className="mt-8 rounded-[1.4rem] border border-white/6 bg-white/[0.02] p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/28">Duvidas ou upgrade antecipado</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/28">Duvidas ou plano sob medida</p>
         <p className="mt-2 text-sm leading-6 text-white/48">
           Entre em contato pelo email{' '}
           <a href="mailto:hello@resenhadoteologo.com" className="text-[#F2BD8A] hover:underline">
             hello@resenhadoteologo.com
           </a>{' '}
-          para conversarmos sobre planos institucionais ou acesso antecipado ao Premium.
+          para conversarmos sobre planos institucionais customizados.
         </p>
       </div>
     </DashboardPageShell>

@@ -710,6 +710,33 @@ export default defineSchema({
     at: v.number(),
   }).index('by_comment_user', ['commentId', 'userId']),
 
+  // Assinaturas Stripe. Uma linha por (userId, plan). plan é o produto interno
+  // ('aluno_premium', 'criador_sem_ads', 'plano_igreja'). status é o status da
+  // subscription do Stripe ('active', 'past_due', 'canceled', 'incomplete', etc.).
+  // currentPeriodEnd é o epoch ms do fim do ciclo atual; usado pra liberar
+  // benefícios mesmo após cancelamento até o fim do período pago.
+  // stripeCustomerId é único por (userId), criado on-demand no createCheckoutSession.
+  // O webhook patcheia users.isPremium=true quando status=active.
+  subscriptions: defineTable({
+    userId: v.string(),
+    plan: v.union(
+      v.literal('aluno_premium'),
+      v.literal('criador_sem_ads'),
+      v.literal('plano_igreja'),
+    ),
+    stripeCustomerId: v.string(),
+    stripeSubscriptionId: v.string(),
+    stripePriceId: v.string(),
+    status: v.string(),
+    currentPeriodEnd: v.number(),
+    cancelAtPeriodEnd: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_stripeSubscriptionId', ['stripeSubscriptionId'])
+    .index('by_stripeCustomerId', ['stripeCustomerId']),
+
   // Seguir um autor. notify* controlam granularidade de notificação. emailDigest
   // reservado para Wave futura (digest semanal via Resend). by_pair garante
   // unicidade lógica (1 follow por par follower-author).
