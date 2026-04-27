@@ -62,20 +62,30 @@ export function useSeo(meta: ArticleSeoMeta) {
       created.push(el)
     }
 
-    // canonical
-    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"][data-dynamic-seo="1"]')
-    if (!canonical) {
-      canonical = document.createElement('link')
-      canonical.rel = 'canonical'
-      canonical.dataset.dynamicSeo = '1'
-      document.head.appendChild(canonical)
-    }
+    // canonical: remove TODOS os canonicals existentes (incluindo estaticos
+    // herdados do index.html) antes de injetar o dinamico, para evitar duas
+    // tags canonical no DOM que confundem o Google Search Console.
+    const previousCanonicals = Array.from(
+      document.querySelectorAll<HTMLLinkElement>('link[rel="canonical"]'),
+    )
+    const stashedCanonicals = previousCanonicals.map((el) => ({ el, href: el.href }))
+    for (const { el } of stashedCanonicals) el.remove()
+
+    const canonical = document.createElement('link')
+    canonical.rel = 'canonical'
+    canonical.dataset.dynamicSeo = '1'
     canonical.href = meta.url
+    document.head.appendChild(canonical)
 
     return () => {
       document.title = previousTitle
       for (const el of created) el.remove()
-      canonical?.remove()
+      canonical.remove()
+      // restaura canonicals que existiam antes (caso voltemos a uma rota sem useSeo)
+      for (const { el, href } of stashedCanonicals) {
+        el.href = href
+        document.head.appendChild(el)
+      }
     }
   }, [
     meta.title,
