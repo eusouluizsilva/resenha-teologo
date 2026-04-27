@@ -464,11 +464,13 @@ export const backfillEnrollmentsForCourse = internalMutation({
 
 // Broadcast de notificacao in-app (sininho) para todos os usuarios. Idempotencia
 // por dedupeKey: marcamos a notificacao com link `${baseLink}?bk=<dedupeKey>` e
-// pulamos quem ja tiver recebido, para o admin poder rerodar sem duplicar.
-// Rodar via:
+// pulamos quem ja tiver recebido, para rerodar sem duplicar.
+//
+// Internal mutation: so rodavel via CLI (acesso de admin garantido pela posse
+// da deploy key do Convex). Rodar via:
 //   npx convex run --prod admin:broadcastNotification \
 //     '{"title":"...","body":"...","link":"/dashboard/perfil","dedupeKey":"perfil_publico_v1"}'
-export const broadcastNotification = mutation({
+export const broadcastNotification = internalMutation({
   args: {
     title: v.string(),
     body: v.optional(v.string()),
@@ -476,8 +478,6 @@ export const broadcastNotification = mutation({
     dedupeKey: v.string(),
   },
   handler: async (ctx, { title, body, link, dedupeKey }) => {
-    await requireAdmin(ctx)
-
     const allUsers = await ctx.db.query('users').collect()
     const finalLink = link
       ? `${link}${link.includes('?') ? '&' : '?'}bk=${dedupeKey}`
