@@ -409,6 +409,8 @@ export function LandingPage() {
                     <img
                       src="/fotos/bible-laptop-headphones.jpg"
                       alt="Ambiente de estudo com Bíblia e laptop"
+                      loading="lazy"
+                      decoding="async"
                       className="h-56 w-full object-cover object-center"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,20,26,0.12)_0%,rgba(15,20,26,0.70)_100%)]" />
