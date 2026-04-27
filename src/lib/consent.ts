@@ -2,14 +2,16 @@
 //
 // Por que centralizar: AdSense, GA4 e qualquer outro tag do Google leem o
 // consent state via window.dataLayer/gtag. O default precisa ser configurado
-// UMA VEZ, antes de qualquer script externo carregar. Antes deste módulo, o
-// initGA4 fazia isso, mas se VITE_GA4_MEASUREMENT_ID estivesse ausente, nada
-// seria configurado e o AdSense rodaria sem Consent Mode.
+// UMA VEZ, antes de qualquer script externo carregar.
 //
-// Em modo 'denied', o AdSense ainda serve anúncios não-personalizados (NPA)
-// e o GA4 ainda envia pings agregados (Consent Mode v2 anonymous pings).
-// Isso significa monetização e medição preservadas mesmo sem cookies, em
-// conformidade com LGPD/GDPR.
+// Estratégia de defaults (sem GTM, Consent Mode v2 básico):
+// - analytics_storage = 'granted' por padrão. Sem GTM, o modo básico NÃO envia
+//   pings modelados quando denied; nesse cenário GA4 fica zerado. Optamos por
+//   medir tráfego desde o primeiro tick e respeitar opt-out explícito do
+//   usuário (botão "Apenas essenciais" passa para denied).
+// - ad_storage / ad_user_data / ad_personalization = 'denied' por padrão.
+//   AdSense serve apenas NPA até o usuário aceitar todos. Isso preserva LGPD
+//   compliance no que diz respeito a publicidade comportamental.
 
 const CONSENT_KEY = 'rdt_cookie_consent_v1'
 
@@ -44,11 +46,21 @@ function consentParamsFor(choice: ConsentChoice | null) {
       analytics_storage: 'granted',
     }
   }
+  if (choice === 'essential') {
+    return {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+    }
+  }
+  // Default (sem escolha registrada): analytics medindo desde o primeiro tick,
+  // anúncios sem personalização até o usuário aceitar todos.
   return {
     ad_storage: 'denied',
     ad_user_data: 'denied',
     ad_personalization: 'denied',
-    analytics_storage: 'denied',
+    analytics_storage: 'granted',
   }
 }
 
