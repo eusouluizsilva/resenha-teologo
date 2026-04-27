@@ -11,6 +11,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 import './index.css'
 import App from './App'
 import { api } from '../convex/_generated/api'
+import { initConsent, applyCurrentConsent } from './lib/consent'
 import { initGA4 } from './lib/analytics'
 import { initAdSense } from './lib/ads'
 import { initMetaPixel } from './lib/metaPixel'
@@ -253,15 +254,17 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   })
 }
 
-// Inicializa GA4, AdSense e Meta Pixel. Cada init é no-op se a env var/ID não
-// estiver presente OU se o usuário ainda não aceitou cookies não-essenciais.
-// O listener abaixo reage à mudança de consent na mesma sessão, sem refresh.
+// Consent Mode v2: configurar default 'denied' antes de qualquer script do
+// Google carregar. Em seguida, GA4 e AdSense carregam sempre (se env var
+// presente) e respeitam o consent state via gtag. Meta Pixel ainda usa o gate
+// antigo (carrega só após "Aceitar todos") porque ainda não migramos.
+initConsent()
 initGA4()
 initAdSense()
 initMetaPixel()
 window.addEventListener('rdt:consent-change', () => {
-  initGA4()
-  initAdSense()
+  applyCurrentConsent()
+  // Meta Pixel ainda precisa de re-init (gate antigo).
   initMetaPixel()
 })
 

@@ -107,6 +107,9 @@ const LessonPreviewPage = lazy(() =>
 const SupportPage = lazy(() =>
   import('@/pages/public/SupportPage').then((m) => ({ default: m.SupportPage })),
 )
+const ContactPage = lazy(() =>
+  import('@/pages/public/ContactPage').then((m) => ({ default: m.ContactPage })),
+)
 const PlanosPage = lazy(() =>
   import('@/pages/dashboard/PlanosPage').then((m) => ({ default: m.PlanosPage })),
 )
@@ -317,6 +320,7 @@ export default function App() {
           <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
           <Route path="/cursos/:courseSlug/:lessonSlug" element={<LessonPreviewPage />} />
           <Route path="/apoie" element={<SupportPage />} />
+          <Route path="/contato" element={<ContactPage />} />
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
           <Route path="/convite/:token" element={<AcceptInvitePage />} />
           <Route path="/sobre" element={<SobrePage />} />

@@ -1,9 +1,14 @@
-// Inicialização do AdSense. Carrega o script externo só se houver publisher
-// ID configurado e consent === 'all'. AdSlot.tsx faz o resto (renderiza
-// <ins> e chama adsbygoogle.push).
+// Inicialização do AdSense com Google Consent Mode v2.
+//
+// adsbygoogle.js carrega sempre que houver Publisher ID configurado. O consent
+// state é gerenciado por src/lib/consent.ts via gtag('consent', ...). Em modo
+// 'denied' (default LGPD), o Google serve anúncios não-personalizados (NPA),
+// que ainda monetizam mas sem cookies/personalização. Em 'granted' (após
+// "Aceitar todos"), monetiza com personalização completa.
+
+import { initConsent } from './consent'
 
 const PUB_ID = import.meta.env.VITE_ADSENSE_PUBLISHER_ID as string | undefined
-const CONSENT_KEY = 'rdt_cookie_consent_v1'
 
 declare global {
   interface Window {
@@ -12,24 +17,14 @@ declare global {
   }
 }
 
-function readConsent(): 'all' | 'essential' | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(CONSENT_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { choice?: 'all' | 'essential' }
-    return parsed?.choice ?? null
-  } catch {
-    return null
-  }
-}
-
 export function getAdSensePublisherId(): string | undefined {
   return PUB_ID
 }
 
 export function isAdSenseEnabled(): boolean {
-  return Boolean(PUB_ID) && readConsent() === 'all'
+  // Com Consent Mode v2, AdSense está sempre habilitado se PUB_ID existir.
+  // O premium gate é feito no AdSlot (independente do consent).
+  return Boolean(PUB_ID)
 }
 
 export function initAdSense(): void {
@@ -39,7 +34,10 @@ export function initAdSense(): void {
     console.debug('[ads] VITE_ADSENSE_PUBLISHER_ID ausente, AdSense desativado')
     return
   }
-  if (readConsent() !== 'all') return
+
+  // Garante consent default antes do adsbygoogle.js carregar, para que o
+  // script já saiba se deve servir personalized ou NPA.
+  initConsent()
 
   const script = document.createElement('script')
   script.async = true

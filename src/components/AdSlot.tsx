@@ -16,10 +16,15 @@ type AdSlotProps = {
   className?: string
 }
 
-// Renderiza um <ins class="adsbygoogle"> respeitando: premium gate, env var,
-// consentimento LGPD. Usa IntersectionObserver para registrar impressão no
-// Convex (atribuída ao creatorId) só quando o slot entra na viewport pela
-// primeira vez. Dedup ocorre server-side via index by_session_slot.
+// Renderiza um <ins class="adsbygoogle"> respeitando premium gate e env var.
+// Com Consent Mode v2, o gate de consent foi removido daqui: o adsbygoogle.js
+// sempre carrega se o PUB_ID existir, e o Google decide servir personalized
+// ou NPA (non-personalized ads) baseado no consent state do gtag. Isso permite
+// monetização mesmo sem "Aceitar todos" no banner de cookies.
+//
+// Usa IntersectionObserver para registrar impressão no Convex (atribuída ao
+// creatorId) só quando o slot entra na viewport pela primeira vez. Dedup
+// ocorre server-side via index by_session_slot.
 
 export function AdSlot({
   slotId,
@@ -39,17 +44,8 @@ export function AdSlot({
   const publisherId = getAdSensePublisherId()
   const enabled = isAdSenseEnabled()
 
-  // Re-checa habilitação após montar (consent pode ter sido aceito agora,
-  // disparando rdt:consent-change).
   useEffect(() => {
-    if (isPremium) {
-      setShouldRender(false)
-      return
-    }
-    setShouldRender(enabled)
-    const onConsent = () => setShouldRender(isAdSenseEnabled())
-    window.addEventListener('rdt:consent-change', onConsent)
-    return () => window.removeEventListener('rdt:consent-change', onConsent)
+    setShouldRender(!isPremium && enabled)
   }, [enabled, isPremium])
 
   // Inicializa o slot do AdSense.

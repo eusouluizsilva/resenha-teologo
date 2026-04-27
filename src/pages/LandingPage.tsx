@@ -1180,6 +1180,9 @@ export function LandingPage() {
             <Link to="/sobre" className="text-xs text-white/30 transition-colors hover:text-white/60">
               Sobre
             </Link>
+            <Link to="/contato" className="text-xs text-white/30 transition-colors hover:text-white/60">
+              Contato
+            </Link>
             <Link to="/termos" className="text-xs text-white/30 transition-colors hover:text-white/60">
               Termos
             </Link>

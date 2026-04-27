@@ -1,59 +1,18 @@
-// Camada de analítica do cliente (GA4 + Google Consent Mode v2).
+// GA4 + tracking de pageviews/ad impressions.
 //
-// Estratégia LGPD: carregamos o gtag.js logo no boot com consent default
-// 'denied'. Nesse modo, o GA4 continua enviando pings agregados (sem cookies,
-// sem ID de cliente), o que nos permite medir tráfego anônimo mesmo de quem
-// fechou o banner sem aceitar. Quando o usuário clica "Aceitar todos" no
-// CookieBanner, fazemos consent update 'granted' e a partir daí passa a haver
-// coleta completa com cookies.
-//
-// Antes desta versão, o gtag.js só carregava após "Aceitar todos", o que
-// resultava em 0 eventos no GA4 mesmo com tráfego real (a maioria fecha o
-// banner sem interagir).
+// O consent default vem de src/lib/consent.ts (initConsent), que precisa rodar
+// ANTES desta função. Aqui só carregamos o gtag.js externo e configuramos o
+// stream do GA4. Em modo 'denied' o GA4 ainda envia pings agregados (Consent
+// Mode v2). Em 'granted' coleta normal com cookies.
+
+import { initConsent } from './consent'
 
 const GA_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID as string | undefined
-const CONSENT_KEY = 'rdt_cookie_consent_v1'
 const SESSION_KEY = 'rdt_session_id'
-
-type ConsentChoice = 'all' | 'essential'
 
 declare global {
   interface Window {
-    dataLayer?: unknown[]
-    gtag?: (...args: unknown[]) => void
     __rdtGAReady?: boolean
-  }
-}
-
-function readConsent(): ConsentChoice | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(CONSENT_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { choice?: ConsentChoice }
-    return parsed?.choice ?? null
-  } catch {
-    return null
-  }
-}
-
-// Mapeia escolha do usuário para os flags do Consent Mode v2 do Google.
-// 'all' libera cookies de analytics e ads. Qualquer outra coisa (essential ou
-// banner não interagido) mantém negado, mas o GA4 ainda coleta pings agregados.
-function consentParamsFor(choice: ConsentChoice | null) {
-  if (choice === 'all') {
-    return {
-      ad_storage: 'granted',
-      ad_user_data: 'granted',
-      ad_personalization: 'granted',
-      analytics_storage: 'granted',
-    }
-  }
-  return {
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    analytics_storage: 'denied',
   }
 }
 
@@ -74,52 +33,31 @@ export function getSessionId(): string {
 }
 
 export function isAnalyticsEnabled(): boolean {
-  // Com Consent Mode v2, GA4 está sempre ativo se a env var existir; o que
-  // muda é se a coleta tem cookies (consent='all') ou é agregada (default).
+  // Com Consent Mode v2 sempre ativo se GA_ID existir; cookies dependem do
+  // consent state que o gtag gerencia automaticamente.
   return Boolean(GA_ID)
 }
 
 export function initGA4(): void {
   if (typeof window === 'undefined') return
+  if (window.__rdtGAReady) return
   if (!GA_ID) {
     console.debug('[analytics] VITE_GA4_MEASUREMENT_ID ausente, GA4 desativado')
     return
   }
 
-  // Idempotente: se já carregou, apenas reaplica o consent atual. Isso permite
-  // que o listener de 'rdt:consent-change' chame initGA4() de novo após o
-  // usuário interagir com o banner.
-  if (window.__rdtGAReady) {
-    window.gtag?.('consent', 'update', consentParamsFor(readConsent()))
-    return
-  }
-
-  window.dataLayer = window.dataLayer ?? []
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args)
-  }
-
-  // ORDEM IMPORTA: o consent default precisa ir antes do gtag('config', ...)
-  // para o GA4 inicializar já em modo Consent Mode v2.
-  window.gtag('consent', 'default', {
-    ...consentParamsFor(null),
-    wait_for_update: 500,
-  })
-  // Se o usuário já tinha escolhido em sessão anterior, aplica antes do config.
-  const stored = readConsent()
-  if (stored) {
-    window.gtag('consent', 'update', consentParamsFor(stored))
-  }
+  // Garante consent default antes do gtag.js carregar.
+  initConsent()
 
   const script = document.createElement('script')
   script.async = true
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`
   document.head.appendChild(script)
 
-  window.gtag('js', new Date())
+  window.gtag!('js', new Date())
   // send_page_view: false porque os pageviews são disparados manualmente
   // pelo RouteTracker (SPA com client-side routing).
-  window.gtag('config', GA_ID, { send_page_view: false })
+  window.gtag!('config', GA_ID, { send_page_view: false })
   window.__rdtGAReady = true
 }
 
