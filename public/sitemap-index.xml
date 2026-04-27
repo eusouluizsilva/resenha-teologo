@@ -2,6 +2,34 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://resenhadoteologo.com/sitemap-static.xml</loc>
-    <lastmod>2026-04-26</lastmod>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-courses.xml</loc>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-lessons.xml</loc>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-blog.xml</loc>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-blog-categories.xml</loc>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-profiles.xml</loc>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-images.xml</loc>
+    <lastmod>2026-04-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://resenhadoteologo.com/sitemap-videos.xml</loc>
+    <lastmod>2026-04-27</lastmod>
   </sitemap>
 </sitemapindex>
