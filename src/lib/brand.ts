@@ -14,11 +14,13 @@ export const brandPanelSoftClass =
 export const brandPanelLightClass =
   'rounded-[1.8rem] border border-[#E6DBCF] bg-[linear-gradient(180deg,#FEFEFE_0%,#F8F3ED_100%)] shadow-[0_20px_60px_rgba(17,24,39,0.08)]'
 
+// text-base (16px) garante que iOS nao da zoom automatico ao focar input.
+// Mantemos 16px tambem no desktop para preservar consistencia visual.
 export const brandInputClass =
-  'w-full rounded-2xl border border-white/10 bg-[#10161E] px-4 py-3 text-base sm:text-sm text-white placeholder-white/28 transition-all duration-200 focus:border-[#F37E20]/55 focus:bg-[#121B25] focus:outline-none focus:ring-4 focus:ring-[#F37E20]/10'
+  'w-full rounded-2xl border border-white/10 bg-[#10161E] px-4 py-3 text-base text-white placeholder-white/28 transition-all duration-200 focus:border-[#F37E20]/55 focus:bg-[#121B25] focus:outline-none focus:ring-4 focus:ring-[#F37E20]/10'
 
 export const brandInputLightClass =
-  'w-full rounded-2xl border border-[#DED4C7] bg-white px-4 py-3 text-base sm:text-sm text-[#111827] placeholder-[#7A8390] transition-all duration-200 focus:border-[#F37E20]/55 focus:outline-none focus:ring-4 focus:ring-[#F37E20]/10'
+  'w-full rounded-2xl border border-[#DED4C7] bg-white px-4 py-3 text-base text-[#111827] placeholder-[#7A8390] transition-all duration-200 focus:border-[#F37E20]/55 focus:outline-none focus:ring-4 focus:ring-[#F37E20]/10'
 
 export const brandPrimaryButtonClass =
   'inline-flex items-center justify-center gap-2 rounded-2xl bg-[#F37E20] px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#e06e10] disabled:cursor-not-allowed disabled:opacity-50'

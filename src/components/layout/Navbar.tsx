@@ -93,8 +93,9 @@ export function Navbar() {
 
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="rounded-full p-2 text-white/80 transition-colors hover:text-white md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition-colors hover:text-white md:hidden"
             aria-label="Menu"
+            aria-expanded={menuOpen}
           >
             <div className="flex w-5 flex-col gap-1.5">
               <span className={`h-0.5 bg-current transition-all duration-200 ${menuOpen ? 'translate-y-2 rotate-45' : ''}`} />

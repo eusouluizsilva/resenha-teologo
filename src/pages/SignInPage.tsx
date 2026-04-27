@@ -251,6 +251,10 @@ export function SignInPage() {
               <label className="text-sm font-medium text-white/72">Email</label>
               <input
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
                 placeholder="seu@email.com"
                 required
                 value={email}
@@ -275,6 +279,7 @@ export function SignInPage() {
               </div>
               <input
                 type="password"
+                autoComplete="current-password"
                 placeholder="Sua senha"
                 required
                 value={password}
@@ -299,6 +304,10 @@ export function SignInPage() {
               <label className="text-sm font-medium text-white/72">Email</label>
               <input
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
                 placeholder="seu@email.com"
                 required
                 value={email}
@@ -337,6 +346,7 @@ export function SignInPage() {
               <label className="text-sm font-medium text-white/72">Nova senha</label>
               <input
                 type="password"
+                autoComplete="new-password"
                 placeholder="Mínimo 8 caracteres"
                 required
                 minLength={8}
