@@ -203,6 +203,49 @@ export const backfillResenhaFollows = internalMutation({
   },
 })
 
+// Busca de perfis publicos (lupa do dashboard). Filtra in-memory porque o
+// volume atual e pequeno; quando crescer, migrar para searchIndex no Convex.
+// Esconde perfis sem handle (nao tem URL publica) e perfis 'unlisted'.
+// Esconde tambem o proprio usuario dos resultados.
+export const searchPublic = query({
+  args: { q: v.string() },
+  handler: async (ctx, { q }) => {
+    const term = q.trim().toLowerCase().replace(/^@/, '')
+    if (term.length < 2) return []
+
+    const identity = await ctx.auth.getUserIdentity()
+    const myClerkId = identity?.subject ?? null
+
+    const all = await ctx.db.query('users').collect()
+    const matches = all
+      .filter((u) => !!u.handle)
+      .filter((u) => u.profileVisibility !== 'unlisted')
+      .filter((u) => u.clerkId !== myClerkId)
+      .filter((u) => {
+        const handle = (u.handle ?? '').toLowerCase()
+        const name = (u.name ?? '').toLowerCase()
+        return handle.includes(term) || name.includes(term)
+      })
+
+    matches.sort((a, b) => {
+      const aHandle = (a.handle ?? '').toLowerCase()
+      const bHandle = (b.handle ?? '').toLowerCase()
+      const aHandleStarts = aHandle.startsWith(term) ? 0 : 1
+      const bHandleStarts = bHandle.startsWith(term) ? 0 : 1
+      if (aHandleStarts !== bHandleStarts) return aHandleStarts - bHandleStarts
+      return (b.followerCount ?? 0) - (a.followerCount ?? 0)
+    })
+
+    return matches.slice(0, 10).map((u) => ({
+      handle: u.handle!,
+      name: u.name,
+      avatarUrl: u.avatarUrl ?? null,
+      bio: u.bio ?? null,
+      followerCount: u.followerCount ?? 0,
+    }))
+  },
+})
+
 // Chamado pelo webhook do Clerk quando a conta é deletada fora do app.
 // Remove apenas o registro do usuário; dados vinculados (cursos, doações, etc.)
 // ficam órfãos mas preservados — a deleção LGPD completa deve ser feita via
