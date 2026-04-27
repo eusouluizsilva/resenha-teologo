@@ -7,6 +7,7 @@ import { cn, brandPrimaryButtonClass, brandInputClass } from '@/lib/brand'
 import { FollowButton } from '@/components/blog/FollowButton'
 import { DonateButton } from '@/components/donate/DonateButton'
 import { VerifiedBadge } from '@/components/VerifiedBadge'
+import { ProfileSearchButton } from '@/components/dashboard/ProfileSearchButton'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 const PROFILE_ORIGIN =
@@ -397,11 +398,14 @@ export function PublicProfilePage() {
         <Link to="/">
           <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-9 w-auto" />
         </Link>
-        {!isSignedIn && (
-          <Link to="/entrar" className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/62 transition-all hover:border-white/20 hover:text-white">
-            Entrar
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <ProfileSearchButton />
+          {!isSignedIn && (
+            <Link to="/entrar" className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/62 transition-all hover:border-white/20 hover:text-white">
+              Entrar
+            </Link>
+          )}
+        </div>
       </header>
 
       <main className="relative z-10 mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6">

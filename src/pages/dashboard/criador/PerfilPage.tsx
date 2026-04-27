@@ -13,7 +13,6 @@ import {
 } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { DashboardPageShell, DashboardStatusPill } from '@/components/dashboard/PageShell'
-import { ProfileSearchButton } from '@/components/dashboard/ProfileSearchButton'
 import type { Id } from '../../../../convex/_generated/dataModel'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
@@ -840,7 +839,6 @@ export function PerfilPage() {
           {saved && effectiveTab === 'dados-pessoais' && (
             <DashboardStatusPill tone="success">Alterações salvas</DashboardStatusPill>
           )}
-          <ProfileSearchButton />
           {handle && (
             <a
               href={`/${handle}`}
