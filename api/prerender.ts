@@ -13,7 +13,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ConvexHttpClient } from 'convex/browser'
-import { api } from '../convex/_generated/api'
+import { api } from '../convex/_generated/api.js'
 import { marked } from 'marked'
 
 const SITE_ORIGIN = 'https://resenhadoteologo.com'
