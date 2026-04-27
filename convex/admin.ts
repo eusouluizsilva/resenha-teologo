@@ -7,6 +7,7 @@ import {
   autoEnrollUserInOfficialCourses,
   autoFollowOfficial,
 } from './lib/autoEnroll'
+import { checkAndIssueCertificate } from './student'
 
 // Verifica se o usuário atual é admin da plataforma. Usado pelo front para
 // decidir se exibe a aba Admin. Retorna false (sem lançar) para usuários
@@ -650,5 +651,95 @@ export const deleteUserCascade = internalMutation({
     }
 
     return { clerkId, deleted: log }
+  },
+})
+
+// Util de teste/preview para o admin: marca todas as matriculas do usuario
+// como 100% concluidas (todas as aulas com watchedSeconds=totalSeconds,
+// completed=true, quizScore=100, quizPassed=true) e dispara
+// checkAndIssueCertificate para emitir certificado de cada curso.
+//
+// Uso: serve para o admin visualizar a tela /dashboard/certificados com
+// dados realistas sem precisar passar por todas as aulas/quizzes manualmente.
+// E destrutivo: sobrescreve progress existentes do usuario.
+export const simulateCompleteEnrollmentsForUser = mutation({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    await requireAdmin(ctx)
+
+    const user = await ctx.db.get(userId)
+    if (!user) throw new Error('Usuario nao encontrado')
+    const studentId = user.clerkId
+
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_studentId', (q) => q.eq('studentId', studentId))
+      .collect()
+
+    let touchedLessons = 0
+    let issuedCertificates = 0
+    const now = Date.now()
+
+    for (const enrollment of enrollments) {
+      const lessons = await ctx.db
+        .query('lessons')
+        .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
+        .collect()
+      const published = lessons.filter((l) => l.isPublished)
+
+      for (const lesson of published) {
+        const existing = await ctx.db
+          .query('progress')
+          .withIndex('by_student_lesson', (q) =>
+            q.eq('studentId', studentId).eq('lessonId', lesson._id),
+          )
+          .unique()
+
+        // Usa duracao real da aula quando disponivel; senao 600s (10min) como
+        // valor sintetico que satisfaz o ratio de 95% do backend.
+        const totalSeconds =
+          existing?.totalSeconds && existing.totalSeconds > 0
+            ? existing.totalSeconds
+            : lesson.durationSeconds && lesson.durationSeconds > 0
+              ? lesson.durationSeconds
+              : 600
+
+        if (existing) {
+          await ctx.db.patch(existing._id, {
+            watchedSeconds: totalSeconds,
+            totalSeconds,
+            completed: true,
+            completedAt: existing.completedAt ?? now,
+            quizScore: 100,
+            quizPassed: true,
+            quizRetryPending: undefined,
+          })
+        } else {
+          await ctx.db.insert('progress', {
+            studentId,
+            lessonId: lesson._id,
+            courseId: enrollment.courseId,
+            watchedSeconds: totalSeconds,
+            totalSeconds,
+            completed: true,
+            completedAt: now,
+            quizScore: 100,
+            quizPassed: true,
+          })
+        }
+        touchedLessons += 1
+      }
+
+      const wasIssued = enrollment.certificateIssued ?? false
+      await checkAndIssueCertificate(ctx, studentId, enrollment.courseId, enrollment._id)
+      const after = await ctx.db.get(enrollment._id)
+      if (!wasIssued && after?.certificateIssued) issuedCertificates += 1
+    }
+
+    return {
+      enrollments: enrollments.length,
+      touchedLessons,
+      issuedCertificates,
+    }
   },
 })

@@ -71,6 +71,32 @@ function UserDetail({
   onBack: () => void
 }) {
   const detail = useQuery(api.admin.getUserDetail, { userId })
+  const simulate = useMutation(api.admin.simulateCompleteEnrollmentsForUser)
+  const [simState, setSimState] = useState<
+    | { status: 'idle' }
+    | { status: 'running' }
+    | { status: 'done'; touched: number; issued: number; total: number }
+    | { status: 'error'; message: string }
+  >({ status: 'idle' })
+
+  async function runSimulate() {
+    if (!confirm('Marcar TODAS as matriculas deste usuario como 100% concluidas? Sobrescreve progresso existente.')) return
+    setSimState({ status: 'running' })
+    try {
+      const r = await simulate({ userId })
+      setSimState({
+        status: 'done',
+        touched: r.touchedLessons,
+        issued: r.issuedCertificates,
+        total: r.enrollments,
+      })
+    } catch (err) {
+      setSimState({
+        status: 'error',
+        message: err instanceof Error ? err.message : 'Erro ao simular',
+      })
+    }
+  }
 
   if (detail === undefined) {
     return (
@@ -152,6 +178,40 @@ function UserDetail({
         <CountTile label="Certificados" value={String(counts.certificates)} />
         <CountTile label="Cursos criados" value={String(counts.ownedCourses)} />
         <CountTile label="Artigos" value={`${counts.publishedPosts}/${counts.posts}`} />
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">Simular conclusão (100%)</p>
+          <p className="mt-0.5 text-xs text-white/52">
+            Marca todas as matrículas como concluídas com nota 100 para visualizar a tela de certificados. Apenas para teste.
+          </p>
+        </div>
+        <div className="flex flex-shrink-0 flex-col items-stretch gap-1 sm:items-end">
+          <button
+            type="button"
+            onClick={runSimulate}
+            disabled={simState.status === 'running' || counts.enrollments === 0}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-200 transition hover:border-amber-400/50 hover:bg-amber-400/16 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {simState.status === 'running' ? (
+              <>
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-amber-200/30 border-t-amber-200" />
+                Simulando
+              </>
+            ) : (
+              'Simular agora'
+            )}
+          </button>
+          {simState.status === 'done' && (
+            <p className="text-[11px] text-emerald-300/80">
+              {simState.touched} aulas marcadas · {simState.issued} novos certificados em {simState.total} matrículas.
+            </p>
+          )}
+          {simState.status === 'error' && (
+            <p className="text-[11px] text-rose-300/80">{simState.message}</p>
+          )}
+        </div>
       </div>
 
       {(user.churchName || user.denomination) && (
