@@ -68,8 +68,11 @@ function renderHtml(meta: PostMeta): string {
   if (meta.updatedAt) {
     ogTags.push(['article:modified_time', new Date(meta.updatedAt).toISOString()])
   }
-  if (meta.authorName) {
-    ogTags.push(['article:author', meta.authorName])
+  // article:author deve ser URL (perfil), nao nome. Facebook scraper falha
+  // com "valor invalido" quando vem string. Usa URL do perfil publico do
+  // autor no proprio dominio se houver handle.
+  if (meta.authorHandle) {
+    ogTags.push(['article:author', `${SITE_ORIGIN}/${meta.authorHandle}`])
   }
   ogTags.push(['article:section', meta.categorySlug])
 
