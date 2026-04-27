@@ -1,12 +1,15 @@
-// Preview HTML do certificado, espelhando o layout do PDF gerado em
-// src/lib/certificate.ts (estilo diploma academico de seminario teologico).
-// Permite ao aluno visualizar o diploma em tela antes de baixar e imprimir.
-// Em @media print, esconde toda a UI ao redor (header, botoes) e imprime
-// apenas a area do certificado.
+// Preview HTML do certificado academico. Usa /certificates/template-academic.png
+// como fundo (arte ornamental gerada por IA: bordas filigranadas, brasao com
+// Biblia aberta + chama do Espirito + ramos de oliveira + fita Sola Scriptura,
+// marca dagua central) e sobrepoe texto dinamico com fontes Google: Cinzel
+// para titulos em capitular, EB Garamond para corpo serif, Pinyon Script para
+// o nome do aluno em caligrafia. O download em PDF e gerado por html2canvas-pro
+// + jsPDF capturando esse mesmo DOM, garantindo paridade pixel-perfect entre
+// tela e impressao.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { downloadCertificatePdf, formatCourseHours } from '@/lib/certificate'
+import { formatCourseHours } from '@/lib/certificate'
 
 type CertificateData = {
   studentName: string
@@ -19,91 +22,65 @@ type CertificateData = {
   lessonsCount?: number
 }
 
-function formatDate(ts: number): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(ts))
-}
+const FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Pinyon+Script&display=swap'
 
-const SERIF = '"Times New Roman", Times, serif'
-
-function CornerDiamond({
-  position,
-}: {
-  position: 'tl' | 'tr' | 'bl' | 'br'
-}) {
-  const style: React.CSSProperties = { position: 'absolute' }
-  if (position === 'tl') {
-    style.top = '2.5%'
-    style.left = '1.7%'
-  } else if (position === 'tr') {
-    style.top = '2.5%'
-    style.right = '1.7%'
-  } else if (position === 'bl') {
-    style.bottom = '3.5%'
-    style.left = '1.7%'
-  } else {
-    style.bottom = '3.5%'
-    style.right = '1.7%'
+function ensureFontsLoaded(): Promise<void> {
+  if (typeof document === 'undefined') return Promise.resolve()
+  if (document.querySelector(`link[data-cert-fonts="1"]`)) {
+    return document.fonts ? document.fonts.ready.then(() => undefined) : Promise.resolve()
   }
-  return (
-    <svg
-      viewBox="0 0 12 12"
-      width="12"
-      height="12"
-      style={style}
-      aria-hidden
-    >
-      <polygon points="6,1 11,6 6,11 1,6" fill="#B8902B" />
-    </svg>
-  )
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = FONTS_HREF
+  link.dataset.certFonts = '1'
+  document.head.appendChild(link)
+  if (!document.fonts) return Promise.resolve()
+  return document.fonts.ready.then(() => undefined)
 }
 
-function GoldSeal() {
-  // Selo dourado concentrico com monograma RDT, espelha drawGoldSeal do PDF.
+const MONTHS_PT = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+]
+
+function toRoman(num: number): string {
+  const table: [number, string][] = [
+    [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+    [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I'],
+  ]
+  let n = num
+  let out = ''
+  for (const [v, s] of table) {
+    while (n >= v) {
+      out += s
+      n -= v
+    }
+  }
+  return out
+}
+
+function formatDateExtenso(ts: number): string {
+  const d = new Date(ts)
+  const day = d.getDate()
+  const month = MONTHS_PT[d.getMonth()]
+  const year = toRoman(d.getFullYear())
+  return `aos ${day} dias do mês de ${month} do ano de Nosso Senhor de ${year}`
+}
+
+function GoldFlourish() {
+  // Pequena vinheta horizontal dourada para separar secoes.
   return (
-    <svg viewBox="0 0 100 100" width="84" height="84" aria-hidden>
-      <defs>
-        <radialGradient id="seal-fill" cx="35%" cy="35%" r="70%">
-          <stop offset="0%" stopColor="#F4D77A" />
-          <stop offset="55%" stopColor="#D4AF37" />
-          <stop offset="100%" stopColor="#9C7A1F" />
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r="48" fill="none" stroke="#B8902B" strokeWidth="1.6" />
-      <circle cx="50" cy="50" r="44" fill="none" stroke="#B8902B" strokeWidth="0.5" />
-      <circle cx="50" cy="50" r="38" fill="url(#seal-fill)" />
-      <circle cx="50" cy="50" r="38" fill="none" stroke="#8B6914" strokeWidth="0.7" />
-      {Array.from({ length: 16 }).map((_, i) => {
-        const angle = (i / 16) * Math.PI * 2
-        const px = 50 + Math.cos(angle) * 46.2
-        const py = 50 + Math.sin(angle) * 46.2
-        return <circle key={i} cx={px} cy={py} r="0.9" fill="#B8902B" />
-      })}
-      <text
-        x="50"
-        y="55"
-        textAnchor="middle"
-        fontFamily={SERIF}
-        fontWeight="700"
-        fontSize="20"
-        fill="#4B370F"
-      >
-        RDT
-      </text>
-      <text
-        x="50"
-        y="68"
-        textAnchor="middle"
-        fontFamily={SERIF}
-        fontStyle="italic"
-        fontSize="7"
-        fill="#5F4614"
-      >
-        {new Date().getFullYear()}
-      </text>
+    <svg viewBox="0 0 200 12" width="100%" height="100%" aria-hidden>
+      <g fill="#9C7A1F" stroke="#9C7A1F" strokeWidth="0.6">
+        <line x1="20" y1="6" x2="85" y2="6" />
+        <line x1="115" y1="6" x2="180" y2="6" />
+        <path d="M 100 6 m -8 0 q 4 -5 8 0 q 4 5 8 0" fill="none" strokeWidth="0.8" />
+        <circle cx="100" cy="6" r="1.4" />
+        <circle cx="88" cy="6" r="0.9" />
+        <circle cx="112" cy="6" r="0.9" />
+      </g>
     </svg>
   )
 }
@@ -117,15 +94,18 @@ export function CertificatePreview({
 }) {
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [fontsReady, setFontsReady] = useState(false)
+  const certRef = useRef<HTMLDivElement | null>(null)
+
   const verifyUrl = `https://resenhadoteologo.com/verificar/${data.verificationCode}`
   const hoursLabel = formatCourseHours(data.totalDurationSeconds)
 
   useEffect(() => {
     let cancelled = false
     QRCode.toDataURL(verifyUrl, {
-      margin: 1,
+      margin: 0,
       width: 256,
-      color: { dark: '#1E2430', light: '#FAF7F0' },
+      color: { dark: '#1E2430', light: '#F4EFE2' },
     })
       .then((url) => {
         if (!cancelled) setQrUrl(url)
@@ -135,6 +115,16 @@ export function CertificatePreview({
       cancelled = true
     }
   }, [verifyUrl])
+
+  useEffect(() => {
+    let cancelled = false
+    ensureFontsLoaded().then(() => {
+      if (!cancelled) setFontsReady(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -153,15 +143,35 @@ export function CertificatePreview({
   }
 
   async function handleDownload() {
+    if (!certRef.current) return
     setIsDownloading(true)
     try {
-      await downloadCertificatePdf(data)
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas-pro'),
+        import('jspdf'),
+      ])
+      const canvas = await html2canvas(certRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+        logging: false,
+      })
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95)
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+      const pageH = doc.internal.pageSize.getHeight()
+      doc.addImage(dataUrl, 'JPEG', 0, 0, pageW, pageH)
+      const safeCourse = (data.courseTitle || 'curso')
+        .replace(/[^a-zA-Z0-9À-ÿ\s]/g, '')
+        .replace(/\s+/g, '-')
+        .slice(0, 40)
+      doc.save(`certificado-${safeCourse}.pdf`)
     } finally {
       setIsDownloading(false)
     }
   }
 
-  // Linha composta de carga horaria + nota final, igual ao PDF.
+  // Linha composta de carga horaria + nota final.
   const detailParts: string[] = []
   if (hoursLabel) {
     const lessonsPart =
@@ -171,9 +181,27 @@ export function CertificatePreview({
     detailParts.push(`com carga horária de ${hoursLabel}${lessonsPart}`)
   }
   if (data.finalScore !== undefined) {
-    detailParts.push(`e média final de ${Math.round(data.finalScore)}%`)
+    detailParts.push(`obtendo média final de ${Math.round(data.finalScore)}%`)
   }
-  const detailLine = detailParts.join(' ')
+  const detailLine = detailParts.join(', ')
+
+  // containerType: inline-size para usar unidades cqw nos tamanhos de fonte.
+  // Cast para never por causa da tipagem do React 19 ainda nao incluir essa propriedade.
+  const containerStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: '1100px',
+    aspectRatio: '1492 / 1054',
+    backgroundImage: "url('/certificates/template-academic.png')",
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    position: 'relative',
+    fontFamily: '"EB Garamond", Times, serif',
+    color: '#1B2430',
+    margin: '0 auto',
+    overflow: 'hidden',
+    visibility: fontsReady ? 'visible' : 'hidden',
+    containerType: 'inline-size' as never,
+  }
 
   return (
     <div
@@ -189,7 +217,6 @@ export function CertificatePreview({
             box-shadow: none !important;
             width: 100vw !important;
             max-width: 100vw !important;
-            height: 100vh !important;
           }
         }
       `}</style>
@@ -217,7 +244,7 @@ export function CertificatePreview({
           <button
             type="button"
             onClick={handleDownload}
-            disabled={isDownloading}
+            disabled={isDownloading || !fontsReady}
             className="inline-flex items-center gap-2 rounded-xl bg-[#F37E20] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-[#e06e10] disabled:opacity-60"
           >
             {isDownloading ? (
@@ -249,128 +276,376 @@ export function CertificatePreview({
 
       <div className="min-h-0 flex-1 overflow-auto p-6 print:overflow-visible print:p-0">
         <div
-          className="certificate-print-area mx-auto w-full max-w-[1100px] shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
-          style={{ aspectRatio: '297 / 210' }}
+          ref={certRef}
+          className="certificate-print-area shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
+          style={containerStyle}
         >
+          {/* Cabecalho institucional */}
           <div
-            className="relative h-full w-full overflow-hidden bg-[#FAF7F0] text-[#111827]"
-            style={{ fontFamily: SERIF }}
+            style={{
+              position: 'absolute',
+              top: '7.5%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+            }}
           >
-            {/* Marca dagua: logo centralizada com baixa opacidade */}
-            <img
-              src="/logos/LOGO ICONE PRETA.png"
-              alt=""
-              aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none"
-              style={{ width: '46%', opacity: 0.05 }}
-            />
-
-            {/* Borda decorativa tripla (escura grossa, escura fina, dourada fina) */}
-            <div className="pointer-events-none absolute inset-[2.7%] border-[1.6px] border-[#1E2430]" />
-            <div className="pointer-events-none absolute inset-[3.6%] border border-[#1E2430]" />
-            <div
-              className="pointer-events-none absolute inset-[4.3%] border"
-              style={{ borderColor: '#B8902B', borderWidth: '0.6px' }}
-            />
-
-            <CornerDiamond position="tl" />
-            <CornerDiamond position="tr" />
-            <CornerDiamond position="bl" />
-            <CornerDiamond position="br" />
-
-            {/* Conteudo */}
-            <div className="relative flex h-full w-full flex-col items-center px-[8%] pt-[5%] pb-[5%]">
-              <p className="text-center text-[22px] font-bold tracking-[0.04em] text-[#1E2430]">
-                RESENHA DO TEÓLOGO
-              </p>
-              <p className="mt-1.5 text-center text-[12px] italic text-[#7A6432]">
-                Sola Scriptura · Soli Deo Gloria
-              </p>
-
-              {/* Linha decorativa dourada com bullet central */}
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <span className="block h-[1px] w-[120px] bg-[#B8902B]" />
-                <span className="block h-[6px] w-[6px] rounded-full bg-[#B8902B]" />
-                <span className="block h-[1px] w-[120px] bg-[#B8902B]" />
-              </div>
-
-              <p className="mt-5 text-center text-[15px] italic uppercase tracking-[0.18em] text-[#5A5040]">
-                Certificado de Conclusão
-              </p>
-
-              <p className="mt-7 text-[14px] text-[#3C3C3C]">
-                Conferimos o presente certificado a
-              </p>
-
-              <p className="mt-4 text-center text-[44px] font-bold leading-tight text-[#111827]">
-                {data.studentName || 'Aluno'}
-              </p>
-
-              <span
-                className="mt-2 block h-[1.5px]"
-                style={{ width: '60%', backgroundColor: '#B8902B' }}
-              />
-
-              <p className="mt-5 text-[14px] text-[#3C3C3C]">
-                pelo aproveitamento e dedicação demonstrados no curso de
-              </p>
-
-              <p className="mt-3 max-w-[88%] text-center text-[26px] font-bold leading-snug text-[#1E2430]">
-                {data.courseTitle}
-              </p>
-
-              {detailLine && (
-                <p className="mt-3 max-w-[80%] text-center text-[13px] italic text-[#5A5040]">
-                  {detailLine}
-                </p>
-              )}
-
-              {/* Selo dourado centralizado embaixo */}
-              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: '14%' }}>
-                <GoldSeal />
-              </div>
-
-              {/* Assinatura do professor (esquerda) */}
-              {data.creatorName && (
-                <div className="absolute" style={{ left: '10%', bottom: '11%' }}>
-                  <div className="h-[1px] w-[200px] bg-[#1E2430]" />
-                  <p className="mt-1.5 w-[200px] text-center text-[13px] italic text-[#1E2430]">
-                    {data.creatorName}
-                  </p>
-                  <p className="w-[200px] text-center text-[10px] text-[#7A7A7A]">
-                    Professor responsável
-                  </p>
-                </div>
-              )}
-
-              {/* QR Code (direita) */}
-              {qrUrl && (
-                <div className="absolute" style={{ right: '8%', bottom: '9%' }}>
-                  <p className="text-center text-[8.5px] uppercase tracking-[0.16em] text-[#7A6432]">
-                    Verificar
-                  </p>
-                  <img
-                    src={qrUrl}
-                    alt=""
-                    className="mt-1 h-[88px] w-[88px]"
-                  />
-                </div>
-              )}
-
-              {/* Rodape: data + codigo (centralizado bem embaixo) */}
-              <div
-                className="absolute left-1/2 -translate-x-1/2 text-center"
-                style={{ bottom: '3%', width: '60%' }}
-              >
-                <p className="text-[11.5px] italic text-[#5A5040]">
-                  Emitido em {formatDate(data.completedAt)}
-                </p>
-                <p className="mt-0.5 text-[8.5px] text-[#8C826E]">
-                  Código de autenticidade: {data.verificationCode} · resenhadoteologo.com/verificar/{data.verificationCode}
-                </p>
-              </div>
-            </div>
+            <h1
+              style={{
+                fontFamily: '"Cinzel", serif',
+                fontWeight: 700,
+                fontSize: '4.4cqw',
+                letterSpacing: '0.02em',
+                color: '#1B2430',
+                margin: 0,
+                lineHeight: 1,
+              }}
+            >
+              RESENHA DO TEÓLOGO
+            </h1>
+            <p
+              style={{
+                fontFamily: '"EB Garamond", serif',
+                fontStyle: 'italic',
+                fontSize: '1.5cqw',
+                color: '#7A5F2A',
+                marginTop: '0.6cqw',
+                letterSpacing: '0.04em',
+              }}
+            >
+              Sola Scriptura · Soli Deo Gloria
+            </p>
           </div>
+
+          {/* Vinheta dourada e linha latina */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '17%',
+              left: '30%',
+              right: '30%',
+              height: '1.2cqw',
+            }}
+          >
+            <GoldFlourish />
+          </div>
+          <p
+            style={{
+              position: 'absolute',
+              top: '19.5%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"EB Garamond", serif',
+              fontStyle: 'italic',
+              fontSize: '1.45cqw',
+              color: '#5A4A30',
+              margin: 0,
+            }}
+          >
+            In nomine Domini, hoc certificatum confertur
+          </p>
+
+          {/* Titulo: Certificado de Conclusao */}
+          <h2
+            style={{
+              position: 'absolute',
+              top: '23%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"Cinzel", serif',
+              fontWeight: 700,
+              fontSize: '2.6cqw',
+              letterSpacing: '0.08em',
+              color: '#9C7A1F',
+              margin: 0,
+            }}
+          >
+            CERTIFICADO DE CONCLUSÃO ACADÊMICO
+          </h2>
+
+          {/* Texto introdutorio */}
+          <p
+            style={{
+              position: 'absolute',
+              top: '30%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"EB Garamond", serif',
+              fontSize: '1.7cqw',
+              color: '#3C3C3C',
+              margin: 0,
+            }}
+          >
+            Conferimos o presente certificado a
+          </p>
+
+          {/* Nome do aluno em caligrafia */}
+          <p
+            style={{
+              position: 'absolute',
+              top: '36%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"Pinyon Script", cursive',
+              fontSize: '6.2cqw',
+              color: '#1B2430',
+              margin: 0,
+              lineHeight: 1.05,
+              padding: '0 6%',
+            }}
+          >
+            {data.studentName || 'Aluno'}
+          </p>
+
+          {/* Corpo do certificado */}
+          <p
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"EB Garamond", serif',
+              fontSize: '1.55cqw',
+              color: '#3C3C3C',
+              margin: 0,
+              padding: '0 12%',
+            }}
+          >
+            que, havendo cumprido com louvor todos os requisitos do curso de
+          </p>
+
+          <h3
+            style={{
+              position: 'absolute',
+              top: '54.5%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"Cinzel", serif',
+              fontWeight: 700,
+              fontSize: '2.1cqw',
+              letterSpacing: '0.05em',
+              color: '#1B2430',
+              margin: 0,
+              padding: '0 10%',
+              lineHeight: 1.2,
+            }}
+          >
+            {data.courseTitle.toUpperCase()}
+          </h3>
+
+          {/* Linhas de detalhe + texto formal */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '63%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              padding: '0 10%',
+            }}
+          >
+            {detailLine && (
+              <p
+                style={{
+                  fontFamily: '"EB Garamond", serif',
+                  fontSize: '1.45cqw',
+                  color: '#3C3C3C',
+                  margin: 0,
+                }}
+              >
+                {detailLine},
+              </p>
+            )}
+            <p
+              style={{
+                fontFamily: '"EB Garamond", serif',
+                fontSize: '1.45cqw',
+                color: '#3C3C3C',
+                margin: '0.4cqw 0 0',
+              }}
+            >
+              e fazendo jus a todas as honras e distinções inerentes,
+            </p>
+            <p
+              style={{
+                fontFamily: '"EB Garamond", serif',
+                fontSize: '1.45cqw',
+                color: '#3C3C3C',
+                margin: '0.2cqw 0 0',
+              }}
+            >
+              é-lhe conferido este diploma como testemunho público de aproveitamento.
+            </p>
+          </div>
+
+          {/* Local e data por extenso */}
+          <p
+            style={{
+              position: 'absolute',
+              top: '74%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"EB Garamond", serif',
+              fontStyle: 'italic',
+              fontSize: '1.35cqw',
+              color: '#5A4A30',
+              margin: 0,
+              padding: '0 12%',
+            }}
+          >
+            Massachusetts, {formatDateExtenso(data.completedAt)}
+          </p>
+
+          {/* Assinatura LEFT: Professor responsavel */}
+          {data.creatorName && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '11%',
+                left: '11%',
+                width: '24%',
+                textAlign: 'center',
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: '"Pinyon Script", cursive',
+                  fontSize: '2.6cqw',
+                  color: '#1B2430',
+                  margin: 0,
+                  lineHeight: 1,
+                  paddingBottom: '0.4cqw',
+                }}
+              >
+                {data.creatorName}
+              </p>
+              <div
+                style={{
+                  height: '1px',
+                  background: '#1B2430',
+                  margin: '0 auto',
+                  width: '100%',
+                }}
+              />
+              <p
+                style={{
+                  fontFamily: '"EB Garamond", serif',
+                  fontStyle: 'italic',
+                  fontSize: '1.05cqw',
+                  color: '#5A4A30',
+                  margin: '0.4cqw 0 0',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                Professor responsável
+              </p>
+            </div>
+          )}
+
+          {/* Assinatura RIGHT: Reitoria */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '11%',
+              left: '65%',
+              width: '24%',
+              textAlign: 'center',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: '"Pinyon Script", cursive',
+                fontSize: '2.6cqw',
+                color: '#1B2430',
+                margin: 0,
+                lineHeight: 1,
+                paddingBottom: '0.4cqw',
+              }}
+            >
+              Luiz Carlos da Silva Junior
+            </p>
+            <div
+              style={{
+                height: '1px',
+                background: '#1B2430',
+                margin: '0 auto',
+                width: '100%',
+              }}
+            />
+            <p
+              style={{
+                fontFamily: '"EB Garamond", serif',
+                fontStyle: 'italic',
+                fontSize: '1.05cqw',
+                color: '#5A4A30',
+                margin: '0.4cqw 0 0',
+                letterSpacing: '0.02em',
+              }}
+            >
+              Reitoria · Resenha do Teólogo
+            </p>
+          </div>
+
+          {/* QR Code (canto inferior direito) */}
+          {qrUrl && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '8%',
+                right: '5%',
+                width: '7.5cqw',
+                textAlign: 'center',
+              }}
+            >
+              <img
+                src={qrUrl}
+                alt=""
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                  border: '0.3cqw solid #F4EFE2',
+                  background: '#F4EFE2',
+                }}
+              />
+              <p
+                style={{
+                  fontFamily: '"EB Garamond", serif',
+                  fontSize: '0.85cqw',
+                  color: '#5A4A30',
+                  margin: '0.3cqw 0 0',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                {data.verificationCode}
+              </p>
+            </div>
+          )}
+
+          {/* Rodape de verificacao */}
+          <p
+            style={{
+              position: 'absolute',
+              bottom: '2.6%',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontFamily: '"EB Garamond", serif',
+              fontSize: '0.95cqw',
+              color: '#5A4A30',
+              margin: 0,
+              fontStyle: 'italic',
+            }}
+          >
+            Verifique a autenticidade em resenhadoteologo.com/verificar/{data.verificationCode}
+          </p>
         </div>
       </div>
     </div>
