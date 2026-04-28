@@ -147,9 +147,24 @@ export const listStudentsByCreator = query({
       .withIndex('by_creatorId', (q) => q.eq('creatorId', identity.subject))
       .collect()
 
-    if (courses.length === 0) return []
+    if (courses.length === 0) return { courses: [], students: [] }
 
     const courseById = new Map(courses.map((c) => [c._id as string, c]))
+
+    // Pré-carrega títulos de aula por curso uma única vez para evitar N+1
+    // ao decorar quizScores com o nome da aula correspondente.
+    const lessonTitleById = new Map<string, string>()
+    const totalLessonsByCourseId = new Map<string, number>()
+    for (const c of courses) {
+      const lessons = await ctx.db
+        .query('lessons')
+        .withIndex('by_courseId', (q) => q.eq('courseId', c._id))
+        .collect()
+      for (const l of lessons) lessonTitleById.set(l._id as string, l.title)
+      // total de aulas publicadas — fallback para o stored `totalLessons` se 0.
+      const publishedCount = lessons.filter((l) => l.isPublished).length
+      totalLessonsByCourseId.set(c._id as string, publishedCount || c.totalLessons || 1)
+    }
 
     // Reúne todas as matrículas dos cursos do professor.
     const allEnrollments: {
@@ -177,13 +192,18 @@ export const listStudentsByCreator = query({
           finalScore: e.finalScore,
           completedAt: e.completedAt,
           courseTitle: course.title,
-          totalLessons: course.totalLessons || 1,
+          totalLessons: totalLessonsByCourseId.get(course._id as string) || course.totalLessons || 1,
           _creationTime: e._creationTime,
         })
       }
     }
 
-    if (allEnrollments.length === 0) return []
+    if (allEnrollments.length === 0) {
+      return {
+        courses: courses.map((c) => ({ id: c._id as string, title: c.title })),
+        students: [],
+      }
+    }
 
     // Agrupar por studentId.
     const byStudent = new Map<string, typeof allEnrollments>()
@@ -210,19 +230,50 @@ export const listStudentsByCreator = query({
               )
               .collect()
             const completedLessons = progressRecords.filter((p) => p.completed).length
-            const percentage = Math.round((completedLessons / e.totalLessons) * 100)
+            const percentage = Math.min(
+              100,
+              Math.round((completedLessons / e.totalLessons) * 100)
+            )
+
+            // Lista de quizzes feitos (nota disponível). Ignora retries
+            // pendentes (quizRetryPending) — esses ainda não tem nota válida.
+            const quizScores = progressRecords
+              .filter((p) => typeof p.quizScore === 'number' && !p.quizRetryPending)
+              .map((p) => ({
+                lessonId: p.lessonId as string,
+                lessonTitle: lessonTitleById.get(p.lessonId as string) ?? 'Aula',
+                score: p.quizScore as number,
+                passed: p.quizPassed === true,
+              }))
+              .sort((a, b) => a.lessonTitle.localeCompare(b.lessonTitle, 'pt-BR'))
 
             return {
               courseId: e.courseId,
               courseTitle: e.courseTitle,
               percentage,
+              completedLessons,
+              totalLessons: e.totalLessons,
               certificateIssued: e.certificateIssued,
               finalScore: e.finalScore,
               completedAt: e.completedAt,
               enrolledAt: e._creationTime,
+              quizScores,
             }
           })
         )
+
+        // Stats de topo: média geral de notas finais (cursos com finalScore)
+        // e total de quizzes feitos somado entre cursos.
+        const finalScores = studentCourses
+          .map((c) => c.finalScore)
+          .filter((s): s is number => typeof s === 'number')
+        const averageScore = finalScores.length
+          ? Math.round(finalScores.reduce((acc, s) => acc + s, 0) / finalScores.length)
+          : null
+        const totalQuizzes = studentCourses.reduce((acc, c) => acc + c.quizScores.length, 0)
+
+        const publicProfile =
+          Boolean(user?.handle) && user?.profileVisibility !== 'unlisted'
 
         return {
           studentId,
@@ -230,15 +281,21 @@ export const listStudentsByCreator = query({
           email: user?.email ?? '',
           avatarUrl: user?.avatarUrl,
           handle: user?.handle,
+          publicProfile,
           coursesEnrolled: studentCourses.length,
           coursesCompleted: studentCourses.filter((c) => c.certificateIssued).length,
+          totalQuizzes,
+          averageScore,
           courses: studentCourses,
           lastEnrolledAt: Math.max(...studentCourses.map((c) => c.enrolledAt)),
         }
       })
     )
 
-    return students.sort((a, b) => b.lastEnrolledAt - a.lastEnrolledAt)
+    return {
+      courses: courses.map((c) => ({ id: c._id as string, title: c.title })),
+      students: students.sort((a, b) => b.lastEnrolledAt - a.lastEnrolledAt),
+    }
   },
 })
 
