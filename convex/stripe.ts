@@ -110,6 +110,32 @@ export const createCheckoutSession = action({
   },
 })
 
+// Action: cria uma sessão do Customer Portal pro usuário gerenciar assinatura
+// (cancelar, atualizar cartão, ver invoices). Reusa o stripeCustomerId já
+// gravado em subscriptions. Sem subscription => 404 lógico.
+type PortalResult = { url: string }
+
+export const createPortalSession = action({
+  args: { returnUrl: v.string() },
+  handler: async (ctx, { returnUrl }): Promise<PortalResult> => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Não autenticado')
+
+    const existing: StoredSubscription = await ctx.runQuery(internal.stripe.getSubscriptionByUser, {
+      userId: identity.subject,
+    })
+    if (!existing?.stripeCustomerId) {
+      throw new Error('Nenhuma assinatura encontrada')
+    }
+
+    const session = await stripeRequest<{ id: string; url: string }>('/billing_portal/sessions', {
+      customer: existing.stripeCustomerId,
+      return_url: returnUrl,
+    })
+    return { url: session.url }
+  },
+})
+
 // Query interna usada pela action acima pra buscar a subscription do usuário
 // sem expor PII. Retorna apenas os campos necessários.
 export const getSubscriptionByUser = internalQuery({

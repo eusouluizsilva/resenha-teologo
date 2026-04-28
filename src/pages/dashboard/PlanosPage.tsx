@@ -252,7 +252,9 @@ export function PlanosPage() {
   const { hasFunction } = useCurrentAppUser()
   const subscription = useQuery(api.subscriptions.mine, {})
   const createCheckout = useAction(api.stripe.createCheckoutSession)
+  const createPortal = useAction(api.stripe.createPortalSession)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [loadingPortal, setLoadingPortal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Prioriza criador sobre instituição sobre aluno quando o usuário tem
@@ -314,6 +316,25 @@ export function PlanosPage() {
     }
   }
 
+  async function handlePortal() {
+    setError(null)
+    setLoadingPortal(true)
+    try {
+      const result = await createPortal({
+        returnUrl: `${window.location.origin}/dashboard/planos`,
+      })
+      if (result?.url) {
+        window.location.href = result.url
+      } else {
+        throw new Error('Stripe não retornou URL do portal')
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro ao abrir portal'
+      setError(msg)
+      setLoadingPortal(false)
+    }
+  }
+
   return (
     <DashboardPageShell
       eyebrow="Assinatura"
@@ -329,14 +350,26 @@ export function PlanosPage() {
 
       {isActive && subscription && (
         <div className="mb-6 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/8 p-4 text-sm leading-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
-            Assinatura ativa
-          </p>
-          <p className="mt-1 text-white/72">
-            Próxima cobrança em{' '}
-            {new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-BR')}.
-            {subscription.cancelAtPeriodEnd ? ' Cancelamento agendado para o fim do período.' : ''}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
+                Assinatura ativa
+              </p>
+              <p className="mt-1 text-white/72">
+                Próxima cobrança em{' '}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-BR')}.
+                {subscription.cancelAtPeriodEnd ? ' Cancelamento agendado para o fim do período.' : ''}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePortal}
+              disabled={loadingPortal}
+              className="shrink-0 rounded-xl border border-white/12 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/72 transition-colors hover:border-white/24 hover:bg-white/[0.08] disabled:opacity-50"
+            >
+              {loadingPortal ? 'Abrindo...' : 'Gerenciar assinatura'}
+            </button>
+          </div>
         </div>
       )}
 
