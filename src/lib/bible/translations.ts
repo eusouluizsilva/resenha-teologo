@@ -27,12 +27,12 @@ export const BIBLE_SOURCES: BibleSource[] = [
   {
     id: 'grego',
     label: 'Grego',
-    name: 'Grego original (SBL Greek New Testament)',
+    name: 'Grego original (Tischendorf 8ª ed., texto crítico do NT)',
     kind: 'original',
     language: 'grc',
     testaments: ['new'],
     bibleGatewayVersion: 'SBLGNT',
-    bollsCode: 'SBLGNT',
+    bollsCode: 'TISCH',
   },
   {
     id: 'hebraico',

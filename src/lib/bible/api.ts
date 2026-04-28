@@ -60,6 +60,11 @@ export async function fetchChapter(params: {
     text: string
     comment?: string | null
   }>
+  if (!Array.isArray(raw) || raw.length === 0) {
+    throw new Error(
+      `A tradução "${source.label}" não cobre este capítulo. Tente outra tradução ou volte para a lista de livros.`,
+    )
+  }
   const verses: BibleVerse[] = raw.map((v) => ({
     pk: v.pk,
     verse: v.verse,
