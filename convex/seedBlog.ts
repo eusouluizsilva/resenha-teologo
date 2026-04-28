@@ -3773,6 +3773,232 @@ Em tudo dai graças, porque esta é à vontade de Deus em Cristo Jesus para conv
     tags: ["gratidão", "insatisfação", "Lúcifer", "milagres", "vontade-de-deus"],
     source: `38_os_perigos_da_insatisfac_ao_e_ingratid_ao.txt`,
   },
+  {
+    title: `O Reino que vale tudo e separa tudo`,
+    slug: `o-reino-que-vale-tudo-e-separa-tudo`,
+    excerpt: `Mateus 13.44-52 reúne três parábolas que confrontam a igreja contemporânea com uma pergunta antiga e atualíssima: o que você considera realmente valioso? Cristo vale tudo, merece tudo, e vai julgar tudo.`,
+    bodyMarkdown: `Vivemos em um tempo perigoso. Não estou falando de guerras, crise econômica, polarização política. Esses são sintomas. Vivemos em um tempo perigoso porque a igreja está perdendo a noção do que é valioso.
+
+Olhe ao redor. O que prende a atenção das pessoas hoje? As redes sociais. As conversas nos grupos da igreja. Futebol, novela, política, fofoca, trabalho, dinheiro. Os eventos performáticos que enchem agendas eclesiásticas. E Cristo? Cristo virou assunto de uma hora no domingo. Compromisso religioso. Algo onde se bate o ponto por costume, não por sede ou fome de Deus.
+
+Quando eu olho ao redor, vejo uma geração de cristãos que canta sobre Jesus, mas não vive por Jesus. Que fala de Deus, que diz que ama Deus, mas abre mão dele por amores menores. Que professa amar o Senhor, mas trata as coisas do Senhor como se fossem qualquer coisa.
+
+E o mais assustador é isto: a maioria não percebe.
+
+Foi para uma multidão exatamente assim que Jesus contou três parábolas curtas em Mateus 13. Três imagens que parecem desconexas, mas funcionam como um único sermão. Três parábolas que respondem a uma pergunta antiga, mas atualíssima: o que vale, de verdade, na sua vida?
+
+## A primeira parábola: a graça que surpreende
+
+> "O reino dos céus é semelhante a um tesouro escondido no campo, que um homem achou e escondeu. E, em seu júbilo, vai, vende tudo quanto tem e compra aquele campo." (Mateus 13.44)
+
+Repare na imagem. Um homem comum. Não um sacerdote. Não um teólogo. Não alguém em busca espiritual. Um trabalhador anônimo, atravessando um campo, talvez para encurtar caminho. E sem aviso, sem expectativa, sem mérito, ele tropeça em um tesouro.
+
+A primeira coisa que esta parábola ensina é que o Reino chega antes da gente buscar. Antes de saber que precisa dele. Antes de procurar.
+
+Isso é graça. Pura graça.
+
+Esse homem não cavou o campo procurando. Ele estava na rotina dele, fazendo algo banal, e Deus o surpreendeu. É exatamente assim que a graça funciona. Saulo de Tarso ia perseguindo cristãos quando foi derrubado. Mateus estava em uma mesa de impostos quando ouviu o "segue-me". Zaqueu subiu numa árvore por curiosidade, não por arrependimento, e Jesus disse: "hoje a salvação entrou nesta casa".
+
+A graça nunca espera o homem ficar pronto. Ela invade.
+
+A segunda coisa que a parábola ensina é a reação correta diante da graça: alegria que custa tudo. O homem não chora pela perda do que vai vender. Ele vende com júbilo. Não há sacrifício no rosto dele, há festa.
+
+Esse é o sinal mais claro de quem realmente encontrou Cristo. Não dói largar o que se larga. A pessoa que encontrou Jesus de verdade não fica calculando o quanto está abrindo mão. Ela só percebe o quanto está ganhando. O preço que parece alto para quem está fora do campo é uma pechincha para quem viu o tesouro.
+
+Aqui está a pergunta para você: você já foi surpreendido pelo Reino? Você se lembra do dia em que Cristo deixou de ser doutrina e passou a ser tesouro? Se a resposta é não, é hora de orar para que ele seja. Se a resposta é sim, é hora de viver à altura do que você encontrou.
+
+## A segunda parábola: a fé que busca
+
+> "Outrossim, o reino dos céus é semelhante a um negociante que busca boas pérolas; e, tendo achado uma pérola de grande valor, vendeu tudo quanto possuía e a comprou." (Mateus 13.45-46)
+
+Se a primeira parábola é o homem que tropeça no tesouro, a segunda é o homem que dedicou a vida inteira a procurar. Um especialista. Um conhecedor. Alguém que viu muita pérola, manuseou muita pedra, sabe distinguir falsa de verdadeira. E em todas as pérolas que encontrou, não estacionou. Foi adiante. Continuou buscando.
+
+Por quê? Porque ele sabia que a pérola que valia tudo ainda não tinha aparecido.
+
+Esse é o cristão maduro. Não o que se contenta com a primeira impressão. Não o que para na conversão. O que continua buscando. O que estuda, ora, medita, pergunta, examina, prova. O que não aceita raso. O que não troca o profundo pelo confortável.
+
+E quando ele encontra a pérola de grande valor, ele a reconhece imediatamente. Porque os anos de busca treinaram o olho dele. A diferença entre o homem da primeira parábola e o desta é o ponto de partida. A semelhança é o destino: ambos vendem tudo.
+
+Cristo é tanto o tesouro escondido para quem nunca o procurou, quanto a pérola final para quem nunca parou de procurar. As duas portas levam ao mesmo Senhor. Mas o ato de fé é o mesmo: largar tudo, sem reserva, com alegria.
+
+Aqui há uma palavra dura para a igreja brasileira: muitos de nós paramos de buscar. Conhecemos um pouco da Bíblia, sabemos os hinos, ocupamos um lugar na liderança, e achamos que chegamos. Mas chegamos onde? Em uma pérola que nem é a melhor. O comerciante da parábola só encontrou a pérola final porque continuou andando. O dia em que o cristão para de ter fome de Deus é o dia em que ele começa a se contentar com pérolas falsas.
+
+A pergunta para você é esta: o que você está realmente buscando hoje? Mais influência? Mais conforto? Mais reconhecimento? Mais entretenimento dentro de uma estrutura cristã? Ou mais de Cristo?
+
+## A terceira parábola: o juízo que separa
+
+> "Igualmente, o reino dos céus é semelhante a uma rede que, lançada ao mar, recolhe peixes de toda espécie. E, quando cheia, alguns a puxam para a praia e, assentando-se, escolhem para cestos os bons e lançam fora os ruins. Assim será na consumação do século: sairão os anjos e separarão os maus do meio dos justos. E lançá-los-ão na fornalha acesa; ali haverá choro e ranger de dentes." (Mateus 13.47-50)
+
+Aqui o tom muda. As duas primeiras parábolas falam de descoberta e alegria. A terceira fala de separação e juízo. E Jesus colocou as três juntas de propósito.
+
+Porque o Reino que vale tudo é o mesmo Reino que separa tudo.
+
+A imagem é direta. Uma rede grande lançada ao mar arrasta para dentro de si peixes de toda espécie. Bons e ruins, juntos, no mesmo arrastão. É exatamente isso que acontece na igreja visível. Convertidos verdadeiros e religiosos sem regeneração, no mesmo culto. Discípulos sinceros e curiosos sem compromisso, no mesmo banco. Quem se apaixonou pelo tesouro e quem só está ali porque sempre esteve.
+
+Por enquanto, a rede acomoda os dois. Mas Jesus está dizendo que isso tem prazo de validade.
+
+Quando a rede é puxada para a praia, vem a separação. E ela é definitiva. Os bons em cestos. Os ruins lançados fora. Não há recurso. Não há instância superior. Os anjos é que fazem a triagem, e o critério é simples: era trigo ou era joio? Era pérola ou imitação? Vendeu tudo pelo Reino, ou só fingiu interesse?
+
+Esta parábola é uma resposta para uma pergunta que muito cristão evita: o inferno existe? Sim. Jesus mesmo descreve a fornalha acesa, o choro, o ranger de dentes. Não dá para amar o Jesus das duas primeiras parábolas e descartar o Jesus da terceira. O mesmo Senhor que oferece o tesouro é o que separa. O mesmo que dá graça é o que vai pesar a vida.
+
+E aqui há um ponto que precisa ser dito: a parábola não está falando do mundo. Está falando da rede. Está falando da igreja visível. Os peixes ruins não foram pescados em outro mar. Estão dentro da rede. Frequentaram o mesmo culto. Cantaram os mesmos louvores. Mas no dia da separação, o exterior não conta. Conta o que estava no interior.
+
+Por isso Paulo manda examinar. Por isso Pedro fala em fazer firme a vocação. Por isso Tiago avisa que fé sem obras é morta. A pergunta que importa é: em que lado da praia você vai estar quando a rede chegar?
+
+## Onde tudo se conecta
+
+> "Entendestes todas estas coisas? Disseram-lhe: Sim. Então lhes acrescentou: Por isso, todo escriba versado no reino dos céus é semelhante a um pai de família que tira do seu tesouro coisas novas e velhas." (Mateus 13.51-52)
+
+Jesus encerra com uma pergunta e uma comissão.
+
+A pergunta é simples e devastadora: entendestes? Não "ouvistes". Não "memorizastes". Entender, no sentido bíblico, é uma palavra que muda a vida. É olhar para o tesouro e perceber que vale tudo. É olhar para a pérola e largar tudo. É olhar para a rede e tremer.
+
+Os discípulos respondem que sim. E Jesus os transforma na hora. De aprendizes em distribuidores. De ouvintes em pais de família que abrem o tesouro para outros, tirando coisas novas e velhas, alimentando a casa toda.
+
+Esse é o desfecho do discurso das parábolas: quem entende o Reino vira mordomo do Reino. Não há cristão entendido que continua quietinho. Não há discípulo informado que vive só para si. Quem viu o valor do tesouro abre o tesouro. Quem encontrou a pérola fala da pérola. Quem teme a separação avisa quem ainda está na água sem saber.
+
+## Três perguntas para terminar
+
+Mateus 13.44-52 te coloca diante de três perguntas que não dá para terceirizar.
+
+Primeira: você já foi surpreendido pelo Reino de Deus? Existe um momento na sua vida em que você parou de jogar igreja e começou a viver com Cristo? Se não há, peça por ele. Hoje. Antes de fechar esta página.
+
+Segunda: você tem buscado o que realmente importa? Ou trocou a pérola final pelas pérolas decorativas? O que ocupa a maior parte da sua atenção, do seu dinheiro, da sua agenda, das suas conversas? Aquilo é o seu tesouro, mesmo que você diga outra coisa.
+
+Terceira: em que lado você vai estar no dia final? Não responda essa rápido. Examine. A rede não falha. A separação é definitiva. E ninguém sobe a praia com adesivo de "frequentava a igreja".
+
+Cristo vale tudo. Cristo merece tudo. Cristo vai julgar tudo.
+
+Que Deus tenha misericórdia de uma geração que tem cantado sobre o tesouro sem nunca o ter aberto. E que a sua vida, a partir desta semana, mostre quem realmente é o seu Senhor.`,
+    categorySlug: `biblia`,
+    tags: ["parábolas", "reino", "mateus-13", "tesouro", "juízo"],
+    source: `BRIEFING DO SERMAO 1 - O Reino que vale tudo e separa tudo.pages`,
+  },
+  {
+    title: `O livro que escrevi para você ler a Bíblia sem distorcer o texto`,
+    slug: `o-livro-que-escrevi-para-voce-ler-a-biblia-sem-distorcer-o-texto`,
+    excerpt: `Acabei de publicar meu primeiro livro, "Interpretação Bíblica: O Poder do Contexto Imediato", agora disponível na Amazon em formato digital, no Brasil e nos Estados Unidos. Aqui está por que ele existe.`,
+    bodyMarkdown: `Existe um problema silencioso na igreja brasileira, e ele não vem dos lobos de fora. Vem dos cristãos sinceros que abrem a Bíblia todos os dias e, sem saber, estão lendo o texto fora de lugar.
+
+Não é má fé. É falta de método.
+
+A maioria de nós aprendeu a usar a Bíblia como uma caixa de versículos. Pegamos um trecho que combina com o que estamos sentindo, colamos na situação, e concluímos que é isso que Deus está dizendo. Às vezes até é. Mas muitas vezes, não é.
+
+E a diferença entre acertar e errar nessa hora não tem a ver com quanto de fé você tem. Tem a ver com como você lê.
+
+Foi a partir dessa convicção que escrevi meu primeiro livro: **Interpretação Bíblica, O Poder do Contexto Imediato**, agora disponível na Amazon em formato digital, no Brasil e nos Estados Unidos.
+
+> [Comprar no Brasil (Amazon.com.br)](https://www.amazon.com.br/dp/B0GXBHDWWZ)
+>
+> [Comprar nos Estados Unidos (Amazon.com)](https://www.amazon.com/dp/B0GXBHDWWZ)
+
+## Por que esse livro existe
+
+Eu não tenho a pretensão de te entregar profundidade acadêmica inédita. O que esse livro promete é outra coisa, clareza, aplicação prática, e ferramentas que você vai usar no próximo devocional, na próxima pregação, na próxima conversa com alguém que está aprendendo a ler a Bíblia.
+
+A maioria dos cristãos sinceros que conheci ao longo dos anos, dentro e fora da igreja, não erra na leitura da Bíblia por má fé. Erra por falta de método. Leem versículos soltos, pulam parágrafos, aplicam textos fora de lugar, e constroem uma compreensão espiritual sobre fundações frágeis.
+
+O resultado é uma fé que oscila ao menor vento, porque não está ancorada no que Deus realmente disse.
+
+Esse livro é para o cristão comum. Para o líder de pequeno grupo. Para o pastor que quer pregar com mais precisão. Para o irmão que quer parar de citar versículos sem saber se está certo. E para o estudante de teologia que precisa de uma porta de entrada antes da hermenêutica acadêmica.
+
+Não é um tratado. Não é manual de seminário. É um guia pastoral, escrito em linguagem direta, para qualquer pessoa que queira ter em mãos a ferramenta mais poderosa e mais acessível de interpretação bíblica.
+
+O contexto imediato.
+
+## O que é contexto imediato (e por que ele muda tudo)
+
+Contexto imediato é o que está ao redor do versículo. Os versículos que vêm antes. Os versículos que vêm depois. O parágrafo onde ele está inserido. O argumento que o autor bíblico está desenvolvendo naquele trecho.
+
+Parece óbvio. Mas quase ninguém faz.
+
+Quando alguém cita Filipenses 4.13, "tudo posso naquele que me fortalece", e usa esse versículo como lema de conquista pessoal, está ignorando o contexto imediato. Porque se você ler os versículos 11 e 12, logo antes, vai descobrir que Paulo está falando sobre **contentamento**. Ele aprendeu a viver com pouco e com muito. O versículo 13 completa o pensamento: ele consegue passar por todas essas situações porque Cristo o fortalece.
+
+Não é um grito de vitória. É uma declaração de **suficiência**.
+
+Bastou ler dois versículos antes para mudar completamente o sentido. Isso é contexto imediato. E o livro inteiro foi escrito para te ensinar a fazer isso de forma natural, todos os dias, em qualquer texto bíblico.
+
+## A estrutura do livro
+
+São doze capítulos divididos em três partes.
+
+### Parte 1, Fundamentos
+
+Você vai entender o que é contexto imediato, por que ele muda tudo, quais são os cinco erros mais comuns que destroem a leitura bíblica, e como aplicar um método prático de quatro passos em qualquer texto das Escrituras. Esses cinco erros e esses quatro passos são o coração do livro. Quando você entende como evitar os erros e como aplicar os passos, a sua relação com a Palavra muda para sempre.
+
+### Parte 2, Versículos mal interpretados
+
+Vamos pegar seis versículos famosos, dos mais citados e mais mal interpretados da igreja brasileira, e ler cada um deles à luz do contexto imediato. Você vai descobrir que:
+
+- Jeremias 29.11 não é sobre você
+- Filipenses 4.13 não é autoajuda
+- Mateus 18.20 não é sobre culto
+- "Não julgueis" não significa o que a maioria pensa
+- "Deus não dá fardo maior do que você pode suportar" não está exatamente na Bíblia
+- Romanos 8.28 ganha uma profundidade nova quando lido no lugar onde pertence
+
+### Parte 3, Gêneros bíblicos
+
+A Bíblia não é um livro só, é uma biblioteca. E cada gênero literário dentro dela, narrativa, carta, provérbio, poesia, profecia, pede um tipo específico de leitura. Ignorar isso é uma das principais causas de erro interpretativo. Nos três últimos capítulos você vai aprender a reconhecer e respeitar essas diferenças quando ler narrativas históricas, cartas paulinas, salmos, provérbios e profecia.
+
+## O que você vai conseguir fazer depois de ler
+
+O livro foi pensado para ser lido com a Bíblia aberta ao seu lado. Os textos citados aparecem por completo nas páginas, mas o verdadeiro aprendizado acontece quando você acompanha nas Escrituras, relê com atenção, e começa a exercitar por conta própria a habilidade que estamos construindo juntos.
+
+Ao final, você vai ser capaz de:
+
+- Reconhecer quando um versículo está sendo usado fora de contexto, na sua leitura ou na de outros.
+- Aplicar um método prático de quatro passos em qualquer texto bíblico, mesmo sem conhecimento de grego ou hebraico.
+- Identificar os cinco erros mais comuns de interpretação e evitá-los na sua própria leitura.
+- Ler narrativas, cartas e poesia bíblica com sensibilidade ao gênero, sem inventar doutrina onde não há.
+- Pregar, ensinar e aconselhar com mais precisão, porque você passou a ler com cuidado o que Deus realmente disse.
+
+Não é um superpoder. É um hábito. Mas é o hábito que muda tudo.
+
+## A versão da Bíblia usada
+
+Todos os versículos citados no livro foram extraídos da **Nova Versão Transformadora (NVT)**, escolhida pela clareza de linguagem e fidelidade ao texto original. Se você usa outra tradução, não há problema, todos os princípios funcionam igual. Mas se quiser ler junto comigo na mesma versão, NVT é a referência.
+
+## A quem o livro se destina
+
+Se você já se pegou usando um versículo para dizer algo que, depois de uma leitura cuidadosa, percebeu que o texto não dizia, esse livro é para você.
+
+Se você ensina pequeno grupo e quer entregar conteúdo bem fundamentado, esse livro é para você.
+
+Se você é pastor e quer afiar a pregação, voltando ao básico que ninguém te ensinou de novo, esse livro é para você.
+
+Se você é estudante de teologia e ainda não tem um manual de hermenêutica formal, mas precisa de uma porta de entrada honesta, esse livro é para você.
+
+E se você é o irmão simples que ama a Palavra e quer crescer no estudo dela, esse livro foi escrito principalmente para você.
+
+## Onde comprar
+
+A versão digital, em formato Kindle, está disponível agora na Amazon. Você pode ler no Kindle, no celular pelo aplicativo gratuito da Amazon, no tablet ou no computador.
+
+**No Brasil**: [amazon.com.br/dp/B0GXBHDWWZ](https://www.amazon.com.br/dp/B0GXBHDWWZ)
+
+**Nos Estados Unidos**: [amazon.com/dp/B0GXBHDWWZ](https://www.amazon.com/dp/B0GXBHDWWZ)
+
+A versão impressa está em produção e o aviso de disponibilidade vai sair aqui mesmo no blog do Resenha do Teólogo.
+
+## Por que esse passo agora
+
+O livro é uma extensão natural do ministério do canal Resenha do Teólogo. Foi originalmente pensado como um curso em doze aulas e, agora, chega às suas mãos em formato de livro, para servir àqueles que preferem o ritmo da leitura, o sublinhado, o retorno às páginas, o estudo em grupo.
+
+Eu acredito que a igreja brasileira não precisa de mais sentimento. Precisa de mais texto. Não precisa de mais sermão emocional. Precisa de mais pastor que abre a Bíblia, lê com cuidado, e prega o que está escrito. E o caminho para isso começa em algo tão simples que ninguém imagina: ler o parágrafo inteiro.
+
+A Bíblia é a Palavra de Deus. E ela merece ser lida com a atenção que ela exige. Não é difícil. Não precisa de seminário. Precisa de **disposição**.
+
+Se você me permitir acompanhar você nessa caminhada, tenho certeza de que, ao final, a sua leitura bíblica nunca mais será a mesma.
+
+Soli Deo Gloria.
+
+*Pastor Luiz Silva*
+*Westborough, Massachusetts*`,
+    categorySlug: `hermeneutica`,
+    tags: ["livro", "lançamento", "hermenêutica", "contexto-imediato", "interpretação-bíblica"],
+    source: `INTERPRETACAO_BIBLICA_MIOLO_6x9.pdf`,
+  },
 ]
 
 export const seedFromCanal = internalMutation({

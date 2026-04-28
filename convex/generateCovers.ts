@@ -152,6 +152,10 @@ const ARTICLE_PROMPTS: Record<string, string> = {
     'cinematic painting of single ancient bronze coin lying on dark wooden table beside antique scale weight, soft golden light from candle, dutch still life oil painting style, deep navy background and amber palette, no text no logo no readable inscription no people',
   'perigos-da-insatisfacao-e-ingratidao':
     'cinematic painting of full grain horn cornucopia spilling ripe wheat and dried fruits onto dark wooden table beside simple clay bowl, soft warm side light, dutch still life oil painting style, deep navy background and amber palette, no text no logo no people no faces',
+  'o-reino-que-vale-tudo-e-separa-tudo':
+    'cinematic painting of antique wooden treasure chest open on dark soil revealing golden coins inside, single luminous large pearl resting on the rim of the chest, weathered fishing net partially folded in foreground, dramatic shaft of warm golden light from above, dutch still life chiaroscuro oil painting, deep navy and amber palette, editorial book cover, no text no logo no people no faces',
+  'o-livro-que-escrevi-para-voce-ler-a-biblia-sem-distorcer-o-texto':
+    'cinematic painting of single hardcover book lying closed on dark wooden writing desk beside antique brass reading glasses and small lit oil lamp, soft warm amber light pooling onto the cover from the side, dust motes suspended in air, dutch still life Rembrandt chiaroscuro oil painting, deep navy and amber palette, editorial book cover, no text no logo no readable writing no people no faces',
 }
 
 const COURSE_PROMPTS: Record<string, string> = {
@@ -289,6 +293,43 @@ export const _patchPostCover = internalMutation({
   args: { postId: v.id('posts'), storageId: v.id('_storage') },
   handler: async (ctx, { postId, storageId }) => {
     await ctx.db.patch(postId, { coverImageStorageId: storageId })
+  },
+})
+
+export const _findPostBySlug = internalQuery({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const post = await ctx.db
+      .query('posts')
+      .filter((q) => q.eq(q.field('slug'), slug))
+      .first()
+    if (!post) return null
+    return { _id: post._id, slug: post.slug }
+  },
+})
+
+export const runForSlug = internalAction({
+  args: { slug: v.string(), seed: v.optional(v.number()) },
+  handler: async (
+    ctx,
+    { slug, seed = 4242 },
+  ): Promise<{ ok: boolean; slug: string; storageId?: string; error?: string }> => {
+    const post = await ctx.runQuery(internal.generateCovers._findPostBySlug, { slug })
+    if (!post) return { ok: false, slug, error: `Post not found: ${slug}` }
+    const prompt = findArticlePrompt(slug)
+    if (!prompt) return { ok: false, slug, error: `No prompt registered for ${slug}` }
+    try {
+      const url = buildUrl(prompt, seed)
+      const blob = await fetchImageBlob(url)
+      const storageId = await ctx.storage.store(blob)
+      await ctx.runMutation(internal.generateCovers._patchPostCover, {
+        postId: post._id as Id<'posts'>,
+        storageId,
+      })
+      return { ok: true, slug, storageId: String(storageId) }
+    } catch (err) {
+      return { ok: false, slug, error: (err as Error).message }
+    }
   },
 })
 
