@@ -182,6 +182,8 @@ export function BlogPostPage() {
               <img
                 src={post.coverImageUrl}
                 alt={post.title}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full rounded-none object-cover md:rounded-2xl"
                 style={{ aspectRatio: '16 / 9' }}
               />

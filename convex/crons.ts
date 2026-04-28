@@ -26,10 +26,11 @@ crons.daily(
 )
 
 // Scheduled-publish runner: varre posts com status='scheduled' e publishAt
-// vencido a cada 5 minutos. Tolerância máxima de ~5min por design.
+// vencido a cada 30 minutos. Tolerância máxima de ~30min por design.
+// Reduzido de 5min para economizar execuções no Convex Free plan.
 crons.interval(
   'post-scheduled-publish',
-  { minutes: 5 },
+  { minutes: 30 },
   internal.postRanking.runScheduledPublish,
 )
 
@@ -38,7 +39,7 @@ crons.interval(
 // matriculados. Espelha o pattern dos posts.
 crons.interval(
   'lesson-scheduled-publish',
-  { minutes: 5 },
+  { minutes: 30 },
   internal.lessons.runScheduledPublish,
 )
 

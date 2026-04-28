@@ -609,6 +609,8 @@ export function PublicProfilePage() {
                         <img
                           src={course.thumbnail}
                           alt={course.title}
+                          loading="lazy"
+                          decoding="async"
                           className="h-20 w-28 flex-shrink-0 rounded-xl object-cover"
                         />
                       )}
@@ -666,6 +668,8 @@ export function PublicProfilePage() {
                         <img
                           src={post.coverImageUrl}
                           alt={post.title}
+                          loading="lazy"
+                          decoding="async"
                           className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
                         />
                       )}
