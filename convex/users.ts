@@ -75,6 +75,10 @@ export const upsert = mutation({
       phone: args.phone,
       phoneCountry: args.phoneCountry,
       totalDonationsReceived: 0,
+      // Perfil publico por padrao. Pode ser alterado pelo proprio usuario na
+      // pagina de perfil (toggle "Publico/Privado") ou pelo admin.
+      profileVisibility: 'public',
+      showProgressPublicly: true,
     })
     await autoFollowOfficial(ctx, args.clerkId)
     await autoEnrollUserInOfficialCourses(ctx, args.clerkId)
@@ -144,6 +148,8 @@ export const syncFromWebhook = internalMutation({
         email: args.email,
         avatarUrl: args.avatarUrl,
         totalDonationsReceived: 0,
+        profileVisibility: 'public',
+        showProgressPublicly: true,
       })
       await autoFollowOfficial(ctx, args.clerkId)
       await autoEnrollUserInOfficialCourses(ctx, args.clerkId)

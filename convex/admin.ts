@@ -450,6 +450,39 @@ export const backfillAdminEnrollments = mutation({
   },
 })
 
+// Backfill: define profileVisibility='public' (e showProgressPublicly=true)
+// em todo usuario sem o campo definido. Tornar a configuracao explicita no
+// banco facilita listagens admin e mantem o default consistente entre
+// inserts antigos e novos. Idempotente. Rodar via:
+//   npx convex run --prod admin:backfillProfileVisibilityPublic '{}'
+export const backfillProfileVisibilityPublic = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const allUsers = await ctx.db.query('users').collect()
+    let visibilityPatched = 0
+    let progressPatched = 0
+    for (const u of allUsers) {
+      const patch: { profileVisibility?: 'public'; showProgressPublicly?: boolean } = {}
+      if (u.profileVisibility === undefined) {
+        patch.profileVisibility = 'public'
+        visibilityPatched += 1
+      }
+      if (u.showProgressPublicly === undefined) {
+        patch.showProgressPublicly = true
+        progressPatched += 1
+      }
+      if (patch.profileVisibility !== undefined || patch.showProgressPublicly !== undefined) {
+        await ctx.db.patch(u._id, patch)
+      }
+    }
+    return {
+      total: allUsers.length,
+      visibilityPatched,
+      progressPatched,
+    }
+  },
+})
+
 // Backfill por curso: matricula todos os usuarios existentes em um curso
 // especifico (apenas se for de admin, publicado e publico). Util quando admin
 // quer forcar a sincronizacao de um curso novo. Internal: rodar via
