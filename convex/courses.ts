@@ -197,6 +197,15 @@ export const publishWithLessons = mutation({
     if (!wasPublished) {
       await autoEnrollAllUsersInCourse(ctx, id)
     }
+
+    if (course.slug) {
+      const SITE = 'https://resenhadoteologo.com'
+      const urls = [`${SITE}/cursos/${course.slug}`]
+      for (const lesson of lessons) {
+        if (lesson.slug) urls.push(`${SITE}/cursos/${course.slug}/${lesson.slug}`)
+      }
+      await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, { urls })
+    }
   },
 })
 

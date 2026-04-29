@@ -43,4 +43,13 @@ crons.interval(
   internal.lessons.runScheduledPublish,
 )
 
+// IndexNow resgate: reenvía o sitemap inteiro a Bing/Yandex/Naver no dia 1 de
+// cada mês às 06:00 UTC. Garantia de safety net caso algum gatilho de
+// publicação tenha falhado silenciosamente. Best-effort, não bloqueia nada.
+crons.monthly(
+  'indexnow-monthly-submitall',
+  { day: 1, hourUTC: 6, minuteUTC: 0 },
+  internal.indexnow.submitAll,
+)
+
 export default crons

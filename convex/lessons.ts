@@ -196,6 +196,15 @@ export const update = mutation({
     const wasUnpublished = !lesson.isPublished
     const becamePublished = fields.isPublished === true
     const wasScheduled = typeof lesson.publishAt === 'number'
+    if (wasUnpublished && becamePublished) {
+      const course = await ctx.db.get(lesson.courseId)
+      const lessonSlug = (fields.title ? toSlug(fields.title) : lesson.slug) ?? null
+      if (course?.slug && lessonSlug && course.visibility !== 'institution') {
+        await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, {
+          urls: [`https://resenhadoteologo.com/cursos/${course.slug}/${lessonSlug}`],
+        })
+      }
+    }
     if (wasUnpublished && becamePublished && wasScheduled) {
       const course = await ctx.db.get(lesson.courseId)
       if (course) {
@@ -264,6 +273,12 @@ export const runScheduledPublish = internalMutation({
           }),
         ),
       )
+
+      if (course.slug && lesson.slug && course.visibility !== 'institution') {
+        await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, {
+          urls: [`https://resenhadoteologo.com/cursos/${course.slug}/${lesson.slug}`],
+        })
+      }
     }
   },
 })

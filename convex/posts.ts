@@ -433,12 +433,19 @@ export const publish = mutation({
 
     // Notifica seguidores apenas na primeira publicação. Edições posteriores
     // não geram nova notificação (evita spam ao salvar/republicar).
+    const author = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', post.authorUserId))
+      .unique()
+    const handle = author?.handle ?? null
+
+    if (handle) {
+      await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, {
+        urls: [`https://resenhadoteologo.com/blog/${handle}/${post.slug}`],
+      })
+    }
+
     if (!wasPublishedBefore) {
-      const author = await ctx.db
-        .query('users')
-        .withIndex('by_clerkId', (q) => q.eq('clerkId', post.authorUserId))
-        .unique()
-      const handle = author?.handle ?? null
       const link = handle ? `/blog/${handle}/${post.slug}` : `/blog`
       const followers = await ctx.db
         .query('profileFollows')
