@@ -417,6 +417,7 @@ export const getPublicPreview = query({
       course: {
         _id: course._id,
         title: course.title,
+        description: course.description,
         slug: course.slug ?? null,
         thumbnail: course.thumbnail ?? null,
         category: course.category,

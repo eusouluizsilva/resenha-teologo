@@ -30,6 +30,7 @@ const STATIC_PATHS = [
   { path: '/', lastmod: today() },
   { path: '/sobre', lastmod: today() },
   { path: '/cursos', lastmod: today() },
+  { path: '/biblia', lastmod: today() },
   { path: '/blog', lastmod: today() },
   { path: '/apoie', lastmod: today() },
   { path: '/contato', lastmod: today() },

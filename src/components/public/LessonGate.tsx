@@ -1,5 +1,6 @@
 // Overlay sobre a thumbnail de uma aula no preview público. CTA principal:
-// criar conta + matricular. Secundário: já tenho conta.
+// criar conta + matricular. Secundário: já tenho conta. Texto enfatiza que
+// é gratuito e que certificado exige login (nudge de conversão).
 
 import { Link } from 'react-router-dom'
 
@@ -30,18 +31,17 @@ export function LessonGate({ thumbnailUrl, courseId, courseSlug, isAuthenticated
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,20,26,0.50)_0%,rgba(10,14,19,0.86)_100%)]" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/12 text-[#F2BD8A]">
-          <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
-          </svg>
-        </div>
-        <h2 className="mt-6 max-w-sm font-display text-2xl font-bold leading-tight text-white">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#F37E20]/30 bg-[#F37E20]/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#F37E20]" />
+          100% gratuito
+        </span>
+        <h2 className="mt-4 max-w-md font-display text-2xl font-bold leading-tight text-white md:text-3xl">
           {isAuthenticated
-            ? 'Matricule-se para assistir esta aula.'
+            ? 'Matricule-se e assista esta aula agora.'
             : 'Crie sua conta gratuita para assistir esta aula.'}
         </h2>
-        <p className="mt-3 max-w-md text-sm leading-6 text-white/64">
-          Acesso completo ao curso, quizzes, certificado e caderno digital. Sem cartão de crédito.
+        <p className="mt-3 max-w-md text-sm leading-6 text-white/72">
+          Acesso ao curso completo, quizzes, certificado oficial e caderno digital. Sem cartão de crédito, sem mensalidade.
         </p>
 
         <div className="mt-7 flex w-full max-w-sm flex-col gap-3">
@@ -49,7 +49,7 @@ export function LessonGate({ thumbnailUrl, courseId, courseSlug, isAuthenticated
             to={ctaPrimaryHref}
             className="inline-flex items-center justify-center rounded-2xl bg-[#F37E20] px-6 py-3.5 text-sm font-bold text-white shadow-[0_18px_50px_rgba(243,126,32,0.30)] transition-all hover:bg-[#e06e10]"
           >
-            {isAuthenticated ? 'Ir para a página do curso' : 'Criar conta e matricular'}
+            {isAuthenticated ? 'Ir para a página do curso' : 'Criar conta gratuita e assistir'}
           </Link>
           {!isAuthenticated && (
             <Link

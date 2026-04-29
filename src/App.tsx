@@ -124,6 +124,9 @@ const CourseDetailPage = lazy(() =>
 const LessonPreviewPage = lazy(() =>
   import('@/pages/public/LessonPreviewPage').then((m) => ({ default: m.LessonPreviewPage })),
 )
+const PublicBibliaPage = lazy(() =>
+  import('@/pages/public/BibliaPage').then((m) => ({ default: m.BibliaPage })),
+)
 const SupportPage = lazy(() =>
   import('@/pages/public/SupportPage').then((m) => ({ default: m.SupportPage })),
 )
@@ -339,6 +342,7 @@ export default function App() {
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
           <Route path="/cursos/:courseSlug/:lessonSlug" element={<LessonPreviewPage />} />
+          <Route path="/biblia" element={<PublicBibliaPage />} />
           <Route path="/apoie" element={<SupportPage />} />
           <Route path="/contato" element={<ContactPage />} />
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />

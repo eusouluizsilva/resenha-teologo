@@ -233,6 +233,68 @@ export function LessonPreviewPage() {
                     </div>
                   </div>
                 </div>
+
+                {course.description && (
+                  <section className="mt-8">
+                    <h2 className="font-display text-xl font-bold text-white">
+                      Sobre o curso, {course.title}
+                    </h2>
+                    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/72">
+                      {course.description}
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-white/48">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                        {course.totalLessons} aulas
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 capitalize">
+                        Nível {course.level}
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                        {course.category}
+                      </span>
+                    </div>
+                  </section>
+                )}
+
+                <section className="mt-8 rounded-[1.6rem] border border-[#F37E20]/24 bg-gradient-to-br from-[#F37E20]/12 to-[#F37E20]/4 p-6 md:p-8">
+                  <h2 className="font-display text-xl font-bold text-white md:text-2xl">
+                    {isSignedIn
+                      ? `Comece a estudar, ${course.title}`
+                      : 'Pronto para estudar de verdade?'}
+                  </h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/72">
+                    Acesso completo ao curso, quizzes para fixar o aprendizado, certificado emitido em PDF e caderno digital. Tudo gratuito.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link
+                      to={
+                        isSignedIn
+                          ? courseHref
+                          : `/cadastro?redirect=${encodeURIComponent(courseHref)}`
+                      }
+                      className="inline-flex items-center justify-center rounded-2xl bg-[#F37E20] px-5 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(243,126,32,0.30)] transition-all hover:bg-[#e06e10]"
+                    >
+                      {isSignedIn ? 'Ir para o curso' : 'Criar conta gratuita'}
+                    </Link>
+                    <Link
+                      to={courseHref}
+                      className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-5 py-3 text-sm font-semibold text-white/76 transition-all hover:border-white/20 hover:text-white"
+                    >
+                      Ver todas as aulas do curso
+                    </Link>
+                  </div>
+                  {course.creatorHandle && (
+                    <p className="mt-4 text-xs text-white/48">
+                      Mais cursos e artigos do professor:{' '}
+                      <Link
+                        to={`/${course.creatorHandle}`}
+                        className="font-semibold text-[#F2BD8A] hover:underline"
+                      >
+                        {course.creatorName}
+                      </Link>
+                    </p>
+                  )}
+                </section>
               </div>
             </div>
 

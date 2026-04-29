@@ -70,7 +70,7 @@ export const submitAll = internalAction({
       `${SITE}/cursos`,
       `${SITE}/blog`,
       `${SITE}/biblia`,
-      `${SITE}/preco`,
+      `${SITE}/apoie`,
     ]
 
     for (const c of courses) {
