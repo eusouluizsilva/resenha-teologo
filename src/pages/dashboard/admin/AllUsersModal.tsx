@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
+import type { FunctionReturnType } from 'convex/server'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import {
   brandGhostButtonClass,
   brandInputClass,
   brandPanelClass,
+  brandPrimaryButtonClass,
   brandStatusPillClass,
   cn,
 } from '@/lib/brand'
@@ -63,6 +65,168 @@ function CountTile({ label, value }: { label: string; value: string }) {
   )
 }
 
+type UserDetailResult = FunctionReturnType<typeof api.admin.getUserDetail>
+
+function EditUserForm({
+  detail,
+  onClose,
+}: {
+  detail: UserDetailResult
+  onClose: () => void
+}) {
+  const updateUser = useMutation(api.admin.updateUserAsAdmin)
+  const { user } = detail
+  const [name, setName] = useState(user.name)
+  const [handle, setHandle] = useState(user.handle ?? '')
+  const [country, setCountry] = useState(user.country ?? '')
+  const [city, setCity] = useState(user.city ?? '')
+  const [stateField, setStateField] = useState(user.state ?? '')
+  const [isPremium, setIsPremium] = useState(user.isPremium ?? false)
+  const initialVisibility = user.profileVisibility ?? 'public'
+  const [visibility, setVisibility] = useState<'public' | 'unlisted'>(initialVisibility)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSave() {
+    setSaving(true)
+    setError(null)
+    try {
+      await updateUser({
+        userId: user._id,
+        name: name.trim() !== user.name ? name.trim() : undefined,
+        handle: handle.trim().toLowerCase().replace(/^@/, '') !== (user.handle ?? '')
+          ? handle.trim()
+          : undefined,
+        country: country !== (user.country ?? '') ? country : undefined,
+        city: city !== (user.city ?? '') ? city : undefined,
+        state: stateField !== (user.state ?? '') ? stateField : undefined,
+        isPremium: isPremium !== (user.isPremium ?? false) ? isPremium : undefined,
+        profileVisibility: visibility !== initialVisibility ? visibility : undefined,
+      })
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={cn('space-y-4 p-5', brandPanelClass, 'border-[#F37E20]/22 bg-[#F37E20]/[0.04]')}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-white">Editar dados do usuário</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/52 hover:text-white"
+        >
+          Cancelar
+        </button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+            Nome
+          </span>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={cn(brandInputClass, 'mt-1.5 w-full')}
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+            Handle (URL pública)
+          </span>
+          <input
+            type="text"
+            value={handle}
+            onChange={(e) => setHandle(e.target.value)}
+            placeholder="ex: joao-silva"
+            className={cn(brandInputClass, 'mt-1.5 w-full')}
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+            País
+          </span>
+          <input
+            type="text"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className={cn(brandInputClass, 'mt-1.5 w-full')}
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+            Cidade
+          </span>
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className={cn(brandInputClass, 'mt-1.5 w-full')}
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+            Estado
+          </span>
+          <input
+            type="text"
+            value={stateField}
+            onChange={(e) => setStateField(e.target.value)}
+            className={cn(brandInputClass, 'mt-1.5 w-full')}
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+            Visibilidade do perfil
+          </span>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value as 'public' | 'unlisted')}
+            className={cn(brandInputClass, 'mt-1.5 w-full cursor-pointer appearance-none')}
+          >
+            <option value="public" className="bg-[#151B23] text-white">Público</option>
+            <option value="unlisted" className="bg-[#151B23] text-white">Não listado</option>
+          </select>
+        </label>
+      </div>
+      <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+        <input
+          type="checkbox"
+          checked={isPremium}
+          onChange={(e) => setIsPremium(e.target.checked)}
+          className="h-4 w-4 cursor-pointer accent-[#F37E20]"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-white">Premium ativo</p>
+          <p className="text-[11px] text-white/52">
+            Quando ligado, AdSense não é exibido para este usuário.
+          </p>
+        </div>
+      </label>
+      {error && (
+        <p className="rounded-xl border border-rose-400/30 bg-rose-400/[0.06] p-3 text-xs text-rose-200">
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className={cn(brandPrimaryButtonClass, 'px-5 py-2 text-xs disabled:opacity-60')}
+        >
+          {saving ? 'Salvando' : 'Salvar alterações'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function UserDetail({
   userId,
   onBack,
@@ -72,6 +236,7 @@ function UserDetail({
 }) {
   const detail = useQuery(api.admin.getUserDetail, { userId })
   const simulate = useMutation(api.admin.simulateCompleteEnrollmentsForUser)
+  const [editing, setEditing] = useState(false)
   const [simState, setSimState] = useState<
     | { status: 'idle' }
     | { status: 'running' }
@@ -111,7 +276,7 @@ function UserDetail({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -122,16 +287,32 @@ function UserDetail({
           </svg>
           Voltar à lista
         </button>
-        {user.handle && (
-          <Link
-            to={`/${user.handle}`}
-            target="_blank"
-            className="text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20]"
-          >
-            Ver perfil público →
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          {!editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#F37E20]/30 bg-[#F37E20]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#F2BD8A] transition hover:border-[#F37E20]/50 hover:text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.687a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+              </svg>
+              Editar
+            </button>
+          )}
+          {user.handle && (
+            <Link
+              to={`/${user.handle}`}
+              target="_blank"
+              className="text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20]"
+            >
+              Ver perfil público →
+            </Link>
+          )}
+        </div>
       </div>
+
+      {editing && <EditUserForm detail={detail} onClose={() => setEditing(false)} />}
 
       <div className="flex items-start gap-4">
         {user.avatarUrl ? (

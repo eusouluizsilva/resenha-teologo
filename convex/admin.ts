@@ -399,6 +399,7 @@ export const getUserDetail = query({
         churchRole: user.churchRole ?? null,
         createdAt: user._creationTime,
         isPremium: user.isPremium ?? false,
+        profileVisibility: user.profileVisibility ?? 'public',
       },
       functions: functions.map((f) => ({ function: f.function, enabledAt: f.enabledAt })),
       counts: {
@@ -1100,5 +1101,348 @@ export const simulateCompleteEnrollmentsForUser = mutation({
       touchedLessons,
       issuedCertificates,
     }
+  },
+})
+
+// Edicao inline de usuario pelo admin. Permite ajustar nome, handle, localidade,
+// premium e visibilidade sem precisar logar como o usuario. Valida unicidade de
+// handle (formato + colisao) porque o handle compoe URLs publicas (/blog/:handle,
+// /:handle). Campos passados como undefined sao ignorados (patch parcial).
+export const updateUserAsAdmin = mutation({
+  args: {
+    userId: v.id('users'),
+    name: v.optional(v.string()),
+    handle: v.optional(v.string()),
+    country: v.optional(v.string()),
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
+    isPremium: v.optional(v.boolean()),
+    profileVisibility: v.optional(v.union(v.literal('public'), v.literal('unlisted'))),
+  },
+  handler: async (ctx, { userId, ...fields }) => {
+    await requireAdmin(ctx)
+
+    const user = await ctx.db.get(userId)
+    if (!user) throw new Error('Usuario nao encontrado.')
+
+    const patch: Record<string, unknown> = {}
+
+    if (fields.name !== undefined) {
+      const n = fields.name.trim()
+      if (n.length === 0) throw new Error('Nome nao pode ficar vazio.')
+      if (n.length > 120) throw new Error('Nome muito longo.')
+      patch.name = n
+    }
+
+    if (fields.handle !== undefined) {
+      const h = fields.handle.trim().toLowerCase().replace(/^@/, '')
+      if (h.length === 0) {
+        // Limpar handle: permitido (volta a usuario sem URL publica).
+        patch.handle = undefined
+      } else {
+        if (!/^[a-z0-9_-]{3,24}$/.test(h)) {
+          throw new Error('Handle invalido. Use 3 a 24 caracteres: a-z, 0-9, _ ou -.')
+        }
+        if (h !== user.handle) {
+          const collision = await ctx.db
+            .query('users')
+            .withIndex('by_handle', (q) => q.eq('handle', h))
+            .unique()
+          if (collision && collision._id !== userId) {
+            throw new Error('Handle ja em uso por outro usuario.')
+          }
+        }
+        patch.handle = h
+      }
+    }
+
+    if (fields.country !== undefined) patch.country = fields.country.trim() || undefined
+    if (fields.city !== undefined) patch.city = fields.city.trim() || undefined
+    if (fields.state !== undefined) patch.state = fields.state.trim() || undefined
+    if (fields.isPremium !== undefined) patch.isPremium = fields.isPremium
+    if (fields.profileVisibility !== undefined) patch.profileVisibility = fields.profileVisibility
+
+    await ctx.db.patch(userId, patch)
+    return { ok: true }
+  },
+})
+
+// Lista TODOS os cursos para o painel admin de cursos. Inclui dados do
+// criador (name, handle), instituicao vinculada e contagens. Usado pela
+// /dashboard/admin/cursos para visao consolidada e edicao inline.
+export const listAllCourses = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    const courses = await ctx.db.query('courses').order('desc').collect()
+    const allInstitutions = await ctx.db.query('institutions').collect()
+    const institutionById = new Map(allInstitutions.map((i) => [i._id, i]))
+
+    return await Promise.all(
+      courses.map(async (c) => {
+        const creator = await ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', c.creatorId))
+          .unique()
+        const institution = c.institutionId ? institutionById.get(c.institutionId) : undefined
+        return {
+          _id: c._id,
+          title: c.title,
+          slug: c.slug ?? null,
+          category: c.category,
+          level: c.level,
+          isPublished: c.isPublished,
+          totalLessons: c.totalLessons,
+          totalStudents: c.totalStudents,
+          createdAt: c._creationTime,
+          passingScore: c.passingScore ?? 70,
+          releaseStatus: c.releaseStatus ?? 'complete',
+          visibility: c.visibility ?? 'public',
+          institutionId: c.institutionId ?? null,
+          institutionName: institution?.name ?? null,
+          creatorId: c.creatorId,
+          creatorName: creator?.name ?? 'Professor',
+          creatorHandle: creator?.handle ?? null,
+          avgRating: c.avgRating ?? null,
+          ratingsCount: c.ratingsCount ?? 0,
+        }
+      }),
+    )
+  },
+})
+
+// Lista de instituicoes para o seletor de vinculacao de curso. Volume baixo,
+// retorna todas. Usado apenas pelo painel admin de cursos.
+export const listAllInstitutions = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+    const list = await ctx.db.query('institutions').collect()
+    return list.map((i) => ({ _id: i._id, name: i.name, type: i.type }))
+  },
+})
+
+// Edicao inline de curso pelo admin. Permite ajustar publicacao, nota minima,
+// estado de producao, visibilidade e instituicao sem trocar de conta. Mantem o
+// curso no professor original (nao muda creatorId).
+export const updateCourseAsAdmin = mutation({
+  args: {
+    courseId: v.id('courses'),
+    isPublished: v.optional(v.boolean()),
+    passingScore: v.optional(v.number()),
+    releaseStatus: v.optional(v.union(v.literal('in_progress'), v.literal('complete'))),
+    visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
+    institutionId: v.optional(v.union(v.id('institutions'), v.null())),
+  },
+  handler: async (ctx, { courseId, institutionId, ...fields }) => {
+    await requireAdmin(ctx)
+
+    const course = await ctx.db.get(courseId)
+    if (!course) throw new Error('Curso nao encontrado.')
+
+    const patch: Record<string, unknown> = {}
+    if (fields.isPublished !== undefined) patch.isPublished = fields.isPublished
+    if (fields.passingScore !== undefined) {
+      const score = Math.round(fields.passingScore)
+      if (score < 70 || score > 100) {
+        throw new Error('Nota minima deve estar entre 70 e 100.')
+      }
+      patch.passingScore = score
+    }
+    if (fields.releaseStatus !== undefined) patch.releaseStatus = fields.releaseStatus
+    if (fields.visibility !== undefined) patch.visibility = fields.visibility
+    if (institutionId !== undefined) {
+      patch.institutionId = institutionId === null ? undefined : institutionId
+    }
+
+    await ctx.db.patch(courseId, patch)
+    return { ok: true }
+  },
+})
+
+// Feed unificado dos comentarios mais recentes em toda a plataforma (aulas,
+// cursos, artigos). Junta as 3 tabelas, ordena por createdAt desc, retorna os
+// 80 mais recentes com contexto suficiente para moderar (titulo da pagina-pai,
+// link, autor, texto). Comentarios ja deletados (deletedAt) sao incluidos para
+// que o admin possa ver o historico mas com flag para a UI cinzar.
+export const listRecentCommentsAcrossPlatform = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    // Cada query toma os 60 mais recentes de cada origem; depois mesclamos e
+    // cortamos pelos 80 globais. Volume hoje cabe sem indices dedicados.
+    const lessonComments = await ctx.db.query('lessonComments').order('desc').take(60)
+    const courseComments = await ctx.db.query('courseComments').order('desc').take(60)
+    const postComments = await ctx.db.query('postComments').order('desc').take(60)
+
+    type Item = {
+      _id: string
+      source: 'lesson' | 'course' | 'post'
+      authorId: string
+      authorName: string
+      authorAvatarUrl: string | null
+      authorRole: string
+      text: string
+      createdAt: number
+      deletedAt: number | null
+      editedAt: number | null
+      contextTitle: string
+      contextLink: string | null
+      parentId: string | null
+    }
+
+    const lessonIds = Array.from(new Set(lessonComments.map((c) => c.lessonId)))
+    const lessonsMap = new Map<string, { title: string; courseId: string; slug: string | null }>()
+    for (const id of lessonIds) {
+      const l = await ctx.db.get(id)
+      if (l) lessonsMap.set(id, { title: l.title, courseId: l.courseId, slug: l.slug ?? null })
+    }
+    const lessonCourseIds = Array.from(
+      new Set(Array.from(lessonsMap.values()).map((l) => l.courseId)),
+    )
+    const courseSlugs = new Map<string, string | null>()
+    for (const id of lessonCourseIds) {
+      const c = await ctx.db.get(id as Id<'courses'>)
+      if (c) courseSlugs.set(id, c.slug ?? null)
+    }
+
+    const lessonItems: Item[] = lessonComments.map((c) => {
+      const ln = lessonsMap.get(c.lessonId)
+      const cSlug = ln ? courseSlugs.get(ln.courseId) : null
+      const link =
+        ln && cSlug && ln.slug
+          ? `/cursos/${cSlug}/${ln.slug}`
+          : null
+      return {
+        _id: c._id,
+        source: 'lesson',
+        authorId: c.authorId,
+        authorName: c.authorName,
+        authorAvatarUrl: c.authorAvatarUrl ?? null,
+        authorRole: c.authorRole,
+        text: c.text,
+        createdAt: c.createdAt,
+        deletedAt: c.deletedAt ?? null,
+        editedAt: c.editedAt ?? null,
+        contextTitle: ln ? `Aula: ${ln.title}` : 'Aula removida',
+        contextLink: link,
+        parentId: c.parentId ?? null,
+      }
+    })
+
+    const courseIds2 = Array.from(new Set(courseComments.map((c) => c.courseId)))
+    const coursesMap = new Map<string, { title: string; slug: string | null }>()
+    for (const id of courseIds2) {
+      const c = await ctx.db.get(id)
+      if (c) coursesMap.set(id, { title: c.title, slug: c.slug ?? null })
+    }
+    const courseItems: Item[] = courseComments.map((c) => {
+      const co = coursesMap.get(c.courseId)
+      return {
+        _id: c._id,
+        source: 'course',
+        authorId: c.authorId,
+        authorName: c.authorName,
+        authorAvatarUrl: c.authorAvatarUrl ?? null,
+        authorRole: c.authorRole,
+        text: c.text,
+        createdAt: c.createdAt,
+        deletedAt: c.deletedAt ?? null,
+        editedAt: c.editedAt ?? null,
+        contextTitle: co ? `Forum do curso: ${co.title}` : 'Curso removido',
+        contextLink: co?.slug ? `/cursos/${co.slug}` : null,
+        parentId: c.parentId ?? null,
+      }
+    })
+
+    const postIds = Array.from(new Set(postComments.map((c) => c.postId)))
+    const postsMap = new Map<
+      string,
+      { title: string; slug: string; authorUserId: string; authorHandle: string | null }
+    >()
+    for (const id of postIds) {
+      const p = await ctx.db.get(id)
+      if (!p) continue
+      const author = await ctx.db
+        .query('users')
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', p.authorUserId))
+        .unique()
+      postsMap.set(id, {
+        title: p.title,
+        slug: p.slug,
+        authorUserId: p.authorUserId,
+        authorHandle: author?.handle ?? null,
+      })
+    }
+    const postItems: Item[] = postComments.map((c) => {
+      const p = postsMap.get(c.postId)
+      const link = p?.authorHandle ? `/blog/${p.authorHandle}/${p.slug}` : null
+      return {
+        _id: c._id,
+        source: 'post',
+        authorId: c.authorId,
+        authorName: c.authorName,
+        authorAvatarUrl: c.authorAvatarUrl ?? null,
+        authorRole: c.authorRole,
+        text: c.text,
+        createdAt: c.createdAt,
+        deletedAt: c.deletedAt ?? null,
+        editedAt: c.editedAt ?? null,
+        contextTitle: p ? `Artigo: ${p.title}` : 'Artigo removido',
+        contextLink: link,
+        parentId: c.parentId ?? null,
+      }
+    })
+
+    return [...lessonItems, ...courseItems, ...postItems]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 80)
+  },
+})
+
+// Soft delete admin de comentario. Marca deletedAt sem apagar a linha. Decrementa
+// contador denormalizado em posts.commentCount quando aplicavel. lessonComments
+// e courseComments nao tem contador, entao basta o patch.
+export const softDeleteCommentAsAdmin = mutation({
+  args: {
+    source: v.union(v.literal('lesson'), v.literal('course'), v.literal('post')),
+    commentId: v.string(),
+  },
+  handler: async (ctx, { source, commentId }) => {
+    await requireAdmin(ctx)
+    const now = Date.now()
+
+    if (source === 'lesson') {
+      const id = commentId as Id<'lessonComments'>
+      const c = await ctx.db.get(id)
+      if (!c) throw new Error('Comentario nao encontrado.')
+      if (c.deletedAt) return { ok: true, alreadyDeleted: true }
+      await ctx.db.patch(id, { deletedAt: now })
+      return { ok: true }
+    }
+
+    if (source === 'course') {
+      const id = commentId as Id<'courseComments'>
+      const c = await ctx.db.get(id)
+      if (!c) throw new Error('Comentario nao encontrado.')
+      if (c.deletedAt) return { ok: true, alreadyDeleted: true }
+      await ctx.db.patch(id, { deletedAt: now })
+      return { ok: true }
+    }
+
+    const id = commentId as Id<'postComments'>
+    const c = await ctx.db.get(id)
+    if (!c) throw new Error('Comentario nao encontrado.')
+    if (c.deletedAt) return { ok: true, alreadyDeleted: true }
+    await ctx.db.patch(id, { deletedAt: now })
+    const post = await ctx.db.get(c.postId)
+    if (post) {
+      await ctx.db.patch(post._id, {
+        commentCount: Math.max(0, (post.commentCount ?? 0) - 1),
+      })
+    }
+    return { ok: true }
   },
 })

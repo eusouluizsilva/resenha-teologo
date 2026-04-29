@@ -402,6 +402,60 @@ export function AdminPage() {
                   Envie um aviso in-app para todos ou para um segmento. Anúncios, lançamentos, manutenções, comunicados.
                 </p>
               </Link>
+
+              <Link
+                to="/dashboard/admin/cursos"
+                className={cn(
+                  'group block p-5 transition hover:border-[#F37E20]/35 hover:bg-[#F37E20]/[0.04]',
+                  brandPanelClass,
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    </svg>
+                  </span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-white/52 transition group-hover:bg-[#F37E20]/16 group-hover:text-[#F37E20]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+                <p className="mt-4 font-display text-lg font-semibold text-white">
+                  Cursos da plataforma
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-white/64">
+                  Toggle de publicação, nota mínima, estado de produção e vinculação a instituição com edição inline.
+                </p>
+              </Link>
+
+              <Link
+                to="/dashboard/admin/comentarios"
+                className={cn(
+                  'group block p-5 transition hover:border-[#F37E20]/35 hover:bg-[#F37E20]/[0.04]',
+                  brandPanelClass,
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                    </svg>
+                  </span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-white/52 transition group-hover:bg-[#F37E20]/16 group-hover:text-[#F37E20]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+                <p className="mt-4 font-display text-lg font-semibold text-white">
+                  Moderação de comentários
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-white/64">
+                  Feed unificado de aulas, fóruns de curso e artigos. Remova conteúdo abusivo em um clique.
+                </p>
+              </Link>
             </div>
           </div>
 

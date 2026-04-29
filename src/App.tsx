@@ -63,6 +63,16 @@ const NotificacoesAdminPage = lazy(() =>
     default: m.NotificacoesAdminPage,
   })),
 )
+const CursosAdminPage = lazy(() =>
+  import('@/pages/dashboard/admin/CursosAdminPage').then((m) => ({
+    default: m.CursosAdminPage,
+  })),
+)
+const ComentariosAdminPage = lazy(() =>
+  import('@/pages/dashboard/admin/ComentariosAdminPage').then((m) => ({
+    default: m.ComentariosAdminPage,
+  })),
+)
 const PerfilPage = lazy(() =>
   import('@/pages/dashboard/criador/PerfilPage').then((m) => ({ default: m.PerfilPage })),
 )
@@ -396,6 +406,8 @@ export default function App() {
             {/* Admin (acesso validado server-side por email) */}
             <Route path="admin" element={<AdminPage />} />
             <Route path="admin/notificacoes" element={<NotificacoesAdminPage />} />
+            <Route path="admin/cursos" element={<CursosAdminPage />} />
+            <Route path="admin/comentarios" element={<ComentariosAdminPage />} />
 
             {/* Catch-all dentro do dashboard */}
             <Route
