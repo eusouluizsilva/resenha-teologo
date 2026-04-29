@@ -75,6 +75,11 @@ const CertificadosPage = lazy(() =>
     default: m.CertificadosPage,
   })),
 )
+const ComoConseguirCertificadoPage = lazy(() =>
+  import('@/pages/dashboard/aluno/ComoConseguirCertificadoPage').then((m) => ({
+    default: m.ComoConseguirCertificadoPage,
+  })),
+)
 const CadernoPage = lazy(() =>
   import('@/pages/dashboard/aluno/CadernoPage').then((m) => ({ default: m.CadernoPage })),
 )
@@ -361,6 +366,7 @@ export default function App() {
             <Route path="meus-cursos/:courseId" element={<RequireFunction allowed={['aluno']}><CursoInternoPage /></RequireFunction>} />
             <Route path="meus-cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['aluno']}><AulaPage /></RequireFunction>} />
             <Route path="certificados" element={<RequireFunction allowed={['aluno']}><CertificadosPage /></RequireFunction>} />
+            <Route path="certificados/como-conseguir" element={<ComoConseguirCertificadoPage />} />
             <Route path="caderno" element={<RequireFunction allowed={['aluno']}><CadernoPage /></RequireFunction>} />
             <Route path="flashcards" element={<RequireFunction allowed={['aluno']}><FlashcardsPage /></RequireFunction>} />
             <Route path="biblia" element={<BibliaPage />} />
