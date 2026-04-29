@@ -462,42 +462,75 @@ export const backfillEnrollmentsForCourse = internalMutation({
   },
 })
 
-// Broadcast de notificacao in-app (sininho) para todos os usuarios. Idempotencia
-// por dedupeKey: marcamos a notificacao com link `${baseLink}?bk=<dedupeKey>` e
-// pulamos quem ja tiver recebido, para rerodar sem duplicar.
+// Broadcast de notificacao in-app (sininho). Idempotencia por dedupeKey:
+// marcamos a notificacao com link `${baseLink}?bk=<dedupeKey>` (ou
+// `internal://broadcast?bk=<dedupeKey>` quando nao ha link) e pulamos quem
+// ja tiver recebido, para rerodar sem duplicar.
 //
-// Internal mutation: so rodavel via CLI (acesso de admin garantido pela posse
-// da deploy key do Convex). Rodar via:
-//   npx convex run --prod admin:broadcastNotification \
-//     '{"title":"...","body":"...","link":"/dashboard/perfil","dedupeKey":"perfil_publico_v1"}'
+// Segmento permite filtrar por funcao ativa (alunos, criadores, instituicoes)
+// ou enviar para todos. Sem segmento, envia para todos os usuarios cadastrados.
+//
+// Internal mutation: usado pela CLI e pelo wrapper publico abaixo.
 export const broadcastNotification = internalMutation({
   args: {
     title: v.string(),
     body: v.optional(v.string()),
     link: v.optional(v.string()),
     dedupeKey: v.string(),
+    segment: v.optional(
+      v.union(
+        v.literal('all'),
+        v.literal('aluno'),
+        v.literal('criador'),
+        v.literal('instituicao'),
+        v.literal('sem_funcao'),
+      ),
+    ),
   },
-  handler: async (ctx, { title, body, link, dedupeKey }) => {
+  handler: async (ctx, { title, body, link, dedupeKey, segment }) => {
     const allUsers = await ctx.db.query('users').collect()
-    const finalLink = link
-      ? `${link}${link.includes('?') ? '&' : '?'}bk=${dedupeKey}`
-      : undefined
+    const seg = segment ?? 'all'
+
+    let recipients = allUsers
+    if (seg !== 'all') {
+      const allFunctions = await ctx.db.query('userFunctions').collect()
+      const fnByUser = new Map<string, Set<string>>()
+      for (const f of allFunctions) {
+        const set = fnByUser.get(f.userId) ?? new Set<string>()
+        set.add(f.function)
+        fnByUser.set(f.userId, set)
+      }
+
+      if (seg === 'sem_funcao') {
+        recipients = allUsers.filter((u) => {
+          const fns = fnByUser.get(u.clerkId)
+          return !fns || fns.size === 0
+        })
+      } else {
+        recipients = allUsers.filter((u) => fnByUser.get(u.clerkId)?.has(seg))
+      }
+    }
+
+    // Marca todas as notificacoes com link interno deduplicavel. Mesmo quando o
+    // admin nao passa link, geramos um sentinela `internal://broadcast?bk=...`
+    // exclusivamente para podermos detectar duplicidade. O front trata link
+    // ausente/sentinela como sem destino (nao navega).
+    const baseLink = link ?? 'internal://broadcast'
+    const finalLink = `${baseLink}${baseLink.includes('?') ? '&' : '?'}bk=${dedupeKey}`
 
     let inserted = 0
     let skipped = 0
     const now = Date.now()
 
-    for (const u of allUsers) {
-      if (finalLink) {
-        const existing = await ctx.db
-          .query('notifications')
-          .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
-          .filter((q) => q.eq(q.field('link'), finalLink))
-          .first()
-        if (existing) {
-          skipped += 1
-          continue
-        }
+    for (const u of recipients) {
+      const existing = await ctx.db
+        .query('notifications')
+        .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
+        .filter((q) => q.eq(q.field('link'), finalLink))
+        .first()
+      if (existing) {
+        skipped += 1
+        continue
       }
 
       await ctx.db.insert('notifications', {
@@ -505,13 +538,211 @@ export const broadcastNotification = internalMutation({
         kind: 'generic',
         title,
         body,
-        link: finalLink,
+        link: link ? finalLink : undefined,
         createdAt: now,
       })
       inserted += 1
     }
 
-    return { totalUsers: allUsers.length, inserted, skipped }
+    return {
+      totalUsers: allUsers.length,
+      eligible: recipients.length,
+      inserted,
+      skipped,
+    }
+  },
+})
+
+// Wrapper publico chamavel pelo painel admin (front). Reusa a logica interna
+// para nao duplicar codigo. requireAdmin garante que apenas o dono envia.
+export const sendBroadcastNotification = mutation({
+  args: {
+    title: v.string(),
+    body: v.optional(v.string()),
+    link: v.optional(v.string()),
+    dedupeKey: v.string(),
+    segment: v.union(
+      v.literal('all'),
+      v.literal('aluno'),
+      v.literal('criador'),
+      v.literal('instituicao'),
+      v.literal('sem_funcao'),
+    ),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx)
+
+    const title = args.title.trim()
+    if (title.length === 0) throw new Error('Título obrigatório.')
+    if (title.length > 120) throw new Error('Título acima de 120 caracteres.')
+    const body = args.body?.trim()
+    if (body && body.length > 500) throw new Error('Mensagem acima de 500 caracteres.')
+    const link = args.link?.trim() || undefined
+    if (link && !link.startsWith('/') && !link.startsWith('http')) {
+      throw new Error('Link deve começar com / (rota interna) ou http (URL externa).')
+    }
+    const dedupeKey = args.dedupeKey.trim()
+    if (dedupeKey.length === 0) throw new Error('Chave de deduplicação obrigatória.')
+
+    const allUsers = await ctx.db.query('users').collect()
+    const seg = args.segment
+
+    let recipients = allUsers
+    if (seg !== 'all') {
+      const allFunctions = await ctx.db.query('userFunctions').collect()
+      const fnByUser = new Map<string, Set<string>>()
+      for (const f of allFunctions) {
+        const set = fnByUser.get(f.userId) ?? new Set<string>()
+        set.add(f.function)
+        fnByUser.set(f.userId, set)
+      }
+
+      if (seg === 'sem_funcao') {
+        recipients = allUsers.filter((u) => {
+          const fns = fnByUser.get(u.clerkId)
+          return !fns || fns.size === 0
+        })
+      } else {
+        recipients = allUsers.filter((u) => fnByUser.get(u.clerkId)?.has(seg))
+      }
+    }
+
+    const baseLink = link ?? 'internal://broadcast'
+    const finalLink = `${baseLink}${baseLink.includes('?') ? '&' : '?'}bk=${dedupeKey}`
+
+    let inserted = 0
+    let skipped = 0
+    const now = Date.now()
+
+    for (const u of recipients) {
+      const existing = await ctx.db
+        .query('notifications')
+        .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
+        .filter((q) => q.eq(q.field('link'), finalLink))
+        .first()
+      if (existing) {
+        skipped += 1
+        continue
+      }
+
+      await ctx.db.insert('notifications', {
+        userId: u.clerkId,
+        kind: 'generic',
+        title,
+        body,
+        link: link ? finalLink : undefined,
+        createdAt: now,
+      })
+      inserted += 1
+    }
+
+    return {
+      totalUsers: allUsers.length,
+      eligible: recipients.length,
+      inserted,
+      skipped,
+    }
+  },
+})
+
+// Estima quantos usuarios receberiam um broadcast antes de envia-lo. Usado
+// pelo painel admin para mostrar "vai notificar X pessoas" antes de confirmar.
+export const previewBroadcastAudience = query({
+  args: {
+    segment: v.union(
+      v.literal('all'),
+      v.literal('aluno'),
+      v.literal('criador'),
+      v.literal('instituicao'),
+      v.literal('sem_funcao'),
+    ),
+  },
+  handler: async (ctx, { segment }) => {
+    await requireAdmin(ctx)
+
+    const allUsers = await ctx.db.query('users').collect()
+    if (segment === 'all') {
+      return { totalUsers: allUsers.length, eligible: allUsers.length }
+    }
+
+    const allFunctions = await ctx.db.query('userFunctions').collect()
+    const fnByUser = new Map<string, Set<string>>()
+    for (const f of allFunctions) {
+      const set = fnByUser.get(f.userId) ?? new Set<string>()
+      set.add(f.function)
+      fnByUser.set(f.userId, set)
+    }
+
+    let eligible: number
+    if (segment === 'sem_funcao') {
+      eligible = allUsers.filter((u) => {
+        const fns = fnByUser.get(u.clerkId)
+        return !fns || fns.size === 0
+      }).length
+    } else {
+      eligible = allUsers.filter((u) => fnByUser.get(u.clerkId)?.has(segment)).length
+    }
+
+    return { totalUsers: allUsers.length, eligible }
+  },
+})
+
+// Lista os ultimos broadcasts (notificacoes generic com bk= no link). Agrupa
+// por dedupeKey, retorna titulo, mensagem, link original (sem o bk), quantos
+// receberam e quando foi o primeiro envio. Limitado aos 30 mais recentes.
+export const listRecentBroadcasts = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    // Pega as ultimas 800 notificacoes generic globalmente, suficiente para
+    // reconstruir os ultimos broadcasts mesmo com 5-10k usuarios. Ordenacao
+    // descrescente por _creationTime (default).
+    const recent = await ctx.db
+      .query('notifications')
+      .order('desc')
+      .filter((q) => q.eq(q.field('kind'), 'generic'))
+      .take(800)
+
+    type Group = {
+      dedupeKey: string
+      title: string
+      body?: string
+      link?: string
+      count: number
+      firstAt: number
+    }
+    const groups = new Map<string, Group>()
+
+    for (const n of recent) {
+      if (!n.link) continue
+      const m = n.link.match(/[?&]bk=([^&]+)/)
+      if (!m) continue
+      const key = decodeURIComponent(m[1])
+      const baseLink = n.link
+        .replace(/([?&])bk=[^&]+&?/, (_, p1) => (p1 === '?' ? '?' : ''))
+        .replace(/[?&]$/, '')
+      const cleanLink = baseLink.startsWith('internal://broadcast') ? undefined : baseLink
+
+      const existing = groups.get(key)
+      if (existing) {
+        existing.count += 1
+        if (n.createdAt < existing.firstAt) existing.firstAt = n.createdAt
+      } else {
+        groups.set(key, {
+          dedupeKey: key,
+          title: n.title,
+          body: n.body,
+          link: cleanLink,
+          count: 1,
+          firstAt: n.createdAt,
+        })
+      }
+    }
+
+    return Array.from(groups.values())
+      .sort((a, b) => b.firstAt - a.firstAt)
+      .slice(0, 30)
   },
 })
 

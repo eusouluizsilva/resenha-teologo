@@ -58,6 +58,11 @@ const PerguntasPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/pages/dashboard/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
 )
+const NotificacoesAdminPage = lazy(() =>
+  import('@/pages/dashboard/admin/NotificacoesAdminPage').then((m) => ({
+    default: m.NotificacoesAdminPage,
+  })),
+)
 const PerfilPage = lazy(() =>
   import('@/pages/dashboard/criador/PerfilPage').then((m) => ({ default: m.PerfilPage })),
 )
@@ -390,6 +395,7 @@ export default function App() {
 
             {/* Admin (acesso validado server-side por email) */}
             <Route path="admin" element={<AdminPage />} />
+            <Route path="admin/notificacoes" element={<NotificacoesAdminPage />} />
 
             {/* Catch-all dentro do dashboard */}
             <Route

@@ -373,6 +373,38 @@ export function AdminPage() {
             </div>
           </div>
 
+          <div>
+            <DashboardSectionLabel>Ações administrativas</DashboardSectionLabel>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Link
+                to="/dashboard/admin/notificacoes"
+                className={cn(
+                  'group block p-5 transition hover:border-[#F37E20]/35 hover:bg-[#F37E20]/[0.04]',
+                  brandPanelClass,
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                    </svg>
+                  </span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-white/52 transition group-hover:bg-[#F37E20]/16 group-hover:text-[#F37E20]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+                <p className="mt-4 font-display text-lg font-semibold text-white">
+                  Notificações do sininho
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-white/64">
+                  Envie um aviso in-app para todos ou para um segmento. Anúncios, lançamentos, manutenções, comunicados.
+                </p>
+              </Link>
+            </div>
+          </div>
+
           <AnalyticsSection analytics={analytics} />
 
           <div>
