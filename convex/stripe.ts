@@ -9,8 +9,8 @@ declare const process: { env: Record<string, string | undefined> }
 // Quando virar live: trocar por price_live_... e setar STRIPE_SECRET_KEY com sk_live_.
 const PRICE_IDS: Record<string, string> = {
   aluno_premium: 'price_1TQyTyBZ3mrrG6uSW8WhyEH9',
-  criador_sem_ads: 'price_1TQyU2BZ3mrrG6uS0W7guQzZ',
-  plano_igreja: 'price_1TQyU6BZ3mrrG6uSlv1ca0yS',
+  criador_sem_ads: 'price_1TRgOXBZ3mrrG6uSjOcxmS6q',
+  plano_igreja: 'price_1TRgOPBZ3mrrG6uSU5lS2jgR',
 }
 
 const PLAN_KIND = v.union(
