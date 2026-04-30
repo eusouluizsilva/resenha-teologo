@@ -553,6 +553,7 @@ export async function checkAndIssueCertificate(
     })
     if (!wasIssued) {
       await ctx.runMutation(internal.gamification.recordCourseComplete, { studentId })
+      await flipReferralOnFirstCompletion(ctx, studentId)
     }
     await notifyCertificateIssued(ctx, studentId, courseId)
   } else {
@@ -562,9 +563,24 @@ export async function checkAndIssueCertificate(
     })
     if (!wasIssued) {
       await ctx.runMutation(internal.gamification.recordCourseComplete, { studentId })
+      await flipReferralOnFirstCompletion(ctx, studentId)
     }
     await notifyCertificateIssued(ctx, studentId, courseId)
   }
+}
+
+// Marca a indicacao do aluno como 'completed' quando ele conclui o primeiro
+// curso. Idempotente: so atualiza se a linha estiver em status 'registered'.
+async function flipReferralOnFirstCompletion(ctx: MutationCtx, studentId: string) {
+  const referral = await ctx.db
+    .query('referrals')
+    .withIndex('by_referredUserId', (q) => q.eq('referredUserId', studentId))
+    .first()
+  if (!referral || referral.status !== 'registered') return
+  await ctx.db.patch(referral._id, {
+    status: 'completed',
+    completedAt: Date.now(),
+  })
 }
 
 async function notifyCertificateIssued(
@@ -605,11 +621,14 @@ export const rateCourse = mutation({
   args: {
     courseId: v.id('courses'),
     stars: v.number(),
+    review: v.optional(v.string()),
   },
-  handler: async (ctx, { courseId, stars }) => {
+  handler: async (ctx, { courseId, stars, review }) => {
     const identity = await requireIdentity(ctx)
 
     if (stars < 1 || stars > 5) throw new Error('Avaliação deve ser entre 1 e 5 estrelas')
+
+    const cleanReview = review?.trim().slice(0, 600) || undefined
 
     const enrollment = await ctx.db
       .query('enrollments')
@@ -628,12 +647,13 @@ export const rateCourse = mutation({
       .unique()
 
     if (existing) {
-      await ctx.db.patch(existing._id, { stars, updatedAt: Date.now() })
+      await ctx.db.patch(existing._id, { stars, review: cleanReview, updatedAt: Date.now() })
     } else {
       await ctx.db.insert('courseRatings', {
         studentId: identity.subject,
         courseId,
         stars,
+        review: cleanReview,
         createdAt: Date.now(),
       })
     }
@@ -652,6 +672,28 @@ export const rateCourse = mutation({
     await ctx.db.patch(courseId, { avgRating: avg, ratingsCount: count })
 
     return { stars }
+  },
+})
+
+// ─── getMyCourseRating ────────────────────────────────────────────────────────
+// Retorna a avaliacao deste aluno para o curso (estrelas + comentario), ou
+// null se ainda nao avaliou. Usado pelo modal pos-conclusao para prefiller.
+
+export const getMyCourseRating = query({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, { courseId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const rating = await ctx.db
+      .query('courseRatings')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', identity.subject).eq('courseId', courseId),
+      )
+      .unique()
+
+    if (!rating) return null
+    return { stars: rating.stars, review: rating.review ?? null }
   },
 })
 
@@ -755,6 +797,88 @@ export const getStudentDashboard = query({
       inProgress: inProgress.slice(0, 6),
       completed: valid.filter((c) => c.certificateIssued).slice(0, 6),
     }
+  },
+})
+
+// ─── getRecommendations ──────────────────────────────────────────────────────
+// Sugestões personalizadas para o aluno: cursos públicos publicados que ele
+// AINDA não está matriculado, ranqueados pela proximidade com o que ele já
+// estuda (categoria + tags). Fallback: cursos com mais alunos. Usado na home
+// do aluno para reduzir a barreira de "e agora, o que estudar?".
+
+export const getRecommendations = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+    const cap = Math.min(Math.max(limit ?? 4, 1), 12)
+
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
+      .collect()
+    const enrolledCourseIds = new Set(enrollments.map((e) => String(e.courseId)))
+
+    // Constrói perfil do aluno a partir dos cursos em que ele está matriculado.
+    const enrolledCourses = await Promise.all(
+      enrollments.map((e) => ctx.db.get(e.courseId)),
+    )
+    const categoryWeights = new Map<string, number>()
+    const tagWeights = new Map<string, number>()
+    for (const c of enrolledCourses) {
+      if (!c) continue
+      categoryWeights.set(c.category, (categoryWeights.get(c.category) ?? 0) + 1)
+      for (const tag of c.tags ?? []) {
+        tagWeights.set(tag, (tagWeights.get(tag) ?? 0) + 1)
+      }
+    }
+
+    // Pool de candidatos: cursos públicos publicados (catálogo geral). Limita
+    // a varredura para não explodir em bases grandes; o ranking abaixo é o que
+    // de fato seleciona os melhores.
+    const candidates = await ctx.db
+      .query('courses')
+      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .take(200)
+
+    type Scored = {
+      course: (typeof candidates)[number]
+      score: number
+    }
+    const scored: Scored[] = []
+    for (const course of candidates) {
+      if (enrolledCourseIds.has(String(course._id))) continue
+      if (course.visibility === 'institution') continue
+
+      let score = 0
+      const catWeight = categoryWeights.get(course.category) ?? 0
+      score += catWeight * 5
+      for (const tag of course.tags ?? []) {
+        score += (tagWeights.get(tag) ?? 0) * 2
+      }
+      // Sinal de popularidade leve: log(students + 1) garante que cursos com
+      // muitos alunos não dominem a recomendação.
+      score += Math.log10((course.totalStudents ?? 0) + 1)
+      // Penaliza cursos sem nenhuma aula publicada.
+      if ((course.totalLessons ?? 0) === 0) score -= 10
+
+      scored.push({ course, score })
+    }
+
+    scored.sort((a, b) => b.score - a.score)
+
+    return scored.slice(0, cap).map(({ course }) => ({
+      _id: course._id,
+      title: course.title,
+      description: course.description,
+      thumbnail: course.thumbnail,
+      category: course.category,
+      level: course.level,
+      slug: course.slug,
+      totalLessons: course.totalLessons,
+      totalStudents: course.totalStudents,
+      tags: course.tags ?? [],
+    }))
   },
 })
 

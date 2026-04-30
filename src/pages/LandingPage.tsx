@@ -570,6 +570,8 @@ export function LandingPage() {
                             <img
                               src={course.creator.avatarUrl}
                               alt={course.creator.name}
+                              loading="lazy"
+                              decoding="async"
                               className="h-6 w-6 rounded-full object-cover"
                             />
                           ) : (
@@ -671,6 +673,8 @@ export function LandingPage() {
                             <img
                               src={article.author.avatarUrl}
                               alt={article.author.name}
+                              loading="lazy"
+                              decoding="async"
                               className="h-6 w-6 rounded-full object-cover"
                             />
                           ) : (
@@ -746,6 +750,7 @@ export function LandingPage() {
                 src="/fotos/library-hall.jpg"
                 alt="Biblioteca teológica"
                 loading="lazy"
+                decoding="async"
                 className="h-full min-h-[30rem] w-full object-cover object-center"
               />
             </motion.div>
@@ -795,6 +800,7 @@ export function LandingPage() {
                 src="/fotos/bible-laptop-headphones.jpg"
                 alt="Bíblia e laptop sobre mesa de estudo"
                 loading="lazy"
+                decoding="async"
                 className="h-full min-h-[28rem] w-full object-cover object-center"
               />
             </motion.div>
@@ -917,6 +923,7 @@ export function LandingPage() {
                   src="/fotos/creator-recording.jpg"
                   alt="Professor gravando aula"
                   loading="lazy"
+                  decoding="async"
                   className="h-64 w-full object-cover object-top"
                 />
               </div>
@@ -1192,6 +1199,9 @@ export function LandingPage() {
             </Link>
             <Link to="/privacidade" className="text-xs text-white/30 transition-colors hover:text-white/60">
               Privacidade
+            </Link>
+            <Link to="/status" className="text-xs text-white/30 transition-colors hover:text-white/60">
+              Status
             </Link>
             <a href="mailto:hello@resenhadoteologo.com" className="text-xs text-white/30 transition-colors hover:text-white/60">
               hello@resenhadoteologo.com

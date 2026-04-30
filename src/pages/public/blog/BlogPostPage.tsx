@@ -144,7 +144,7 @@ export function BlogPostPage() {
             {post.author.handle ? (
               <Link to={`/${post.author.handle}`} className="flex items-center gap-3">
                 {post.author.avatarUrl ? (
-                  <img src={post.author.avatarUrl} alt={authorLabel} className="h-11 w-11 rounded-2xl object-cover" />
+                  <img src={post.author.avatarUrl} alt={authorLabel} loading="lazy" decoding="async" className="h-11 w-11 rounded-2xl object-cover" />
                 ) : (
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F37E20]/10 text-sm font-semibold text-[#F37E20]">
                     {authorLabel.slice(0, 2).toUpperCase()}
@@ -204,7 +204,7 @@ export function BlogPostPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E6DBCF] bg-white p-5">
               <div className="flex items-center gap-3">
                 {post.author.avatarUrl ? (
-                  <img src={post.author.avatarUrl} alt={authorLabel} className="h-12 w-12 rounded-2xl object-cover" />
+                  <img src={post.author.avatarUrl} alt={authorLabel} loading="lazy" decoding="async" className="h-12 w-12 rounded-2xl object-cover" />
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F37E20]/10 text-sm font-semibold text-[#F37E20]">
                     {authorLabel.slice(0, 2).toUpperCase()}

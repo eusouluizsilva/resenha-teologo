@@ -105,6 +105,21 @@ export function RegisterPage() {
   const recordConsent = useMutation(api.consents.record)
   const enableFunction = useMutation(api.userFunctions.enable)
 
+  // Captura codigo de indicacao do link (?ref=CODIGO) e armazena em
+  // localStorage. Sera consumido pelo AuthSyncGate logo apos o usuario
+  // ser criado no Convex (mutation referrals.linkOnSignup). Persiste entre
+  // navegacoes do fluxo de cadastro/SSO.
+  useEffect(() => {
+    const ref = searchParams.get('ref')?.trim().toUpperCase()
+    if (ref && ref.length >= 4 && ref.length <= 12) {
+      try {
+        window.localStorage.setItem('rdt_ref_code', ref)
+      } catch {
+        /* localStorage indisponivel */
+      }
+    }
+  }, [searchParams])
+
   const [step, setStep] = useState<'form' | 'verify'>('form')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

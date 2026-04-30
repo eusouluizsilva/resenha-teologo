@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
@@ -121,8 +121,23 @@ export function LojaPage() {
   ])
 
   const products = useQuery(api.products.listPublic, {}) as CatalogItem[] | undefined
-  const [search, setSearch] = useState('')
-  const [type, setType] = useState<'todos' | CatalogItem['type']>('todos')
+  const [params, setParams] = useSearchParams()
+  const search = params.get('q') ?? ''
+  const typeParam = params.get('tipo')
+  const type: 'todos' | CatalogItem['type'] =
+    typeParam === 'fisico' || typeParam === 'digital' || typeParam === 'servico'
+      ? typeParam
+      : 'todos'
+
+  function updateParam(key: 'q' | 'tipo', value: string) {
+    const next = new URLSearchParams(params)
+    if (!value || value === 'todos') {
+      next.delete(key)
+    } else {
+      next.set(key, value)
+    }
+    setParams(next, { replace: true })
+  }
 
   const filtered = useMemo(() => {
     if (!products) return []
@@ -159,8 +174,9 @@ export function LojaPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateParam('q', e.target.value)}
               placeholder="Buscar por título, descrição ou criador..."
+              aria-label="Buscar produtos"
               className="flex-1 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/36 transition-all focus:border-[#F37E20]/40 focus:bg-white/[0.05] focus:outline-none"
             />
             <div className="flex flex-wrap gap-2">
@@ -175,7 +191,7 @@ export function LojaPage() {
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setType(opt.value)}
+                  onClick={() => updateParam('tipo', opt.value)}
                   className={cn(
                     'rounded-2xl border px-4 py-2 text-sm font-medium transition-all',
                     type === opt.value

@@ -69,7 +69,7 @@ export const articleComponents: Components = {
   ),
   img: ({ src, alt, ...props }) => (
     <figure className="my-8">
-      <img src={src} alt={alt ?? ''} loading="lazy" className="w-full rounded-2xl" {...props} />
+      <img src={src} alt={alt ?? ''} loading="lazy" decoding="async" className="w-full rounded-2xl" {...props} />
       {alt ? <figcaption className="mt-2 text-center text-sm text-[#6B7280]">{alt}</figcaption> : null}
     </figure>
   ),

@@ -8,6 +8,7 @@ import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
 import { DashboardPageShell, DashboardSectionLabel } from '@/components/dashboard/PageShell'
+import { TemplatePicker } from '@/components/criador/TemplatePicker'
 
 const categories = [
   'Teologia Sistemática', 'Hermenêutica', 'Antigo Testamento', 'Novo Testamento',
@@ -208,6 +209,7 @@ export function EditarInfoCursoPage() {
     isInProgress: boolean
     expectedTotalLessons: string
     nextLessonScheduleText: string
+    faq: Array<{ question: string; answer: string }>
   } | null>(null)
 
   const myInstitutions = useQuery(api.institutions.listByUser, {})
@@ -235,6 +237,8 @@ export function EditarInfoCursoPage() {
             ? String(course.expectedTotalLessons)
             : '',
         nextLessonScheduleText: course.nextLessonScheduleText ?? '',
+        faq:
+          (course as { faq?: Array<{ question: string; answer: string }> }).faq ?? [],
       })
       setThumbnail(course.thumbnail ?? '')
     }
@@ -325,6 +329,12 @@ export function EditarInfoCursoPage() {
         visibility: form.institutionId ? form.visibility : 'public',
         expectedTotalLessons: expectedTotalParsed,
         nextLessonScheduleText: scheduleTextTrim || undefined,
+        faq: form.faq
+          .map((entry) => ({
+            question: entry.question.trim(),
+            answer: entry.answer.trim(),
+          }))
+          .filter((entry) => entry.question && entry.answer),
       })
 
       const previousInProgress = course?.releaseStatus === 'in_progress'
@@ -356,9 +366,14 @@ export function EditarInfoCursoPage() {
       description="Ajuste identidade, contexto e apresentação do curso com uma camada visual mais consistente com a nova direção da plataforma."
       maxWidthClass="max-w-3xl"
       actions={
-        <Link to={`/dashboard/cursos/${id}/modulos`} className={brandSecondaryButtonClass}>
-          Módulos e aulas
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to={`/dashboard/cursos/${id}/coautores`} className={brandSecondaryButtonClass}>
+            Co-autores
+          </Link>
+          <Link to={`/dashboard/cursos/${id}/modulos`} className={brandSecondaryButtonClass}>
+            Módulos e aulas
+          </Link>
+        </div>
       }
     >
       <motion.form variants={staggerContainer} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-6">
@@ -403,7 +418,14 @@ export function EditarInfoCursoPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white/72">Descrição</label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-sm font-medium text-white/72">Descrição</label>
+              <TemplatePicker
+                kind="course_description"
+                currentValue={form.description}
+                onApply={(body) => setForm((prev) => (prev ? { ...prev, description: body } : prev))}
+              />
+            </div>
             <textarea
               name="description"
               value={form.description}
@@ -482,6 +504,86 @@ export function EditarInfoCursoPage() {
               A nota mínima nunca pode ser inferior a 70%. Aumente apenas se você quiser um curso mais rigoroso.
             </p>
           </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
+          <DashboardSectionLabel>Perguntas frequentes (opcional)</DashboardSectionLabel>
+          <p className="text-xs leading-6 text-white/40">
+            Adicione até 12 perguntas. Aparece como acordeon na página pública do curso e gera marcação FAQPage no Google.
+          </p>
+          {form.faq.map((entry, index) => (
+            <div key={index} className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/52">
+                  Pergunta {index + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm((f) =>
+                      f ? { ...f, faq: f.faq.filter((_, i) => i !== index) } : f,
+                    )
+                  }
+                  className="text-xs font-semibold text-red-300 hover:text-red-200"
+                >
+                  Remover
+                </button>
+              </div>
+              <input
+                type="text"
+                value={entry.question}
+                maxLength={200}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          faq: f.faq.map((it, i) =>
+                            i === index ? { ...it, question: e.target.value } : it,
+                          ),
+                        }
+                      : f,
+                  )
+                }
+                placeholder="Ex: Quanto tempo dura o curso?"
+                className={brandInputClass}
+              />
+              <textarea
+                value={entry.answer}
+                maxLength={800}
+                rows={3}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          faq: f.faq.map((it, i) =>
+                            i === index ? { ...it, answer: e.target.value } : it,
+                          ),
+                        }
+                      : f,
+                  )
+                }
+                placeholder="Resposta clara, sem promessas exageradas."
+                className={cn(brandInputClass, 'resize-none')}
+              />
+            </div>
+          ))}
+          {form.faq.length < 12 ? (
+            <button
+              type="button"
+              onClick={() =>
+                setForm((f) =>
+                  f
+                    ? { ...f, faq: [...f.faq, { question: '', answer: '' }] }
+                    : f,
+                )
+              }
+              className="rounded-2xl border border-white/10 bg-white/4 px-4 py-2 text-xs font-semibold text-white/72 transition-all hover:border-white/20 hover:bg-white/8"
+            >
+              {form.faq.length === 0 ? 'Adicionar primeira pergunta' : 'Adicionar pergunta'}
+            </button>
+          ) : null}
         </motion.div>
 
         {adminInstitutions.length > 0 && (

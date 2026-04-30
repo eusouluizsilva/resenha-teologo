@@ -51,7 +51,9 @@ export function ProdutoPage() {
 
   const [activeImage, setActiveImage] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [orderResult, setOrderResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [orderResult, setOrderResult] = useState<
+    { ok: boolean; message: string; orderId?: Id<'orders'> } | null
+  >(null)
 
   useSeo({
     title: product ? `${product.title} - Loja` : 'Produto - Loja',
@@ -136,11 +138,12 @@ export function ProdutoPage() {
     setSubmitting(true)
     setOrderResult(null)
     try {
-      await createOrder({ items: [{ productId: product._id, quantity: 1 }] })
+      const orderId = await createOrder({ items: [{ productId: product._id, quantity: 1 }] })
       setOrderResult({
         ok: true,
         message:
-          'Pedido registrado. Em breve você receberá instruções de pagamento por email.',
+          'Pedido registrado. Acompanhe o status em "Meus pedidos" no seu painel.',
+        orderId,
       })
     } catch (e) {
       setOrderResult({
@@ -171,6 +174,9 @@ export function ProdutoPage() {
                   <img
                     src={currentImage}
                     alt={product.title}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -195,7 +201,7 @@ export function ProdutoPage() {
                           : 'border-white/10 hover:border-white/20',
                       )}
                     >
-                      <img src={img} alt="" className="h-full w-full object-cover" />
+                      <img src={img} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -224,6 +230,8 @@ export function ProdutoPage() {
                   <img
                     src={product.creatorAvatar}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
@@ -290,7 +298,18 @@ export function ProdutoPage() {
                       : 'border-red-500/30 bg-red-500/8 text-red-300',
                   )}
                 >
-                  {orderResult.message}
+                  <p>{orderResult.message}</p>
+                  {orderResult.ok && orderResult.orderId ? (
+                    <Link
+                      to={`/dashboard/pedidos/${orderResult.orderId}`}
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#34D399] underline-offset-2 hover:underline"
+                    >
+                      Acompanhar pedido
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </Link>
+                  ) : null}
                 </div>
               )}
 

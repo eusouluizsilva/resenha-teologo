@@ -105,7 +105,7 @@ function TestimonialCard({
     <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
       <div className="flex items-center gap-3">
         {authorAvatarUrl ? (
-          <img src={authorAvatarUrl} alt={authorName} className="h-9 w-9 rounded-xl object-cover" />
+          <img src={authorAvatarUrl} alt={authorName} loading="lazy" decoding="async" className="h-9 w-9 rounded-xl object-cover" />
         ) : (
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#F37E20]/16 bg-[#F37E20]/10">
             <span className="text-xs font-semibold text-[#F2BD8A]">{initials}</span>
@@ -274,7 +274,7 @@ export function PublicProfilePage() {
     profile ? { authorUserId: profile.userId } : 'skip'
   )
 
-  const [activeTab, setActiveTab] = useState<'sobre' | 'cursos' | 'artigos'>('sobre')
+  const [activeTab, setActiveTab] = useState<'sobre' | 'cursos' | 'artigos' | 'depoimentos'>('sobre')
 
   const profileUrl = `${PROFILE_ORIGIN}/${handle ?? ''}`
   const profileTitle = profile
@@ -416,6 +416,8 @@ export function PublicProfilePage() {
             <img
               src={profile.avatarUrl}
               alt={profile.name}
+              loading="eager"
+              decoding="async"
               className="mx-auto h-24 w-24 rounded-[1.6rem] object-cover shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
             />
           ) : (
@@ -469,6 +471,7 @@ export function PublicProfilePage() {
             { id: 'sobre', label: 'Sobre' },
             { id: 'cursos', label: `Cursos${courses ? ` (${courses.length})` : ''}` },
             { id: 'artigos', label: `Artigos${articles ? ` (${articles.length})` : ''}` },
+            { id: 'depoimentos', label: `Depoimentos${testimonials ? ` (${testimonials.length})` : ''}` },
           ] as const).map((tab) => (
             <button
               key={tab.id}
@@ -509,6 +512,7 @@ export function PublicProfilePage() {
                           src={spotlight.topPost.coverImageUrl}
                           alt={spotlight.topPost.title}
                           loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
@@ -547,6 +551,7 @@ export function PublicProfilePage() {
                           src={spotlight.topCourse.thumbnail}
                           alt={spotlight.topCourse.title}
                           loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
@@ -888,43 +893,43 @@ export function PublicProfilePage() {
         )}
 
         {/* Testimonials */}
-        <div className="mt-8">
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">Depoimentos</p>
+        {activeTab === 'depoimentos' && (
+          <div className="mt-8">
+            {testimonials === undefined ? (
+              <div className="text-center py-6">
+                <div className="h-5 w-5 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin mx-auto" />
+              </div>
+            ) : testimonials.length === 0 ? (
+              <p className="text-sm text-white/36">Nenhum depoimento aprovado ainda.</p>
+            ) : (
+              <div className="space-y-3">
+                {testimonials.map((t) => (
+                  <TestimonialCard
+                    key={String(t._id)}
+                    text={t.text}
+                    authorName={t.authorName}
+                    authorAvatarUrl={t.authorAvatarUrl}
+                    authorHandle={t.authorHandle}
+                    createdAt={t.createdAt}
+                  />
+                ))}
+              </div>
+            )}
 
-          {testimonials === undefined ? (
-            <div className="text-center py-6">
-              <div className="h-5 w-5 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin mx-auto" />
-            </div>
-          ) : testimonials.length === 0 ? (
-            <p className="text-sm text-white/36">Nenhum depoimento aprovado ainda.</p>
-          ) : (
-            <div className="space-y-3">
-              {testimonials.map((t) => (
-                <TestimonialCard
-                  key={String(t._id)}
-                  text={t.text}
-                  authorName={t.authorName}
-                  authorAvatarUrl={t.authorAvatarUrl}
-                  authorHandle={t.authorHandle}
-                  createdAt={t.createdAt}
-                />
-              ))}
-            </div>
-          )}
+            {isSignedIn && handle && (
+              <div className="mt-6">
+                <p className="mb-3 text-sm font-medium text-white/62">Deixar um depoimento</p>
+                <TestimonialSubmit profileHandle={handle} />
+              </div>
+            )}
 
-          {isSignedIn && handle && (
-            <div className="mt-6">
-              <p className="mb-3 text-sm font-medium text-white/62">Deixar um depoimento</p>
-              <TestimonialSubmit profileHandle={handle} />
-            </div>
-          )}
-
-          {!isSignedIn && (
-            <p className="mt-4 text-sm text-white/36">
-              <Link to="/entrar" className="text-[#F2BD8A] hover:underline">Entre na plataforma</Link> para deixar um depoimento.
-            </p>
-          )}
-        </div>
+            {!isSignedIn && (
+              <p className="mt-4 text-sm text-white/36">
+                <Link to="/entrar" className="text-[#F2BD8A] hover:underline">Entre na plataforma</Link> para deixar um depoimento.
+              </p>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )

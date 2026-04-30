@@ -52,6 +52,18 @@ interface YTPlayer {
   pauseVideo: () => void
   seekTo: (seconds: number, allowSeekAhead: boolean) => void
   destroy: () => void
+  setPlaybackRate: (rate: number) => void
+  getPlaybackRate: () => number
+}
+
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
+const PLAYBACK_RATE_STORAGE_KEY = 'rdt_player_rate'
+
+function readSavedPlaybackRate(): number {
+  if (typeof window === 'undefined') return 1
+  const raw = window.localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY)
+  const n = raw ? Number(raw) : NaN
+  return PLAYBACK_RATES.includes(n as (typeof PLAYBACK_RATES)[number]) ? n : 1
 }
 
 function extractYouTubeId(url: string): string | null {
@@ -116,6 +128,7 @@ function VideoPlayer({
   const [maxWatched, setMaxWatched] = useState(initialWatched)
   const [overlayVisible, setOverlayVisible] = useState(true)
   const [blockToast, setBlockToast] = useState(false)
+  const [playbackRate, setPlaybackRate] = useState<number>(() => readSavedPlaybackRate())
 
   const videoId = extractYouTubeId(youtubeUrl)
 
@@ -160,6 +173,15 @@ function VideoPlayer({
           if (playerHandleRef) playerHandleRef.current = e.target
           const d = e.target.getDuration()
           if (d > 0) setDuration(d)
+          const saved = readSavedPlaybackRate()
+          if (saved !== 1) {
+            try {
+              e.target.setPlaybackRate(saved)
+            } catch {
+              // ignora — algumas instancias do YT.Player ainda nao expuseram
+              // setPlaybackRate quando onReady dispara em conexoes lentas.
+            }
+          }
         },
         onStateChange: (e) => {
           if (e.data === window.YT.PlayerState.PLAYING) {
@@ -264,6 +286,36 @@ function VideoPlayer({
     else playerRef.current.playVideo()
   }
 
+  // Pula 10s para tras (sempre permitido). Se o aluno apertar 'J' no teclado,
+  // recua dentro do que ja foi assistido. Nao mexe em maxWatched.
+  function seekRelative(deltaSeconds: number) {
+    if (!playerRef.current) return
+    const now = playerRef.current.getCurrentTime()
+    const next = Math.max(0, now + deltaSeconds)
+    if (deltaSeconds > 0 && next > maxWatchedRef.current + 1) {
+      flashBlockToast()
+      return
+    }
+    const clamped = Math.min(next, maxWatchedRef.current)
+    playerRef.current.seekTo(clamped, true)
+    setCurrentTime(clamped)
+  }
+
+  function cyclePlaybackRate() {
+    if (!playerRef.current) return
+    const idx = PLAYBACK_RATES.indexOf(playbackRate as (typeof PLAYBACK_RATES)[number])
+    const next = PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length]
+    setPlaybackRate(next)
+    try {
+      playerRef.current.setPlaybackRate(next)
+    } catch {
+      // ignora
+    }
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, String(next))
+    }
+  }
+
   function seekFromPointer(clientX: number) {
     if (!barRef.current || !playerRef.current) return
     const rect = barRef.current.getBoundingClientRect()
@@ -323,6 +375,43 @@ function VideoPlayer({
     // é zerado (retry de quiz) ou a aula muda.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initPlayer, resetKey])
+
+  // Atalhos de teclado: espaco/K = play/pause; J = -10s; L = +10s; setas = +/-5s.
+  // Ignora se o foco estiver em campo de texto (nota, comentario etc.).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const tag = target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
+        e.preventDefault()
+        togglePlay()
+        showOverlayTemporarily()
+      } else if (e.key === 'j' || e.key === 'J') {
+        e.preventDefault()
+        seekRelative(-10)
+        showOverlayTemporarily()
+      } else if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault()
+        seekRelative(10)
+        showOverlayTemporarily()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        seekRelative(-5)
+        showOverlayTemporarily()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        seekRelative(5)
+        showOverlayTemporarily()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!videoId) {
     return (
@@ -418,9 +507,20 @@ function VideoPlayer({
               </svg>
             )}
           </button>
-          <span className="tabular-nums tracking-wide text-white/90">
-            {formatClock(currentTime)} / {formatClock(safeDuration)}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={cyclePlaybackRate}
+              className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-white/90 transition-colors hover:bg-white/20"
+              aria-label="Alterar velocidade de reprodução"
+              title="Velocidade"
+            >
+              {playbackRate}x
+            </button>
+            <span className="tabular-nums tracking-wide text-white/90">
+              {formatClock(currentTime)} / {formatClock(safeDuration)}
+            </span>
+          </div>
         </div>
       </div>
     </div>

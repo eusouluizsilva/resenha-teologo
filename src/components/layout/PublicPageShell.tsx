@@ -81,7 +81,7 @@ export function PublicPageShell({ children, bare = false }: PublicPageShellProps
 
       <DashboardSidebar isMobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
-      <main className={cn('relative min-h-screen lg:pl-72')}>
+      <main id="main-content" className={cn('relative min-h-screen lg:pl-72')}>
         {/* Sino fixo no canto superior direito no desktop, igual DashboardLayout. */}
         <div className="pointer-events-none absolute right-6 top-6 z-30 hidden sm:right-8 sm:top-8 lg:right-12 lg:top-12 lg:block">
           <div className="pointer-events-auto">

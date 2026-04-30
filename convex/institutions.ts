@@ -97,6 +97,12 @@ export const update = mutation({
     denomination: v.optional(v.string()),
     denominationName: v.optional(v.string()),
     responsibleRole: v.optional(v.string()),
+    // Branding institucional. themeColor é o accent (#hex) que substitui
+    // #F37E20 nas páginas internas da instituição. logoUrl aparece no topo
+    // do painel. description é mostrada na futura página pública.
+    themeColor: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
   },
   handler: async (ctx, { institutionId, ...fields }) => {
     const identity = await requireIdentity(ctx)
@@ -110,6 +116,28 @@ export const update = mutation({
 
     if (!membership || !['dono', 'admin'].includes(membership.role)) {
       throw new Error('Sem permissão para editar esta instituição')
+    }
+
+    if (fields.themeColor !== undefined) {
+      const c = fields.themeColor.trim()
+      if (c && !/^#[0-9a-fA-F]{6}$/.test(c)) {
+        throw new Error('Cor inválida. Use formato hex #RRGGBB.')
+      }
+      fields.themeColor = c || undefined
+    }
+    if (fields.logoUrl !== undefined) {
+      const u = fields.logoUrl.trim()
+      if (u && !/^https?:\/\//i.test(u)) {
+        throw new Error('URL de logo inválida. Use http(s)://')
+      }
+      fields.logoUrl = u || undefined
+    }
+    if (fields.description !== undefined) {
+      const d = fields.description.trim()
+      if (d.length > 1000) {
+        throw new Error('Descrição muito longa (máximo 1000 caracteres).')
+      }
+      fields.description = d || undefined
     }
 
     await ctx.db.patch(institutionId, fields)
@@ -209,6 +237,100 @@ export const createInvite = mutation({
     })
 
     return inviteId
+  },
+})
+
+// Convite em massa: recebe lista de emails (até 200 por chamada), valida cada
+// um e cria convites pendentes. Retorna agregado de criados, ignorados (já
+// pendentes), inválidos e duplicados dentro do CSV. Pula emails que já têm
+// convite pendente vivo OU já são membros ativos da instituição. Limite de
+// 200 evita falhas de timeout: para listas maiores, o front quebra em
+// blocos sequenciais.
+export const createInvitesBulk = mutation({
+  args: {
+    institutionId: v.id('institutions'),
+    emails: v.array(v.string()),
+  },
+  handler: async (ctx, { institutionId, emails }) => {
+    const identity = await requireIdentity(ctx)
+    await requireAdmin(ctx, institutionId, identity.subject)
+
+    if (emails.length === 0) {
+      return { created: 0, alreadyInvited: 0, alreadyMember: 0, invalid: 0, duplicates: 0 }
+    }
+    if (emails.length > 200) {
+      throw new Error('Máximo de 200 emails por importação. Quebre o CSV em blocos.')
+    }
+
+    const now = Date.now()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    const seen = new Set<string>()
+    const valid: string[] = []
+    let invalid = 0
+    let duplicates = 0
+    for (const raw of emails) {
+      const normalized = raw.trim().toLowerCase()
+      if (!normalized) continue
+      if (!emailRegex.test(normalized)) {
+        invalid++
+        continue
+      }
+      if (seen.has(normalized)) {
+        duplicates++
+        continue
+      }
+      seen.add(normalized)
+      valid.push(normalized)
+    }
+
+    const existingInvites = await ctx.db
+      .query('institutionInvites')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .collect()
+    const pendingEmails = new Set(
+      existingInvites
+        .filter((i) => i.status === 'pendente' && i.expiresAt > now)
+        .map((i) => i.email),
+    )
+
+    const memberRows = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .filter((q) => q.eq(q.field('status'), 'ativo'))
+      .collect()
+    const memberClerkIds = new Set(memberRows.map((m) => m.userId))
+
+    let created = 0
+    let alreadyInvited = 0
+    let alreadyMember = 0
+
+    for (const email of valid) {
+      if (pendingEmails.has(email)) {
+        alreadyInvited++
+        continue
+      }
+      const existingUser = await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', email))
+        .unique()
+      if (existingUser && memberClerkIds.has(existingUser.clerkId)) {
+        alreadyMember++
+        continue
+      }
+      await ctx.db.insert('institutionInvites', {
+        institutionId,
+        email,
+        token: generateInviteToken(),
+        sentAt: now,
+        expiresAt: now + INVITE_TTL_MS,
+        status: 'pendente',
+        sentByUserId: identity.subject,
+      })
+      created++
+    }
+
+    return { created, alreadyInvited, alreadyMember, invalid, duplicates }
   },
 })
 

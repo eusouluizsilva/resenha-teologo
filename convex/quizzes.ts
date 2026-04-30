@@ -1,18 +1,20 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
+import { canEditCourse, requireUserFunction } from './lib/auth'
 
 export const getByLesson = query({
   args: { lessonId: v.id('lessons'), creatorId: v.string() },
-  handler: async (ctx, { lessonId, creatorId }) => {
+  handler: async (ctx, { lessonId }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
+
+    const lesson = await ctx.db.get(lessonId)
+    if (!lesson) return null
+    if (!(await canEditCourse(ctx, lesson.courseId, identity.subject))) return null
 
     const quiz = await ctx.db
       .query('quizzes')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', lessonId))
       .first()
-    if (!quiz || quiz.creatorId !== identity.subject) return null
     return quiz
   },
 })
@@ -34,10 +36,12 @@ export const upsert = mutation({
   },
   handler: async (ctx, args) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, args.creatorId)
 
     const lesson = await ctx.db.get(args.lessonId)
-    if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
+    if (!lesson) throw new Error('Não autorizado')
+    if (!(await canEditCourse(ctx, lesson.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
     if (lesson.courseId !== args.courseId) throw new Error('Curso inválido')
 
     // Regra do produto: quizzes regulares devem ter pelo menos 5 perguntas.
@@ -70,24 +74,29 @@ export const upsert = mutation({
       await ctx.db.patch(existing._id, { questions: args.questions })
       return existing._id
     }
+    const { creatorId: _ownerHint, ...rest } = args
+    void _ownerHint
     return await ctx.db.insert('quizzes', {
-      ...args,
-      creatorId: identity.subject,
+      ...rest,
+      creatorId: lesson.creatorId,
     })
   },
 })
 
 export const remove = mutation({
   args: { lessonId: v.id('lessons'), creatorId: v.string() },
-  handler: async (ctx, { lessonId, creatorId }) => {
+  handler: async (ctx, { lessonId }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
+
+    const lesson = await ctx.db.get(lessonId)
+    if (!lesson) return
+    if (!(await canEditCourse(ctx, lesson.courseId, identity.subject))) return
 
     const quiz = await ctx.db
       .query('quizzes')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', lessonId))
       .first()
-    if (!quiz || quiz.creatorId !== identity.subject) return
+    if (!quiz) return
     await ctx.db.delete(quiz._id)
   },
 })

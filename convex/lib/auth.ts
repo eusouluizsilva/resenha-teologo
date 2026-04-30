@@ -145,3 +145,26 @@ export async function requireCourseAccess(
 
   return { identity, course, role: 'aluno' as const, enrollment }
 }
+
+// Verifica se um usuário pode editar o conteúdo de um curso (módulos, aulas,
+// quiz, materiais). Retorna true para o dono do curso OU para co-autor com
+// role 'editor'. NÃO autoriza publicar curso, excluir curso ou alterar
+// configurações de cobrança e visibilidade — isso permanece exclusivo do dono
+// (verificar creatorId === identity.subject diretamente nessas mutations).
+export async function canEditCourse(
+  ctx: Ctx,
+  courseId: Id<'courses'>,
+  userId: string,
+): Promise<boolean> {
+  const course = await ctx.db.get(courseId)
+  if (!course) return false
+  if (course.creatorId === userId) return true
+  const coauthor = await ctx.db
+    .query('courseCoauthors')
+    .withIndex('by_course_user', (q) =>
+      q.eq('courseId', courseId).eq('userId', userId),
+    )
+    .unique()
+  return !!coauthor && coauthor.role === 'editor'
+}
+

@@ -139,8 +139,9 @@ export const setStatus = mutation({
       v.literal('refunded'),
     ),
     trackingCode: v.optional(v.string()),
+    trackingUrl: v.optional(v.string()),
   },
-  handler: async (ctx, { orderId, status, trackingCode }) => {
+  handler: async (ctx, { orderId, status, trackingCode, trackingUrl }) => {
     const identity = await requireIdentity(ctx)
     const order = await ctx.db.get(orderId)
     if (!order) throw new Error('Pedido não encontrado')
@@ -152,9 +153,48 @@ export const setStatus = mutation({
     const patch: Partial<Doc<'orders'>> = { status, updatedAt: now }
     if (status === 'paid' && !order.paidAt) patch.paidAt = now
     if (status === 'shipped') {
-      patch.shippedAt = now
+      if (!order.shippedAt) patch.shippedAt = now
       if (trackingCode) patch.trackingCode = trackingCode
+      if (trackingUrl) patch.trackingUrl = trackingUrl
     }
+    if (status === 'delivered' && !order.deliveredAt) patch.deliveredAt = now
+    if (status === 'cancelled' && !order.cancelledAt) patch.cancelledAt = now
     await ctx.db.patch(orderId, patch)
+  },
+})
+
+// Detalhe do pedido para o comprador (timeline + dados de entrega).
+export const getMine = query({
+  args: { orderId: v.id('orders') },
+  handler: async (ctx, { orderId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+    const order = await ctx.db.get(orderId)
+    if (!order) return null
+    if (order.userId !== identity.subject) return null
+
+    const creator = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', order.creatorId))
+      .unique()
+
+    const products = await Promise.all(
+      order.items.map(async (it) => {
+        const p = await ctx.db.get(it.productId)
+        return {
+          ...it,
+          slug: p?.slug ?? null,
+          coverUrl: p?.coverUrl ?? null,
+        }
+      }),
+    )
+
+    return {
+      ...order,
+      items: products,
+      creatorName: creator?.name ?? 'Criador',
+      creatorHandle: creator?.handle ?? null,
+      creatorEmail: creator?.email ?? null,
+    }
   },
 })

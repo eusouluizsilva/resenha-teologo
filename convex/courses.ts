@@ -92,6 +92,9 @@ export const update = mutation({
     visibility: v.optional(v.union(v.literal('public'), v.literal('institution'))),
     expectedTotalLessons: v.optional(v.number()),
     nextLessonScheduleText: v.optional(v.string()),
+    faq: v.optional(
+      v.array(v.object({ question: v.string(), answer: v.string() })),
+    ),
   },
   handler: async (ctx, { id, creatorId, ...fields }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
@@ -102,6 +105,23 @@ export const update = mutation({
 
     if (fields.nextLessonScheduleText !== undefined && fields.nextLessonScheduleText.length > 200) {
       throw new Error('Texto do cronograma não pode passar de 200 caracteres.')
+    }
+
+    if (fields.faq !== undefined) {
+      if (fields.faq.length > 12) {
+        throw new Error('Máximo de 12 perguntas no FAQ.')
+      }
+      for (const entry of fields.faq) {
+        if (!entry.question.trim() || !entry.answer.trim()) {
+          throw new Error('Pergunta e resposta não podem ficar vazias.')
+        }
+        if (entry.question.length > 200) {
+          throw new Error('Cada pergunta deve ter no máximo 200 caracteres.')
+        }
+        if (entry.answer.length > 800) {
+          throw new Error('Cada resposta deve ter no máximo 800 caracteres.')
+        }
+      }
     }
 
     if (fields.passingScore !== undefined) {

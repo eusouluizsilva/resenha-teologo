@@ -22,6 +22,15 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    if (!menuOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -16 }}
@@ -45,7 +54,7 @@ export function Navbar() {
             />
           </Link>
 
-          <nav className="hidden items-center gap-7 md:flex">
+          <nav aria-label="Navegação principal" className="hidden items-center gap-7 md:flex">
             {SECTIONS.map((section) =>
               onHome ? (
                 <a

@@ -122,12 +122,27 @@ export const listNotebookEntries = query({
       entries.map(async (entry) => {
         const lesson = await ctx.db.get(entry.lessonId)
         const course = entry.courseId ? await ctx.db.get(entry.courseId) : null
+        // Anotacoes timestampadas da mesma aula. O Caderno mostra junto da
+        // entrada para o aluno reconstituir o estudo completo da aula.
+        const timestamps = await ctx.db
+          .query('lessonTimestamps')
+          .withIndex('by_student_lesson', (q) =>
+            q.eq('studentId', identity.subject).eq('lessonId', entry.lessonId),
+          )
+          .collect()
         return {
           ...entry,
           lessonTitle: lesson?.title ?? 'Aula removida',
           lessonSlug: lesson?.slug,
           courseTitle: course?.title ?? 'Curso removido',
           courseSlug: course?.slug,
+          timestamps: timestamps
+            .sort((a, b) => a.timestampSeconds - b.timestampSeconds)
+            .map((t) => ({
+              _id: t._id,
+              timestampSeconds: t.timestampSeconds,
+              note: t.note,
+            })),
         }
       })
     )

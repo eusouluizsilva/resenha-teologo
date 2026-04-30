@@ -442,3 +442,48 @@ Deploy:    a definir
 - [ ] Claude faz as perguntas necessárias
 - [ ] Definir arquitetura completa
 - [ ] Iniciar desenvolvimento pela Fase 1
+
+---
+
+## Pendências Atuais (snapshot 2026-04-30)
+
+> Lista consolidada de tudo que ainda falta para a plataforma rodar 100% em produção. Atualizar conforme cada item for resolvido. As 33 melhorias internas de UX (TaskList) foram concluídas; o que sobra agora depende de credenciais externas, ações de plataformas terceiras ou decisões de produto.
+
+### Bloqueadores de receita (prioridade máxima)
+
+- [ ] **Stripe Live mode** — ativação iniciada 2026-04-29 (sole proprietor US). Parou na etapa de produtos/site. Bloqueia: certificado pago R$29,90, assinatura premium aluno, criador sem ads, plano igreja, loja online.
+- [ ] **Pix no Stripe** — habilitar como método de pagamento depois que o Live mode estiver ativo. Necessário para o público brasileiro.
+- [ ] **AdSense — destravar conta** — caso de duplicate regrediu em 2026-04-28 (sistema automático reverteu). Precisa postar update na thread original e aguardar revisão humana.
+- [ ] **Cloudflare R2** — backend `convex/r2.ts` pronto desde 2026-04-28. Falta usuário criar bucket + token de acesso no dashboard Cloudflare e colar credenciais no Convex.
+
+### AdSense — repasse para criadores (4 fases)
+
+- [x] Privacy policy + termos publicados
+- [ ] Conta Google AdSense ativa e aprovada (depende de destravar primeiro)
+- [ ] Conectar slots de anúncio nas páginas (`<AdSlot>` já implementado, falta `client` real)
+- [ ] Revenue share automático por criador (impressões já são contabilizadas em `adImpressions`; falta cron de fechamento mensal + relatório)
+
+### Operacional / Infra
+
+- [ ] **Convex Free plan** — covers ainda servidos pelo Convex (lazy loading aplicado). Próximo corte: migrar covers de curso/post para R2 público para sair de uma vez do limite gratuito.
+- [ ] **Endereço Google Payments** — atualizar de Marlborough MA para Westborough MA (endereço residencial atual).
+- [ ] **GSC indexação** — plano de 4 dias iniciado 2026-04-29; submeter URLs diariamente até cobrir todas as páginas públicas.
+
+### Funcionalidades aprovadas aguardando implementação
+
+- [ ] **Biblioteca de playlists YouTube** — aprovado 2026-04-27, escopo admin-only. Implementação em fila depois das pendências de infra.
+- [ ] **% exata do repasse do AdSense para criadores** — modelo conceitual definido (proporcional a impressões/cliques); falta cravar o split (sugestão atual: 50% líquido após taxas).
+- [ ] **Criador cadastra chave PIX no perfil** — campo `pixKey` já existe em `creatorProfiles`; falta UI no painel do criador para editar e fluxo de repasse manual mensal.
+
+### Decisões de produto pendentes
+
+- [ ] Subdomínio para white label (`criador.resenhadoteologo.com` vs path `/c/criador`)
+- [ ] Quais plataformas de vídeo aceitar além do YouTube (Vimeo já tecnicamente suportado, falta validar UX)
+- [ ] Estratégia detalhada de gamificação além do streak atual (níveis, ranking público, conquistas com badge)
+- [ ] Política de moderação de fórum (quem aprova denúncias, quanto tempo retém soft-deleted, fluxo de banimento)
+- [ ] DMCA / direitos autorais (template de notificação, processo de takedown)
+
+### Próximas fases do roadmap (referência)
+
+- **Fase 4** — White label completo, planos B2B (igreja), gamificação avançada, PWA já parcialmente entregue (cache + offline + install prompt já em produção desde commit `490dfcb`).
+- **Fase 5** — IA Tutor (Anthropic/OpenAI), busca semântica via Convex Vector Search, modo estudo profundo.

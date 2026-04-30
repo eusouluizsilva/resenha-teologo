@@ -41,6 +41,12 @@ type NotebookSummary = {
   updatedAt?: number
 }
 
+type TimestampEntry = {
+  _id: Id<'lessonTimestamps'>
+  timestampSeconds: number
+  note: string
+}
+
 type EnrichedEntry = {
   _id: Id<'notebookEntries'>
   _creationTime: number
@@ -50,6 +56,16 @@ type EnrichedEntry = {
   courseSlug?: string
   content: string
   updatedAt?: number
+  timestamps?: TimestampEntry[]
+}
+
+function formatVideoTimestamp(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  return `${m}:${String(sec).padStart(2, '0')}`
 }
 
 function NotebookCard({
@@ -193,6 +209,23 @@ function ReadingMode({
           <div className="mt-8 whitespace-pre-wrap text-[18px] leading-[1.8] text-[#1F2937]">
             {entry.content || '(sem conteúdo)'}
           </div>
+          {entry.timestamps && entry.timestamps.length > 0 && (
+            <div className="mt-10 rounded-2xl border border-black/8 bg-white p-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
+                Anotações por momento
+              </p>
+              <ul className="mt-4 space-y-4">
+                {entry.timestamps.map((t) => (
+                  <li key={t._id} className="flex gap-4 text-base leading-7 text-[#1F2937]">
+                    <span className="mt-1 shrink-0 rounded-full border border-[#F37E20]/30 bg-[#F37E20]/10 px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#F37E20]">
+                      {formatVideoTimestamp(t.timestampSeconds)}
+                    </span>
+                    <span className="whitespace-pre-wrap font-serif">{t.note}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {entry.courseSlug && entry.lessonSlug && (
             <Link
               to={`/dashboard/meus-cursos/${entry.courseSlug}/aula/${entry.lessonSlug}`}
@@ -382,6 +415,23 @@ function NotebookDetail({
                     </div>
                     <p className="mt-0.5 text-xs uppercase tracking-[0.14em] text-white/36">{entry.courseTitle}</p>
                     <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/78">{entry.content}</p>
+                    {entry.timestamps && entry.timestamps.length > 0 && (
+                      <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/36">
+                          Anotações por momento ({entry.timestamps.length})
+                        </p>
+                        <ul className="mt-2 space-y-2">
+                          {entry.timestamps.map((t) => (
+                            <li key={t._id} className="flex gap-3 text-sm leading-6 text-white/72">
+                              <span className="mt-0.5 shrink-0 rounded-full border border-[#F37E20]/24 bg-[#F37E20]/10 px-2 py-0.5 text-[11px] font-bold tabular-nums text-[#F2BD8A]">
+                                {formatVideoTimestamp(t.timestampSeconds)}
+                              </span>
+                              <span className="whitespace-pre-wrap">{t.note}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <div className="mt-3 flex flex-wrap items-center gap-3">
                       <button
                         type="button"

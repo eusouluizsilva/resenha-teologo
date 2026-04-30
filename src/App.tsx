@@ -7,6 +7,7 @@ import { LandingPage } from '@/pages/LandingPage'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { CookieBanner } from '@/components/CookieBanner'
+import { CommandPalette } from '@/components/CommandPalette'
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
 import { PWAUpdateNotification } from '@/components/PWAUpdateNotification'
 import { useCurrentAppUser } from '@/lib/currentUser'
@@ -47,6 +48,26 @@ const EditarInfoCursoPage = lazy(() =>
 )
 const EditarAulaPage = lazy(() =>
   import('@/pages/dashboard/criador/EditarAulaPage').then((m) => ({ default: m.EditarAulaPage })),
+)
+const LessonPreviewCreatorPage = lazy(() =>
+  import('@/pages/dashboard/criador/LessonPreviewCreatorPage').then((m) => ({
+    default: m.LessonPreviewCreatorPage,
+  })),
+)
+const MetricasCursoPage = lazy(() =>
+  import('@/pages/dashboard/criador/MetricasCursoPage').then((m) => ({
+    default: m.MetricasCursoPage,
+  })),
+)
+const CoautoresPage = lazy(() =>
+  import('@/pages/dashboard/criador/CoautoresPage').then((m) => ({
+    default: m.CoautoresPage,
+  })),
+)
+const CursosCompartilhadosPage = lazy(() =>
+  import('@/pages/dashboard/criador/CursosCompartilhadosPage').then((m) => ({
+    default: m.CursosCompartilhadosPage,
+  })),
 )
 const FinanceiroPage = lazy(() =>
   import('@/pages/dashboard/criador/FinanceiroPage').then((m) => ({ default: m.FinanceiroPage })),
@@ -102,6 +123,12 @@ const CadernoPage = lazy(() =>
 )
 const FlashcardsPage = lazy(() =>
   import('@/pages/dashboard/aluno/FlashcardsPage').then((m) => ({ default: m.FlashcardsPage })),
+)
+const MeusPedidosPage = lazy(() =>
+  import('@/pages/dashboard/aluno/MeusPedidosPage').then((m) => ({ default: m.MeusPedidosPage })),
+)
+const PedidoDetalhePage = lazy(() =>
+  import('@/pages/dashboard/aluno/PedidoDetalhePage').then((m) => ({ default: m.PedidoDetalhePage })),
 )
 const BibliaPage = lazy(() => import('@/pages/dashboard/aluno/BibliaPage'))
 const CursoInternoPage = lazy(() =>
@@ -174,8 +201,36 @@ const RelatoriosPage = lazy(() =>
     default: m.RelatoriosPage,
   })),
 )
+const BrandingPage = lazy(() =>
+  import('@/pages/dashboard/instituicao/BrandingPage').then((m) => ({
+    default: m.BrandingPage,
+  })),
+)
+const CursosObrigatoriosPage = lazy(() =>
+  import('@/pages/dashboard/instituicao/CursosObrigatoriosPage').then((m) => ({
+    default: m.CursosObrigatoriosPage,
+  })),
+)
+const TrilhasPage = lazy(() =>
+  import('@/pages/dashboard/trilhas/TrilhasPage').then((m) => ({
+    default: m.TrilhasPage,
+  })),
+)
+const EditarTrilhaPage = lazy(() =>
+  import('@/pages/dashboard/trilhas/EditarTrilhaPage').then((m) => ({
+    default: m.EditarTrilhaPage,
+  })),
+)
+const TrilhaPublicaPage = lazy(() =>
+  import('@/pages/public/TrilhaPublicaPage').then((m) => ({
+    default: m.TrilhaPublicaPage,
+  })),
+)
 const SobrePage = lazy(() =>
   import('@/pages/public/SobrePage').then((m) => ({ default: m.SobrePage })),
+)
+const StatusPage = lazy(() =>
+  import('@/pages/public/StatusPage').then((m) => ({ default: m.StatusPage })),
 )
 const LojaPage = lazy(() =>
   import('@/pages/public/LojaPage').then((m) => ({ default: m.LojaPage })),
@@ -186,6 +241,11 @@ const ProdutoPage = lazy(() =>
 const MinhaLojaPage = lazy(() =>
   import('@/pages/dashboard/criador/MinhaLojaPage').then((m) => ({
     default: m.MinhaLojaPage,
+  })),
+)
+const BancoQuestoesPage = lazy(() =>
+  import('@/pages/dashboard/criador/BancoQuestoesPage').then((m) => ({
+    default: m.BancoQuestoesPage,
   })),
 )
 const NotFoundPage = lazy(() =>
@@ -360,8 +420,12 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter>
+      <a href="#main-content" className="skip-to-content">
+        Pular para o conteúdo
+      </a>
       <RouteTracker />
       <CookieBanner />
+      <CommandPalette />
       <PWAInstallPrompt />
       <PWAUpdateNotification />
       <AnimatePresence mode="wait">
@@ -378,8 +442,10 @@ export default function App() {
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
           <Route path="/convite/:token" element={<AcceptInvitePage />} />
           <Route path="/sobre" element={<SobrePage />} />
+          <Route path="/status" element={<StatusPage />} />
           <Route path="/loja" element={<LojaPage />} />
           <Route path="/loja/:slug" element={<ProdutoPage />} />
+          <Route path="/trilhas/:slug" element={<TrilhaPublicaPage />} />
 
           {/* Blog público (precisa vir antes de /:handle, que é catch-all) */}
           <Route path="/blog" element={<BlogIndexPage />} />
@@ -408,10 +474,15 @@ export default function App() {
             <Route path="cursos/:id" element={<RequireFunction allowed={['criador']}><EditarInfoCursoPage /></RequireFunction>} />
             <Route path="cursos/:id/modulos" element={<RequireFunction allowed={['criador']}><EditarCursoPage /></RequireFunction>} />
             <Route path="cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['criador']}><EditarAulaPage /></RequireFunction>} />
+            <Route path="cursos/:courseId/aula/:lessonId/preview" element={<RequireFunction allowed={['criador']}><LessonPreviewCreatorPage /></RequireFunction>} />
+            <Route path="cursos/:courseId/metricas" element={<RequireFunction allowed={['criador']}><MetricasCursoPage /></RequireFunction>} />
+            <Route path="cursos/:courseId/coautores" element={<RequireFunction allowed={['criador']}><CoautoresPage /></RequireFunction>} />
+            <Route path="cursos-compartilhados" element={<RequireFunction allowed={['criador']}><CursosCompartilhadosPage /></RequireFunction>} />
             <Route path="alunos" element={<RequireFunction allowed={['criador']}><AlunosPage /></RequireFunction>} />
             <Route path="perguntas" element={<RequireFunction allowed={['criador']}><PerguntasPage /></RequireFunction>} />
             <Route path="financeiro" element={<RequireFunction allowed={['criador']}><FinanceiroPage /></RequireFunction>} />
             <Route path="minha-loja" element={<RequireFunction allowed={['criador']}><MinhaLojaPage /></RequireFunction>} />
+            <Route path="banco-questoes" element={<RequireFunction allowed={['criador']}><BancoQuestoesPage /></RequireFunction>} />
 
             {/* Aluno */}
             <Route path="meus-cursos" element={<RequireFunction allowed={['aluno']}><MeusCursosPage /></RequireFunction>} />
@@ -422,12 +493,18 @@ export default function App() {
             <Route path="caderno" element={<RequireFunction allowed={['aluno']}><CadernoPage /></RequireFunction>} />
             <Route path="flashcards" element={<RequireFunction allowed={['aluno']}><FlashcardsPage /></RequireFunction>} />
             <Route path="biblia" element={<BibliaPage />} />
+            <Route path="pedidos" element={<MeusPedidosPage />} />
+            <Route path="pedidos/:orderId" element={<PedidoDetalhePage />} />
 
             {/* Instituição */}
             <Route path="painel-instituicao" element={<RequireFunction allowed={['instituicao']}><InstituicaoDashboardPage /></RequireFunction>} />
             <Route path="membros" element={<RequireFunction allowed={['instituicao']}><MembrosPage /></RequireFunction>} />
             <Route path="cursos-instituicao" element={<RequireFunction allowed={['instituicao']}><CursosInstituicaoPage /></RequireFunction>} />
             <Route path="relatorios" element={<RequireFunction allowed={['instituicao']}><RelatoriosPage /></RequireFunction>} />
+            <Route path="branding" element={<RequireFunction allowed={['instituicao']}><BrandingPage /></RequireFunction>} />
+            <Route path="cursos-obrigatorios" element={<RequireFunction allowed={['instituicao']}><CursosObrigatoriosPage /></RequireFunction>} />
+            <Route path="trilhas" element={<RequireFunction allowed={['instituicao', 'criador']}><TrilhasPage /></RequireFunction>} />
+            <Route path="trilhas/:id" element={<RequireFunction allowed={['instituicao', 'criador']}><EditarTrilhaPage /></RequireFunction>} />
 
             {/* Blog (autoria) — disponível para qualquer função, gating é feito no
                 IdentitySelector dentro do editor (que só lista identidades válidas) */}

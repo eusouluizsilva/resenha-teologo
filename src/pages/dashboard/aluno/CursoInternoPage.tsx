@@ -5,6 +5,7 @@ import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 import { CourseForum } from '@/components/courseForum/CourseForum'
+import { CourseRatingModal } from '@/components/aluno/CourseRatingModal'
 
 type LessonWithSlug = {
   _id: string
@@ -136,6 +137,8 @@ export function CursoInternoPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [showSuccess, setShowSuccess] = useState(false)
+  const [ratingOpen, setRatingOpen] = useState(false)
+  const [ratingDismissed, setRatingDismissed] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('matriculado') === '1') {
@@ -159,11 +162,28 @@ export function CursoInternoPage() {
     resolvedCourseId ? { courseId: resolvedCourseId as Id<'courses'> } : 'skip'
   )
 
+  const myCourseRating = useQuery(
+    api.student.getMyCourseRating,
+    resolvedCourseId ? { courseId: resolvedCourseId as Id<'courses'> } : 'skip',
+  )
+
   useEffect(() => {
     if (data === null && rawCourseId) {
       navigate(`/cursos/${rawCourseId}`, { replace: true })
     }
   }, [data, rawCourseId, navigate])
+
+  useEffect(() => {
+    if (
+      data &&
+      data.enrollment.certificateIssued &&
+      myCourseRating === null &&
+      !ratingDismissed &&
+      !ratingOpen
+    ) {
+      setRatingOpen(true)
+    }
+  }, [data, myCourseRating, ratingDismissed, ratingOpen])
 
   if (data === undefined || (rawCourseId?.includes('-') && slugLookup === undefined)) {
     return (
@@ -408,6 +428,81 @@ export function CursoInternoPage() {
               )}
             </div>
 
+            {enrollment.certificateIssued && course.category && (
+              <div className="rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/5 p-5 shadow-sm">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#B5560F]">Próximos passos</p>
+                <p className="text-sm leading-6 text-gray-700">
+                  Você concluiu este curso. Continue aprendendo com outros estudos de
+                  <span className="font-semibold"> {course.category}</span>.
+                </p>
+                <Link
+                  to={`/cursos?categoria=${encodeURIComponent(course.category)}`}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F37E20] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#e06e10]"
+                >
+                  Ver mais cursos
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+              </div>
+            )}
+
+            {enrollment.certificateIssued && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {myCourseRating ? 'Sua avaliação' : 'Avalie este curso'}
+                </p>
+                {myCourseRating ? (
+                  <>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <svg
+                          key={n}
+                          className={cn(
+                            'h-5 w-5',
+                            myCourseRating.stars >= n
+                              ? 'fill-[#F37E20] text-[#F37E20]'
+                              : 'fill-transparent text-gray-300',
+                          )}
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                        </svg>
+                      ))}
+                    </div>
+                    {myCourseRating.review ? (
+                      <p className="mt-3 text-sm leading-6 text-gray-700">"{myCourseRating.review}"</p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setRatingOpen(true)}
+                      className="mt-4 text-xs font-semibold text-[#B5560F] hover:underline"
+                    >
+                      Editar avaliação
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm leading-6 text-gray-700">
+                      Compartilhe o que achou do curso. Sua opinião ajuda outros alunos.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRatingDismissed(false)
+                        setRatingOpen(true)
+                      }}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#F37E20]/30 bg-white px-4 py-2.5 text-sm font-semibold text-[#B5560F] transition-all hover:bg-[#F37E20]/5"
+                    >
+                      Avaliar agora
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Criador */}
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Professor</p>
@@ -428,6 +523,20 @@ export function CursoInternoPage() {
           </div>
         </div>
       </main>
+
+      {resolvedCourseId ? (
+        <CourseRatingModal
+          open={ratingOpen}
+          onClose={() => {
+            setRatingOpen(false)
+            setRatingDismissed(true)
+          }}
+          courseId={resolvedCourseId as Id<'courses'>}
+          courseTitle={course.title}
+          initialStars={myCourseRating?.stars ?? null}
+          initialReview={myCourseRating?.review ?? null}
+        />
+      ) : null}
     </div>
   )
 }

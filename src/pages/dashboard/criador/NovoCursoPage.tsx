@@ -8,6 +8,7 @@ import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
 import { DashboardPageShell, DashboardSectionLabel } from '@/components/dashboard/PageShell'
+import { TemplatePicker } from '@/components/criador/TemplatePicker'
 
 const categories = [
   'Teologia Sistemática', 'Hermenêutica', 'Antigo Testamento', 'Novo Testamento',
@@ -157,7 +158,14 @@ export function NovoCursoPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white/72">Descrição</label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-sm font-medium text-white/72">Descrição</label>
+              <TemplatePicker
+                kind="course_description"
+                currentValue={form.description}
+                onApply={(body) => setForm((prev) => ({ ...prev, description: body }))}
+              />
+            </div>
             <textarea
               name="description"
               value={form.description}

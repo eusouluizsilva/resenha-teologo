@@ -189,6 +189,7 @@ export function SobrePage() {
                 src="/fotos/luiz.jpg"
                 alt="Luiz Carlos da Silva Junior, fundador da Resenha do Teólogo"
                 loading="lazy"
+                decoding="async"
                 className="aspect-[3/4] w-full object-cover"
                 onError={(e) => {
                   const target = e.currentTarget

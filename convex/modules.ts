@@ -1,15 +1,13 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
+import { canEditCourse, requireUserFunction } from './lib/auth'
 
 export const listByCourse = query({
   args: { courseId: v.id('courses'), creatorId: v.string() },
-  handler: async (ctx, { courseId, creatorId }) => {
+  handler: async (ctx, { courseId }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
-    const course = await ctx.db.get(courseId)
-    if (!course || course.creatorId !== identity.subject) return []
+    if (!(await canEditCourse(ctx, courseId, identity.subject))) return []
 
     return await ctx.db
       .query('modules')
@@ -28,14 +26,19 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, args.creatorId)
 
     const course = await ctx.db.get(args.courseId)
-    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
+    if (!course || !(await canEditCourse(ctx, args.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
 
     const moduleId = await ctx.db.insert('modules', {
-      ...args,
-      creatorId: identity.subject,
+      courseId: args.courseId,
+      title: args.title,
+      order: args.order,
+      // Sempre o dono do curso, independente de quem (co-autor) está criando.
+      // Garante consistência das queries multi-tenant que filtram por creatorId.
+      creatorId: course.creatorId,
     })
     await ctx.db.patch(args.courseId, { totalModules: course.totalModules + 1 })
     return moduleId
@@ -49,24 +52,54 @@ export const update = mutation({
     title: v.optional(v.string()),
     order: v.optional(v.number()),
   },
-  handler: async (ctx, { id, creatorId, ...fields }) => {
+  handler: async (ctx, { id, creatorId: _ownerHint, ...patch }) => {
+    void _ownerHint
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
     const mod = await ctx.db.get(id)
-    if (!mod || mod.creatorId !== identity.subject) throw new Error('Não autorizado')
-    await ctx.db.patch(id, fields)
+    if (!mod || !(await canEditCourse(ctx, mod.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
+    await ctx.db.patch(id, patch)
+  },
+})
+
+export const reorder = mutation({
+  args: {
+    courseId: v.id('courses'),
+    creatorId: v.string(),
+    orderedIds: v.array(v.id('modules')),
+  },
+  handler: async (ctx, { courseId, orderedIds }) => {
+    const { identity } = await requireUserFunction(ctx, ['criador'])
+    if (!(await canEditCourse(ctx, courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
+
+    const all = await ctx.db
+      .query('modules')
+      .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+      .collect()
+    const allIds = new Set(all.map((m) => m._id))
+    if (orderedIds.length !== all.length || !orderedIds.every((id) => allIds.has(id))) {
+      throw new Error('Lista de módulos inválida.')
+    }
+
+    for (let i = 0; i < orderedIds.length; i++) {
+      await ctx.db.patch(orderedIds[i], { order: i + 1 })
+    }
   },
 })
 
 export const remove = mutation({
   args: { id: v.id('modules'), creatorId: v.string() },
-  handler: async (ctx, { id, creatorId }) => {
+  handler: async (ctx, { id }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
     const mod = await ctx.db.get(id)
-    if (!mod || mod.creatorId !== identity.subject) throw new Error('Não autorizado')
+    if (!mod || !(await canEditCourse(ctx, mod.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
 
     const lessons = await ctx.db
       .query('lessons')

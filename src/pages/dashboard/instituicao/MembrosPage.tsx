@@ -227,6 +227,7 @@ function InstitutionSection({ institutionId }: { institutionId: Id<'institutions
   const institution = useQuery(api.institutions.getById, { institutionId })
 
   const createInvite = useMutation(api.institutions.createInvite)
+  const createInvitesBulk = useMutation(api.institutions.createInvitesBulk)
   const revokeInvite = useMutation(api.institutions.revokeInvite)
   const removeMember = useMutation(api.institutions.removeMember)
 
@@ -234,6 +235,60 @@ function InstitutionSection({ institutionId }: { institutionId: Id<'institutions
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState('')
   const [inviteSuccess, setInviteSuccess] = useState('')
+
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+  const [bulkSending, setBulkSending] = useState(false)
+  const [bulkError, setBulkError] = useState('')
+  const [bulkResult, setBulkResult] = useState<{
+    created: number
+    alreadyInvited: number
+    alreadyMember: number
+    invalid: number
+    duplicates: number
+  } | null>(null)
+
+  function parseEmails(text: string): string[] {
+    return text
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+  }
+
+  const parsedEmails = parseEmails(bulkText)
+  const overLimit = parsedEmails.length > 200
+
+  async function handleBulkFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      setBulkText((prev) => (prev.trim().length > 0 ? `${prev}\n${text}` : text))
+    } catch {
+      setBulkError('Não foi possível ler o arquivo.')
+    } finally {
+      e.target.value = ''
+    }
+  }
+
+  async function handleBulkSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (overLimit || parsedEmails.length === 0) return
+    setBulkSending(true)
+    setBulkError('')
+    setBulkResult(null)
+    try {
+      const res = await createInvitesBulk({ institutionId, emails: parsedEmails })
+      setBulkResult(res)
+      if (res.created > 0) {
+        setBulkText('')
+      }
+    } catch (err) {
+      setBulkError(err instanceof Error ? err.message : 'Falha ao processar a lista.')
+    } finally {
+      setBulkSending(false)
+    }
+  }
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault()
@@ -303,6 +358,94 @@ function InstitutionSection({ institutionId }: { institutionId: Id<'institutions
           </p>
         )}
       </form>
+
+      <div className={cn('p-6', brandPanelClass)}>
+        <button
+          type="button"
+          onClick={() => setBulkOpen((v) => !v)}
+          className="flex w-full items-center justify-between text-left"
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F37E20]/10 text-[#F37E20]">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5M5.25 5.25h13.5a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V6.75a1.5 1.5 0 011.5-1.5z" />
+              </svg>
+            </span>
+            Importar lista (CSV)
+          </span>
+          <span className="text-xs text-white/52">{bulkOpen ? 'Fechar' : 'Abrir'}</span>
+        </button>
+
+        {bulkOpen && (
+          <form onSubmit={handleBulkSubmit} className="mt-5 space-y-3">
+            <p className="text-xs text-white/56">
+              Cole emails (um por linha ou separados por vírgula) ou envie um arquivo
+              {' '}.csv/.txt. Máximo de 200 emails por envio.
+            </p>
+            <textarea
+              rows={6}
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              placeholder={'pessoa1@email.com\npessoa2@email.com'}
+              className={cn(brandInputClass, 'font-mono text-xs')}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-xs font-medium text-white/72 transition-all hover:border-white/22 hover:bg-white/8">
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Carregar arquivo
+                <input type="file" accept=".csv,.txt" onChange={handleBulkFile} className="hidden" />
+              </label>
+              <span className={cn(
+                'text-xs',
+                overLimit ? 'text-red-300' : 'text-white/56',
+              )}>
+                {parsedEmails.length} email(s) {overLimit && '— acima do limite de 200'}
+              </span>
+            </div>
+
+            {bulkError && (
+              <p className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+                {bulkError}
+              </p>
+            )}
+
+            {bulkResult && (
+              <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-3">
+                <p className="mb-2 text-xs font-semibold text-white/82">Resultado</p>
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-emerald-300">
+                    Enviados: {bulkResult.created}
+                  </span>
+                  <span className="rounded-full border border-yellow-400/24 bg-yellow-400/10 px-3 py-1 text-yellow-200">
+                    Já convidados: {bulkResult.alreadyInvited}
+                  </span>
+                  <span className="rounded-full border border-blue-400/24 bg-blue-400/10 px-3 py-1 text-blue-200">
+                    Já membros: {bulkResult.alreadyMember}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/4 px-3 py-1 text-white/62">
+                    Duplicados na lista: {bulkResult.duplicates}
+                  </span>
+                  <span className="rounded-full border border-red-500/24 bg-red-500/10 px-3 py-1 text-red-300">
+                    Inválidos: {bulkResult.invalid}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={bulkSending || overLimit || parsedEmails.length === 0}
+              className={cn(brandPrimaryButtonClass, 'px-5 py-2.5 text-sm')}
+            >
+              {bulkSending
+                ? 'Enviando...'
+                : `Enviar ${parsedEmails.length || ''} convite(s)`}
+            </button>
+          </form>
+        )}
+      </div>
 
       <section>
         <div className="mb-3 flex items-center justify-between">

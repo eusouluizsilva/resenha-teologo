@@ -5,6 +5,8 @@ import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { DashboardSidebar } from './DashboardSidebar'
 import { NotificationsBell } from './NotificationsBell'
+import { MobileBottomNav } from './MobileBottomNav'
+import { StreakIndicator } from '@/components/aluno/StreakIndicator'
 import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { normalizePerfil } from '@/lib/perfil'
@@ -46,6 +48,16 @@ export function DashboardLayout() {
     return () => {
       document.body.style.overflow = original
     }
+  }, [mobileOpen])
+
+  // Fecha o drawer quando o usuário pressiona ESC no mobile.
+  useEffect(() => {
+    if (!mobileOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [mobileOpen])
 
   if (!isLoaded) {
@@ -108,7 +120,10 @@ export function DashboardLayout() {
         <Link to="/" className="inline-flex items-center">
           <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-8 w-auto" />
         </Link>
-        <NotificationsBell />
+        <div className="flex items-center gap-2">
+          <StreakIndicator compact />
+          <NotificationsBell />
+        </div>
       </header>
 
       {/* Scrim do drawer mobile. */}
@@ -122,10 +137,11 @@ export function DashboardLayout() {
 
       <DashboardSidebar isMobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
-      <main className="relative min-h-screen lg:pl-72">
-        <div className="relative min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <main id="main-content" className="relative min-h-screen lg:pl-72">
+        <div className="relative min-h-screen px-4 py-4 pb-24 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8">
           <div className="pointer-events-none absolute right-6 top-6 z-30 hidden sm:right-8 sm:top-8 lg:right-12 lg:top-12 lg:block">
-            <div className="pointer-events-auto">
+            <div className="pointer-events-auto flex items-center gap-3">
+              <StreakIndicator />
               <NotificationsBell />
             </div>
           </div>
@@ -134,6 +150,8 @@ export function DashboardLayout() {
           </div>
         </div>
       </main>
+
+      <MobileBottomNav />
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { v } from 'convex/values'
 import { mutation, query, internalMutation, type MutationCtx } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
-import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
+import { canEditCourse, requireUserFunction } from './lib/auth'
 import { toSlug } from './lib/slug'
 
 // Validador do formato estruturado de versículos (espelha schema.ts).
@@ -16,24 +16,73 @@ const verseRefValidator = v.object({
 
 export const getById = query({
   args: { id: v.id('lessons'), creatorId: v.string() },
-  handler: async (ctx, { id, creatorId }) => {
+  handler: async (ctx, { id }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
     const lesson = await ctx.db.get(id)
-    if (!lesson || lesson.creatorId !== identity.subject) return null
+    if (!lesson) return null
+    if (!(await canEditCourse(ctx, lesson.courseId, identity.subject))) return null
     return lesson
+  },
+})
+
+// Preview da aula para o criador. Retorna lesson, course e siblings na ordem
+// do curso. Acessivel mesmo se isPublished=false (criador testa rascunhos).
+export const getForCreatorPreview = query({
+  args: { lessonId: v.id('lessons') },
+  handler: async (ctx, { lessonId }) => {
+    const { identity } = await requireUserFunction(ctx, ['criador'])
+    const lesson = await ctx.db.get(lessonId)
+    if (!lesson) return null
+    if (!(await canEditCourse(ctx, lesson.courseId, identity.subject))) return null
+
+    const course = await ctx.db.get(lesson.courseId)
+    if (!course) return null
+
+    const siblings = await ctx.db
+      .query('lessons')
+      .withIndex('by_courseId', (q) => q.eq('courseId', lesson.courseId))
+      .order('asc')
+      .collect()
+
+    return {
+      lesson: {
+        _id: lesson._id,
+        title: lesson.title,
+        description: lesson.description ?? null,
+        youtubeUrl: lesson.youtubeUrl,
+        durationSeconds: lesson.durationSeconds ?? null,
+        slug: lesson.slug ?? null,
+        order: lesson.order,
+        isPublished: lesson.isPublished,
+        publishAt: lesson.publishAt ?? null,
+        hasMandatoryQuiz: lesson.hasMandatoryQuiz,
+        versesRefs: lesson.versesRefs ?? [],
+      },
+      course: {
+        _id: course._id,
+        title: course.title,
+        slug: course.slug ?? null,
+        totalLessons: course.totalLessons,
+      },
+      siblings: siblings.map((l) => ({
+        _id: l._id,
+        title: l.title,
+        order: l.order,
+        isPublished: l.isPublished,
+        durationSeconds: l.durationSeconds ?? null,
+        isCurrent: l._id === lesson._id,
+      })),
+    }
   },
 })
 
 export const listByCourse = query({
   args: { courseId: v.id('courses'), creatorId: v.string() },
-  handler: async (ctx, { courseId, creatorId }) => {
+  handler: async (ctx, { courseId }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
-    const course = await ctx.db.get(courseId)
-    if (!course || course.creatorId !== identity.subject) return []
+    if (!(await canEditCourse(ctx, courseId, identity.subject))) return []
 
     return await ctx.db
       .query('lessons')
@@ -45,18 +94,48 @@ export const listByCourse = query({
 
 export const listByModule = query({
   args: { moduleId: v.id('modules'), creatorId: v.string() },
-  handler: async (ctx, { moduleId, creatorId }) => {
+  handler: async (ctx, { moduleId }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
     const mod = await ctx.db.get(moduleId)
-    if (!mod || mod.creatorId !== identity.subject) return []
+    if (!mod) return []
+    if (!(await canEditCourse(ctx, mod.courseId, identity.subject))) return []
 
     return await ctx.db
       .query('lessons')
       .withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
       .order('asc')
       .collect()
+  },
+})
+
+export const reorderInModule = mutation({
+  args: {
+    moduleId: v.id('modules'),
+    creatorId: v.string(),
+    orderedIds: v.array(v.id('lessons')),
+  },
+  handler: async (ctx, { moduleId, orderedIds }) => {
+    const { identity } = await requireUserFunction(ctx, ['criador'])
+
+    const mod = await ctx.db.get(moduleId)
+    if (!mod) throw new Error('Módulo não encontrado')
+    if (!(await canEditCourse(ctx, mod.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
+
+    const all = await ctx.db
+      .query('lessons')
+      .withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
+      .collect()
+    const allIds = new Set(all.map((l) => l._id))
+    if (orderedIds.length !== all.length || !orderedIds.every((id) => allIds.has(id))) {
+      throw new Error('Lista de aulas inválida.')
+    }
+
+    for (let i = 0; i < orderedIds.length; i++) {
+      await ctx.db.patch(orderedIds[i], { order: i + 1 })
+    }
   },
 })
 
@@ -120,20 +199,23 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, args.creatorId)
 
     const course = await ctx.db.get(args.courseId)
     const mod = await ctx.db.get(args.moduleId)
-    if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
-    if (!mod || mod.creatorId !== identity.subject || mod.courseId !== args.courseId) {
+    if (!course || !(await canEditCourse(ctx, args.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
+    if (!mod || mod.courseId !== args.courseId) {
       throw new Error('Módulo inválido')
     }
 
-    await ensureUniqueYouTubeUrl(ctx, identity.subject, args.youtubeUrl)
+    await ensureUniqueYouTubeUrl(ctx, course.creatorId, args.youtubeUrl)
 
+    const { creatorId: _ownerHint, ...rest } = args
+    void _ownerHint
     const lessonId = await ctx.db.insert('lessons', {
-      ...args,
-      creatorId: identity.subject,
+      ...rest,
+      creatorId: course.creatorId,
       isPublished: false,
       slug: toSlug(args.title),
     })
@@ -168,15 +250,26 @@ export const update = mutation({
     allowQuizRetry: v.optional(v.boolean()),
     publishAt: v.optional(v.union(v.number(), v.null())),
   },
-  handler: async (ctx, { id, creatorId, ...fields }) => {
+  handler: async (ctx, { id, creatorId: _ownerHint, ...fields }) => {
+    void _ownerHint
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
     const lesson = await ctx.db.get(id)
-    if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
+    if (!lesson || !(await canEditCourse(ctx, lesson.courseId, identity.subject))) {
+      throw new Error('Não autorizado')
+    }
+
+    // Apenas o dono do curso pode publicar/despublicar (gating editorial).
+    // Co-autores editores podem alterar todos os outros campos, mas não
+    // mudar o estado de publicação.
+    if (fields.isPublished !== undefined && fields.isPublished !== lesson.isPublished) {
+      if (lesson.creatorId !== identity.subject) {
+        throw new Error('Apenas o dono do curso pode alterar o estado de publicação.')
+      }
+    }
 
     if (fields.youtubeUrl !== undefined && fields.youtubeUrl !== lesson.youtubeUrl) {
-      await ensureUniqueYouTubeUrl(ctx, identity.subject, fields.youtubeUrl, id)
+      await ensureUniqueYouTubeUrl(ctx, lesson.creatorId, fields.youtubeUrl, id)
     }
 
     const { publishAt: rawPublishAt, ...rest } = fields
@@ -190,12 +283,11 @@ export const update = mutation({
     }
     await ctx.db.patch(id, updates)
 
-    // Quando uma aula que estava agendada (tinha publishAt) é publicada agora,
-    // notifica todos os matriculados do curso. Filtra por transição
-    // false→true para não disparar em edições subsequentes.
+    // Transição false→true em isPublished: notifica todos os matriculados e
+    // dispara IndexNow. Vale tanto para aulas que vinham agendadas via
+    // publishAt quanto para publicação manual sem agendamento.
     const wasUnpublished = !lesson.isPublished
     const becamePublished = fields.isPublished === true
-    const wasScheduled = typeof lesson.publishAt === 'number'
     if (wasUnpublished && becamePublished) {
       const course = await ctx.db.get(lesson.courseId)
       const lessonSlug = (fields.title ? toSlug(fields.title) : lesson.slug) ?? null
@@ -204,9 +296,6 @@ export const update = mutation({
           urls: [`https://resenhadoteologo.com/cursos/${course.slug}/${lessonSlug}`],
         })
       }
-    }
-    if (wasUnpublished && becamePublished && wasScheduled) {
-      const course = await ctx.db.get(lesson.courseId)
       if (course) {
         const enrollments = await ctx.db
           .query('enrollments')
@@ -215,8 +304,6 @@ export const update = mutation({
         const courseRef = course.slug ?? course._id
         const lessonRef = (fields.title ? toSlug(fields.title) : lesson.slug) ?? lesson._id
         const lessonTitle = fields.title ?? lesson.title
-        // Promise.all dispara as inserções em paralelo. Antes era loop
-        // sequencial: 100 alunos = 100 round-trips encadeados na mutation.
         await Promise.all(
           enrollments.map((enrollment) =>
             ctx.runMutation(internal.notifications.pushInternal, {
@@ -299,12 +386,13 @@ export const generateLessonSlugs = internalMutation({
 
 export const remove = mutation({
   args: { id: v.id('lessons'), creatorId: v.string() },
-  handler: async (ctx, { id, creatorId }) => {
+  handler: async (ctx, { id }) => {
     const { identity } = await requireUserFunction(ctx, ['criador'])
-    ensureIdentityMatches(identity.subject, creatorId)
 
     const lesson = await ctx.db.get(id)
-    if (!lesson || lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
+    if (!lesson) throw new Error('Não autorizado')
+    // Excluir aula é ação destrutiva: apenas o dono do curso pode.
+    if (lesson.creatorId !== identity.subject) throw new Error('Não autorizado')
 
     const course = await ctx.db.get(lesson.courseId)
     if (course) {

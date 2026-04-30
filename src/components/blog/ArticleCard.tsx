@@ -54,6 +54,7 @@ export function ArticleCard({
               src={article.coverImageUrl}
               alt={article.title}
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (
@@ -100,6 +101,7 @@ export function ArticleCard({
             src={article.coverImageUrl}
             alt={article.title}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (
@@ -132,7 +134,7 @@ export function ArticleCard({
         <div className="mt-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             {article.author.avatarUrl ? (
-              <img src={article.author.avatarUrl} alt={authorLabel} className="h-8 w-8 flex-shrink-0 rounded-xl object-cover" />
+              <img src={article.author.avatarUrl} alt={authorLabel} loading="lazy" decoding="async" className="h-8 w-8 flex-shrink-0 rounded-xl object-cover" />
             ) : (
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#F37E20]/10 text-xs font-semibold text-[#F37E20]">
                 {authorLabel.slice(0, 2).toUpperCase()}

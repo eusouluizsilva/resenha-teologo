@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { useAuth } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
@@ -159,10 +159,27 @@ function CourseCard({ course }: { course: CatalogCourse }) {
 
 export function CatalogPage() {
   const { isSignedIn } = useAuth()
-  const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined)
-  const [activeLevel, setActiveLevel] = useState<'iniciante' | 'intermediario' | 'avancado' | undefined>(undefined)
-  const [activeLanguage, setActiveLanguage] = useState<string | undefined>(undefined)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [params, setParams] = useSearchParams()
+  const activeCategory = params.get('categoria') || undefined
+  const levelParam = params.get('nivel')
+  const activeLevel: 'iniciante' | 'intermediario' | 'avancado' | undefined =
+    levelParam === 'iniciante' || levelParam === 'intermediario' || levelParam === 'avancado'
+      ? levelParam
+      : undefined
+  const activeLanguage = params.get('idioma') || undefined
+  const searchTerm = params.get('q') ?? ''
+
+  function updateParam(key: string, value: string | undefined) {
+    const next = new URLSearchParams(params)
+    if (!value) next.delete(key)
+    else next.set(key, value)
+    setParams(next, { replace: true })
+  }
+  const setSearchTerm = (v: string) => updateParam('q', v || undefined)
+  const setActiveCategory = (v: string | undefined) => updateParam('categoria', v)
+  const setActiveLevel = (v: 'iniciante' | 'intermediario' | 'avancado' | undefined) =>
+    updateParam('nivel', v)
+  const setActiveLanguage = (v: string | undefined) => updateParam('idioma', v)
 
   const courses = useQuery(api.catalog.listPublished, {
     category: activeCategory,

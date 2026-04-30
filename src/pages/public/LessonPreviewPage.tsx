@@ -211,6 +211,8 @@ export function LessonPreviewPage() {
                       <img
                         src={course.creatorAvatarUrl}
                         alt={course.creatorName}
+                        loading="lazy"
+                        decoding="async"
                         className="h-10 w-10 rounded-2xl object-cover"
                       />
                     ) : (

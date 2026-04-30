@@ -25,6 +25,8 @@ export function LessonGate({ thumbnailUrl, courseId, courseSlug, isAuthenticated
         <img
           src={thumbnailUrl}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover opacity-50"
         />
       )}

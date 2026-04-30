@@ -41,9 +41,15 @@ export default defineSchema({
     // Contador denormalizado de profileFollows. Atualizado por
     // profileFollows.follow/unfollow.
     followerCount: v.optional(v.number()),
+    // Código de indicação único do usuário. Gerado on-demand pela primeira
+    // visita à página /indicar. Outras pessoas que se cadastram com ?ref=CODE
+    // ficam linkadas ao referrer via tabela referrals.
+    referralCode: v.optional(v.string()),
   })
     .index('by_clerkId', ['clerkId'])
-    .index('by_handle', ['handle']),
+    .index('by_handle', ['handle'])
+    .index('by_email', ['email'])
+    .index('by_referralCode', ['referralCode']),
 
   userFunctions: defineTable({
     userId: v.string(),
@@ -92,8 +98,16 @@ export default defineSchema({
       state: v.optional(v.string()),
       country: v.optional(v.string()),
     })),
+    // Branding institucional. themeColor é o accent (#hex) que substitui
+    // #F37E20 nas páginas /instituicao/:id (futuras). logoUrl é o logo da
+    // instituição mostrado no topo das páginas dela. Slug é a chave pública.
+    themeColor: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    description: v.optional(v.string()),
   })
-    .index('by_createdByUserId', ['createdByUserId']),
+    .index('by_createdByUserId', ['createdByUserId'])
+    .index('by_slug', ['slug']),
 
   institutionMembers: defineTable({
     institutionId: v.id('institutions'),
@@ -184,6 +198,11 @@ export default defineSchema({
     // cai para "sem avaliações".
     avgRating: v.optional(v.number()),
     ratingsCount: v.optional(v.number()),
+    // FAQ pré-cadastrada pelo professor. Renderizada na página pública do
+    // curso e exposta como JSON-LD FAQPage para SEO. Lista de objetos
+    // {question, answer} simples; nada estruturado além disso para manter o
+    // editor leve.
+    faq: v.optional(v.array(v.object({ question: v.string(), answer: v.string() }))),
   })
     .index('by_creatorId', ['creatorId'])
     .index('by_published', ['isPublished'])
@@ -294,7 +313,9 @@ export default defineSchema({
   })
     .index('by_studentId', ['studentId'])
     .index('by_student_lesson', ['studentId', 'lessonId'])
-    .index('by_student_course', ['studentId', 'courseId']),
+    .index('by_student_course', ['studentId', 'courseId'])
+    .index('by_lessonId', ['lessonId'])
+    .index('by_courseId', ['courseId']),
 
   // Materiais complementares (apenas .pdf e .txt) anexados a uma aula.
   // Armazenados no Convex File Storage via storageId. Multi-tenant: creatorId
@@ -495,6 +516,7 @@ export default defineSchema({
     studentId: v.string(),
     courseId: v.id('courses'),
     stars: v.number(),
+    review: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
@@ -812,7 +834,10 @@ export default defineSchema({
     notes: v.optional(v.string()),
     paidAt: v.optional(v.number()),
     shippedAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+    cancelledAt: v.optional(v.number()),
     trackingCode: v.optional(v.string()),
+    trackingUrl: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -836,4 +861,153 @@ export default defineSchema({
     .index('by_follower', ['followerUserId'])
     .index('by_author', ['authorUserId'])
     .index('by_pair', ['followerUserId', 'authorUserId']),
+
+  // Marcações coloridas em versículos. Cada highlight aplica uma cor a um
+  // versículo específico (livro+capítulo+verso). Um aluno pode ter no máximo
+  // 1 highlight por verso (a UI sobrescreve se já existir). color é uma das
+  // cores predefinidas do leitor.
+  bibleHighlights: defineTable({
+    studentId: v.string(),
+    bookSlug: v.string(),
+    chapter: v.number(),
+    verse: v.number(),
+    color: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_student_chapter', ['studentId', 'bookSlug', 'chapter'])
+    .index('by_student_verse', ['studentId', 'bookSlug', 'chapter', 'verse']),
+
+  // Anotações livres em versículos. Diferente do caderno (que vincula a aulas),
+  // estes notes são exclusivamente sobre versículos. Texto opcional curto (até
+  // 2000 chars). Um aluno pode ter múltiplas notas no mesmo verso.
+  bibleNotes: defineTable({
+    studentId: v.string(),
+    bookSlug: v.string(),
+    chapter: v.number(),
+    verse: v.number(),
+    note: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_student_chapter', ['studentId', 'bookSlug', 'chapter'])
+    .index('by_student_verse', ['studentId', 'bookSlug', 'chapter', 'verse']),
+
+  // Programa de indicação. Quando um usuário gera link de indicação, recebe
+  // referralCode (slug curto) que ele compartilha. Quando outro se cadastra
+  // pelo link, criamos linha referrals com status='registered'. Quando o
+  // indicado conclui o primeiro curso, viramos para 'completed'. Não há
+  // recompensa monetária ainda; é apenas tracking até a Fase 4.
+  referrals: defineTable({
+    referrerUserId: v.string(),
+    referredUserId: v.optional(v.string()),
+    referredEmail: v.optional(v.string()),
+    code: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('registered'),
+      v.literal('completed'),
+    ),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_referrerUserId', ['referrerUserId'])
+    .index('by_referredUserId', ['referredUserId'])
+    .index('by_code', ['code']),
+
+  // Co-autores de curso. courseCoauthors permite que outro criador tenha
+  // permissão de editar o curso (módulos, aulas, quiz) sem poder publicar nem
+  // excluir. Por enquanto role é 'editor' apenas; reservado para 'reviewer' no
+  // futuro (sem write).
+  courseCoauthors: defineTable({
+    courseId: v.id('courses'),
+    userId: v.string(),
+    role: v.union(v.literal('editor'), v.literal('reviewer')),
+    addedAt: v.number(),
+    addedByUserId: v.string(),
+  })
+    .index('by_courseId', ['courseId'])
+    .index('by_userId', ['userId'])
+    .index('by_course_user', ['courseId', 'userId']),
+
+  // Banco de questões reutilizáveis pelo professor. Independente de qualquer
+  // aula. O criador escolhe questões deste banco para incluir no quiz da
+  // aula. Tags facilitam categorização (ex.: "Pentateuco", "Cristologia").
+  questionBank: defineTable({
+    creatorId: v.string(),
+    text: v.string(),
+    options: v.array(v.object({ id: v.string(), text: v.string() })),
+    correctOptionId: v.string(),
+    explanation: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_creatorId', ['creatorId']),
+
+  // Trilhas de aprendizagem. Uma trilha é uma sequência ordenada de cursos
+  // que pertencem a uma instituição (ou criador). pathItems guarda a ordem.
+  // pathEnrollments rastreia matrículas em trilhas (independente de matrículas
+  // de curso). Quando o aluno conclui o último curso da trilha, ela vira
+  // 'completed'.
+  learningPaths: defineTable({
+    institutionId: v.optional(v.id('institutions')),
+    creatorId: v.string(),
+    title: v.string(),
+    slug: v.string(),
+    description: v.string(),
+    coverUrl: v.optional(v.string()),
+    isPublished: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_institutionId', ['institutionId'])
+    .index('by_creatorId', ['creatorId'])
+    .index('by_slug', ['slug']),
+
+  pathItems: defineTable({
+    pathId: v.id('learningPaths'),
+    courseId: v.id('courses'),
+    order: v.number(),
+  })
+    .index('by_pathId', ['pathId'])
+    .index('by_courseId', ['courseId']),
+
+  pathEnrollments: defineTable({
+    pathId: v.id('learningPaths'),
+    studentId: v.string(),
+    status: v.union(v.literal('active'), v.literal('completed')),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_studentId', ['studentId'])
+    .index('by_pathId', ['pathId'])
+    .index('by_student_path', ['studentId', 'pathId']),
+
+  // Cursos obrigatórios para uma instituição (ou para um sub-grupo de membros).
+  // Quando memberRole é definido, só vale para aquele papel; quando ausente,
+  // vale para todos. Aluno membro vê banner "obrigatório" no catálogo.
+  requiredAssignments: defineTable({
+    institutionId: v.id('institutions'),
+    courseId: v.id('courses'),
+    memberRole: v.optional(v.union(v.literal('dono'), v.literal('admin'), v.literal('membro'))),
+    addedAt: v.number(),
+    addedByUserId: v.string(),
+  })
+    .index('by_institutionId', ['institutionId'])
+    .index('by_courseId', ['courseId'])
+    .index('by_institution_course', ['institutionId', 'courseId']),
+
+  // Templates de descrição de curso e aula. Por padrão são globais (creatorId
+  // ausente, criados via internalMutation seed); criadores também podem salvar
+  // os próprios. kind diferencia 'course_description' de 'lesson_description'.
+  courseTemplates: defineTable({
+    creatorId: v.optional(v.string()),
+    kind: v.union(v.literal('course_description'), v.literal('lesson_description')),
+    title: v.string(),
+    body: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_creatorId', ['creatorId'])
+    .index('by_kind', ['kind']),
 })

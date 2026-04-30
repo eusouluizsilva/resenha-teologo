@@ -140,6 +140,7 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth()
   const { user } = useUser()
   const upsertCurrentUser = useMutation(api.users.upsert)
+  const linkReferral = useMutation(api.referrals.linkOnSignup)
   const [ready, setReady] = useState(false)
   const [syncFailed, setSyncFailed] = useState(false)
   const [retryToken, setRetryToken] = useState(0)
@@ -212,6 +213,21 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
           await upsertCurrentUser(syncPayload.payload)
           if (cancelled) return
           lastSyncedRef.current = syncPayload.fingerprint
+          // Vincula indicacao se houver codigo capturado durante a navegacao.
+          // Idempotente: se ja foi vinculado antes, retorna o ID existente.
+          try {
+            const refCode =
+              typeof window !== 'undefined'
+                ? window.localStorage.getItem('rdt_ref_code')
+                : null
+            if (refCode) {
+              await linkReferral({ code: refCode })
+              window.localStorage.removeItem('rdt_ref_code')
+            }
+          } catch {
+            // Falha de indicacao nao deve bloquear o login. Mantemos o codigo
+            // para tentar de novo na proxima sessao.
+          }
           setReady(true)
           return
         } catch (err) {
@@ -231,7 +247,7 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isLoaded, isSignedIn, syncPayload, upsertCurrentUser, retryToken])
+  }, [isLoaded, isSignedIn, syncPayload, upsertCurrentUser, linkReferral, retryToken])
 
   if (syncFailed) {
     return <SyncErrorScreen onRetry={() => setRetryToken((t) => t + 1)} />

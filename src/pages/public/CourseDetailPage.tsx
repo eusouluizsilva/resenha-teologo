@@ -273,6 +273,27 @@ export function CourseDetailPage() {
       : null,
   )
 
+  // FAQ JSON-LD (Schema.org) para SEO. Quando o curso tem perguntas
+  // cadastradas, serializamos como FAQPage para Google exibir como rich
+  // snippet de "Perguntas frequentes" nos resultados.
+  const faqJsonLd = useMemo(() => {
+    const faq = (course as { faq?: Array<{ question: string; answer: string }> } | null)?.faq
+    if (!faq || faq.length === 0) return null
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faq.map((entry) => ({
+        '@type': 'Question',
+        name: entry.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: entry.answer,
+        },
+      })),
+    }
+  }, [course])
+  useJsonLd(faqJsonLd)
+
   // Atribui a pageview ao criador (revenue share). Roda uma vez por carga
   // do curso. Falha em silêncio se Convex estiver offline.
   useEffect(() => {
@@ -525,7 +546,7 @@ export function CourseDetailPage() {
               <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/36">Professor do curso</p>
               <div className="flex items-center gap-4">
                 {course.creatorAvatarUrl ? (
-                  <img src={course.creatorAvatarUrl} alt={course.creatorName} className="h-14 w-14 flex-shrink-0 rounded-2xl object-cover" />
+                  <img src={course.creatorAvatarUrl} alt={course.creatorName} loading="lazy" decoding="async" className="h-14 w-14 flex-shrink-0 rounded-2xl object-cover" />
                 ) : (
                   <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/16 bg-[#F37E20]/10">
                     <span className="text-lg font-bold text-[#F2BD8A]">{course.creatorName.slice(0, 2).toUpperCase()}</span>
@@ -539,6 +560,41 @@ export function CourseDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* FAQ do curso (acordeon) */}
+            {(() => {
+              const faq = (course as { faq?: Array<{ question: string; answer: string }> }).faq
+              if (!faq || faq.length === 0) return null
+              return (
+                <div className="rounded-2xl border border-white/8 bg-[#151B23] p-6">
+                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/36">
+                    Perguntas frequentes
+                  </p>
+                  <div className="space-y-3">
+                    {faq.map((entry, i) => (
+                      <details
+                        key={i}
+                        className="group rounded-2xl border border-white/8 bg-white/[0.02] px-5 py-4 transition-all open:border-[#F37E20]/24 open:bg-[#F37E20]/5"
+                      >
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-white">
+                          <span>{entry.question}</span>
+                          <svg
+                            className="h-4 w-4 flex-shrink-0 text-white/52 transition-transform group-open:rotate-180"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.8}
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </summary>
+                        <p className="mt-3 text-sm leading-7 text-white/64">{entry.answer}</p>
+                      </details>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Coluna lateral — CTA sticky */}
@@ -546,7 +602,7 @@ export function CourseDetailPage() {
             <div className="sticky top-20 rounded-2xl border border-white/10 bg-[#151B23] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.4)]">
               {course.thumbnail && (
                 <div className="mb-5 overflow-hidden rounded-xl border border-white/8">
-                  <img src={course.thumbnail} alt={course.title} className="w-full aspect-video object-cover" />
+                  <img src={course.thumbnail} alt={course.title} loading="lazy" decoding="async" className="w-full aspect-video object-cover" />
                 </div>
               )}
 

@@ -194,7 +194,7 @@ function CommentRow({
   return (
     <div className="flex gap-3">
       {comment.authorAvatarUrl ? (
-        <img src={comment.authorAvatarUrl} alt={comment.authorName} className="h-9 w-9 rounded-2xl object-cover" />
+        <img src={comment.authorAvatarUrl} alt={comment.authorName} loading="lazy" decoding="async" className="h-9 w-9 rounded-2xl object-cover" />
       ) : (
         <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#F37E20]/10 text-xs font-semibold text-[#F37E20]">
           {comment.authorName.slice(0, 2).toUpperCase()}

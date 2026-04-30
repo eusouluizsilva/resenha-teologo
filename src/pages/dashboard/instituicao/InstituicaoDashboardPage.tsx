@@ -11,6 +11,9 @@ type InstitutionRow = {
   name: string
   type: 'igreja' | 'ensino' | 'empresa'
   memberRole: 'dono' | 'admin' | 'membro'
+  themeColor?: string
+  logoUrl?: string
+  description?: string
 }
 
 function StatCard({
@@ -111,11 +114,43 @@ export function InstituicaoDashboardPage() {
       )}
 
       {institution && (
-        <div className={cn('mb-6 p-5', brandPanelClass)}>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
-            {institution.type === 'igreja' ? 'Igreja' : institution.type === 'ensino' ? 'Instituição de ensino' : 'Empresa'}
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-bold text-white">{institution.name}</h2>
+        <div
+          className={cn('mb-6 p-5', brandPanelClass)}
+          style={
+            institution.themeColor
+              ? { borderColor: `${institution.themeColor}33` }
+              : undefined
+          }
+        >
+          <div className="flex flex-wrap items-center gap-4">
+            {institution.logoUrl ? (
+              <img
+                src={institution.logoUrl}
+                alt={institution.name}
+                className="h-14 w-14 rounded-xl object-contain"
+                style={{
+                  backgroundColor: institution.themeColor
+                    ? `${institution.themeColor}14`
+                    : 'rgba(255,255,255,0.04)',
+                  padding: '6px',
+                }}
+              />
+            ) : null}
+            <div className="min-w-0">
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.24em]"
+                style={{ color: institution.themeColor ?? '#F2BD8A' }}
+              >
+                {institution.type === 'igreja' ? 'Igreja' : institution.type === 'ensino' ? 'Instituição de ensino' : 'Empresa'}
+              </p>
+              <h2 className="mt-1 font-display text-2xl font-bold text-white">{institution.name}</h2>
+              {institution.description ? (
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-white/64">
+                  {institution.description}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
 
@@ -169,6 +204,37 @@ export function InstituicaoDashboardPage() {
               <p className="text-sm font-semibold text-white">Relatórios</p>
               <p className="text-xs text-white/48">Engajamento por membro, conclusões e última atividade.</p>
               <span className="mt-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">Abrir →</span>
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <Link
+              to="/dashboard/cursos-obrigatorios"
+              className={cn('group flex items-center justify-between gap-4 p-5 transition-all hover:border-[#F37E20]/30', brandPanelClass)}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">Cursos obrigatórios</p>
+                <p className="mt-0.5 text-xs text-white/48">
+                  Defina cursos que membros devem concluir, com banner de destaque.
+                </p>
+              </div>
+              <svg className="h-4 w-4 flex-shrink-0 text-white/40 group-hover:text-[#F2BD8A]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+            <Link
+              to="/dashboard/branding"
+              className={cn('group flex items-center justify-between gap-4 p-5 transition-all hover:border-[#F37E20]/30', brandPanelClass)}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">Branding da instituição</p>
+                <p className="mt-0.5 text-xs text-white/48">
+                  Personalize cor, logo e descrição mostradas nos espaços da instituição.
+                </p>
+              </div>
+              <svg className="h-4 w-4 flex-shrink-0 text-white/40 group-hover:text-[#F2BD8A]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
             </Link>
           </div>
         </>
