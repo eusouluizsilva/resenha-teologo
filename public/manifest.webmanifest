@@ -2,15 +2,17 @@
   "name": "Resenha do Teólogo",
   "short_name": "Resenha",
   "description": "Plataforma gratuita de ensino teológico com cursos, Bíblia integrada, caderno digital e certificados.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "lang": "pt-BR",
   "dir": "ltr",
   "theme_color": "#0F141A",
   "background_color": "#0F141A",
   "categories": ["education", "books", "lifestyle"],
+  "id": "/",
   "icons": [
     {
       "src": "/logos/LOGO ICONE PRETA.png",
@@ -30,5 +32,36 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Meus cursos",
+      "short_name": "Cursos",
+      "description": "Continuar de onde parou",
+      "url": "/dashboard/meus-cursos",
+      "icons": [{ "src": "/logos/LOGO ICONE PRETA.png", "sizes": "512x512", "type": "image/png" }]
+    },
+    {
+      "name": "Bíblia",
+      "short_name": "Bíblia",
+      "description": "Abrir a Bíblia integrada",
+      "url": "/biblia",
+      "icons": [{ "src": "/logos/LOGO ICONE PRETA.png", "sizes": "512x512", "type": "image/png" }]
+    },
+    {
+      "name": "Caderno",
+      "short_name": "Caderno",
+      "description": "Suas anotações de aula",
+      "url": "/dashboard/caderno",
+      "icons": [{ "src": "/logos/LOGO ICONE PRETA.png", "sizes": "512x512", "type": "image/png" }]
+    },
+    {
+      "name": "Catálogo",
+      "short_name": "Catálogo",
+      "description": "Explorar cursos disponíveis",
+      "url": "/cursos",
+      "icons": [{ "src": "/logos/LOGO ICONE PRETA.png", "sizes": "512x512", "type": "image/png" }]
+    }
+  ],
+  "prefer_related_applications": false
 }

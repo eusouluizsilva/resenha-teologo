@@ -246,11 +246,23 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
 
 // Registra service worker apenas em produção. Evita interferir com HMR do Vite
 // em dev e reduz chance de cache de build quebrado durante desenvolvimento.
+// Verifica updates a cada 1h enquanto a aba estiver aberta — se o servidor
+// servir um sw.js diferente, o navegador instala em background e
+// PWAUpdateNotification mostra o prompt de "Atualizar".
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('[sw] registro falhou', err)
-    })
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        const checkForUpdate = () => reg.update().catch(() => undefined)
+        setInterval(checkForUpdate, 60 * 60 * 1000)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkForUpdate()
+        })
+      })
+      .catch((err) => {
+        console.warn('[sw] registro falhou', err)
+      })
   })
 }
 

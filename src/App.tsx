@@ -7,6 +7,8 @@ import { LandingPage } from '@/pages/LandingPage'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { CookieBanner } from '@/components/CookieBanner'
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
+import { PWAUpdateNotification } from '@/components/PWAUpdateNotification'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { trackPageView, getSessionId } from '@/lib/analytics'
 import { trackMetaPageView } from '@/lib/metaPixel'
@@ -334,6 +336,8 @@ export default function App() {
     <BrowserRouter>
       <RouteTracker />
       <CookieBanner />
+      <PWAInstallPrompt />
+      <PWAUpdateNotification />
       <AnimatePresence mode="wait">
         <Suspense fallback={<RouteFallback />}>
         <Routes>

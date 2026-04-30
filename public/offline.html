@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0F141A" />
+    <title>Sem conexão — Resenha do Teólogo</title>
+    <meta name="robots" content="noindex" />
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; height: 100%; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #0F141A;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+      }
+      .glow1, .glow2 {
+        position: absolute;
+        border-radius: 9999px;
+        filter: blur(120px);
+        pointer-events: none;
+      }
+      .glow1 { top: 14%; left: 12%; height: 14rem; width: 14rem; background: rgba(243, 126, 32, 0.10); }
+      .glow2 { top: 16%; right: 8%; height: 18rem; width: 18rem; background: rgba(255, 255, 255, 0.04); }
+      .card {
+        position: relative;
+        z-index: 1;
+        max-width: 36rem;
+        text-align: center;
+        border-radius: 2rem;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(180deg, rgba(13,18,24,0.92) 0%, rgba(10,14,20,0.96) 100%);
+        padding: 2rem;
+        box-shadow: 0 30px 120px rgba(0,0,0,0.25);
+      }
+      .icon {
+        margin: 0 auto 1.25rem;
+        height: 3rem;
+        width: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 1rem;
+        border: 1px solid rgba(243,126,32,0.18);
+        background: rgba(243,126,32,0.10);
+        color: #F37E20;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 0.75rem;
+        font-weight: 700;
+      }
+      p {
+        color: rgba(255,255,255,0.56);
+        line-height: 1.7;
+        font-size: 0.95rem;
+        margin: 0 0 1.5rem;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        background: #F37E20;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.85rem 1.5rem;
+        border-radius: 1rem;
+        transition: background 160ms ease;
+      }
+      button:hover { background: #E06A10; }
+      .sub {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.36);
+        margin-top: 1.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow1"></div>
+    <div class="glow2"></div>
+    <div class="card">
+      <div class="icon" aria-hidden="true">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.7L21 8.7M5.4 13h13.2M8.4 17.3h7.2M12 21h.01" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+        </svg>
+      </div>
+      <h1>Sem conexão no momento</h1>
+      <p>
+        Você ficou offline. Algumas páginas que você já visitou continuam disponíveis
+        no cache. Reconecte sua internet para acessar todo o conteúdo.
+      </p>
+      <button onclick="location.reload()">Tentar novamente</button>
+      <p class="sub">Resenha do Teólogo</p>
+    </div>
+  </body>
+</html>
