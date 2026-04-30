@@ -1,4 +1,5 @@
 import { v } from 'convex/values'
+import { internal } from './_generated/api'
 import type { Doc } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 import { mutation, query } from './_generated/server'
@@ -239,11 +240,19 @@ export const setStatus = mutation({
       throw new Error('Não autorizado')
     }
     const now = Date.now()
+    const wasPublishedBefore = product.status === 'published'
     const patch: Partial<Doc<'products'>> = { status, updatedAt: now }
     if (status === 'published' && !product.publishedAt) {
       patch.publishedAt = now
     }
     await ctx.db.patch(productId, patch)
+
+    // Notifica IndexNow quando publica ou despublica para refletir no Bing.
+    if (status === 'published' || wasPublishedBefore) {
+      await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, {
+        urls: [`https://resenhadoteologo.com/loja/${product.slug}`],
+      })
+    }
   },
 })
 

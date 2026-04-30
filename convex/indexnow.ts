@@ -56,12 +56,13 @@ export const submitUrls = internalAction({
 export const submitAll = internalAction({
   args: {},
   handler: async (ctx) => {
-    const [courses, lessons, posts, profiles, categories] = await Promise.all([
+    const [courses, lessons, posts, profiles, categories, products] = await Promise.all([
       ctx.runQuery(internal.indexnow._coursesForSubmit, {}),
       ctx.runQuery(internal.indexnow._lessonsForSubmit, {}),
       ctx.runQuery(internal.indexnow._postsForSubmit, {}),
       ctx.runQuery(internal.indexnow._profilesForSubmit, {}),
       ctx.runQuery(internal.indexnow._categoriesForSubmit, {}),
+      ctx.runQuery(internal.indexnow._productsForSubmit, {}),
     ])
 
     const urls: string[] = [
@@ -70,6 +71,7 @@ export const submitAll = internalAction({
       `${SITE}/cursos`,
       `${SITE}/blog`,
       `${SITE}/biblia`,
+      `${SITE}/loja`,
       `${SITE}/apoie`,
     ]
 
@@ -87,6 +89,9 @@ export const submitAll = internalAction({
     }
     for (const cat of categories) {
       urls.push(`${SITE}/blog/categoria/${cat.slug}`)
+    }
+    for (const p of products) {
+      urls.push(`${SITE}/loja/${p.slug}`)
     }
 
     const chunks: string[][] = []
@@ -196,5 +201,16 @@ export const _categoriesForSubmit = internalQuery({
   handler: async (ctx) => {
     const categories = await ctx.db.query('postCategories').collect()
     return categories.map((c) => ({ slug: c.slug }))
+  },
+})
+
+export const _productsForSubmit = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const products = await ctx.db
+      .query('products')
+      .withIndex('by_status', (q) => q.eq('status', 'published'))
+      .collect()
+    return products.map((p) => ({ slug: p.slug }))
   },
 })
