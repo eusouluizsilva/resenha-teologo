@@ -177,6 +177,17 @@ const RelatoriosPage = lazy(() =>
 const SobrePage = lazy(() =>
   import('@/pages/public/SobrePage').then((m) => ({ default: m.SobrePage })),
 )
+const LojaPage = lazy(() =>
+  import('@/pages/public/LojaPage').then((m) => ({ default: m.LojaPage })),
+)
+const ProdutoPage = lazy(() =>
+  import('@/pages/public/ProdutoPage').then((m) => ({ default: m.ProdutoPage })),
+)
+const MinhaLojaPage = lazy(() =>
+  import('@/pages/dashboard/criador/MinhaLojaPage').then((m) => ({
+    default: m.MinhaLojaPage,
+  })),
+)
 const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 )
@@ -367,6 +378,8 @@ export default function App() {
           <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
           <Route path="/convite/:token" element={<AcceptInvitePage />} />
           <Route path="/sobre" element={<SobrePage />} />
+          <Route path="/loja" element={<LojaPage />} />
+          <Route path="/loja/:slug" element={<ProdutoPage />} />
 
           {/* Blog público (precisa vir antes de /:handle, que é catch-all) */}
           <Route path="/blog" element={<BlogIndexPage />} />
@@ -398,6 +411,7 @@ export default function App() {
             <Route path="alunos" element={<RequireFunction allowed={['criador']}><AlunosPage /></RequireFunction>} />
             <Route path="perguntas" element={<RequireFunction allowed={['criador']}><PerguntasPage /></RequireFunction>} />
             <Route path="financeiro" element={<RequireFunction allowed={['criador']}><FinanceiroPage /></RequireFunction>} />
+            <Route path="minha-loja" element={<RequireFunction allowed={['criador']}><MinhaLojaPage /></RequireFunction>} />
 
             {/* Aluno */}
             <Route path="meus-cursos" element={<RequireFunction allowed={['aluno']}><MeusCursosPage /></RequireFunction>} />

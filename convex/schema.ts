@@ -737,6 +737,90 @@ export default defineSchema({
     .index('by_stripeSubscriptionId', ['stripeSubscriptionId'])
     .index('by_stripeCustomerId', ['stripeCustomerId']),
 
+  // Loja de produtos. Catálogo de itens fisicos/digitais (livros, ebooks, kits,
+  // brindes). Não substitui cursos (cursos sao sempre gratuitos). status
+  // controla visibilidade publica. priceCents em centavos BRL para evitar float.
+  // Stripe checkout sera ligado em Live mode (Fase 4); por enquanto sem cobranca.
+  products: defineTable({
+    creatorId: v.string(),
+    title: v.string(),
+    slug: v.string(),
+    description: v.string(),
+    shortDescription: v.optional(v.string()),
+    type: v.union(v.literal('fisico'), v.literal('digital'), v.literal('servico')),
+    priceCents: v.number(),
+    compareAtCents: v.optional(v.number()),
+    coverUrl: v.optional(v.string()),
+    galleryUrls: v.optional(v.array(v.string())),
+    sku: v.optional(v.string()),
+    stock: v.optional(v.number()),
+    weightGrams: v.optional(v.number()),
+    fileUrl: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
+    status: v.union(
+      v.literal('draft'),
+      v.literal('published'),
+      v.literal('archived'),
+    ),
+    publishedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_creatorId', ['creatorId'])
+    .index('by_slug', ['slug'])
+    .index('by_status', ['status']),
+
+  // Pedidos. Por enquanto registra intent de compra para futura integracao
+  // com Stripe Checkout. status: pending (criado, aguardando pagamento),
+  // paid (Stripe webhook), shipped (criador marcou), delivered, cancelled.
+  // amountCents = soma de items + shipping. items eh um snapshot do produto
+  // no momento da compra (titulo, preco) para nao quebrar se produto mudar.
+  orders: defineTable({
+    userId: v.string(),
+    creatorId: v.string(),
+    items: v.array(
+      v.object({
+        productId: v.id('products'),
+        title: v.string(),
+        priceCents: v.number(),
+        quantity: v.number(),
+      }),
+    ),
+    amountCents: v.number(),
+    shippingCents: v.optional(v.number()),
+    currency: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('paid'),
+      v.literal('shipped'),
+      v.literal('delivered'),
+      v.literal('cancelled'),
+      v.literal('refunded'),
+    ),
+    stripePaymentIntentId: v.optional(v.string()),
+    shippingAddress: v.optional(
+      v.object({
+        name: v.string(),
+        line1: v.string(),
+        line2: v.optional(v.string()),
+        city: v.string(),
+        state: v.string(),
+        postalCode: v.string(),
+        country: v.string(),
+      }),
+    ),
+    notes: v.optional(v.string()),
+    paidAt: v.optional(v.number()),
+    shippedAt: v.optional(v.number()),
+    trackingCode: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_creatorId', ['creatorId'])
+    .index('by_status', ['status'])
+    .index('by_stripePaymentIntentId', ['stripePaymentIntentId']),
+
   // Seguir um autor. notify* controlam granularidade de notificação. emailDigest
   // reservado para Wave futura (digest semanal via Resend). by_pair garante
   // unicidade lógica (1 follow por par follower-author).
