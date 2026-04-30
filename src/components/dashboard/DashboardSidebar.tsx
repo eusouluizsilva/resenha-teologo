@@ -129,6 +129,7 @@ const NAV_GROUPS: NavGroupExt[] = [
           label: 'Instituição',
           fn: 'instituicao' as UserFunction,
           items: [
+            { label: 'Painel', href: '/dashboard/painel-instituicao', icon: iconChart },
             { label: 'Membros', href: '/dashboard/membros', icon: iconMembers },
             { label: 'Cursos', href: '/dashboard/cursos-instituicao', icon: iconBook },
             { label: 'Relatórios', href: '/dashboard/relatorios', icon: iconChart },

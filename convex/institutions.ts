@@ -325,3 +325,252 @@ export const removeMember = mutation({
     await ctx.db.patch(memberId, { status: 'removido' })
   },
 })
+
+// Promove ou rebaixa um membro entre 'admin' e 'membro'. Apenas o dono pode
+// alterar papéis. Membros 'dono' não podem ter papel alterado.
+export const setMemberRole = mutation({
+  args: {
+    memberId: v.id('institutionMembers'),
+    role: v.union(v.literal('admin'), v.literal('membro')),
+  },
+  handler: async (ctx, { memberId, role }) => {
+    const identity = await requireIdentity(ctx)
+    const member = await ctx.db.get(memberId)
+    if (!member) throw new Error('Membro não encontrado')
+
+    const myMembership = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institution_user', (q) =>
+        q.eq('institutionId', member.institutionId).eq('userId', identity.subject),
+      )
+      .unique()
+    if (!myMembership || myMembership.role !== 'dono' || myMembership.status === 'removido') {
+      throw new Error('Apenas o dono da instituição pode alterar papéis')
+    }
+
+    if (member.role === 'dono') throw new Error('Papel do dono não pode ser alterado')
+    await ctx.db.patch(memberId, { role })
+  },
+})
+
+// Lista cursos vinculados a esta instituição (visibility='institution' OU
+// visibility='public' com institutionId apontando para esta instituição). Apenas
+// membros ativos veem o resultado. Útil para a tela de "Cursos da instituição".
+export const listCourses = query({
+  args: { institutionId: v.id('institutions') },
+  handler: async (ctx, { institutionId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+
+    const membership = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institution_user', (q) =>
+        q.eq('institutionId', institutionId).eq('userId', identity.subject),
+      )
+      .unique()
+    if (!membership || membership.status === 'removido') return []
+
+    const courses = await ctx.db
+      .query('courses')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .collect()
+
+    const creators = await Promise.all(
+      courses.map((c) =>
+        ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', c.creatorId))
+          .unique(),
+      ),
+    )
+
+    return courses.map((c, i) => ({
+      _id: c._id,
+      title: c.title,
+      slug: c.slug,
+      thumbnail: c.thumbnail,
+      category: c.category,
+      level: c.level,
+      isPublished: c.isPublished,
+      visibility: c.visibility,
+      totalLessons: c.totalLessons,
+      totalStudents: c.totalStudents,
+      releaseStatus: c.releaseStatus,
+      creatorName: creators[i]?.name ?? 'Criador',
+      creatorHandle: creators[i]?.handle,
+    }))
+  },
+})
+
+// Estatísticas agregadas para o dashboard institucional. Retorna contagens leves
+// derivadas em runtime; com volumes pequenos (instituições reais com dezenas/
+// centenas de membros) é aceitável. Se passar de milhares, denormalizar.
+export const getStats = query({
+  args: { institutionId: v.id('institutions') },
+  handler: async (ctx, { institutionId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const myMembership = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institution_user', (q) =>
+        q.eq('institutionId', institutionId).eq('userId', identity.subject),
+      )
+      .unique()
+    if (!myMembership || !['dono', 'admin'].includes(myMembership.role)) return null
+
+    const members = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .filter((q) => q.eq(q.field('status'), 'ativo'))
+      .collect()
+
+    const invites = await ctx.db
+      .query('institutionInvites')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .collect()
+    const now = Date.now()
+    const pendingInvites = invites.filter((i) => i.status === 'pendente' && i.expiresAt > now)
+
+    const courses = await ctx.db
+      .query('courses')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .collect()
+    const publishedCourses = courses.filter((c) => c.isPublished)
+    const courseIdSet = new Set(courses.map((c) => c._id))
+
+    // Enrollments e progresso dos membros nos cursos da instituição.
+    const memberIds = members.map((m) => m.userId)
+    let totalEnrollments = 0
+    let totalCertificates = 0
+    let totalLessonsCompleted = 0
+    let lessonsCompletedLast30d = 0
+    const cutoff = now - 30 * 24 * 60 * 60 * 1000
+
+    const enrollmentsPerMember = await Promise.all(
+      memberIds.map((uid) =>
+        ctx.db
+          .query('enrollments')
+          .withIndex('by_studentId', (q) => q.eq('studentId', uid))
+          .collect(),
+      ),
+    )
+    for (const list of enrollmentsPerMember) {
+      for (const e of list) {
+        if (!courseIdSet.has(e.courseId)) continue
+        totalEnrollments++
+        if (e.certificateIssued) totalCertificates++
+      }
+    }
+
+    const progressPerMember = await Promise.all(
+      memberIds.map((uid) =>
+        ctx.db
+          .query('progress')
+          .withIndex('by_studentId', (q) => q.eq('studentId', uid))
+          .collect(),
+      ),
+    )
+    for (const list of progressPerMember) {
+      for (const p of list) {
+        if (!courseIdSet.has(p.courseId)) continue
+        if (!p.completed) continue
+        totalLessonsCompleted++
+        if (p.completedAt && p.completedAt >= cutoff) lessonsCompletedLast30d++
+      }
+    }
+
+    return {
+      members: members.length,
+      pendingInvites: pendingInvites.length,
+      totalCourses: courses.length,
+      publishedCourses: publishedCourses.length,
+      totalEnrollments,
+      totalCertificates,
+      totalLessonsCompleted,
+      lessonsCompletedLast30d,
+      completionRate:
+        totalEnrollments > 0 ? Math.round((totalCertificates / totalEnrollments) * 100) : 0,
+    }
+  },
+})
+
+// Relatório por membro: para cada membro ativo, quantos cursos da instituição
+// tem matriculado, quantos concluiu, total de aulas concluídas e última
+// atividade. Apenas dono/admin podem ver. Limita lookups a uma instituição.
+export const listMembersReport = query({
+  args: { institutionId: v.id('institutions') },
+  handler: async (ctx, { institutionId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+
+    const myMembership = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institution_user', (q) =>
+        q.eq('institutionId', institutionId).eq('userId', identity.subject),
+      )
+      .unique()
+    if (!myMembership || !['dono', 'admin'].includes(myMembership.role)) return []
+
+    const members = await ctx.db
+      .query('institutionMembers')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .filter((q) => q.eq(q.field('status'), 'ativo'))
+      .collect()
+
+    const courses = await ctx.db
+      .query('courses')
+      .withIndex('by_institutionId', (q) => q.eq('institutionId', institutionId))
+      .collect()
+    const courseIdSet = new Set(courses.map((c) => c._id))
+
+    const userDocs = await Promise.all(
+      members.map((m) =>
+        ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', m.userId))
+          .unique(),
+      ),
+    )
+    const enrollmentsList = await Promise.all(
+      members.map((m) =>
+        ctx.db
+          .query('enrollments')
+          .withIndex('by_studentId', (q) => q.eq('studentId', m.userId))
+          .collect(),
+      ),
+    )
+    const progressList = await Promise.all(
+      members.map((m) =>
+        ctx.db
+          .query('progress')
+          .withIndex('by_studentId', (q) => q.eq('studentId', m.userId))
+          .collect(),
+      ),
+    )
+
+    return members.map((m, i) => {
+      const myEnrollments = (enrollmentsList[i] ?? []).filter((e) => courseIdSet.has(e.courseId))
+      const myProgress = (progressList[i] ?? []).filter((p) => courseIdSet.has(p.courseId))
+      const completedLessons = myProgress.filter((p) => p.completed)
+      const lastCompletion = completedLessons.reduce(
+        (acc, p) => Math.max(acc, p.completedAt ?? 0),
+        0,
+      )
+      const certificates = myEnrollments.filter((e) => e.certificateIssued).length
+      return {
+        memberId: m._id,
+        userId: m.userId,
+        name: userDocs[i]?.name ?? userDocs[i]?.email ?? 'Membro',
+        email: userDocs[i]?.email,
+        avatarUrl: userDocs[i]?.avatarUrl,
+        role: m.role,
+        addedAt: m.addedAt,
+        coursesEnrolled: myEnrollments.length,
+        coursesCompleted: certificates,
+        lessonsCompleted: completedLessons.length,
+        lastActivity: lastCompletion > 0 ? lastCompletion : null,
+      }
+    })
+  },
+})

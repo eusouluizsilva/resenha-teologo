@@ -159,6 +159,21 @@ const MembrosPage = lazy(() =>
     default: m.MembrosPage,
   })),
 )
+const InstituicaoDashboardPage = lazy(() =>
+  import('@/pages/dashboard/instituicao/InstituicaoDashboardPage').then((m) => ({
+    default: m.InstituicaoDashboardPage,
+  })),
+)
+const CursosInstituicaoPage = lazy(() =>
+  import('@/pages/dashboard/instituicao/CursosInstituicaoPage').then((m) => ({
+    default: m.CursosInstituicaoPage,
+  })),
+)
+const RelatoriosPage = lazy(() =>
+  import('@/pages/dashboard/instituicao/RelatoriosPage').then((m) => ({
+    default: m.RelatoriosPage,
+  })),
+)
 const SobrePage = lazy(() =>
   import('@/pages/public/SobrePage').then((m) => ({ default: m.SobrePage })),
 )
@@ -251,7 +266,7 @@ function DashboardIndexPage() {
 
   if (hasFunction('aluno')) return <AlunoDashboardPage />
 
-  if (hasFunction('instituicao')) return <MembrosPage />
+  if (hasFunction('instituicao')) return <InstituicaoDashboardPage />
 
   return (
     <DashboardPageShell
@@ -395,9 +410,10 @@ export default function App() {
             <Route path="biblia" element={<BibliaPage />} />
 
             {/* Instituição */}
+            <Route path="painel-instituicao" element={<RequireFunction allowed={['instituicao']}><InstituicaoDashboardPage /></RequireFunction>} />
             <Route path="membros" element={<RequireFunction allowed={['instituicao']}><MembrosPage /></RequireFunction>} />
-            <Route path="cursos-instituicao" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Cursos vinculados em preparação" description="A vinculação de cursos a membros será liberada em breve." /></RequireFunction>} />
-            <Route path="relatorios" element={<RequireFunction allowed={['instituicao']}><EmConstrucao title="Relatórios em preparação" description="Os relatórios institucionais serão liberados em breve." /></RequireFunction>} />
+            <Route path="cursos-instituicao" element={<RequireFunction allowed={['instituicao']}><CursosInstituicaoPage /></RequireFunction>} />
+            <Route path="relatorios" element={<RequireFunction allowed={['instituicao']}><RelatoriosPage /></RequireFunction>} />
 
             {/* Blog (autoria) — disponível para qualquer função, gating é feito no
                 IdentitySelector dentro do editor (que só lista identidades válidas) */}
