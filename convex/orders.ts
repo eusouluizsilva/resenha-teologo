@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import type { Id } from './_generated/dataModel'
+import type { Doc, Id } from './_generated/dataModel'
 import { requireCurrentUser, requireIdentity } from './lib/auth'
 
 const shippingValidator = v.object({
@@ -149,12 +149,12 @@ export const setStatus = mutation({
     }
 
     const now = Date.now()
-    const patch: Record<string, unknown> = { status, updatedAt: now }
+    const patch: Partial<Doc<'orders'>> = { status, updatedAt: now }
     if (status === 'paid' && !order.paidAt) patch.paidAt = now
     if (status === 'shipped') {
       patch.shippedAt = now
       if (trackingCode) patch.trackingCode = trackingCode
     }
-    await ctx.db.patch(orderId, patch as any)
+    await ctx.db.patch(orderId, patch)
   },
 })

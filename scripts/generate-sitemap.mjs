@@ -130,15 +130,17 @@ async function main() {
   let posts = []
   let categories = []
   let profiles = []
+  let products = []
 
   try {
     const client = new ConvexHttpClient(convexUrl)
-    ;[courses, lessons, posts, categories, profiles] = await Promise.all([
+    ;[courses, lessons, posts, categories, profiles, products] = await Promise.all([
       client.query(api.sitemapData.listCoursesForSitemap, {}),
       client.query(api.sitemapData.listLessonsForSitemap, {}),
       client.query(api.sitemapData.listPostsForSitemap, {}),
       client.query(api.sitemapData.listBlogCategoriesForSitemap, {}),
       client.query(api.sitemapData.listProfilesForSitemap, {}),
+      client.query(api.sitemapData.listProductsForSitemap, {}),
     ])
   } catch (err) {
     console.warn('[sitemap] falha ao consultar Convex:', err?.message ?? err)
@@ -186,6 +188,16 @@ async function main() {
     generated.push({ loc: `${SITE_URL}/sitemap-blog-categories.xml`, lastmod: today_ })
   }
 
+  // 6.1) sitemap-products.xml
+  if (Array.isArray(products) && products.length > 0) {
+    const entries = products.map((p) => ({
+      loc: `${SITE_URL}/loja/${p.slug}`,
+      lastmod: toIsoDate(p.updatedAt),
+    }))
+    writeXml('sitemap-products.xml', buildUrlset(entries))
+    generated.push({ loc: `${SITE_URL}/sitemap-products.xml`, lastmod: today_ })
+  }
+
   // 6) sitemap-profiles.xml
   if (Array.isArray(profiles) && profiles.length > 0) {
     const entries = profiles.map((p) => ({
@@ -212,6 +224,14 @@ async function main() {
       loc: `${SITE_URL}/cursos/${c.slug}`,
       lastmod: toIsoDate(c.updatedAt),
       image: { loc: c.thumbnail, title: c.title },
+    })
+  }
+  for (const p of products ?? []) {
+    if (!p.coverUrl) continue
+    imageEntries.push({
+      loc: `${SITE_URL}/loja/${p.slug}`,
+      lastmod: toIsoDate(p.updatedAt),
+      image: { loc: p.coverUrl, title: p.title },
     })
   }
   if (imageEntries.length > 0) {
@@ -248,7 +268,7 @@ async function main() {
   console.log(
     `[sitemap] gerado índice com ${generated.length} sub-sitemaps`,
     `(courses=${courses.length ?? 0}, lessons=${lessons.length ?? 0}, posts=${posts.length ?? 0},`,
-    `categories=${categories.length ?? 0}, profiles=${profiles.length ?? 0})`,
+    `categories=${categories.length ?? 0}, profiles=${profiles.length ?? 0}, products=${products.length ?? 0})`,
   )
 }
 

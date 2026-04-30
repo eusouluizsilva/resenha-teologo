@@ -1,4 +1,5 @@
 import { v } from 'convex/values'
+import type { Doc } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 import { mutation, query } from './_generated/server'
 import { requireCurrentUser, requireIdentity } from './lib/auth'
@@ -216,12 +217,12 @@ export const update = mutation({
       throw new Error('Preço inválido')
     }
 
-    const cleaned: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(patch)) {
-      if (v !== undefined) cleaned[k] = v
+    const cleaned: Partial<Doc<'products'>> = {}
+    for (const [k, val] of Object.entries(patch)) {
+      if (val !== undefined) (cleaned as Record<string, unknown>)[k] = val
     }
     cleaned.updatedAt = Date.now()
-    await ctx.db.patch(productId, cleaned as any)
+    await ctx.db.patch(productId, cleaned)
   },
 })
 
@@ -238,11 +239,11 @@ export const setStatus = mutation({
       throw new Error('Não autorizado')
     }
     const now = Date.now()
-    const patch: Record<string, unknown> = { status, updatedAt: now }
+    const patch: Partial<Doc<'products'>> = { status, updatedAt: now }
     if (status === 'published' && !product.publishedAt) {
       patch.publishedAt = now
     }
-    await ctx.db.patch(productId, patch as any)
+    await ctx.db.patch(productId, patch)
   },
 })
 

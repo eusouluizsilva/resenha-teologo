@@ -139,6 +139,22 @@ export const listBlogCategoriesForSitemap = query({
   },
 })
 
+export const listProductsForSitemap = query({
+  args: {},
+  handler: async (ctx) => {
+    const products = await ctx.db
+      .query('products')
+      .withIndex('by_status', (q) => q.eq('status', 'published'))
+      .collect()
+    return products.map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      coverUrl: p.coverUrl ?? null,
+      updatedAt: p.updatedAt ?? p._creationTime,
+    }))
+  },
+})
+
 export const listProfilesForSitemap = query({
   args: {},
   handler: async (ctx) => {

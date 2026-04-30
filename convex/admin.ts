@@ -145,7 +145,7 @@ export const getAnalytics = query({
     const byRef = new Map<string, number>()
     for (const v of current) {
       if (!v.referrer) continue
-      let host = ''
+      let host: string
       try {
         host = new URL(v.referrer).hostname.replace(/^www\./, '')
       } catch {
