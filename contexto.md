@@ -263,9 +263,12 @@ Deploy:    a definir
 
 ### Infraestrutura
 - `src/lib/motion.ts` — tokens de animação (fadeUp, fadeIn, staggerContainer, etc.)
-- `src/index.css` — design tokens via @theme do Tailwind 4
-- `vite.config.ts` — alias @/ configurado
-- `index.html` — favicon adaptativo dark/light
+- `src/index.css` — design tokens via @theme do Tailwind 4 + `@source` explícito limita scan a `src/` + `index.html`
+- `vite.config.ts` — aliases `@/` (src) e `@convex/` (convex/), manualChunks separa framer-motion/clerk/convex/react-vendor, `vite-plugin-html` minifica HTML
+- `tsconfig.json` — `paths` espelha os aliases do Vite
+- `src/main.tsx` — fontes self-hostadas via `@fontsource/{plus-jakarta-sans,inter,source-serif-4}` (zero conexão com fonts.googleapis.com)
+- `src/pages/LandingPage.tsx` — usa `LazyMotion + m + domAnimation` (framer fora do critical path)
+- `index.html` — favicon adaptativo dark/light, sem links de fontes externas
 
 ### Seções da landing page (em ordem)
 1. Hero — headline + dois CTAs + badges
@@ -347,6 +350,8 @@ Deploy:    a definir
 | 2026-04-18 | Rodapé: "Desenvolvido por Silva Growth" com link para silvagrowth.com |
 | 2026-04-18 | REGRA PERMANENTE: nunca usar travessao (—) em nenhum texto da plataforma |
 | 2026-04-18 | REGRA PERMANENTE: nunca usar emojis, substituir por icones SVG Heroicons |
+| 2026-05-01 | Auditoria interna rodada 1 (commit `8ee1a3d`): 28 itens críticos/alto/médio/baixo resolvidos. PIX exposto fechado, admins migrados pra tabela com seed, headers de segurança, rate limit, CSP, validação client-side, Stripe webhook idempotente, soft-delete real, multi-tenant leak corrigido. |
+| 2026-05-01 | Auditoria interna rodada 2 (commit `ca307a9`): +8 itens. Lint zerado, framer-motion lazy na landing via LazyMotion, Tailwind v4 @source explícito, fontes self-hostadas via @fontsource, HTML minify, alias @convex/* em 84 arquivos, cron LGPD anonimiza IP/UA de consents após 12 meses. |
 
 ---
 
@@ -447,7 +452,7 @@ Deploy:    a definir
 
 ## Pendências Atuais (snapshot 2026-05-01)
 
-> Lista consolidada de tudo que ainda falta para a plataforma rodar 100% em produção. Atualizar conforme cada item for resolvido. As 33 melhorias internas de UX (TaskList) foram concluídas; o que sobra agora depende de credenciais externas, ações de plataformas terceiras ou decisões de produto.
+> Lista consolidada de tudo que ainda falta para a plataforma rodar 100% em produção. Atualizar conforme cada item for resolvido. 36 itens da auditoria interna 2026-05-01 já estão em produção (28 na rodada 1 + 8 na rodada 2); o que sobra agora depende de credenciais externas, ações de plataformas terceiras ou decisões de produto. Detalhe item-a-item em `lista-de-pendencias.md`.
 
 ### Bloqueadores de receita (prioridade máxima)
 
