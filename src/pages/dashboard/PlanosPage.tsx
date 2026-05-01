@@ -105,7 +105,7 @@ const criadorPlans: Plan[] = [
   {
     id: 'criador-sem-ads',
     name: 'Professor sem anúncios',
-    price: 'R$ 99,90',
+    price: 'R$ 39,99',
     period: '/mês',
     description: 'Seu espaço sem anúncios. Experiência limpa para os seus alunos.',
     features: [
@@ -121,7 +121,7 @@ const criadorPlans: Plan[] = [
   {
     id: 'igreja-sem-ads',
     name: 'Igreja ou instituição',
-    price: 'R$ 199,90',
+    price: 'R$ 39,99',
     period: '/mês',
     description: 'Plano dedicado para igrejas e instituições. Espaço sem anúncios para todos os membros.',
     features: [
@@ -157,7 +157,7 @@ const instituicaoPlans: Plan[] = [
   {
     id: 'plano-igreja',
     name: 'Plano Igreja',
-    price: 'R$ 99,90',
+    price: 'R$ 39,99',
     period: '/mês',
     description: 'Membros ilimitados, matrícula em lote e painel pastoral de acompanhamento.',
     features: [

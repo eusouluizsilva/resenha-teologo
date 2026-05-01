@@ -1056,7 +1056,7 @@ export function LandingPage() {
               },
               {
                 name: 'Criador / Professor / Igreja / Instituição de Ensino',
-                price: 'R$ 99',
+                price: 'R$ 39,99',
                 period: '/mês',
                 description: 'Para criadores, professores, igrejas e instituições que querem publicar cursos e organizar a formação de muitos alunos, sem anúncios.',
                 features: ['Publicação ilimitada de cursos e artigos', 'Matrícula e painel de progresso coletivo', 'Membros e alunos ilimitados', 'Sem anúncios para o seu público'],

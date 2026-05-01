@@ -4,13 +4,14 @@ import { internal } from './_generated/api'
 
 declare const process: { env: Record<string, string | undefined> }
 
-// Mapa interno → Stripe Price ID. Atualizar aqui quando criar novos produtos
-// no Stripe (test ou live mode). IDs atuais são test mode (acct_1SBFR3BZ3mrrG6uS).
-// Quando virar live: trocar por price_live_... e setar STRIPE_SECRET_KEY com sk_live_.
+// Mapa interno → Stripe Price ID. IDs atuais são Live mode da conta US
+// (acct_1SBFQxBSCnH7XGvJ). Para criar novos preços, atualizar aqui e arquivar
+// o anterior no dashboard. Aluno Premium R$ 9,99/mes; Criador sem ads e Plano
+// Igreja R$ 39,99/mes.
 const PRICE_IDS: Record<string, string> = {
-  aluno_premium: 'price_1TQyTyBZ3mrrG6uSW8WhyEH9',
-  criador_sem_ads: 'price_1TRgOXBZ3mrrG6uSjOcxmS6q',
-  plano_igreja: 'price_1TRgOPBZ3mrrG6uSU5lS2jgR',
+  aluno_premium: 'price_1TRb8kBSCnH7XGvJGLfnik32',
+  criador_sem_ads: 'price_1TS6fSBSCnH7XGvJ2N5mVuMz',
+  plano_igreja: 'price_1TS6fSBSCnH7XGvJhDFEJNoH',
 }
 
 const PLAN_KIND = v.union(
