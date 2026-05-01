@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { DashboardSidebar } from './DashboardSidebar'
 import { NotificationsBell } from './NotificationsBell'
 import { MobileBottomNav } from './MobileBottomNav'
@@ -56,6 +56,7 @@ export function DashboardLayout() {
 
   // Fecha o drawer ao trocar de rota.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false)
   }, [pathname])
 

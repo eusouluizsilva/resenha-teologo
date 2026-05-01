@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
 
 // Card de programa de indicacao. Mostra o link unico do usuario, total de

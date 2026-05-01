@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAction, useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'

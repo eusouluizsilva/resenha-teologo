@@ -15,7 +15,7 @@ import {
 } from '@/lib/brand'
 import { clerkErrorMessage } from '@/lib/auth'
 import { DOCUMENT_VERSION, type UserFunction } from '@/lib/functions'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 
 function safeRedirectTarget(value: string | null): string {
   if (!value) return '/dashboard'

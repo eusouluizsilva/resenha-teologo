@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
@@ -178,6 +178,8 @@ export function EditarInfoCursoPage() {
 
   useEffect(() => {
     if (course && form === null) {
+      // Hidrata o form da edição uma única vez quando o curso carrega.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         title: course.title,
         description: course.description,

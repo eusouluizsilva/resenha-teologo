@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { cn } from '@/lib/brand'
 
 // Command palette global (Cmd+K / Ctrl+K). Permite buscar cursos, criadores
@@ -50,7 +50,10 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
+      // Reseta busca/seleção sempre que o palette reabre.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery('')
+       
       setActiveIndex(0)
       const t = setTimeout(() => inputRef.current?.focus(), 30)
       return () => clearTimeout(t)
@@ -109,6 +112,8 @@ export function CommandPalette() {
   }, [shouldSearch, results])
 
   useEffect(() => {
+    // Mantém o índice ativo dentro do range quando a lista muda.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeIndex >= items.length) setActiveIndex(0)
   }, [items.length, activeIndex])
 

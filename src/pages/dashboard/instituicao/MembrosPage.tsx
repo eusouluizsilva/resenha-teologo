@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import {
   brandInputClass,
@@ -9,7 +9,7 @@ import {
   brandStatusPillClass,
   cn,
 } from '@/lib/brand'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import type { Id } from '@convex/_generated/dataModel'
 
 // Gestão mínima de instituição: escolhe a instituição ativa (primeira em que o
 // usuário é dono/admin), lista membros ativos e convites pendentes, permite

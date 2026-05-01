@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
 

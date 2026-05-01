@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
 import { useBreadcrumbJsonLd, useSeo } from '@/lib/seo'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'

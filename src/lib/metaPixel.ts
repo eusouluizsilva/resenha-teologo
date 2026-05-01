@@ -41,7 +41,7 @@ export function initMetaPixel(): void {
   if (!window.fbq) {
     const fbq: FbqFn = function (...args: unknown[]) {
       if (fbq.callMethod) {
-        fbq.callMethod.apply(fbq, args)
+        fbq.callMethod(...args)
       } else {
         fbq.queue.push(args)
       }

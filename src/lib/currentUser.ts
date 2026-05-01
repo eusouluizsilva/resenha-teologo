@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-react'
 import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import type { UserFunction } from './functions'
 import { normalizePerfil } from './perfil'
 

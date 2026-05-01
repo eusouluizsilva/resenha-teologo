@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-react'
 import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 
 // Retorna true apenas quando confirmamos que o usuário tem isPremium === true
 // no Convex. Para visitantes anônimos ou enquanto a query carrega, retorna

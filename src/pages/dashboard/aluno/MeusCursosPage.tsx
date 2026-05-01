@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { brandPanelClass, brandPanelSoftClass, brandStatusPillClass, cn } from '@/lib/brand'
 import { RequiredCoursesBanner } from '@/components/aluno/RequiredCoursesBanner'

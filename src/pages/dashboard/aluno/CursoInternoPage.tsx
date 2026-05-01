@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 import { CourseForum } from '@/components/courseForum/CourseForum'
 import { CourseRatingModal } from '@/components/aluno/CourseRatingModal'
@@ -142,6 +142,8 @@ export function CursoInternoPage() {
 
   useEffect(() => {
     if (searchParams.get('matriculado') === '1') {
+      // Banner de sucesso pós-matrícula, auto-dismiss em 4s.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowSuccess(true)
       const t = setTimeout(() => setShowSuccess(false), 4000)
       return () => clearTimeout(t)
@@ -181,6 +183,8 @@ export function CursoInternoPage() {
       !ratingDismissed &&
       !ratingOpen
     ) {
+      // Convida o aluno a avaliar quando o certificado foi emitido.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRatingOpen(true)
     }
   }, [data, myCourseRating, ratingDismissed, ratingOpen])

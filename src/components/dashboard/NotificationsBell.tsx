@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { cn } from '@/lib/brand'
-import type { Id } from '../../../convex/_generated/dataModel'
+import type { Id } from '@convex/_generated/dataModel'
 
 // Sino de notificações do dashboard. Lê as 20 mais recentes e o count de não
 // lidas via queries reativas do Convex. Clique em uma notificação marca como

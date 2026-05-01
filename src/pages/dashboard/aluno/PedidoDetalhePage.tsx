@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
 
@@ -103,8 +103,8 @@ function buildTimeline(order: OrderDetail): Step[] {
   const status = order.status
   const cancelled = status === 'cancelled' || status === 'refunded'
 
-  const order_ = ['pending', 'paid', 'shipped', 'delivered'] as const
-  const indexByStatus: Record<(typeof order_)[number], number> = {
+  const _order = ['pending', 'paid', 'shipped', 'delivered'] as const
+  const indexByStatus: Record<(typeof _order)[number], number> = {
     pending: 0,
     paid: 1,
     shipped: 2,
@@ -112,7 +112,7 @@ function buildTimeline(order: OrderDetail): Step[] {
   }
   const currentIndex = cancelled
     ? -1
-    : indexByStatus[status as (typeof order_)[number]] ?? 0
+    : indexByStatus[status as (typeof _order)[number]] ?? 0
 
   return [
     {

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
 import {
   brandInputClass,
@@ -72,8 +72,12 @@ export function EditarTrilhaPage() {
 
   useEffect(() => {
     if (!path) return
+    // Hidrata o form ao carregar a trilha.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(path.title)
+     
     setDescription(path.description)
+     
     setCoverUrl(path.coverUrl ?? '')
   }, [path])
 

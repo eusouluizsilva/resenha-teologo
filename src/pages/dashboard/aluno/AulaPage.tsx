@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 import {
   BIBLE_BOOKS,
@@ -210,6 +210,10 @@ function VideoPlayer({
         },
       },
     })
+    // handleComplete/startTick/startTracking são closures estáveis declaradas
+    // depois deste useCallback; incluí-las criaria ciclo. Player só reinicializa
+    // quando o videoId muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, playerHandleRef])
 
   function startTick() {
@@ -350,7 +354,10 @@ function VideoPlayer({
   useEffect(() => {
     initialWatchedRef.current = initialWatched
     maxWatchedRef.current = initialWatched
+    // Reseta tempo assistido ao trocar de aula. Side effect intencional.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMaxWatched(initialWatched)
+     
     setCurrentTime(initialWatched)
     completedRef.current = false
 
@@ -567,8 +574,12 @@ function VerseCard({
   useEffect(() => {
     if (!compatible) return
     let cancelled = false
+    // Loading state acompanha ciclo do fetch async.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
+     
     setFetchError(false)
+     
     setExpanded(false)
     fetchChapter({
       sourceId: source.id,
@@ -1321,6 +1332,7 @@ function NotebookSection({
   useEffect(() => {
     if (!notebooks || activeNotebookId) return
     if (notebooks.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveNotebookId(notebooks[0]._id)
     }
   }, [notebooks, activeNotebookId])
@@ -1340,8 +1352,11 @@ function NotebookSection({
   // Sincroniza conteúdo quando troca de caderno ou quando entrada carrega do servidor.
   useEffect(() => {
     if (entry === undefined) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setContent(entry?.content ?? '')
+     
     setIsDirty(false)
+     
     setSaveStatus('idle')
   }, [entry, activeNotebookId])
 
@@ -2624,6 +2639,7 @@ export function AulaPage() {
 
   useEffect(() => {
     // Reset quando troca aula ou quando servidor zerou watchedSeconds (retry).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReachedThresholdLocal(false)
   }, [lessonId, data?.progress?.watchResetAt])
 
@@ -2655,6 +2671,7 @@ export function AulaPage() {
     [courseId, lessonId, updateProgress]
   )
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleComplete = useCallback(async () => {
     if (!courseId || !lessonId) return
     setReachedThresholdLocal(true)

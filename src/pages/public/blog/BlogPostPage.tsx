@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { ArticleBody } from '@/components/blog/ArticleBody'
 import { ArticleReactions } from '@/components/blog/ArticleReactions'

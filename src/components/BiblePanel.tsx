@@ -42,7 +42,10 @@ export function BiblePanel({ open, onClose, initialRef }: Props) {
 
   useEffect(() => {
     if (!initialRef) return
+    // Hidrata o livro/capítulo a partir da prop quando o painel reabre com referência diferente.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBookSlug(initialRef.bookSlug)
+     
     setChapter(initialRef.chapter)
   }, [initialRef])
 
@@ -66,6 +69,8 @@ export function BiblePanel({ open, onClose, initialRef }: Props) {
     if (!book) return
     const ok = source && source.testaments.includes(book.testament)
     if (!ok && filteredSources.length > 0) {
+      // Auto-corrige a fonte quando incompatível com o testamento. Side effect intencional.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSourceId(filteredSources[0].id)
     }
   }, [book, source, filteredSources])
@@ -74,6 +79,8 @@ export function BiblePanel({ open, onClose, initialRef }: Props) {
     if (!open) return
     if (!book) return
     let cancelled = false
+    // Loading state acompanha ciclo de vida do fetch async.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(null)
     fetchChapter({ sourceId, bookSlug, chapter })

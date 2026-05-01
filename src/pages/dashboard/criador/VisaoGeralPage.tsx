@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandPanelClass, brandPanelSoftClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'

@@ -7,8 +7,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { BIBLE_BOOKS, getBibleBook } from '@/lib/bible/books'
 import { BIBLE_SOURCES, DEFAULT_BIBLE_SOURCE_ID, getBibleSource } from '@/lib/bible/translations'
 import { fetchChapter, type BibleVerse } from '@/lib/bible/api'
@@ -117,6 +117,8 @@ export function BibliaReader({ backHref, backLabel = 'Voltar' }: BibliaReaderPro
     if (!book) return
     const ok = source && source.testaments.includes(book.testament)
     if (!ok && filteredSources.length > 0) {
+      // Auto-corrige a fonte quando incompatível com o testamento.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSourceId(filteredSources[0].id)
     }
   }, [book, source, filteredSources])
@@ -131,14 +133,20 @@ export function BibliaReader({ backHref, backLabel = 'Voltar' }: BibliaReaderPro
   }, [sourceId, bookSlug, chapter])
 
   useEffect(() => {
+    // Limpa seleção quando o usuário troca de capítulo/livro.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveVerse(null)
+     
     setEditingNoteId(null)
+     
     setNewNoteVerse(null)
   }, [bookSlug, chapter])
 
   useEffect(() => {
     if (!book) return
     let cancelled = false
+    // Loading state acompanha ciclo de vida do fetch async.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(null)
     fetchChapter({ sourceId, bookSlug, chapter })

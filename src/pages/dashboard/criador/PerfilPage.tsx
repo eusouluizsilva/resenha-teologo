@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { useClerk } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import {
   brandInputClass,
   brandPanelClass,
@@ -13,7 +13,7 @@ import {
 } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { DashboardPageShell, DashboardStatusPill } from '@/components/dashboard/PageShell'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import type { Id } from '@convex/_generated/dataModel'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -454,6 +454,8 @@ export function PerfilPage() {
   // Sync form from Convex user + Clerk
   useEffect(() => {
     if (!currentUser || !clerkUser) return
+    // Hidrata o form com dados do Convex + Clerk quando ambos chegam.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setForm({
       firstName: clerkUser.firstName ?? '',
       lastName: clerkUser.lastName ?? '',
@@ -1748,6 +1750,8 @@ function CreatorPixSection() {
   const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
+    // Reflete a chave PIX salva no campo de edição.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (profile?.pixKey) setValue(profile.pixKey)
   }, [profile?.pixKey])
 

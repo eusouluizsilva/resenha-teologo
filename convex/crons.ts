@@ -60,4 +60,12 @@ crons.monthly(
   internal.dataRetention.purgeSoftDeleted,
 )
 
+// Anonimização mensal de consents: remove ipAddress/userAgent de aceites com
+// mais de 12 meses. O registro do consentimento permanece para fins legais.
+crons.monthly(
+  'data-retention-consent-pii',
+  { day: 1, hourUTC: 7, minuteUTC: 30 },
+  internal.dataRetention.purgeConsentPii,
+)
+
 export default crons

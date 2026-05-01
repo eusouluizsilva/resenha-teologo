@@ -14,7 +14,7 @@ import { useCurrentAppUser } from '@/lib/currentUser'
 import { trackPageView, getSessionId } from '@/lib/analytics'
 import { trackMetaPageView } from '@/lib/metaPixel'
 import { detectDevice } from '@/lib/device'
-import { api } from '../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import type { UserFunction } from '@/lib/functions'
 
 // Code-splitting: rotas secundárias viram chunks sob demanda para manter o

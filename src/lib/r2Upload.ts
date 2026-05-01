@@ -11,7 +11,7 @@
 
 import { useCallback, useState } from 'react'
 import { useAction } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 
 export type R2Purpose = 'cover' | 'material' | 'avatar' | 'ebook' | 'post-image'
 

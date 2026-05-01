@@ -5,7 +5,7 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { LessonGate } from '@/components/public/LessonGate'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'

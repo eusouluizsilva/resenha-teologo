@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '../../convex/_generated/api'
-import type { Id } from '../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { useIsPremium } from '../lib/useIsPremium'
 import { getSessionId, trackAdImpression } from '../lib/analytics'
 import { getAdSensePublisherId, isAdSenseEnabled } from '../lib/ads'
@@ -45,6 +45,8 @@ export function AdSlot({
   const enabled = isAdSenseEnabled()
 
   useEffect(() => {
+    // Sincroniza shouldRender com props (premium + enabled). Padrão de espelhamento intencional.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShouldRender(!isPremium && enabled)
   }, [enabled, isPremium])
 

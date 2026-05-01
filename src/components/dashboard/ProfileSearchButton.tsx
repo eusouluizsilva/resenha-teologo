@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 
 // Lupa de busca de perfis publicos. Click abre um popover ancorado abaixo do
 // botao com input ao vivo. Resultados vem de users.searchPublic, limitados a
@@ -38,7 +38,9 @@ export function ProfileSearchButton() {
   }, [open])
 
   useEffect(() => {
+     
     if (open) inputRef.current?.focus()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     else setQ('')
   }, [open])
 

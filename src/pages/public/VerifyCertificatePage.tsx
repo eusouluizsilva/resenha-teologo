@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 
 // Página pública para qualquer pessoa validar um certificado. O código vem do
 // PDF baixado pelo aluno. Não exige autenticação. Nenhum dado sensível é

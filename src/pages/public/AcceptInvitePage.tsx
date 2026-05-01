@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { SignedIn, SignedOut } from '@clerk/clerk-react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 
 // Aceita convites institucionais via /convite/:token. Se o usuário não estiver
 // logado, oferece entrar/cadastrar antes de aceitar; se estiver, aceita direto

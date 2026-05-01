@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4: limita o scan a src/ e index.html. Convex, scripts, docs e
+   markdown ficam de fora — utility classes só aparecem no front. */
+@source "../src/**/*.{ts,tsx,js,jsx,html}";
+@source "../index.html";
+
 @theme {
   /* Cores principais */
   --color-navy-deep: #1E2430;

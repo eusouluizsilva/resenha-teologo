@@ -1,6 +1,6 @@
 import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
 

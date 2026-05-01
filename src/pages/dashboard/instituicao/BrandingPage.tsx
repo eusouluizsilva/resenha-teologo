@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import {
   DashboardEmptyState,
   DashboardPageShell,
@@ -69,12 +69,20 @@ export function BrandingPage() {
 
   useEffect(() => {
     if (institution) {
+      // Hidrata o form quando a instituição carrega ou muda de identidade.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setThemeColor(institution.themeColor ?? '')
+       
       setLogoUrl(institution.logoUrl ?? '')
+       
       setDescription(institution.description ?? '')
+       
       setSavedAt(null)
+       
       setError(null)
     }
+    // Dependências cobrem todos os campos de identidade da instituição.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [institution?._id, institution?.themeColor, institution?.logoUrl, institution?.description])
 
   const previewColor = useMemo(() => {

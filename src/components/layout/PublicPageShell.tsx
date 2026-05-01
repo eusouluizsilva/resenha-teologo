@@ -25,6 +25,8 @@ export function PublicPageShell({ children, bare = false }: PublicPageShellProps
   const { pathname } = useLocation()
 
   useEffect(() => {
+    // Fecha o menu mobile ao mudar de rota.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false)
   }, [pathname])
 

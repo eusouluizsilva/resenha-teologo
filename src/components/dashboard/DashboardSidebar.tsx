@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { brandEyebrowClass, brandPanelSoftClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import type { UserFunction } from '@/lib/functions'

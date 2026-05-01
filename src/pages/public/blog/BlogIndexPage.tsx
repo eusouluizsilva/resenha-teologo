@@ -1,6 +1,6 @@
 import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { ArticleCard } from '@/components/blog/ArticleCard'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'

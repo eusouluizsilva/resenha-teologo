@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import {
   brandPanelClass,
   brandPrimaryButtonClass,
@@ -71,8 +71,12 @@ export function QuestionBankImportDialog({
 
   useEffect(() => {
     if (!open) {
+      // Reseta seleção quando o dialog fecha.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelected(new Set())
+       
       setSearch('')
+       
       setTagFilter('')
     }
   }, [open])

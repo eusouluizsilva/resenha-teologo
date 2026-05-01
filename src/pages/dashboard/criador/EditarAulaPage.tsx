@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation, useAction } from 'convex/react'
-import { api } from '../../../../convex/_generated/api'
-import type { Id } from '../../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
@@ -975,10 +975,16 @@ export function EditarAulaPage() {
 
   useEffect(() => {
     if (lesson && !initialized) {
+      // Hidrata o form da edição uma única vez quando a aula carrega.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(lesson.title)
+       
       setVideoUrl(lesson.youtubeUrl)
+       
       setDescription(lesson.description ?? '')
+       
       setIsPublished(lesson.isPublished)
+       
       setAllowQuizRetry(lesson.allowQuizRetry ?? false)
       if (typeof lesson.publishAt === 'number') {
         const d = new Date(lesson.publishAt)
@@ -1007,6 +1013,8 @@ export function EditarAulaPage() {
 
   useEffect(() => {
     if (quiz && !quizInitialized) {
+      // Hidrata as questões do quiz uma única vez quando o quiz carrega.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuestions(
         quiz.questions.map((q) => ({
           id: q.id,
@@ -1016,6 +1024,7 @@ export function EditarAulaPage() {
           explanation: q.explanation ?? '',
         }))
       )
+       
       setQuizInitialized(true)
     }
   }, [quiz, quizInitialized])

@@ -101,7 +101,10 @@ export function StatusPage() {
   }
 
   useEffect(() => {
+    // Roda checks ao montar a página.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     runChecks()
+     
   }, [])
 
   const overall: CheckStatus = checks.some((c) => c.status === 'down')

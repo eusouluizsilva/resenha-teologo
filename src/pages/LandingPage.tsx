@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { LazyMotion, domAnimation, m } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { AdSlot } from '@/components/AdSlot'
 import { fadeUp, fadeIn, staggerContainer, scaleSoft } from '@/lib/motion'
@@ -315,6 +315,7 @@ export function LandingPage() {
 
   return (
     <PublicPageShell>
+    <LazyMotion features={domAnimation} strict>
     <div className="min-h-screen overflow-x-hidden bg-[#0F141A] text-white">
       <section className="relative overflow-hidden px-6 pb-16 pt-32 md:pt-36">
         <div className="absolute inset-0 pointer-events-none">
@@ -330,7 +331,7 @@ export function LandingPage() {
           <div className="absolute right-[10%] top-[18%] h-72 w-72 rounded-full bg-white/5 blur-[130px]" />
         </div>
 
-        <motion.div
+        <m.div
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -338,14 +339,14 @@ export function LandingPage() {
         >
           <div className="grid items-end gap-12 lg:grid-cols-2">
             <div className="max-w-2xl">
-              <motion.div variants={fadeIn} className="inline-flex items-center gap-3 rounded-full border border-[#F37E20]/25 bg-[#F37E20]/8 px-4 py-2">
+              <m.div variants={fadeIn} className="inline-flex items-center gap-3 rounded-full border border-[#F37E20]/25 bg-[#F37E20]/8 px-4 py-2">
                 <span className="h-2 w-2 rounded-full bg-[#F37E20] shadow-[0_0_0_6px_rgba(243,126,32,0.12)]" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#F8D4B5]">
                   Formação teológica séria, gratuita e bem estruturada
                 </span>
-              </motion.div>
+              </m.div>
 
-              <motion.h1
+              <m.h1
                 variants={fadeUp}
                 className="mt-8 font-display text-[clamp(2.6rem,6vw,4.5rem)] font-extrabold leading-[1.05] tracking-[-0.04em] text-white"
               >
@@ -354,14 +355,14 @@ export function LandingPage() {
                   teológico
                 </span>{' '}
                 para quem leva formação a sério.
-              </motion.h1>
+              </m.h1>
 
-              <motion.p variants={fadeUp} className="mt-6 max-w-xl text-base leading-8 text-white/68 md:text-lg">
+              <m.p variants={fadeUp} className="mt-6 max-w-xl text-base leading-8 text-white/68 md:text-lg">
                 Alunos estudam com mais clareza e continuidade. Professores publicam com autoridade, formam comunidade e monetizam
                 sem transformar o ensino em página de venda.
-              </motion.p>
+              </m.p>
 
-              <motion.div variants={fadeUp} className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <m.div variants={fadeUp} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   to="/cadastro?perfil=aluno"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#F37E20] px-6 py-4 text-sm font-semibold text-white shadow-[0_20px_50px_rgba(243,126,32,0.24)] transition-all duration-200 hover:bg-[#e06e10]"
@@ -390,14 +391,14 @@ export function LandingPage() {
                   </svg>
                   Quero publicar meu conteúdo
                 </Link>
-              </motion.div>
+              </m.div>
 
-              <motion.p variants={fadeIn} className="mt-6 text-sm leading-6 text-white/42">
+              <m.p variants={fadeIn} className="mt-6 text-sm leading-6 text-white/42">
                 Sem venda de cursos. O estudo é livre para todos, com opção de experiência sem anúncios.
-              </motion.p>
+              </m.p>
             </div>
 
-            <motion.div variants={scaleSoft} className="relative hidden h-[34rem] lg:block lg:h-[38rem]">
+            <m.div variants={scaleSoft} className="relative hidden h-[34rem] lg:block lg:h-[38rem]">
               <div className="absolute inset-x-10 top-6 rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,#1A2230_0%,#141B24_100%)] shadow-[0_28px_90px_rgba(0,0,0,0.32)]">
                 <div className="flex items-center justify-between px-6 pt-5 text-[11px] uppercase tracking-[0.18em] text-white/38">
                   <span>Curso em destaque</span>
@@ -469,27 +470,27 @@ export function LandingPage() {
                   Versículos, materiais e anotações ficam ao lado do vídeo. Tudo permanece dentro do mesmo fluxo de estudo.
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={staggerContainer}
           {...inView}
           className="relative z-10 mx-auto mt-16 grid max-w-7xl gap-6 border-t border-white/10 pt-6 sm:grid-cols-2 lg:grid-cols-4"
         >
           {heroStats.map((stat) => (
-            <motion.div key={stat.label} variants={fadeUp}>
+            <m.div key={stat.label} variants={fadeUp}>
               <p className="font-display text-3xl font-extrabold text-white">{stat.value}</p>
               <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-white/38">{stat.label}</p>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       </section>
 
       <section className="bg-[#EFE9E1] px-6 py-24 text-[#111827]">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
-          <motion.div variants={fadeUp} className="mb-12 flex flex-wrap items-end justify-between gap-4">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+          <m.div variants={fadeUp} className="mb-12 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F37E20]">
                 Cursos em destaque
@@ -510,15 +511,15 @@ export function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5l7.5 7.5-7.5 7.5M21 12H3" />
               </svg>
             </Link>
-          </motion.div>
+          </m.div>
 
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <m.div variants={staggerContainer} className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {courseSlots.map((course, index) => {
               if (!course) {
                 return (
-                  <motion.div key={`placeholder-${index}`} variants={fadeUp}>
+                  <m.div key={`placeholder-${index}`} variants={fadeUp}>
                     <CoursePlaceholderCard />
-                  </motion.div>
+                  </m.div>
                 )
               }
               const slotLabel =
@@ -529,7 +530,7 @@ export function LandingPage() {
                     : 'Do @resenhadoteologo'
               const href = course.slug ? `/cursos/${course.slug}` : `/cursos`
               return (
-                <motion.div key={String(course._id)} variants={fadeUp}>
+                <m.div key={String(course._id)} variants={fadeUp}>
                   <Link
                     to={href}
                     className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-[#D9CFC2] bg-white transition-all hover:border-[#F37E20]/40 hover:shadow-[0_24px_60px_rgba(17,24,39,0.08)]"
@@ -587,17 +588,17 @@ export function LandingPage() {
                       </div>
                     </div>
                   </Link>
-                </motion.div>
+                </m.div>
               )
             })}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </section>
 
       {featuredArticles && featuredArticles.length > 0 && (
         <section className="bg-[#F7F5F2] px-6 py-24 text-[#111827]">
-          <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
-            <motion.div variants={fadeUp} className="mb-12 flex flex-wrap items-end justify-between gap-4">
+          <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+            <m.div variants={fadeUp} className="mb-12 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F37E20]">
                   Em destaque no blog
@@ -618,9 +619,9 @@ export function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5l7.5 7.5-7.5 7.5M21 12H3" />
                 </svg>
               </Link>
-            </motion.div>
+            </m.div>
 
-            <motion.div variants={staggerContainer} className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <m.div variants={staggerContainer} className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {featuredArticles.map((article) => {
                 const slotLabel =
                   article.slot === 'top'
@@ -629,7 +630,7 @@ export function LandingPage() {
                       ? 'Mais recente'
                       : 'Do @resenhadoteologo'
                 return (
-                  <motion.div key={String(article._id)} variants={fadeUp}>
+                  <m.div key={String(article._id)} variants={fadeUp}>
                     <Link
                       to={
                         article.author.handle
@@ -686,33 +687,33 @@ export function LandingPage() {
                         </div>
                       </div>
                     </Link>
-                  </motion.div>
+                  </m.div>
                 )
               })}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </section>
       )}
 
       <section className="bg-[#F7F5F2] px-6 py-24 text-[#111827]">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
-            <motion.div variants={fadeUp}>
+            <m.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Modelo da plataforma"
                 title="Acesso livre para o aluno, autoridade para o professor e sustentabilidade para a plataforma."
                 description="O aluno não precisa pagar para começar a estudar. O professor não precisa vender curso para gerar receita. A plataforma organiza os dois lados dentro da mesma lógica."
                 light
               />
-            </motion.div>
-            <motion.p variants={fadeUp} className="max-w-xl text-sm leading-7 text-[#5A6472] md:text-base">
+            </m.div>
+            <m.p variants={fadeUp} className="max-w-xl text-sm leading-7 text-[#5A6472] md:text-base">
               A Resenha do Teólogo parte de uma convicção simples: formação teológica de qualidade deve ser acessível. Professores ganham estrutura e apoio. Alunos ganham estudo sério, sem que o acesso dependa da venda do conteúdo.
-            </motion.p>
+            </m.p>
           </div>
 
           <div className="mt-14 grid gap-5 lg:grid-cols-3">
             {accessModel.map((item) => (
-              <motion.div
+              <m.div
                 key={item.title}
                 variants={scaleSoft}
                 className={`rounded-[1.8rem] border px-7 py-7 ${
@@ -736,16 +737,16 @@ export function LandingPage() {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </section>
 
       <section className="bg-[#0A0E13] px-6 py-24">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <motion.div variants={scaleSoft} className="overflow-hidden rounded-[2rem] border border-white/8">
+            <m.div variants={scaleSoft} className="overflow-hidden rounded-[2rem] border border-white/8">
               <img
                 src="/fotos/library-hall.jpg"
                 alt="Biblioteca teológica"
@@ -753,9 +754,9 @@ export function LandingPage() {
                 decoding="async"
                 className="h-full min-h-[30rem] w-full object-cover object-center"
               />
-            </motion.div>
+            </m.div>
 
-            <motion.div variants={fadeUp}>
+            <m.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Biblioteca teológica"
                 title="Uma biblioteca teológica integrada ao ambiente de estudo."
@@ -780,13 +781,13 @@ export function LandingPage() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
+        </m.div>
       </section>
 
       <section id="como-funciona" className="bg-[#0D1218] px-6 py-24">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Como funciona"
             title="Do vídeo ao certificado, com uma jornada que transforma aula em formação."
@@ -795,7 +796,7 @@ export function LandingPage() {
           />
 
           <div className="mt-14 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <motion.div variants={scaleSoft} className="overflow-hidden rounded-[2rem] border border-white/8">
+            <m.div variants={scaleSoft} className="overflow-hidden rounded-[2rem] border border-white/8">
               <img
                 src="/fotos/bible-laptop-headphones.jpg"
                 alt="Bíblia e laptop sobre mesa de estudo"
@@ -803,25 +804,25 @@ export function LandingPage() {
                 decoding="async"
                 className="h-full min-h-[28rem] w-full object-cover object-center"
               />
-            </motion.div>
+            </m.div>
 
             <div className="grid gap-5">
               {learningFlow.map((item) => (
-                <motion.div key={item.step} variants={fadeUp} className="rounded-[1.7rem] border border-white/8 bg-white/3 p-7">
+                <m.div key={item.step} variants={fadeUp} className="rounded-[1.7rem] border border-white/8 bg-white/3 p-7">
                   <span className="font-display text-sm font-bold tracking-[0.2em] text-[#F37E20]/55">{item.step}</span>
                   <h3 className="mt-4 font-display text-2xl font-bold text-white">{item.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-white/58">{item.description}</p>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </section>
 
       <section id="para-alunos" className="bg-[#F7F5F2] px-6 py-24 text-[#111827]">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <motion.div variants={scaleSoft} className="order-2 rounded-[2rem] border border-[#E4DCD2] bg-white p-7 shadow-[0_18px_50px_rgba(17,24,39,0.06)] lg:order-1">
+            <m.div variants={scaleSoft} className="order-2 rounded-[2rem] border border-[#E4DCD2] bg-white p-7 shadow-[0_18px_50px_rgba(17,24,39,0.06)] lg:order-1">
               <div className="flex items-center justify-between border-b border-[#ECE5DD] pb-4">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.18em] text-[#9D7B5E]">Modo de estudo</p>
@@ -856,9 +857,9 @@ export function LandingPage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
 
-            <motion.div variants={fadeUp} className="order-1 lg:order-2">
+            <m.div variants={fadeUp} className="order-1 lg:order-2">
               <SectionIntro
                 eyebrow="Para alunos"
                 title="Um lugar para estudar de verdade, não só para assistir vídeos."
@@ -883,15 +884,15 @@ export function LandingPage() {
                   Criar minha conta de aluno
                 </Link>
               </div>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
+        </m.div>
       </section>
 
       <section id="para-professores" className="bg-[#0A0E13] px-6 py-24">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[1fr_0.95fr] lg:items-center">
-            <motion.div variants={fadeUp}>
+            <m.div variants={fadeUp}>
               <SectionIntro
                 eyebrow="Para professores"
                 title="Publique cursos com a seriedade que seu conteúdo exige."
@@ -915,9 +916,9 @@ export function LandingPage() {
                   Criar minha conta de criador
                 </Link>
               </div>
-            </motion.div>
+            </m.div>
 
-            <motion.div variants={scaleSoft} className="space-y-4">
+            <m.div variants={scaleSoft} className="space-y-4">
               <div className="overflow-hidden rounded-[2rem] border border-white/8">
                 <img
                   src="/fotos/creator-recording.jpg"
@@ -947,13 +948,13 @@ export function LandingPage() {
                   Seu conteúdo passa a ser percebido dentro de uma plataforma séria, com linguagem visual que reforça autoridade e maturidade.
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
+        </m.div>
       </section>
 
       <section id="para-igrejas" className="bg-[#EEE7DE] px-6 py-24 text-[#111827]">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Para igrejas e instituições"
             title="Formação coletiva com a seriedade que sua comunidade exige."
@@ -964,26 +965,26 @@ export function LandingPage() {
 
           <div className="mt-14 grid gap-5 lg:grid-cols-3">
             {institutionFeatures.map((item) => (
-              <motion.div key={item.title} variants={scaleSoft} className="rounded-[1.7rem] border border-[#DED3C6] bg-white px-6 py-6">
+              <m.div key={item.title} variants={scaleSoft} className="rounded-[1.7rem] border border-[#DED3C6] bg-white px-6 py-6">
                 <h3 className="font-display text-xl font-bold text-[#111827]">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-[#5A6472]">{item.description}</p>
-              </motion.div>
+              </m.div>
             ))}
           </div>
 
-          <motion.div variants={fadeUp} className="mt-10 text-center">
+          <m.div variants={fadeUp} className="mt-10 text-center">
             <Link
               to="/cadastro?perfil=instituicao"
               className="inline-flex items-center gap-2 rounded-2xl border border-[#CDBEAF] bg-white px-6 py-4 text-sm font-semibold text-[#111827] transition-colors duration-200 hover:border-[#BBA48E] hover:bg-[#F7F2EC]"
             >
               Solicitar plano institucional
             </Link>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </section>
 
       <section className="bg-[#0D1218] px-6 py-24">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Diferença real"
             title="O que separa a Resenha do Teólogo de qualquer outra plataforma."
@@ -991,7 +992,7 @@ export function LandingPage() {
             centered
           />
 
-          <motion.div variants={fadeUp} className="mt-14 overflow-hidden rounded-[2rem] border border-white/8 bg-[#131A23]">
+          <m.div variants={fadeUp} className="mt-14 overflow-hidden rounded-[2rem] border border-white/8 bg-[#131A23]">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[48rem] text-sm">
                 <thead>
@@ -1018,12 +1019,12 @@ export function LandingPage() {
                 </tbody>
               </table>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </section>
 
       <section id="planos" className="bg-[#F7F5F2] px-6 py-24 text-[#111827]">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-7xl">
           <SectionIntro
             eyebrow="Planos"
             title="Todo o conteúdo é livre. O plano premium apenas melhora a experiência."
@@ -1065,7 +1066,7 @@ export function LandingPage() {
                 highlight: false,
               },
             ].map((plan) => (
-              <motion.div
+              <m.div
                 key={plan.name}
                 variants={scaleSoft}
                 className={`flex flex-col rounded-[1.8rem] border px-7 py-7 ${
@@ -1109,24 +1110,24 @@ export function LandingPage() {
                     {plan.cta}
                   </Link>
                 )}
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </section>
 
       <section className="px-6 py-24">
-        <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-4xl text-center">
-          <motion.div variants={fadeIn}>
+        <m.div variants={staggerContainer} {...inView} className="mx-auto max-w-4xl text-center">
+          <m.div variants={fadeIn}>
             <img src="/logos/LOGO ICONE BRANCA.png" alt="Resenha do Teólogo" loading="lazy" decoding="async" width="144" height="144" className="mx-auto mb-8 h-36 w-36" />
-          </motion.div>
-          <motion.h2 variants={fadeUp} className="font-display text-3xl font-bold leading-tight text-white md:text-4xl">
+          </m.div>
+          <m.h2 variants={fadeUp} className="font-display text-3xl font-bold leading-tight text-white md:text-4xl">
             Comece hoje sua formação teológica, gratuitamente.
-          </motion.h2>
-          <motion.p variants={fadeUp} className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/56 md:text-base">
+          </m.h2>
+          <m.p variants={fadeUp} className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/56 md:text-base">
             Formação teológica séria, gratuita e bem organizada. Crie sua conta, escolha seus cursos e comece a estudar com professores comprometidos com conteúdo sólido.
-          </motion.p>
-          <motion.div variants={fadeUp} className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+          </m.p>
+          <m.div variants={fadeUp} className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
               to="/cadastro?perfil=aluno"
               className="rounded-2xl bg-[#F37E20] px-8 py-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#e06e10]"
@@ -1139,8 +1140,8 @@ export function LandingPage() {
             >
               Publicar meu conteúdo
             </Link>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </section>
 
       <div className="mx-auto my-8 max-w-3xl px-6">
@@ -1226,6 +1227,7 @@ export function LandingPage() {
         </div>
       </footer>
     </div>
+    </LazyMotion>
     </PublicPageShell>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
+import { api } from '@convex/_generated/api'
+import type { Id } from '@convex/_generated/dataModel'
 import { brandPrimaryButtonClass, cn } from '@/lib/brand'
 
 // Modal de avaliacao pos-conclusao do curso. Aparece para o aluno quando
@@ -35,8 +35,12 @@ export function CourseRatingModal({
 
   useEffect(() => {
     if (open) {
+      // Reseta o formulário sempre que o modal abre, refletindo props atuais.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStars(initialStars ?? 0)
+       
       setReview(initialReview ?? '')
+       
       setError(null)
     }
   }, [open, initialStars, initialReview])
