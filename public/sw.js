@@ -6,7 +6,7 @@
 // - Imagens cross-origin (covers/thumbnails): stale-while-revalidate (cap)
 // Convex, Clerk, AdSense, GA4 e Meta Pixel passam direto sem cache.
 
-const VERSION = 'v4'
+const VERSION = 'v5'
 const STATIC_CACHE = `resenha-static-${VERSION}`
 const NAV_CACHE = `resenha-nav-${VERSION}`
 const FONT_CACHE = `resenha-fonts-${VERSION}`

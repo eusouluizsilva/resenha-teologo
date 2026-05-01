@@ -1,15 +1,21 @@
 // Preview HTML do certificado academico. Usa /certificates/template-academic.png
 // como fundo (arte ornamental gerada por IA: bordas filigranadas, brasao com
 // Biblia aberta + chama do Espirito + ramos de oliveira + fita Sola Scriptura,
-// marca dagua central) e sobrepoe texto dinamico com fontes Google: Cinzel
-// para titulos em capitular, EB Garamond para corpo serif, Pinyon Script para
-// o nome do aluno em caligrafia. O download em PDF e gerado por html2canvas-pro
-// + jsPDF capturando esse mesmo DOM, garantindo paridade pixel-perfect entre
-// tela e impressao.
+// marca dagua central) e sobrepoe texto dinamico com fontes self-hosted via
+// @fontsource (Cinzel para titulos em capitular, EB Garamond para corpo serif,
+// Pinyon Script para o nome do aluno em caligrafia). O download em PDF e
+// gerado por html2canvas-pro + jsPDF capturando esse mesmo DOM, garantindo
+// paridade pixel-perfect entre tela e impressao.
 
 import { useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { formatCourseHours } from '@/lib/certificate'
+import '@fontsource/cinzel/500.css'
+import '@fontsource/cinzel/700.css'
+import '@fontsource/eb-garamond/400.css'
+import '@fontsource/eb-garamond/500.css'
+import '@fontsource/eb-garamond/600.css'
+import '@fontsource/eb-garamond/400-italic.css'
+import '@fontsource/pinyon-script/400.css'
 
 type CertificateData = {
   studentName: string
@@ -22,20 +28,10 @@ type CertificateData = {
   lessonsCount?: number
 }
 
-const FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Pinyon+Script&display=swap'
-
 function ensureFontsLoaded(): Promise<void> {
-  if (typeof document === 'undefined') return Promise.resolve()
-  if (document.querySelector(`link[data-cert-fonts="1"]`)) {
-    return document.fonts ? document.fonts.ready.then(() => undefined) : Promise.resolve()
-  }
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = FONTS_HREF
-  link.dataset.certFonts = '1'
-  document.head.appendChild(link)
-  if (!document.fonts) return Promise.resolve()
+  // Fontes injetadas via @fontsource imports estaticos no topo do arquivo.
+  // document.fonts.ready aguarda o navegador terminar o load das woff2.
+  if (typeof document === 'undefined' || !document.fonts) return Promise.resolve()
   return document.fonts.ready.then(() => undefined)
 }
 
@@ -102,15 +98,19 @@ export function CertificatePreview({
 
   useEffect(() => {
     let cancelled = false
-    QRCode.toDataURL(verifyUrl, {
-      margin: 0,
-      width: 256,
-      color: { dark: '#1E2430', light: '#F4EFE2' },
-    })
-      .then((url) => {
-        if (!cancelled) setQrUrl(url)
+    // Lazy-load do qrcode (~30KB) só quando o certificado é aberto. Antes
+    // estava no bundle estático dessa rota mesmo sem certificado em tela.
+    import('qrcode').then(({ default: QRCode }) =>
+      QRCode.toDataURL(verifyUrl, {
+        margin: 0,
+        width: 256,
+        color: { dark: '#1E2430', light: '#F4EFE2' },
       })
-      .catch(() => {})
+        .then((url) => {
+          if (!cancelled) setQrUrl(url)
+        })
+        .catch(() => {}),
+    )
     return () => {
       cancelled = true
     }

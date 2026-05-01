@@ -491,7 +491,9 @@ export default defineSchema({
     message: v.optional(v.string()),
     status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')),
     stripePaymentId: v.optional(v.string()),
-  }).index('by_creatorId', ['creatorId']),
+  })
+    .index('by_creatorId', ['creatorId'])
+    .index('by_studentId', ['studentId']),
 
   testimonials: defineTable({
     authorId: v.string(),

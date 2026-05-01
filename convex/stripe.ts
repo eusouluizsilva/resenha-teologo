@@ -50,7 +50,11 @@ async function stripeRequest<T>(
   })
   if (!resp.ok) {
     const text = await resp.text()
-    throw new Error(`Stripe API ${resp.status}: ${text}`)
+    // Loga corpo bruto da Stripe pro server-side e propaga só o status pro
+    // client. O corpo pode conter PII e mensagens internas que não devem
+    // vazar pro frontend.
+    console.error('[stripe] erro upstream', resp.status, text)
+    throw new Error(`Stripe API erro ${resp.status}`)
   }
   return (await resp.json()) as T
 }
@@ -173,6 +177,37 @@ export const upsertFromWebhook = internalMutation({
       )
       .unique()
 
+    // Hardening anti-bypass: se a subscription já existe gravada com outro
+    // userId, rejeita a mudança. Cenário: atacante tenta reaproveitar um
+    // stripeSubscriptionId que já pertence a outro user, ou metadata.clerkUserId
+    // foi adulterada em algum ponto. O userId só pode mudar via fluxo de
+    // transferência (que não temos), nunca via webhook.
+    if (existing && existing.userId !== args.clerkUserId) {
+      console.error(
+        '[stripe.upsertFromWebhook] tentativa de cross-user para subscription',
+        args.stripeSubscriptionId,
+        'gravada=', existing.userId,
+        'recebida=', args.clerkUserId,
+      )
+      return
+    }
+
+    // Hardening: clerkUserId precisa corresponder a um users existente. Se
+    // chegar um webhook com clerkUserId fantasma, ignora em vez de criar
+    // subscription órfã ou ativar premium em registro inexistente.
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', args.clerkUserId))
+      .unique()
+    if (!user) {
+      console.error(
+        '[stripe.upsertFromWebhook] clerkUserId desconhecido',
+        args.clerkUserId,
+        'subscription=', args.stripeSubscriptionId,
+      )
+      return
+    }
+
     if (existing) {
       await ctx.db.patch(existing._id, {
         plan: args.plan,
@@ -198,16 +233,8 @@ export const upsertFromWebhook = internalMutation({
       })
     }
 
-    // Sincroniza users.isPremium com base no status. 'active' e 'trialing' contam
-    // como premium; qualquer outro status (canceled, past_due, unpaid) desliga.
     const isActive = args.status === 'active' || args.status === 'trialing'
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', args.clerkUserId))
-      .unique()
-    if (user) {
-      await ctx.db.patch(user._id, { isPremium: isActive })
-    }
+    await ctx.db.patch(user._id, { isPremium: isActive })
   },
 })
 

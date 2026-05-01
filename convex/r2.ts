@@ -86,11 +86,27 @@ async function hmac(key: ArrayBuffer, msg: string): Promise<ArrayBuffer> {
   return await crypto.subtle.sign('HMAC', k, toArrayBuffer(new TextEncoder().encode(msg)))
 }
 
+// Cache da signing key por (secret, dateStamp). Evita refazer 4 HMACs por
+// presign quando uma listagem pede 20+ URLs no mesmo segundo. A chave gira
+// por dia, então o cache cresce no máximo em 2 entradas (limite do scope).
+const signingKeyCache = new Map<string, Promise<ArrayBuffer>>()
+
 async function signingKey(secret: string, dateStamp: string): Promise<ArrayBuffer> {
-  const kDate = await hmac(toArrayBuffer(new TextEncoder().encode(`AWS4${secret}`)), dateStamp)
-  const kRegion = await hmac(kDate, REGION)
-  const kService = await hmac(kRegion, SERVICE)
-  return await hmac(kService, 'aws4_request')
+  const cacheKey = `${dateStamp}:${secret.slice(0, 8)}`
+  const cached = signingKeyCache.get(cacheKey)
+  if (cached) return cached
+  const promise = (async () => {
+    const kDate = await hmac(toArrayBuffer(new TextEncoder().encode(`AWS4${secret}`)), dateStamp)
+    const kRegion = await hmac(kDate, REGION)
+    const kService = await hmac(kRegion, SERVICE)
+    return await hmac(kService, 'aws4_request')
+  })()
+  signingKeyCache.set(cacheKey, promise)
+  if (signingKeyCache.size > 4) {
+    const firstKey = signingKeyCache.keys().next().value
+    if (firstKey) signingKeyCache.delete(firstKey)
+  }
+  return promise
 }
 
 // RFC 3986 unreserved encoding (S3 canonical query string)
@@ -341,21 +357,24 @@ export const generateUploadUrl = action({
 })
 
 // ──────────────────────────────────────────────────────────────────────────
-// ACTION: gera URL pré-assinada de leitura (GET) — útil quando o bucket é
-// privado e o cliente precisa baixar (ex: PDF de aula com matrícula ativa).
-// Caller deve já ter validado autorização antes de chamar.
+// INTERNAL ACTION: gera URL pré-assinada de leitura (GET).
+//
+// IMPORTANTE: era public action e foi convertida pra internal porque aceitava
+// qualquer key sem checar ownership ou matrícula. Qualquer logado conseguia
+// presignar download de objeto privado de outros tenants. Agora só pode ser
+// chamada de outras actions/mutations do servidor que validaram acesso antes
+// (ex: lessonMaterials.getDownloadUrl que valida `requireLessonAccess`).
+// Não exponha como public sem antes adicionar verificação de prefixo + auth.
 // ──────────────────────────────────────────────────────────────────────────
-export const generateDownloadUrl = action({
+export const generateDownloadUrl = internalAction({
   args: { key: v.string(), expiresInSec: v.optional(v.number()) },
-  handler: async (ctx, { key, expiresInSec }) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error('Não autenticado')
+  handler: async (_ctx, { key, expiresInSec }) => {
     const env = getR2Env()
     return await presignS3Url({
       env,
       method: 'GET',
       key,
-      expiresInSec: expiresInSec ?? 60 * 60, // 1h default
+      expiresInSec: expiresInSec ?? 60 * 60,
     })
   },
 })

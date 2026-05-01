@@ -11,7 +11,17 @@
 // description, og:image, JSON-LD Article + BreadcrumbList e o body em HTML
 // pra Googlebot/Bingbot indexarem o texto direto.
 
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+// Tipos minimais inline para evitar a dependencia @vercel/node (que arrasta
+// vulnerabilidades transitivas em path-to-regexp, undici, ajv, minimatch, etc).
+// O runtime real e provido pelo Vercel; aqui so precisamos da forma do handler.
+type VercelRequest = {
+  query: Record<string, string | string[] | undefined>
+  url?: string
+}
+type VercelResponse = {
+  setHeader: (name: string, value: string) => void
+  status: (code: number) => { send: (body: string) => unknown }
+}
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '../convex/_generated/api.js'
 import { marked } from 'marked'
@@ -225,7 +235,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const canonical = `${SITE_ORIGIN}/blog/${handle}/${slug}`
     const description = post.excerpt || post.title
     const image = post.coverImageUrl || DEFAULT_OG_IMAGE
-    const bodyHtml = await marked.parse(post.bodyMarkdown || '', { async: true })
+    const rawBody = await marked.parse(post.bodyMarkdown || '', { async: true })
+    // Sanitize: remove tags perigosas (script, iframe, object, embed, link,
+    // meta, style) e atributos on*/javascript: do HTML servido a crawlers.
+    // Sem isso, autor de blog poderia injetar <script> que executa em
+    // previews de Slack/WhatsApp/Googlebot (ataque XSS via SSR).
+    const bodyHtml = rawBody
+      .replace(/<\/?(script|iframe|object|embed|link|meta|style|form|input|button|textarea|select)[\s>][\s\S]*?(?:<\/(?:script|iframe|object|embed|style|form|textarea|select)>|>)/gi, '')
+      .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+      .replace(/\s(href|src|action)\s*=\s*("|')\s*javascript:[^"']*("|')/gi, ' $1=$2#$3')
 
     const html = renderHtml({
       title: `${post.title}, ${post.author.name}, Resenha do Teólogo`,

@@ -1,8 +1,38 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { useBreadcrumbJsonLd, useFaqJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+
+// Foto do fundador com fallback de placeholder. Usa state em vez de manipular
+// DOM via parent.innerHTML (que escapa do reconciler React e quebra hidratação).
+function FounderPhoto() {
+  const [errored, setErrored] = useState(false)
+  if (errored) {
+    return (
+      <div className="overflow-hidden rounded-[2rem] border border-white/8 bg-white/[0.03]">
+        <div className="flex aspect-[3/4] w-full items-center justify-center bg-white/[0.02] text-white/24">
+          <svg className="h-16 w-16" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="overflow-hidden rounded-[2rem] border border-white/8 bg-white/[0.03]">
+      <img
+        src="/fotos/luiz.jpg"
+        alt="Luiz Carlos da Silva Junior, fundador da Resenha do Teólogo"
+        loading="lazy"
+        decoding="async"
+        className="aspect-[3/4] w-full object-cover"
+        onError={() => setErrored(true)}
+      />
+    </div>
+  )
+}
 
 const pilares = [
   {
@@ -184,25 +214,7 @@ export function SobrePage() {
           </motion.h2>
 
           <motion.div variants={fadeUp} className="mt-10 grid gap-8 md:grid-cols-[0.8fr_1.2fr] md:items-start">
-            <div className="overflow-hidden rounded-[2rem] border border-white/8 bg-white/[0.03]">
-              <img
-                src="/fotos/luiz.jpg"
-                alt="Luiz Carlos da Silva Junior, fundador da Resenha do Teólogo"
-                loading="lazy"
-                decoding="async"
-                className="aspect-[3/4] w-full object-cover"
-                onError={(e) => {
-                  const target = e.currentTarget
-                  target.style.display = 'none'
-                  const parent = target.parentElement
-                  if (parent) {
-                    parent.classList.add('flex', 'items-center', 'justify-center')
-                    parent.innerHTML =
-                      '<div class="flex aspect-[3/4] w-full items-center justify-center bg-white/[0.02] text-white/24"><svg class="h-16 w-16" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div>'
-                  }
-                }}
-              />
-            </div>
+            <FounderPhoto />
 
             <div>
               <h3 className="font-display text-2xl font-bold text-white md:text-3xl">Luiz Carlos da Silva Junior</h3>

@@ -18,7 +18,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - run: npm install --prefer-offline
+      - run: npm ci --prefer-offline
 
       - name: Deploy Convex functions to production
         run: npx convex deploy --typecheck=disable

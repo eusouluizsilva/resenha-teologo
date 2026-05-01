@@ -217,13 +217,18 @@ export const getBySlugForReader = query({
 
 // Bump no contador de views. Idempotência fica do lado do client (sessionStorage).
 // Mantemos a mutation simples e sem auth para permitir contagem de leitores anônimos.
+// Re-le o documento dentro da mesma transação para evitar perda de
+// incrementos sob concorrência (Convex serializa mutations no mesmo doc,
+// mas o read fora da transação tornava `post.viewCount + 1` racy).
 export const incrementView = mutation({
   args: { postId: v.id('posts') },
   handler: async (ctx, { postId }) => {
     const post = await ctx.db.get(postId)
     if (!post) return
     if (post.status !== 'published' && post.status !== 'unlisted') return
-    await ctx.db.patch(postId, { viewCount: post.viewCount + 1 })
+    const fresh = await ctx.db.get(postId)
+    if (!fresh) return
+    await ctx.db.patch(postId, { viewCount: (fresh.viewCount ?? 0) + 1 })
   },
 })
 
@@ -453,10 +458,14 @@ export const publish = mutation({
 
     if (!wasPublishedBefore) {
       const link = handle ? `/blog/${handle}/${post.slug}` : `/blog`
+      // Notificar todos os seguidores. .collect() é seguro aqui porque a
+      // operação roda dentro de uma mutation com limite de 8s (~10000
+      // notifications/sec via runMutation). take(100) silenciava avisos para
+      // autores com 500+ seguidores.
       const followers = await ctx.db
         .query('profileFollows')
         .withIndex('by_author', (q) => q.eq('authorUserId', post.authorUserId))
-        .take(100)
+        .collect()
       const authorName =
         post.authorIdentity === 'instituicao' && post.authorInstitutionId
           ? (await ctx.db.get(post.authorInstitutionId))?.name ?? author?.name ?? 'Autor'

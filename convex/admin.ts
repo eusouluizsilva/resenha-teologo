@@ -663,8 +663,30 @@ export const sendBroadcastNotification = mutation({
     const body = args.body?.trim()
     if (body && body.length > 500) throw new Error('Mensagem acima de 500 caracteres.')
     const link = args.link?.trim() || undefined
-    if (link && !link.startsWith('/') && !link.startsWith('http')) {
-      throw new Error('Link deve começar com / (rota interna) ou http (URL externa).')
+    if (link) {
+      // Whitelist explícita: rota interna (/) ou domínio próprio. Bloqueia
+      // open redirect via broadcast (qualquer admin podia mandar URL externa
+      // arbitrária para todos os usuários, ataque de phishing perfeito).
+      const ALLOWED_HOSTS = new Set([
+        'resenhadoteologo.com',
+        'www.resenhadoteologo.com',
+      ])
+      if (link.startsWith('/')) {
+        // OK, rota interna
+      } else if (link.startsWith('http://') || link.startsWith('https://')) {
+        let parsed: URL
+        try {
+          parsed = new URL(link)
+        } catch (err) {
+          console.error('[admin.broadcast] URL inválida', link, err)
+          throw new Error('URL inválida.')
+        }
+        if (!ALLOWED_HOSTS.has(parsed.hostname)) {
+          throw new Error(`Link externo bloqueado. Hosts permitidos: ${[...ALLOWED_HOSTS].join(', ')}.`)
+        }
+      } else {
+        throw new Error('Link deve começar com / (rota interna) ou https://resenhadoteologo.com.')
+      }
     }
     const dedupeKey = args.dedupeKey.trim()
     if (dedupeKey.length === 0) throw new Error('Chave de deduplicação obrigatória.')

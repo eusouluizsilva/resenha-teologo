@@ -122,7 +122,40 @@ export const updateProfile = mutation({
       .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
       .unique()
     if (!user) throw new Error('Usuário não encontrado')
-    await ctx.db.patch(user._id, fields)
+
+    // Sanitização: campos que viram href em <a> precisam recusar
+    // javascript:/data:/vbscript:. Sem isso, autor de perfil podia gravar
+    // `javascript:alert(1)` e o link no perfil público disparava XSS.
+    // Aceita só http(s):// ou caminho relativo iniciando em /.
+    const sanitizeUrl = (raw: string | undefined): string | undefined => {
+      if (raw === undefined) return undefined
+      const trimmed = raw.trim()
+      if (trimmed === '') return ''
+      const lower = trimmed.toLowerCase()
+      if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('vbscript:')) return ''
+      // Permite https?:// ou caminho relativo. Sem esquema, prefixa https://.
+      if (/^https?:\/\//i.test(trimmed)) return trimmed
+      if (trimmed.startsWith('/')) return trimmed
+      return `https://${trimmed}`
+    }
+    const sanitizeHandle = (raw: string | undefined): string | undefined => {
+      if (raw === undefined) return undefined
+      // Para handles de redes sociais (instagram/facebook/etc), aceita só
+      // caracteres alfanuméricos, ponto, sublinhado e hífen. Recusa qualquer
+      // coisa com ":" ou "<", evitando ataques quando concatenados em href.
+      return raw.trim().replace(/[^a-zA-Z0-9._\-@]/g, '')
+    }
+    const safe = {
+      ...fields,
+      website: sanitizeUrl(fields.website),
+      youtubeChannel: sanitizeUrl(fields.youtubeChannel),
+      instagram: sanitizeHandle(fields.instagram),
+      facebook: sanitizeHandle(fields.facebook),
+      linkedin: sanitizeHandle(fields.linkedin),
+      twitter: sanitizeHandle(fields.twitter),
+      churchInstagram: sanitizeHandle(fields.churchInstagram),
+    }
+    await ctx.db.patch(user._id, safe)
   },
 })
 

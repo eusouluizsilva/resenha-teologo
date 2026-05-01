@@ -16,7 +16,7 @@
   "icons": [
     {
       "src": "/logos/LOGO ICONE PRETA.png",
-      "sizes": "512x512",
+      "sizes": "192x192 256x256 384x384 512x512",
       "type": "image/png",
       "purpose": "any"
     },

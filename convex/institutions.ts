@@ -197,18 +197,17 @@ export const listMembers = query({
 })
 
 // Gera um token aleatório não sequencial para convites. Usar _id do Convex como
-// token seria inseguro porque expõe a ordem de inserção. Usamos crypto quando
-// disponível no runtime V8 do Convex, com fallback em Math.random.
+// token seria inseguro porque expõe a ordem de inserção. Exige WebCrypto no
+// runtime V8 do Convex, sem fallback inseguro: Math.random é previsível e
+// permitiria bruteforce do convite.
 function generateInviteToken(): string {
   const g = globalThis as { crypto?: { getRandomValues: (a: Uint8Array) => Uint8Array } }
-  if (g.crypto?.getRandomValues) {
-    const bytes = new Uint8Array(24)
-    g.crypto.getRandomValues(bytes)
-    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  if (!g.crypto?.getRandomValues) {
+    throw new Error('WebCrypto indisponível, não é possível gerar token de convite')
   }
-  let s = ''
-  for (let i = 0; i < 48; i++) s += Math.floor(Math.random() * 16).toString(16)
-  return s
+  const bytes = new Uint8Array(24)
+  g.crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias

@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { autoEnrollAllUsersInCourse } from './lib/autoEnroll'
@@ -175,7 +175,10 @@ export const getBySlug = query({
   },
 })
 
-export const generateSlugs = mutation({
+// Backfill de slugs em cursos antigos. Era mutation pública sem auth (mesma
+// natureza do bug em lessons.generateLessonSlugs corrigido em #36). Convertido
+// pra internalMutation: só roda via Convex Dashboard ou ctx.runMutation.
+export const generateSlugs = internalMutation({
   args: {},
   handler: async (ctx) => {
     const courses = await ctx.db.query('courses').collect()
@@ -360,31 +363,35 @@ export const remove = mutation({
 
     const cComments = await ctx.db
       .query('courseComments')
-      .filter((q) => q.eq(q.field('courseId'), id))
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
     await Promise.all(cComments.map((c) => ctx.db.delete(c._id)))
 
-    const lComments = await ctx.db
-      .query('lessonComments')
-      .filter((q) => q.eq(q.field('courseId'), id))
-      .collect()
-    await Promise.all(lComments.map((c) => ctx.db.delete(c._id)))
+    // lessonComments tem by_lessonId mas não by_courseId; iterar por aula
+    // (lessons já estão coletadas no início da mutation).
+    for (const lesson of lessons) {
+      const lComments = await ctx.db
+        .query('lessonComments')
+        .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
+        .collect()
+      await Promise.all(lComments.map((c) => ctx.db.delete(c._id)))
+    }
 
     const ratings = await ctx.db
       .query('courseRatings')
-      .filter((q) => q.eq(q.field('courseId'), id))
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
     await Promise.all(ratings.map((r) => ctx.db.delete(r._id)))
 
     const questions = await ctx.db
       .query('courseQuestions')
-      .filter((q) => q.eq(q.field('courseId'), id))
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
     await Promise.all(questions.map((q) => ctx.db.delete(q._id)))
 
     const coauthors = await ctx.db
       .query('courseCoauthors')
-      .filter((q) => q.eq(q.field('courseId'), id))
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
       .collect()
     await Promise.all(coauthors.map((c) => ctx.db.delete(c._id)))
 

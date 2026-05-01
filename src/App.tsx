@@ -404,7 +404,11 @@ function RouteTracker() {
       sessionId: getSessionId(),
       referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
       device: detectDevice(),
-    }).catch(() => { /* silencioso */ })
+    }).catch((err) => {
+      // Não bloqueia navegação por falha de tracking, mas registra pra não
+      // perder visibilidade quando Convex estiver com problema.
+      console.warn('[analytics] logPageView falhou', err)
+    })
   }, [location.pathname, location.search, logPageView])
   return null
 }

@@ -279,13 +279,16 @@ export const deleteAccount = mutation({
     for (const m of memberships) await ctx.db.delete(m._id)
 
     // Doações concluídas: anonimiza studentId para manter histórico fiscal.
+    // Usa userId original com prefixo "deleted:" para evitar colisão de
+    // identidade entre múltiplos exclusões (literal "deleted-user" colidia
+    // em rastreio fiscal de múltiplos antigos doadores).
     const donations = await ctx.db
       .query('donations')
-      .filter((q) => q.eq(q.field('studentId'), userId))
+      .withIndex('by_studentId', (q) => q.eq('studentId', userId))
       .collect()
     for (const d of donations) {
       await ctx.db.patch(d._id, {
-        studentId: 'deleted-user',
+        studentId: `deleted:${userId}`,
         studentName: 'Usuário excluído',
       })
     }

@@ -277,12 +277,17 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
 // servir um sw.js diferente, o navegador instala em background e
 // PWAUpdateNotification mostra o prompt de "Atualizar".
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // Guarda o handle do interval pra evitar duplicação se o registro
+  // disparar mais de uma vez (não deveria, mas hot-reload em prod via
+  // back/forward cache pode reentrar).
+  let updateIntervalId: ReturnType<typeof setInterval> | null = null
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
         const checkForUpdate = () => reg.update().catch(() => undefined)
-        setInterval(checkForUpdate, 60 * 60 * 1000)
+        if (updateIntervalId !== null) clearInterval(updateIntervalId)
+        updateIntervalId = setInterval(checkForUpdate, 60 * 60 * 1000)
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible') checkForUpdate()
         })

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
@@ -38,17 +38,13 @@ export function AdSlot({
   const isPremium = useIsPremium()
   const insRef = useRef<HTMLModElement | null>(null)
   const reportedRef = useRef(false)
-  const [shouldRender, setShouldRender] = useState(false)
   const logImpression = useMutation(api.analytics.logAdImpression)
 
   const publisherId = getAdSensePublisherId()
   const enabled = isAdSenseEnabled()
-
-  useEffect(() => {
-    // Sincroniza shouldRender com props (premium + enabled). Padrão de espelhamento intencional.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShouldRender(!isPremium && enabled)
-  }, [enabled, isPremium])
+  // Derivado dos props, sem state intermediário. O useEffect+setState anterior
+  // causava render extra e era anti-pattern (ESLint react-hooks/set-state-in-effect).
+  const shouldRender = !isPremium && enabled
 
   // Inicializa o slot do AdSense.
   useEffect(() => {
@@ -94,7 +90,10 @@ export function AdSlot({
     <ins
       ref={insRef}
       className={`adsbygoogle ${className ?? ''}`.trim()}
-      style={{ display: 'block' }}
+      // min-height reservado pra reduzir CLS enquanto o AdSense decide o
+      // tamanho do criativo. Se o ad não preencher, o slot continua com o
+      // espaço (in: AdSense pode colapsar via collapseEmptyDivs).
+      style={{ display: 'block', minHeight: 90 }}
       data-ad-client={publisherId}
       data-ad-slot={slotId}
       data-ad-format={format}

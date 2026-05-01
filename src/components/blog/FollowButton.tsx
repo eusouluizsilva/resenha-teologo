@@ -27,6 +27,7 @@ export function FollowButton({ authorUserId, authorName, tone = 'light' }: Follo
   const updatePrefs = useMutation(api.profileFollows.updateNotifyPrefs)
 
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [pending, setPending] = useState(false)
   const popRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -54,7 +55,13 @@ export function FollowButton({ authorUserId, authorName, tone = 'light' }: Follo
       setPopoverOpen((p) => !p)
       return
     }
-    await follow({ authorUserId })
+    if (pending) return
+    setPending(true)
+    try {
+      await follow({ authorUserId })
+    } finally {
+      setPending(false)
+    }
   }
 
   async function setPref(key: 'notifyArticles' | 'notifyCourses' | 'notifyLessons', value: boolean) {
@@ -80,6 +87,7 @@ export function FollowButton({ authorUserId, authorName, tone = 'light' }: Follo
       <button
         type="button"
         onClick={handleClick}
+        disabled={pending}
         className={
           isFollowing
             ? tone === 'dark' ? activeDark : activeLight
