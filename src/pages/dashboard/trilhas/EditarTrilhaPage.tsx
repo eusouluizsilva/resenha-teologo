@@ -12,13 +12,16 @@ import {
   brandStatusPillClass,
   cn,
 } from '@/lib/brand'
-import { useCreatorId } from '@/lib/useCreatorId'
 
 type CourseOption = {
   _id: Id<'courses'>
   title: string
   isPublished: boolean
   totalLessons: number
+  category: string
+  level: string
+  isOwn: boolean
+  creatorName: string
 }
 
 export function EditarTrilhaPage() {
@@ -30,18 +33,26 @@ export function EditarTrilhaPage() {
     api.learningPaths.getById,
     pathIdRaw ? { pathId: pathIdRaw } : 'skip',
   )
-
-  const creatorId = useCreatorId()
-  const myCourses = useQuery(
-    api.courses.listByCreator,
-    creatorId ? { creatorId } : 'skip',
+  const availableCoursesData = useQuery(
+    api.learningPaths.listCoursesForPath,
+    pathIdRaw ? { pathId: pathIdRaw } : 'skip',
   ) as CourseOption[] | undefined
+  const studentsData = useQuery(
+    api.learningPaths.listPathStudents,
+    pathIdRaw && path?.institutionId ? { pathId: pathIdRaw } : 'skip',
+  )
+  const availableMembersData = useQuery(
+    api.learningPaths.listAvailableMembers,
+    pathIdRaw && path?.institutionId ? { pathId: pathIdRaw } : 'skip',
+  )
 
   const update = useMutation(api.learningPaths.update)
   const remove = useMutation(api.learningPaths.remove)
   const addItem = useMutation(api.learningPaths.addItem)
   const removeItem = useMutation(api.learningPaths.removeItem)
   const moveItem = useMutation(api.learningPaths.moveItem)
+  const enrollBulk = useMutation(api.learningPaths.enrollMembersBulk)
+  const removeMemberFromPath = useMutation(api.learningPaths.removeMemberFromPath)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -53,6 +64,12 @@ export function EditarTrilhaPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('')
   const [adding, setAdding] = useState(false)
 
+  const [showAddMembers, setShowAddMembers] = useState(false)
+  const [pickedMemberIds, setPickedMemberIds] = useState<Set<string>>(new Set())
+  const [memberSearch, setMemberSearch] = useState('')
+  const [enrolling, setEnrolling] = useState(false)
+  const [enrollMessage, setEnrollMessage] = useState('')
+
   useEffect(() => {
     if (!path) return
     setTitle(path.title)
@@ -61,10 +78,20 @@ export function EditarTrilhaPage() {
   }, [path])
 
   const availableCourses = useMemo(() => {
-    if (!myCourses || !path) return [] as CourseOption[]
-    const taken = new Set(path.items.map((i) => i.courseId))
-    return myCourses.filter((c) => !taken.has(c._id))
-  }, [myCourses, path])
+    if (!availableCoursesData) return [] as CourseOption[]
+    return availableCoursesData
+  }, [availableCoursesData])
+
+  const filteredAvailableMembers = useMemo(() => {
+    if (!availableMembersData) return []
+    const term = memberSearch.trim().toLowerCase()
+    if (!term) return availableMembersData
+    return availableMembersData.filter(
+      (m) =>
+        m.name.toLowerCase().includes(term) ||
+        (m.email ?? '').toLowerCase().includes(term),
+    )
+  }, [availableMembersData, memberSearch])
 
   if (!pathIdRaw) return null
   const pathId = pathIdRaw
@@ -72,7 +99,7 @@ export function EditarTrilhaPage() {
   if (path === undefined) {
     return (
       <DashboardPageShell
-        eyebrow="Trilha"
+        eyebrow="Plano de estudo"
         title="Carregando..."
         description=""
       >
@@ -84,15 +111,15 @@ export function EditarTrilhaPage() {
   if (path === null) {
     return (
       <DashboardPageShell
-        eyebrow="Trilha"
-        title="Trilha não encontrada"
-        description="Esta trilha foi removida ou você não tem acesso."
+        eyebrow="Plano de estudo"
+        title="Plano não encontrado"
+        description="Este plano foi removido ou você não tem acesso."
       >
         <Link
           to="/dashboard/trilhas"
           className={brandSecondaryButtonClass}
         >
-          Voltar para trilhas
+          Voltar
         </Link>
       </DashboardPageShell>
     )
@@ -101,19 +128,23 @@ export function EditarTrilhaPage() {
   if (!path.canEdit) {
     return (
       <DashboardPageShell
-        eyebrow="Trilha"
+        eyebrow="Plano de estudo"
         title="Sem permissão"
-        description="Você não pode editar esta trilha."
+        description="Você não pode editar este plano."
       >
         <Link
           to="/dashboard/trilhas"
           className={brandSecondaryButtonClass}
         >
-          Voltar para trilhas
+          Voltar
         </Link>
       </DashboardPageShell>
     )
   }
+
+  const isInstitutional = !!path.institutionId
+  const eyebrow = isInstitutional ? 'Plano de estudo' : 'Trilha'
+  const itemNoun = isInstitutional ? 'cursos no plano' : 'cursos da trilha'
 
   async function handleSaveBasics() {
     setSaving(true)
@@ -160,18 +191,71 @@ export function EditarTrilhaPage() {
     }
   }
 
+  function toggleMember(userId: string) {
+    setPickedMemberIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(userId)) next.delete(userId)
+      else next.add(userId)
+      return next
+    })
+  }
+
+  function selectAllVisibleMembers() {
+    setPickedMemberIds(new Set(filteredAvailableMembers.map((m) => m.userId)))
+  }
+
+  function clearMemberSelection() {
+    setPickedMemberIds(new Set())
+  }
+
+  async function handleEnrollSelected() {
+    if (pickedMemberIds.size === 0) return
+    setEnrolling(true)
+    setEnrollMessage('')
+    setError('')
+    try {
+      const ids = Array.from(pickedMemberIds)
+      const result = await enrollBulk({ pathId, memberUserIds: ids })
+      setEnrollMessage(
+        `${result.added} aluno(s) adicionado(s)${
+          result.skipped > 0 ? ` · ${result.skipped} já matriculado(s) ou inválido(s)` : ''
+        }.`,
+      )
+      setPickedMemberIds(new Set())
+      setMemberSearch('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao matricular alunos.')
+    } finally {
+      setEnrolling(false)
+    }
+  }
+
+  async function handleRemoveStudent(studentId: string, name: string) {
+    if (!window.confirm(`Remover "${name}" deste plano de estudo?`)) return
+    setError('')
+    try {
+      await removeMemberFromPath({ pathId, studentId })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao remover aluno.')
+    }
+  }
+
   const trailTitle = path.title
   async function handleDelete() {
-    if (!window.confirm(`Excluir a trilha "${trailTitle}"? Esta ação é irreversível.`)) return
+    if (!window.confirm(`Excluir "${trailTitle}"? Esta ação é irreversível.`)) return
     await remove({ pathId })
     navigate('/dashboard/trilhas')
   }
 
   return (
     <DashboardPageShell
-      eyebrow="Trilha"
+      eyebrow={eyebrow}
       title={path.title}
-      description="Configure a sequência de cursos, capa e descrição."
+      description={
+        isInstitutional
+          ? 'Configure os cursos do plano e matricule os alunos da instituição.'
+          : 'Configure a sequência de cursos, capa e descrição.'
+      }
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Link to="/dashboard/trilhas" className={brandSecondaryButtonClass}>
@@ -201,8 +285,11 @@ export function EditarTrilhaPage() {
         <div className={cn('p-6', brandPanelClass)}>
           <div className="mb-4 flex items-center gap-2">
             <span className={brandStatusPillClass(path.isPublished ? 'success' : 'neutral')}>
-              {path.isPublished ? 'Publicada' : 'Rascunho'}
+              {path.isPublished ? 'Publicado' : 'Rascunho'}
             </span>
+            {isInstitutional && (
+              <span className={brandStatusPillClass('info')}>Plano institucional</span>
+            )}
             <span className="text-xs text-white/40">/{path.slug}</span>
           </div>
           <div className="grid gap-4">
@@ -269,15 +356,17 @@ export function EditarTrilhaPage() {
 
         <div className={cn('p-6', brandPanelClass)}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Cursos da trilha</h3>
+            <h3 className="text-sm font-semibold text-white">
+              {isInstitutional ? 'Cursos do plano' : 'Cursos da trilha'}
+            </h3>
             <span className="text-xs text-white/48">
-              {path.items.length} curso(s)
+              {path.items.length} {itemNoun}
             </span>
           </div>
 
           {path.items.length === 0 ? (
             <p className="text-sm text-white/52">
-              Adicione cursos abaixo. A ordem é mostrada ao aluno na página da trilha.
+              Adicione cursos abaixo. A ordem é mostrada ao aluno na página do plano.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -319,7 +408,7 @@ export function EditarTrilhaPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!window.confirm(`Remover "${it.title}" da trilha?`)) return
+                        if (!window.confirm(`Remover "${it.title}" do plano?`)) return
                         removeItem({ itemId: it.itemId })
                       }}
                       className="rounded-lg border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs text-red-300 hover:bg-red-500/20"
@@ -341,12 +430,16 @@ export function EditarTrilhaPage() {
             >
               <option value="">
                 {availableCourses.length === 0
-                  ? 'Você não tem cursos disponíveis'
-                  : 'Selecione um curso seu'}
+                  ? 'Nenhum curso disponível'
+                  : isInstitutional
+                    ? 'Selecione um curso do catálogo'
+                    : 'Selecione um curso seu'}
               </option>
               {availableCourses.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.title} {c.isPublished ? '' : '(rascunho)'}
+                  {c.title}
+                  {c.isPublished ? '' : ' (rascunho)'}
+                  {isInstitutional && !c.isOwn ? ` · ${c.creatorName}` : ''}
                 </option>
               ))}
             </select>
@@ -358,19 +451,224 @@ export function EditarTrilhaPage() {
               {adding ? 'Adicionando...' : 'Adicionar curso'}
             </button>
           </form>
+          {isInstitutional && (
+            <p className="mt-3 text-xs text-white/48">
+              Você pode adicionar qualquer curso publicado do catálogo da plataforma, além
+              dos cursos da própria instituição.
+            </p>
+          )}
         </div>
+
+        {isInstitutional && (
+          <div className={cn('p-6', brandPanelClass)}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Alunos do plano</h3>
+                <p className="mt-0.5 text-xs text-white/48">
+                  Apenas membros da instituição podem ser matriculados aqui.
+                </p>
+              </div>
+              <span className="text-xs text-white/48">
+                {studentsData?.length ?? 0} aluno(s)
+              </span>
+            </div>
+
+            {studentsData === undefined ? (
+              <div className={cn('h-20 animate-pulse', brandPanelClass)} />
+            ) : studentsData.length === 0 ? (
+              <p className="text-sm text-white/52">
+                Nenhum aluno matriculado ainda. Use o botão abaixo para escolher membros
+                da instituição.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {studentsData.map((s) => {
+                  const pct =
+                    s.totalCourses > 0
+                      ? Math.round((s.completedCourses / s.totalCourses) * 100)
+                      : 0
+                  return (
+                    <li
+                      key={s.enrollmentId}
+                      className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-3"
+                    >
+                      {s.avatarUrl ? (
+                        <img
+                          src={s.avatarUrl}
+                          alt=""
+                          className="h-9 w-9 flex-shrink-0 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F37E20]/12 text-xs font-semibold text-[#F2BD8A]">
+                          {s.name.slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-white">
+                          {s.name}
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-white/48">
+                          {s.email ?? ''}
+                        </p>
+                      </div>
+                      <div className="hidden flex-col items-end gap-0.5 sm:flex">
+                        <span className="text-xs font-semibold text-[#F2BD8A]">
+                          {pct}%
+                        </span>
+                        <span className="text-[10px] text-white/40">
+                          {s.completedCourses}/{s.totalCourses} cursos
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStudent(s.studentId, s.name)}
+                        className="rounded-lg border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs text-red-300 hover:bg-red-500/20"
+                      >
+                        Remover
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddMembers((v) => !v)
+                  setEnrollMessage('')
+                }}
+                className={cn(brandPrimaryButtonClass, 'px-5 py-2.5 text-sm')}
+              >
+                {showAddMembers ? 'Fechar' : 'Adicionar alunos'}
+              </button>
+              {enrollMessage && (
+                <p className="text-xs text-emerald-300">{enrollMessage}</p>
+              )}
+            </div>
+
+            {showAddMembers && (
+              <div className="mt-5 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+                {availableMembersData === undefined ? (
+                  <div className="h-20 animate-pulse rounded-xl bg-white/4" />
+                ) : availableMembersData.length === 0 ? (
+                  <p className="text-sm text-white/52">
+                    Todos os membros ativos da instituição já estão matriculados aqui.
+                  </p>
+                ) : (
+                  <>
+                    <div className="mb-3 flex flex-wrap items-center gap-3">
+                      <input
+                        type="search"
+                        placeholder="Buscar por nome ou email"
+                        value={memberSearch}
+                        onChange={(e) => setMemberSearch(e.target.value)}
+                        className={cn(brandInputClass, 'flex-1 min-w-[220px]')}
+                      />
+                      <button
+                        type="button"
+                        onClick={selectAllVisibleMembers}
+                        className="rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-xs font-semibold text-white/82 hover:border-white/22 hover:bg-white/8"
+                      >
+                        Selecionar todos
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearMemberSelection}
+                        disabled={pickedMemberIds.size === 0}
+                        className="rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-xs font-semibold text-white/82 disabled:opacity-40 hover:border-white/22 hover:bg-white/8"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+
+                    <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+                      {filteredAvailableMembers.length === 0 ? (
+                        <li className="px-2 py-3 text-xs text-white/48">
+                          Nenhum membro encontrado para "{memberSearch}".
+                        </li>
+                      ) : (
+                        filteredAvailableMembers.map((m) => {
+                          const checked = pickedMemberIds.has(m.userId)
+                          return (
+                            <li key={m.memberId}>
+                              <label
+                                className={cn(
+                                  'flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 transition-colors',
+                                  checked
+                                    ? 'border-[#F37E20]/40 bg-[#F37E20]/8'
+                                    : 'border-white/8 bg-white/[0.02] hover:border-white/14 hover:bg-white/4',
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleMember(m.userId)}
+                                  className="h-4 w-4 cursor-pointer accent-[#F37E20]"
+                                />
+                                {m.avatarUrl ? (
+                                  <img
+                                    src={m.avatarUrl}
+                                    alt=""
+                                    className="h-7 w-7 flex-shrink-0 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white/8 text-xs font-semibold text-white/72">
+                                    {m.name.slice(0, 1).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-white">
+                                    {m.name}
+                                  </p>
+                                  <p className="truncate text-xs text-white/48">
+                                    {m.email ?? ''}
+                                  </p>
+                                </div>
+                                <span className="text-[10px] uppercase tracking-[0.16em] text-white/40">
+                                  {m.role}
+                                </span>
+                              </label>
+                            </li>
+                          )
+                        })
+                      )}
+                    </ul>
+
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs text-white/52">
+                        {pickedMemberIds.size} aluno(s) selecionado(s)
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleEnrollSelected}
+                        disabled={pickedMemberIds.size === 0 || enrolling}
+                        className={cn(brandPrimaryButtonClass, 'px-5 py-2.5 text-sm')}
+                      >
+                        {enrolling
+                          ? 'Matriculando...'
+                          : `Matricular ${pickedMemberIds.size > 0 ? pickedMemberIds.size : ''}`.trim()}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className={cn('p-6', brandPanelClass)}>
           <h3 className="text-sm font-semibold text-white">Zona perigosa</h3>
           <p className="mt-1 text-xs text-white/48">
-            Excluir a trilha remove também todas as matrículas dos alunos. A ação é irreversível.
+            Excluir o plano remove também todas as matrículas dos alunos. A ação é irreversível.
           </p>
           <button
             type="button"
             onClick={handleDelete}
             className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-300 transition-all hover:bg-red-500/20"
           >
-            Excluir trilha
+            Excluir {isInstitutional ? 'plano' : 'trilha'}
           </button>
         </div>
       </div>

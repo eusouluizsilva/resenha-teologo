@@ -79,16 +79,16 @@ export function TrilhasPage() {
 
   return (
     <DashboardPageShell
-      eyebrow="Trilhas de aprendizagem"
-      title="Suas trilhas"
-      description="Sequências ordenadas de cursos para guiar alunos por um plano de estudo."
+      eyebrow="Trilhas e planos de estudo"
+      title="Suas trilhas e planos"
+      description="Sequências ordenadas de cursos. Trilhas pessoais para alunos no geral; planos institucionais para matricular membros específicos da igreja ou escola."
       actions={
         <button
           type="button"
           onClick={() => setShowCreate((v) => !v)}
           className={brandPrimaryButtonClass}
         >
-          {showCreate ? 'Cancelar' : 'Nova trilha'}
+          {showCreate ? 'Cancelar' : 'Novo plano de estudo'}
         </button>
       }
     >
@@ -246,8 +246,11 @@ export function TrilhasPage() {
                     {p.title}
                   </Link>
                   <span className={brandStatusPillClass(p.isPublished ? 'success' : 'neutral')}>
-                    {p.isPublished ? 'Publicada' : 'Rascunho'}
+                    {p.isPublished ? 'Publicado' : 'Rascunho'}
                   </span>
+                  {p.institutionId && (
+                    <span className={brandStatusPillClass('info')}>Institucional</span>
+                  )}
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs text-white/56">
                   {p.description}
