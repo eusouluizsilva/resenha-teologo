@@ -1,10 +1,11 @@
-// Meta Pixel "rt" (ID 1884382392256153). Carrega o fbevents.js só com
-// consent === 'all'. RouteTracker (App.tsx) dispara PageView a cada navegação
-// SPA. Mesma estrutura de analytics.ts/ads.ts: idempotente, escuta o evento
+// Meta Pixel "rt" (ID 1884382392256153). Carrega o fbevents.js só com consent
+// de anúncios concedido (ad_storage = granted). RouteTracker (App.tsx) dispara
+// PageView a cada navegação SPA. Idempotente, escuta o evento
 // rdt:consent-change emitido pelo CookieBanner.
 
+import { isAdConsentGranted } from './consent'
+
 const META_PIXEL_ID = '1884382392256153'
-const CONSENT_KEY = 'rdt_cookie_consent_v1'
 
 declare global {
   interface Window {
@@ -20,30 +21,18 @@ declare global {
   }
 }
 
-function readConsent(): 'all' | 'essential' | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(CONSENT_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { choice?: 'all' | 'essential' }
-    return parsed?.choice ?? null
-  } catch {
-    return null
-  }
-}
-
 export function getMetaPixelId(): string {
   return META_PIXEL_ID
 }
 
 export function isMetaPixelEnabled(): boolean {
-  return readConsent() === 'all'
+  return isAdConsentGranted()
 }
 
 export function initMetaPixel(): void {
   if (typeof window === 'undefined') return
   if (window.__rdtMetaPixelReady) return
-  if (readConsent() !== 'all') return
+  if (!isAdConsentGranted()) return
 
   // Snippet oficial do Meta (fbevents.js loader). Mantido fiel ao do Facebook
   // para que o Pixel Helper reconheça a instalação.

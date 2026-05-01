@@ -132,7 +132,8 @@ export function useArticleJsonLd(meta: {
   useEffect(() => {
     const data = {
       '@context': 'https://schema.org',
-      '@type': 'Article',
+      '@type': 'BlogPosting',
+      mainEntityOfPage: { '@type': 'WebPage', '@id': meta.url },
       headline: meta.title,
       description: meta.description,
       url: meta.url,
@@ -149,6 +150,10 @@ export function useArticleJsonLd(meta: {
       publisher: {
         '@type': 'Organization',
         name: 'Resenha do Teólogo',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://resenhadoteologo.com/logos/LOGO%20QUADRADA%20LETRA%20BRANCA.png',
+        },
       },
     }
     const script = document.createElement('script')
