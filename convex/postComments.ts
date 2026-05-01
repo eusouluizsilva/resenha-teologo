@@ -7,6 +7,7 @@ import { v } from 'convex/values'
 import { mutation, query, type QueryCtx } from './_generated/server'
 import { requireCurrentUser } from './lib/auth'
 import { internal } from './_generated/api'
+import { checkRateLimit } from './lib/rateLimit'
 import type { Doc } from './_generated/dataModel'
 
 const MAX_COMMENT_LEN = 2000
@@ -35,6 +36,7 @@ export const create = mutation({
   },
   handler: async (ctx, { postId, text, parentId }) => {
     const { identity, user } = await requireCurrentUser(ctx)
+    await checkRateLimit(ctx, identity.subject, 'comment.create', { max: 10, windowMs: 60_000 })
     const post = await ctx.db.get(postId)
     if (!post) throw new Error('Artigo não encontrado.')
     if (post.status !== 'published' && post.status !== 'unlisted') {

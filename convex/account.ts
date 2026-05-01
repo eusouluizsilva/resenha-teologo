@@ -136,12 +136,12 @@ export const deleteAccount = mutation({
     for (const e of entries) await ctx.db.delete(e._id)
 
     // Comentários: soft-delete preserva estrutura das threads sem expor dados.
-    const comments = await ctx.db
+    const lessonComments = await ctx.db
       .query('lessonComments')
       .withIndex('by_authorId', (q) => q.eq('authorId', userId))
       .collect()
     const now = Date.now()
-    for (const c of comments) {
+    for (const c of lessonComments) {
       await ctx.db.patch(c._id, {
         authorName: 'Usuário excluído',
         authorAvatarUrl: undefined,
@@ -149,6 +149,95 @@ export const deleteAccount = mutation({
         deletedAt: now,
       })
     }
+
+    const courseComments = await ctx.db
+      .query('courseComments')
+      .filter((q) => q.eq(q.field('authorId'), userId))
+      .collect()
+    for (const c of courseComments) {
+      await ctx.db.patch(c._id, {
+        authorName: 'Usuário excluído',
+        authorAvatarUrl: undefined,
+        text: '[comentário removido pelo autor]',
+        deletedAt: now,
+      })
+    }
+
+    const postComments = await ctx.db
+      .query('postComments')
+      .withIndex('by_authorId', (q) => q.eq('authorId', userId))
+      .collect()
+    for (const c of postComments) {
+      await ctx.db.patch(c._id, {
+        authorName: 'Usuário excluído',
+        authorAvatarUrl: undefined,
+        text: '[comentário removido pelo autor]',
+        deletedAt: now,
+      })
+    }
+
+    // Likes/shares/helpful em posts: hard-delete por serem dados puramente
+    // pessoais sem dependência estrutural.
+    const postLikes = await ctx.db
+      .query('postLikes')
+      .filter((q) => q.eq(q.field('userId'), userId))
+      .collect()
+    for (const l of postLikes) await ctx.db.delete(l._id)
+
+    const postShares = await ctx.db
+      .query('postShares')
+      .filter((q) => q.eq(q.field('userId'), userId))
+      .collect()
+    for (const s of postShares) await ctx.db.delete(s._id)
+
+    const postCommentHelpful = await ctx.db
+      .query('postCommentHelpful')
+      .filter((q) => q.eq(q.field('userId'), userId))
+      .collect()
+    for (const h of postCommentHelpful) await ctx.db.delete(h._id)
+
+    const profileFollows = await ctx.db
+      .query('profileFollows')
+      .filter((q) => q.eq(q.field('followerUserId'), userId))
+      .collect()
+    for (const f of profileFollows) await ctx.db.delete(f._id)
+
+    const courseQuestions = await ctx.db
+      .query('courseQuestions')
+      .filter((q) => q.eq(q.field('studentId'), userId))
+      .collect()
+    for (const q of courseQuestions) await ctx.db.delete(q._id)
+
+    const lessonTimestamps = await ctx.db
+      .query('lessonTimestamps')
+      .filter((q) => q.eq(q.field('studentId'), userId))
+      .collect()
+    for (const t of lessonTimestamps) await ctx.db.delete(t._id)
+
+    const studentStats = await ctx.db
+      .query('studentStats')
+      .filter((q) => q.eq(q.field('studentId'), userId))
+      .collect()
+    for (const s of studentStats) await ctx.db.delete(s._id)
+
+    const flashDecks = await ctx.db
+      .query('flashcardDecks')
+      .withIndex('by_studentId', (q) => q.eq('studentId', userId))
+      .collect()
+    for (const d of flashDecks) {
+      const cards = await ctx.db
+        .query('flashcards')
+        .withIndex('by_deckId', (q) => q.eq('deckId', d._id))
+        .collect()
+      for (const c of cards) await ctx.db.delete(c._id)
+      await ctx.db.delete(d._id)
+    }
+
+    const userNotifications = await ctx.db
+      .query('notifications')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect()
+    for (const n of userNotifications) await ctx.db.delete(n._id)
 
     // Testemunhos e avaliações escritos pelo usuário (remove totalmente)
     const authoredTestimonials = await ctx.db

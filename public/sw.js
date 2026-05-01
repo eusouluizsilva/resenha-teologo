@@ -6,12 +6,15 @@
 // - Imagens cross-origin (covers/thumbnails): stale-while-revalidate (cap)
 // Convex, Clerk, AdSense, GA4 e Meta Pixel passam direto sem cache.
 
-const VERSION = 'v3'
+const VERSION = 'v4'
 const STATIC_CACHE = `resenha-static-${VERSION}`
 const NAV_CACHE = `resenha-nav-${VERSION}`
 const FONT_CACHE = `resenha-fonts-${VERSION}`
 const IMG_CACHE = `resenha-img-${VERSION}`
 const IMG_CACHE_MAX = 80
+// TTL de 24h para capas/thumbs cacheadas (covers atualizam quando o criador
+// troca a imagem; sem TTL o usuário podia ver imagem antiga por dias).
+const IMG_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const OFFLINE_URL = '/offline.html'
 
 const STATIC_ASSETS = [
@@ -117,14 +120,28 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         const cache = await caches.open(IMG_CACHE)
         const cached = await cache.match(req)
+        const cachedAt = cached?.headers.get('x-rdt-cached-at')
+        const isFresh = cachedAt && (Date.now() - Number(cachedAt)) < IMG_CACHE_TTL_MS
+
         const networkPromise = fetch(req)
-          .then((res) => {
+          .then(async (res) => {
             if (res.ok && res.status === 200) {
-              cache.put(req, res.clone()).then(() => trimCache(IMG_CACHE, IMG_CACHE_MAX))
+              const clone = res.clone()
+              const blob = await clone.blob()
+              const headers = new Headers(clone.headers)
+              headers.set('x-rdt-cached-at', String(Date.now()))
+              const stamped = new Response(blob, {
+                status: clone.status,
+                statusText: clone.statusText,
+                headers,
+              })
+              cache.put(req, stamped).then(() => trimCache(IMG_CACHE, IMG_CACHE_MAX))
             }
             return res
           })
           .catch(() => cached)
+
+        if (cached && isFresh) return cached
         return cached ?? (await networkPromise)
       })()
     )

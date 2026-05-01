@@ -1,5 +1,7 @@
 // Persistência local temporária até Convex ser conectado
 
+import { uuid } from './uuid'
+
 export type Course = {
   _id: string
   title: string
@@ -30,7 +32,7 @@ export function saveCourse(data: Omit<Course, '_id' | 'isPublished' | 'totalLess
   const courses = getCourses()
   const course: Course = {
     ...data,
-    _id: crypto.randomUUID(),
+    _id: uuid(),
     isPublished: false,
     totalLessons: 0,
     totalStudents: 0,

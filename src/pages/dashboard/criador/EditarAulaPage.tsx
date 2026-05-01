@@ -1,16 +1,18 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useQuery, useMutation } from 'convex/react'
+import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
+import { useR2Upload } from '@/lib/r2Upload'
 import { DashboardPageShell, DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
 import { BIBLE_BOOKS, formatVerseReference, getBibleBook, type BibleTestament } from '@/lib/bible/books'
 import { TemplatePicker } from '@/components/criador/TemplatePicker'
 import { QuestionBankImportDialog } from '@/components/criador/QuestionBankImportDialog'
+import { uuid } from '@/lib/uuid'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,7 +37,7 @@ type VerseRef = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function uid() {
-  return crypto.randomUUID()
+  return uuid()
 }
 
 function formatBytes(bytes: number) {
@@ -490,13 +492,15 @@ function MaterialsSection({
   setBanner: (msg: { type: 'error' | 'info'; text: string } | null) => void
 }) {
   const materials = useQuery(api.lessonMaterials.listByLesson, { lessonId })
-  const generateUploadUrl = useMutation(api.lessonMaterials.generateUploadUrl)
-  const createMaterial = useMutation(api.lessonMaterials.create)
+  const createFromR2 = useMutation(api.lessonMaterials.createFromR2)
   const removeMaterial = useMutation(api.lessonMaterials.remove)
+  const getDownloadUrl = useAction(api.lessonMaterials.getDownloadUrl)
+  const { upload } = useR2Upload()
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [openingId, setOpeningId] = useState<Id<'lessonMaterials'> | null>(null)
 
   const handleFiles = useCallback(
     async (files: FileList) => {
@@ -515,32 +519,28 @@ function MaterialsSection({
             continue
           }
 
-          const uploadUrl = await generateUploadUrl()
-          const resp = await fetch(uploadUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': file.type || 'application/octet-stream' },
-            body: file,
-          })
-          if (!resp.ok) {
-            setBanner({ type: 'error', text: `Falha ao enviar "${file.name}".` })
-            continue
-          }
-          const { storageId } = (await resp.json()) as { storageId: Id<'_storage'> }
-
           const mimeType = ALLOWED_MIME.includes(file.type)
             ? file.type
             : file.name.toLowerCase().endsWith('.pdf')
               ? 'application/pdf'
               : 'text/plain'
 
-          await createMaterial({
-            lessonId,
-            creatorId,
-            name: file.name,
-            size: file.size,
-            mimeType,
-            storageId,
-          })
+          try {
+            const { key } = await upload(file, 'material')
+            await createFromR2({
+              lessonId,
+              creatorId,
+              name: file.name,
+              size: file.size,
+              mimeType,
+              r2Key: key,
+            })
+          } catch (err) {
+            setBanner({
+              type: 'error',
+              text: err instanceof Error ? err.message : `Falha ao enviar "${file.name}".`,
+            })
+          }
         }
       } catch (err) {
         setBanner({ type: 'error', text: err instanceof Error ? err.message : 'Erro ao enviar arquivo.' })
@@ -549,7 +549,25 @@ function MaterialsSection({
         if (inputRef.current) inputRef.current.value = ''
       }
     },
-    [createMaterial, creatorId, generateUploadUrl, lessonId, setBanner]
+    [createFromR2, creatorId, lessonId, setBanner, upload]
+  )
+
+  const openMaterial = useCallback(
+    async (id: Id<'lessonMaterials'>, fallbackUrl: string | null) => {
+      try {
+        setOpeningId(id)
+        const url = fallbackUrl ?? (await getDownloadUrl({ materialId: id }))
+        window.open(url, '_blank', 'noopener,noreferrer')
+      } catch (err) {
+        setBanner({
+          type: 'error',
+          text: err instanceof Error ? err.message : 'Erro ao gerar link de download.',
+        })
+      } finally {
+        setOpeningId(null)
+      }
+    },
+    [getDownloadUrl, setBanner],
   )
 
   return (
@@ -576,16 +594,14 @@ function MaterialsSection({
                 <p className="text-sm font-medium text-white truncate">{m.name}</p>
                 <p className="text-xs text-white/30">{formatBytes(m.size)}</p>
               </div>
-              {m.url && (
-                <a
-                  href={m.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-white/50 hover:text-[#F37E20] px-2 py-1 rounded transition-colors"
-                >
-                  Abrir
-                </a>
-              )}
+              <button
+                type="button"
+                onClick={() => void openMaterial(m._id, m.url)}
+                disabled={openingId === m._id}
+                className="text-xs text-white/50 hover:text-[#F37E20] px-2 py-1 rounded transition-colors disabled:opacity-50"
+              >
+                {openingId === m._id ? 'Abrindo…' : 'Abrir'}
+              </button>
               <button
                 type="button"
                 onClick={async () => {

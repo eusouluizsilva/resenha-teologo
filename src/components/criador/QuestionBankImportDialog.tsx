@@ -8,6 +8,7 @@ import {
   brandSecondaryButtonClass,
   cn,
 } from '@/lib/brand'
+import { uuid } from '@/lib/uuid'
 
 type QuizOption = { id: string; text: string }
 type QuizQuestion = {
@@ -28,7 +29,7 @@ type BankRow = {
 }
 
 function uid() {
-  return crypto.randomUUID()
+  return uuid()
 }
 
 function rowToQuiz(row: BankRow): QuizQuestion {

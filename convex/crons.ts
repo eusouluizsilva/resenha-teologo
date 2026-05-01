@@ -52,4 +52,12 @@ crons.monthly(
   internal.indexnow.submitAll,
 )
 
+// Purga mensal de comentários soft-deletados há mais de 30 dias. Honra LGPD
+// (direito ao esquecimento) e mantém as tabelas leves.
+crons.monthly(
+  'data-retention-monthly-purge',
+  { day: 1, hourUTC: 7, minuteUTC: 0 },
+  internal.dataRetention.purgeSoftDeleted,
+)
+
 export default crons

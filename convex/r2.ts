@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { action, internalQuery } from './_generated/server'
+import { action, internalAction, internalQuery } from './_generated/server'
 import { internal } from './_generated/api'
 import { isAdminEmail } from './lib/auth'
 
@@ -245,7 +245,7 @@ const MAX_SIZE_BYTES: Record<Purpose, number> = {
 
 const ALLOWED_MIME: Record<Purpose, string[]> = {
   cover: ['image/jpeg', 'image/png', 'image/webp'],
-  material: ['application/pdf', 'image/jpeg', 'image/png', 'application/zip'],
+  material: ['application/pdf', 'image/jpeg', 'image/png'],
   avatar: ['image/jpeg', 'image/png', 'image/webp'],
   ebook: ['application/pdf', 'application/epub+zip'],
   'post-image': ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
@@ -360,8 +360,37 @@ export const generateDownloadUrl = action({
   },
 })
 
+// Helper exportado para outros módulos (lessonMaterials.getDownloadUrl, etc).
+// Caller deve garantir que chamou a partir de uma action que já validou
+// autorização ao recurso. Não fazer chamadas diretas do cliente.
+export async function presignR2DownloadUrl(
+  key: string,
+  expiresInSec: number,
+): Promise<string> {
+  return await presignS3Url({
+    env: getR2Env(),
+    method: 'GET',
+    key,
+    expiresInSec,
+  })
+}
+
+// Resolve URL pública a partir de uma key. Se R2_PUBLIC_BASE_URL estiver
+// setado (custom domain), retorna URL estável. Senão, presigned GET de 7 dias.
+// Usado em queries que devolvem coverImageUrl resolvida (blog posts, etc).
+export async function resolveR2PublicUrl(key: string): Promise<string> {
+  const env = getR2Env()
+  if (env.publicBaseUrl) return `${env.publicBaseUrl}/${key}`
+  return await presignS3Url({
+    env,
+    method: 'GET',
+    key,
+    expiresInSec: 60 * 60 * 24 * 7,
+  })
+}
+
 // ──────────────────────────────────────────────────────────────────────────
-// ACTION: deleta objeto do R2. Usar com cuidado — não desfaz. Restrito a admin.
+// ACTION: deleta objeto do R2. Usar com cuidado, não desfaz. Restrito a admin.
 // ──────────────────────────────────────────────────────────────────────────
 export const deleteObject = action({
   args: { key: v.string() },
@@ -380,5 +409,24 @@ export const deleteObject = action({
       throw new Error(`R2 delete falhou ${resp.status}: ${text}`)
     }
     return { ok: true }
+  },
+})
+
+// Internal action chamada via ctx.scheduler quando o backend precisa apagar
+// um objeto em cascata (curso/aula/materiais excluídos). Sem checagem de admin
+// porque é disparada por mutations já autorizadas. Falhas são silenciadas para
+// não bloquear o cascade se o objeto não existir mais.
+export const internalDeleteObject = internalAction({
+  args: { key: v.string() },
+  handler: async (_ctx, { key }) => {
+    try {
+      const env = getR2Env()
+      const resp = await signedFetch({ env, method: 'DELETE', key })
+      if (!resp.ok && resp.status !== 404) {
+        console.warn(`R2 cascade delete falhou ${resp.status} para chave ${key.slice(0, 40)}...`)
+      }
+    } catch (err) {
+      console.warn('R2 cascade delete erro:', err instanceof Error ? err.message : 'unknown')
+    }
   },
 })

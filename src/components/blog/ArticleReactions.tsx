@@ -7,13 +7,14 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { useEffect, useRef, useState } from 'react'
+import { uuid } from '@/lib/uuid'
 
 const SHARE_SESSION_KEY = 'rdt_share_session'
 
 function getOrCreateSessionId(): string {
   let id = sessionStorage.getItem(SHARE_SESSION_KEY)
   if (!id) {
-    id = crypto.randomUUID()
+    id = uuid()
     sessionStorage.setItem(SHARE_SESSION_KEY, id)
   }
   return id

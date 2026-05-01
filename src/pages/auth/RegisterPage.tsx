@@ -161,6 +161,26 @@ export function RegisterPage() {
     e.preventDefault()
     if (!isLoaded) return
 
+    // Validação client-side antes de enviar ao Clerk: feedback imediato e
+    // economiza um round-trip que retornaria a mesma mensagem.
+    const trimmedFirst = form.firstName.trim()
+    const trimmedLast = form.lastName.trim()
+    if (!trimmedFirst || !trimmedLast) {
+      setError('Informe nome e sobrenome.')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
+      setError('Email inválido.')
+      return
+    }
+    if (form.password.length < 8) {
+      setError('Senha deve ter ao menos 8 caracteres.')
+      return
+    }
+    if (!/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) {
+      setError('Senha deve conter letras e números.')
+      return
+    }
     if (form.password !== form.confirmPassword) {
       setError('As senhas não coincidem.')
       return

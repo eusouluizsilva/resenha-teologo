@@ -24,6 +24,51 @@ export const amIAdmin = query({
   },
 })
 
+// Lista admins promovidos via tabela. Bootstrap admins (dono) não entram aqui.
+export const listAdmins = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+    const rows = await ctx.db.query('admins').collect()
+    return rows.map((r) => ({
+      _id: r._id,
+      email: r.email,
+      addedAt: r.addedAt,
+      addedBy: r.addedBy ?? null,
+      note: r.note ?? null,
+    }))
+  },
+})
+
+export const promoteAdmin = mutation({
+  args: { email: v.string(), note: v.optional(v.string()) },
+  handler: async (ctx, { email, note }) => {
+    const { user } = await requireAdmin(ctx)
+    const lower = email.trim().toLowerCase()
+    if (!lower || !lower.includes('@')) throw new Error('Email inválido.')
+    const existing = await ctx.db
+      .query('admins')
+      .withIndex('by_email', (q) => q.eq('email', lower))
+      .unique()
+    if (existing) return { _id: existing._id, alreadyExists: true }
+    const _id = await ctx.db.insert('admins', {
+      email: lower,
+      addedAt: Date.now(),
+      addedBy: user.email,
+      note,
+    })
+    return { _id, alreadyExists: false }
+  },
+})
+
+export const revokeAdmin = mutation({
+  args: { id: v.id('admins') },
+  handler: async (ctx, { id }) => {
+    await requireAdmin(ctx)
+    await ctx.db.delete(id)
+  },
+})
+
 // Métricas globais da plataforma. Visíveis apenas para admin. Propositalmente
 // usa collect() em tabelas inteiras, aceitável nesta escala inicial. Se o
 // volume crescer, migrar para contadores denormalizados em tabela separada.
@@ -32,12 +77,18 @@ export const getStats = query({
   handler: async (ctx) => {
     await requireAdmin(ctx)
 
-    const users = await ctx.db.query('users').collect()
-    const courses = await ctx.db.query('courses').collect()
-    const enrollments = await ctx.db.query('enrollments').collect()
-    const donations = await ctx.db.query('donations').collect()
-    const userFunctions = await ctx.db.query('userFunctions').collect()
-    const posts = await ctx.db.query('posts').collect()
+    // Roda os 6 .collect() em paralelo. Reduz o p95 de ~6× para ~1× (o mais
+    // lento). Convex ainda precisa varrer cada tabela; quando a base passar de
+    // alguns milhares por tabela, este getStats deve migrar para contadores
+    // denormalizados (ver audit item #14).
+    const [users, courses, enrollments, donations, userFunctions, posts] = await Promise.all([
+      ctx.db.query('users').collect(),
+      ctx.db.query('courses').collect(),
+      ctx.db.query('enrollments').collect(),
+      ctx.db.query('donations').collect(),
+      ctx.db.query('userFunctions').collect(),
+      ctx.db.query('posts').collect(),
+    ])
 
     const now = Date.now()
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000

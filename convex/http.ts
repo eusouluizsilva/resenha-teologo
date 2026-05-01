@@ -200,12 +200,21 @@ http.route({
     const ok = await verifyStripeSignature(secret, sigHeader, body)
     if (!ok) return new Response('Assinatura inválida', { status: 401 })
 
-    let event: { type: string; data: { object: Record<string, unknown> } }
+    let event: { id: string; type: string; data: { object: Record<string, unknown> } }
     try {
       event = JSON.parse(body)
     } catch {
       return new Response('JSON inválido', { status: 400 })
     }
+
+    if (!event.id) return new Response('event.id ausente', { status: 400 })
+
+    // Dedup por event.id. Retries do Stripe não duplicam efeito.
+    const dedup = await ctx.runMutation(internal.stripe.recordStripeEvent, {
+      eventId: event.id,
+      type: event.type,
+    })
+    if (!dedup.isNew) return new Response(null, { status: 204 })
 
     try {
       switch (event.type) {

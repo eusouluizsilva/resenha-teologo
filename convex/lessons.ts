@@ -405,21 +405,21 @@ export const remove = mutation({
       .first()
     if (quiz) await ctx.db.delete(quiz._id)
 
-    // Cascata: materiais (com storage), anotações de caderno e comentários
-    // da aula. Removidos para não deixar dados órfãos após exclusão da aula.
+    // Cascata: materiais (com storage/R2), anotações de caderno, comentários,
+    // perguntas privadas, timestamps e progresso da aula. Removidos para não
+    // deixar dados órfãos após exclusão da aula.
     const materials = await ctx.db
       .query('lessonMaterials')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
       .collect()
     for (const mat of materials) {
-      await ctx.storage.delete(mat.storageId)
+      if (mat.storageId) await ctx.storage.delete(mat.storageId)
+      if (mat.r2Key) {
+        await ctx.scheduler.runAfter(0, internal.r2.internalDeleteObject, { key: mat.r2Key })
+      }
       await ctx.db.delete(mat._id)
     }
 
-    // Remoção em cascata de notebookEntries desta aula. O índice
-    // by_student_lesson começa por studentId; como aqui varremos por lessonId
-    // e esta mutation é rara (apenas quando criador exclui aula), usamos
-    // filter() simples.
     const notebookEntries = await ctx.db
       .query('notebookEntries')
       .filter((q) => q.eq(q.field('lessonId'), id))
@@ -435,6 +435,24 @@ export const remove = mutation({
     for (const c of comments) {
       await ctx.db.delete(c._id)
     }
+
+    const questions = await ctx.db
+      .query('courseQuestions')
+      .filter((q) => q.eq(q.field('lessonId'), id))
+      .collect()
+    for (const q of questions) await ctx.db.delete(q._id)
+
+    const timestamps = await ctx.db
+      .query('lessonTimestamps')
+      .filter((q) => q.eq(q.field('lessonId'), id))
+      .collect()
+    for (const t of timestamps) await ctx.db.delete(t._id)
+
+    const progresses = await ctx.db
+      .query('progress')
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
+      .collect()
+    for (const p of progresses) await ctx.db.delete(p._id)
 
     await ctx.db.delete(id)
   },

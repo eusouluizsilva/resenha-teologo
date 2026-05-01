@@ -332,6 +332,64 @@ export const remove = mutation({
       .collect()
     await Promise.all(modules.map((mod) => ctx.db.delete(mod._id)))
 
+    // Cascade nas tabelas filhas do curso. Materiais R2 são apagados via
+    // scheduler (internalDeleteObject) para não bloquear a mutation.
+    const materials = await ctx.db
+      .query('lessonMaterials')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+    for (const mat of materials) {
+      if (mat.storageId) await ctx.storage.delete(mat.storageId)
+      if (mat.r2Key) {
+        await ctx.scheduler.runAfter(0, internal.r2.internalDeleteObject, { key: mat.r2Key })
+      }
+      await ctx.db.delete(mat._id)
+    }
+
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+    await Promise.all(enrollments.map((e) => ctx.db.delete(e._id)))
+
+    const progresses = await ctx.db
+      .query('progress')
+      .withIndex('by_courseId', (q) => q.eq('courseId', id))
+      .collect()
+    await Promise.all(progresses.map((p) => ctx.db.delete(p._id)))
+
+    const cComments = await ctx.db
+      .query('courseComments')
+      .filter((q) => q.eq(q.field('courseId'), id))
+      .collect()
+    await Promise.all(cComments.map((c) => ctx.db.delete(c._id)))
+
+    const lComments = await ctx.db
+      .query('lessonComments')
+      .filter((q) => q.eq(q.field('courseId'), id))
+      .collect()
+    await Promise.all(lComments.map((c) => ctx.db.delete(c._id)))
+
+    const ratings = await ctx.db
+      .query('courseRatings')
+      .filter((q) => q.eq(q.field('courseId'), id))
+      .collect()
+    await Promise.all(ratings.map((r) => ctx.db.delete(r._id)))
+
+    const questions = await ctx.db
+      .query('courseQuestions')
+      .filter((q) => q.eq(q.field('courseId'), id))
+      .collect()
+    await Promise.all(questions.map((q) => ctx.db.delete(q._id)))
+
+    const coauthors = await ctx.db
+      .query('courseCoauthors')
+      .filter((q) => q.eq(q.field('courseId'), id))
+      .collect()
+    await Promise.all(coauthors.map((c) => ctx.db.delete(c._id)))
+
+    // courses.thumbnail é uma URL pública R2. Sem o key armazenado, a capa
+    // continua no bucket após delete (sobrescrita acontece em re-upload).
     await ctx.db.delete(id)
   },
 })

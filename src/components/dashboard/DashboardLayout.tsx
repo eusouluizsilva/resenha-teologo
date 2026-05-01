@@ -11,6 +11,25 @@ import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } fro
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { normalizePerfil } from '@/lib/perfil'
 
+function dashboardTitleFromPath(pathname: string): string {
+  if (pathname.startsWith('/dashboard/criador/cursos')) return 'Cursos'
+  if (pathname.startsWith('/dashboard/criador/aulas')) return 'Aulas'
+  if (pathname.startsWith('/dashboard/criador/blog')) return 'Blog'
+  if (pathname.startsWith('/dashboard/criador/banco-questoes')) return 'Banco de questões'
+  if (pathname.startsWith('/dashboard/criador/perfil')) return 'Perfil do criador'
+  if (pathname.startsWith('/dashboard/criador')) return 'Painel do criador'
+  if (pathname.startsWith('/dashboard/instituicao')) return 'Painel da instituição'
+  if (pathname.startsWith('/dashboard/admin')) return 'Painel admin'
+  if (pathname.startsWith('/dashboard/aluno/cursos')) return 'Meus cursos'
+  if (pathname.startsWith('/dashboard/aluno/certificados')) return 'Certificados'
+  if (pathname.startsWith('/dashboard/aluno/caderno')) return 'Caderno'
+  if (pathname.startsWith('/dashboard/aluno')) return 'Painel do aluno'
+  if (pathname.startsWith('/dashboard/perfil')) return 'Perfil'
+  if (pathname.startsWith('/dashboard/configuracoes')) return 'Configurações'
+  if (pathname.startsWith('/dashboard/notificacoes')) return 'Notificações'
+  return 'Painel'
+}
+
 export function DashboardLayout() {
   const { user, isLoaded } = useUser()
   const [timedOut, setTimedOut] = useState(false)
@@ -38,6 +57,27 @@ export function DashboardLayout() {
   // Fecha o drawer ao trocar de rota.
   useEffect(() => {
     setMobileOpen(false)
+  }, [pathname])
+
+  // Título da aba conforme a rota do dashboard. Mantém quem usa muitas abas
+  // simultâneas (criador editando vários cursos) sem se perder. Páginas
+  // específicas que já chamam useSeo têm prioridade (este efeito roda antes).
+  useEffect(() => {
+    const previous = document.title
+    document.title = `${dashboardTitleFromPath(pathname)} · Resenha do Teólogo`
+    // Sinaliza ao Google Search Console pra não indexar áreas privadas.
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"][data-dashboard]')
+    if (!robots) {
+      robots = document.createElement('meta')
+      robots.setAttribute('name', 'robots')
+      robots.setAttribute('data-dashboard', '1')
+      document.head.appendChild(robots)
+    }
+    robots.content = 'noindex, nofollow'
+    return () => {
+      document.title = previous
+      robots?.remove()
+    }
   }, [pathname])
 
   // Trava o scroll do body quando o drawer está aberto no mobile.

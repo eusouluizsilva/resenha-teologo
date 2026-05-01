@@ -15,6 +15,7 @@ import {
   brandStatusPillClass,
   cn,
 } from '@/lib/brand'
+import { uuid } from '@/lib/uuid'
 
 type QuestionRow = {
   _id: Id<'questionBank'>
@@ -36,7 +37,7 @@ type Draft = {
 }
 
 function uid() {
-  return crypto.randomUUID()
+  return uuid()
 }
 
 function emptyDraft(): Draft {

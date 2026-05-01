@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireCurrentUser, requireCourseAccess } from './lib/auth'
 import { internal } from './_generated/api'
+import { checkRateLimit } from './lib/rateLimit'
 
 // Fórum de discussão por curso. Thread de um nível: comentário raiz (parentId
 // ausente) pode receber respostas com parentId apontando para ele. Professor
@@ -18,6 +19,7 @@ export const create = mutation({
   },
   handler: async (ctx, { courseId, text, parentId }) => {
     const { identity, user } = await requireCurrentUser(ctx)
+    await checkRateLimit(ctx, identity.subject, 'comment.create', { max: 10, windowMs: 60_000 })
     const trimmed = text.trim()
     if (!trimmed) throw new Error('Comentário vazio')
     const safeText = trimmed.slice(0, MAX_COMMENT_LEN)

@@ -7,16 +7,18 @@ import { isAdConsentGranted } from './consent'
 
 const META_PIXEL_ID = '1884382392256153'
 
+type FbqFn = ((...args: unknown[]) => void) & {
+  callMethod?: (...args: unknown[]) => void
+  queue: unknown[][]
+  push: unknown
+  loaded: boolean
+  version: string
+}
+
 declare global {
   interface Window {
-    fbq?: ((...args: unknown[]) => void) & {
-      callMethod?: (...args: unknown[]) => void
-      queue?: unknown[][]
-      push?: unknown
-      loaded?: boolean
-      version?: string
-    }
-    _fbq?: Window['fbq']
+    fbq?: FbqFn
+    _fbq?: FbqFn
     __rdtMetaPixelReady?: boolean
   }
 }
@@ -36,25 +38,20 @@ export function initMetaPixel(): void {
 
   // Snippet oficial do Meta (fbevents.js loader). Mantido fiel ao do Facebook
   // para que o Pixel Helper reconheça a instalação.
-  const w = window as Window & { fbq?: Window['fbq']; _fbq?: Window['fbq'] }
-  if (!w.fbq) {
-    const fbq = function (...args: unknown[]) {
-      const f = fbq as unknown as {
-        callMethod?: (...a: unknown[]) => void
-        queue: unknown[][]
-      }
-      if (f.callMethod) {
-        f.callMethod.apply(fbq, args)
+  if (!window.fbq) {
+    const fbq: FbqFn = function (...args: unknown[]) {
+      if (fbq.callMethod) {
+        fbq.callMethod.apply(fbq, args)
       } else {
-        f.queue.push(args)
+        fbq.queue.push(args)
       }
-    } as Window['fbq']
-    ;(fbq as unknown as { queue: unknown[][] }).queue = []
-    ;(fbq as unknown as { loaded: boolean }).loaded = true
-    ;(fbq as unknown as { version: string }).version = '2.0'
-    ;(fbq as unknown as { push: unknown }).push = fbq
-    w.fbq = fbq
-    if (!w._fbq) w._fbq = fbq
+    } as FbqFn
+    fbq.queue = []
+    fbq.loaded = true
+    fbq.version = '2.0'
+    fbq.push = fbq
+    window.fbq = fbq
+    if (!window._fbq) window._fbq = fbq
 
     const script = document.createElement('script')
     script.async = true

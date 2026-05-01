@@ -1118,7 +1118,7 @@ export function LandingPage() {
       <section className="px-6 py-24">
         <motion.div variants={staggerContainer} {...inView} className="mx-auto max-w-4xl text-center">
           <motion.div variants={fadeIn}>
-            <img src="/logos/LOGO ICONE BRANCA.png" alt="Resenha do Teólogo" className="mx-auto mb-8 h-36 w-36" />
+            <img src="/logos/LOGO ICONE BRANCA.png" alt="Resenha do Teólogo" loading="lazy" decoding="async" width="144" height="144" className="mx-auto mb-8 h-36 w-36" />
           </motion.div>
           <motion.h2 variants={fadeUp} className="font-display text-3xl font-bold leading-tight text-white md:text-4xl">
             Comece hoje sua formação teológica, gratuitamente.
@@ -1149,7 +1149,7 @@ export function LandingPage() {
 
       <footer className="border-t border-[#2A313B] px-6 py-10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
-          <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-16 w-auto opacity-80" />
+          <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" loading="lazy" decoding="async" width="160" height="64" className="h-16 w-auto opacity-80" />
 
           <div className="flex items-center gap-4">
             <a

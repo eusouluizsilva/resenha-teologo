@@ -68,7 +68,7 @@ export function EditarArtigoPage() {
             status: post.status,
             authorIdentity: post.authorIdentity,
             authorInstitutionId: post.authorInstitutionId,
-            coverImageStorageId: post.coverImageStorageId,
+            coverImageR2Key: post.coverImageR2Key,
             coverImageUrl: post.coverImageUrl,
             slug: post.slug,
           },

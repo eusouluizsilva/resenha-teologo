@@ -5,6 +5,7 @@ import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
+import { uuid } from '@/lib/uuid'
 
 // Drawer para CRIAR uma nova aula. Campos avançados (versículos estruturados,
 // materiais PDF/TXT, toggle de retry) ficam na EditarAulaPage, acessada após
@@ -23,7 +24,7 @@ export type QuizQuestion = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function uid() { return crypto.randomUUID() }
+function uid() { return uuid() }
 
 function detectVideo(url: string) {
   if (!url) return { embedUrl: null, label: '', color: '' }

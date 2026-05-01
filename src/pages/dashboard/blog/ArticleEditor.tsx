@@ -1,7 +1,7 @@
 // Editor compartilhado para criação e edição de artigo. Renderiza dois modos:
 // 'create' chama posts.createDraft, 'edit' chama posts.updateDraft. Em ambos
 // o autor pode publicar/despublicar/remover usando os botões de ação no
-// rodapé. Cover via Convex File Storage (generateUploadUrl + storage.store).
+// rodapé. Cover via Cloudflare R2 (useR2Upload → presigned PUT).
 
 import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -19,6 +19,10 @@ import {
 } from '@/lib/brand'
 import { ArticleBody } from '@/components/blog/ArticleBody'
 import { IdentitySelector, type IdentityValue } from '@/components/blog/IdentitySelector'
+import { useR2Upload } from '@/lib/r2Upload'
+
+const MAX_COVER_BYTES = 5 * 1024 * 1024
+const MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024
 
 type Mode =
   | { kind: 'create' }
@@ -34,7 +38,7 @@ type Mode =
         status: 'draft' | 'scheduled' | 'published' | 'unlisted' | 'removed'
         authorIdentity: 'aluno' | 'criador' | 'instituicao'
         authorInstitutionId: Id<'institutions'> | null
-        coverImageStorageId: Id<'_storage'> | null
+        coverImageR2Key: string | null
         coverImageUrl: string | null
         slug: string
       }
@@ -54,7 +58,7 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
   const publish = useMutation(api.posts.publish)
   const unpublish = useMutation(api.posts.unpublish)
   const softDelete = useMutation(api.posts.softDeleteMine)
-  const generateUploadUrl = useMutation(api.posts.generateUploadUrl)
+  const { upload: uploadToR2, uploading: r2Uploading } = useR2Upload()
 
   const initial = mode.kind === 'edit' ? mode.initial : null
 
@@ -71,14 +75,15 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
         }
       : null,
   )
-  const [coverStorageId, setCoverStorageId] = useState<Id<'_storage'> | null>(
-    initial?.coverImageStorageId ?? null,
-  )
+  const [coverR2Key, setCoverR2Key] = useState<string | null>(initial?.coverImageR2Key ?? null)
   const [coverPreview, setCoverPreview] = useState<string | null>(initial?.coverImageUrl ?? null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [insertingImage, setInsertingImage] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const inlineFileInputRef = useRef<HTMLInputElement>(null)
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
 
   // Em create, se o usuário ainda não escolheu, usa a primeira categoria
   // disponível como valor efetivo. Calculado, não sincronizado via setState.
@@ -109,22 +114,59 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
 
   async function handleCoverUpload(file: File) {
     setError('')
+    if (!file.type.startsWith('image/')) {
+      setError('Envie um arquivo de imagem.')
+      return
+    }
+    if (file.size > MAX_COVER_BYTES) {
+      setError('Imagem acima de 5 MB. Reduza antes de enviar.')
+      return
+    }
     setBusy(true)
     try {
-      const url = await generateUploadUrl()
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': file.type || 'image/jpeg' },
-        body: file,
-      })
-      if (!res.ok) throw new Error('Falha no upload.')
-      const data = (await res.json()) as { storageId: Id<'_storage'> }
-      setCoverStorageId(data.storageId)
-      setCoverPreview(URL.createObjectURL(file))
+      const { key, publicUrl } = await uploadToR2(file, 'cover')
+      setCoverR2Key(key)
+      setCoverPreview(publicUrl)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao enviar imagem.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function handleInsertInlineImage(file: File) {
+    setError('')
+    if (!file.type.startsWith('image/')) {
+      setError('Envie um arquivo de imagem.')
+      return
+    }
+    if (file.size > MAX_INLINE_IMAGE_BYTES) {
+      setError('Imagem acima de 5 MB. Reduza antes de enviar.')
+      return
+    }
+    setInsertingImage(true)
+    try {
+      const { publicUrl } = await uploadToR2(file, 'post-image')
+      const alt = file.name.replace(/\.[^.]+$/, '').slice(0, 80) || 'imagem'
+      const snippet = `\n\n![${alt}](${publicUrl})\n\n`
+      const textarea = bodyRef.current
+      if (textarea) {
+        const start = textarea.selectionStart ?? body.length
+        const end = textarea.selectionEnd ?? body.length
+        const next = body.slice(0, start) + snippet + body.slice(end)
+        setBody(next)
+        const caret = start + snippet.length
+        requestAnimationFrame(() => {
+          textarea.focus()
+          textarea.setSelectionRange(caret, caret)
+        })
+      } else {
+        setBody((prev) => prev + snippet)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar imagem.')
+    } finally {
+      setInsertingImage(false)
     }
   }
 
@@ -147,7 +189,7 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
           tags,
           authorIdentity: identityValue.identity,
           authorInstitutionId: identityValue.institutionId,
-          coverImageStorageId: coverStorageId ?? undefined,
+          coverImageR2Key: coverR2Key ?? undefined,
         })
         return id
       }
@@ -160,7 +202,7 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
         tags,
         authorIdentity: identityValue.identity,
         authorInstitutionId: identityValue.institutionId,
-        coverImageStorageId: coverStorageId ?? undefined,
+        coverImageR2Key: coverR2Key ?? undefined,
       })
       return mode.postId
     } catch (err) {
@@ -325,40 +367,66 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={busy}
+                disabled={busy || r2Uploading}
                 className={brandSecondaryButtonClass}
               >
-                {coverPreview ? 'Trocar imagem' : 'Enviar imagem'}
+                {r2Uploading ? 'Enviando...' : coverPreview ? 'Trocar imagem' : 'Enviar imagem'}
               </button>
               {coverPreview && (
                 <button
                   type="button"
                   onClick={() => {
                     setCoverPreview(null)
-                    setCoverStorageId(null)
+                    setCoverR2Key(null)
                   }}
                   className="text-xs text-white/48 hover:text-white"
                 >
                   Remover capa
                 </button>
               )}
+              <p className="text-[11px] text-white/32">JPG, PNG ou WebP, até 5 MB.</p>
             </div>
           </div>
         </div>
       </motion.div>
 
       <motion.div variants={fadeUp} className={cn('space-y-3 p-6 sm:p-7', brandPanelClass)}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
             Conteúdo (Markdown)
           </label>
-          <button
-            type="button"
-            onClick={() => setShowPreview((s) => !s)}
-            className="text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20]"
-          >
-            {showPreview ? 'Voltar a editar' : 'Ver pré-visualização'}
-          </button>
+          <div className="flex items-center gap-4">
+            {!showPreview && (
+              <>
+                <input
+                  ref={inlineFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) handleInsertInlineImage(f)
+                    e.target.value = ''
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => inlineFileInputRef.current?.click()}
+                  disabled={insertingImage}
+                  className="text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20] disabled:opacity-50"
+                >
+                  {insertingImage ? 'Enviando imagem...' : 'Inserir imagem'}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowPreview((s) => !s)}
+              className="text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20]"
+            >
+              {showPreview ? 'Voltar a editar' : 'Ver pré-visualização'}
+            </button>
+          </div>
         </div>
 
         {showPreview ? (
@@ -367,10 +435,11 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
           </div>
         ) : (
           <textarea
+            ref={bodyRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={20}
-            placeholder={`# Título principal\n\nUm parágrafo de abertura. Use \`##\` para subtítulos, \`>\` para citações e \`-\` para listas.`}
+            placeholder={`# Título principal\n\nUm parágrafo de abertura. Use \`##\` para subtítulos, \`>\` para citações e \`-\` para listas.\n\nDica: clique em "Inserir imagem" acima para subir um arquivo direto pro R2.`}
             className={cn(brandInputClass, 'font-mono text-[13px] leading-6 resize-y')}
           />
         )}

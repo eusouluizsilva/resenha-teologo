@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from 'convex/react'
+import { useQuery, useMutation, useAction } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
@@ -1736,9 +1736,27 @@ function NotebookSection({
 
 function MaterialsSection({ lessonId }: { lessonId: Id<'lessons'> }) {
   const materials = useQuery(api.lessonMaterials.listByLesson, { lessonId })
+  const getDownloadUrl = useAction(api.lessonMaterials.getDownloadUrl)
+  const [openingId, setOpeningId] = useState<Id<'lessonMaterials'> | null>(null)
 
   if (materials === undefined) return null
   if (materials.length === 0) return null
+
+  const openMaterial = async (id: Id<'lessonMaterials'>, fallbackUrl: string | null) => {
+    if (fallbackUrl) {
+      window.open(fallbackUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+    try {
+      setOpeningId(id)
+      const url = await getDownloadUrl({ materialId: id })
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch {
+      // sem-op: botão volta a estar habilitado
+    } finally {
+      setOpeningId(null)
+    }
+  }
 
   return (
     <section className="mt-10">
@@ -1771,7 +1789,10 @@ function MaterialsSection({ lessonId }: { lessonId: Id<'lessons'> }) {
 
       <div className="grid gap-2 sm:grid-cols-2">
         {materials.map((m) => {
-          const hasUrl = typeof m.url === 'string' && m.url.length > 0
+          const hasStorageUrl = typeof m.url === 'string' && m.url.length > 0
+          const hasR2Key = typeof m.r2Key === 'string' && m.r2Key.length > 0
+          const canOpen = hasStorageUrl || hasR2Key
+          const isOpening = openingId === m._id
           const inner = (
             <>
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
@@ -1812,16 +1833,16 @@ function MaterialsSection({ lessonId }: { lessonId: Id<'lessons'> }) {
               </svg>
             </>
           )
-          return hasUrl ? (
-            <a
+          return canOpen ? (
+            <button
               key={m._id}
-              href={m.url as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-all hover:border-[#F37E20]/40 hover:shadow-sm"
+              type="button"
+              onClick={() => void openMaterial(m._id, m.url ?? null)}
+              disabled={isOpening}
+              className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-all hover:border-[#F37E20]/40 hover:shadow-sm disabled:opacity-60"
             >
               {inner}
-            </a>
+            </button>
           ) : (
             <div
               key={m._id}

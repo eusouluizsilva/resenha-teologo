@@ -7,6 +7,7 @@ import type { Id } from '../../../../convex/_generated/dataModel'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { brandInputClass, brandPanelClass, brandPrimaryButtonClass, brandSecondaryButtonClass, cn } from '@/lib/brand'
 import { useCreatorId } from '@/lib/useCreatorId'
+import { useR2Upload } from '@/lib/r2Upload'
 import { DashboardPageShell, DashboardSectionLabel } from '@/components/dashboard/PageShell'
 import { TemplatePicker } from '@/components/criador/TemplatePicker'
 
@@ -21,75 +22,33 @@ const languages = [
   'Grego', 'Hebraico', 'Latim', 'Outro',
 ]
 
-const MAX_BASE64_BYTES = 750_000
-
-function compressImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      const canvas = document.createElement('canvas')
-      let { width, height } = img
-      const maxDim = 1280
-
-      if (width > maxDim || height > maxDim) {
-        const ratio = Math.min(maxDim / width, maxDim / height)
-        width = Math.round(width * ratio)
-        height = Math.round(height * ratio)
-      }
-
-      canvas.width = width
-      canvas.height = height
-      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
-      let quality = 0.85
-      let result = canvas.toDataURL('image/jpeg', quality)
-
-      while (result.length > MAX_BASE64_BYTES && quality > 0.3) {
-        quality -= 0.1
-        result = canvas.toDataURL('image/jpeg', quality)
-      }
-
-      if (result.length > MAX_BASE64_BYTES) {
-        reject(new Error('Imagem muito grande mesmo após compressão. Use uma imagem menor.'))
-      } else {
-        resolve(result)
-      }
-    }
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Erro ao carregar imagem.'))
-    }
-
-    img.src = url
-  })
-}
+const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024
 
 function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
-  const [compressing, setCompressing] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const { upload, uploading } = useR2Upload()
 
   const handleFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) return
-    if (file.size > 5_000_000) {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Selecione um arquivo de imagem.')
+      return
+    }
+    if (file.size > MAX_THUMBNAIL_BYTES) {
       setUploadError('Arquivo muito grande. Máximo 5 MB.')
       return
     }
 
     setUploadError('')
-    setCompressing(true)
 
     try {
-      onChange(await compressImage(file))
+      const { publicUrl } = await upload(file, 'cover')
+      onChange(publicUrl)
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : 'Erro ao processar imagem.')
-    } finally {
-      setCompressing(false)
+      setUploadError(error instanceof Error ? error.message : 'Erro ao enviar imagem.')
     }
-  }, [onChange])
+  }, [onChange, upload])
 
   const handleDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault()
@@ -132,7 +91,7 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
             }}
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
-            onClick={() => !compressing && inputRef.current?.click()}
+            onClick={() => !uploading && inputRef.current?.click()}
             className={cn(
               'flex aspect-video cursor-pointer flex-col items-center justify-center gap-3 rounded-[1.5rem] border-2 border-dashed transition-all duration-200',
               dragging
@@ -141,7 +100,7 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
             )}
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
-              {compressing ? (
+              {uploading ? (
                 <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -154,7 +113,7 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
             </div>
             <div className="text-center">
               <p className="text-sm font-medium text-white/72">
-                {compressing ? 'Comprimindo...' : dragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}
+                {uploading ? 'Enviando...' : dragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}
               </p>
               <p className="mt-1 text-xs leading-6 text-white/32">PNG, JPG ou WEBP. Máximo 5 MB. Proporção 16:9 recomendada.</p>
             </div>

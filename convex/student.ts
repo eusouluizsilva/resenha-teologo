@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireIdentity } from './lib/auth'
 import { internal } from './_generated/api'
+import { checkRateLimit } from './lib/rateLimit'
 import type { Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 
@@ -24,6 +25,19 @@ export const getEnrolledCourse = query({
 
     const course = await ctx.db.get(courseId)
     if (!course || !course.isPublished) return null
+
+    // Multi-tenant: cursos com visibility='institution' exigem que o aluno
+    // permaneça como membro ativo da instituição. Matrícula antiga + remoção
+    // posterior do membro não pode dar acesso continuado.
+    if (course.visibility === 'institution' && course.institutionId) {
+      const member = await ctx.db
+        .query('institutionMembers')
+        .withIndex('by_institution_user', (q) =>
+          q.eq('institutionId', course.institutionId!).eq('userId', identity.subject)
+        )
+        .unique()
+      if (!member || member.status !== 'ativo') return null
+    }
 
     const creator = await ctx.db
       .query('users')
@@ -143,6 +157,16 @@ export const getLessonForPlayer = query({
 
     const course = await ctx.db.get(courseId)
     if (!course || !course.isPublished) return null
+
+    if (course.visibility === 'institution' && course.institutionId) {
+      const member = await ctx.db
+        .query('institutionMembers')
+        .withIndex('by_institution_user', (q) =>
+          q.eq('institutionId', course.institutionId!).eq('userId', identity.subject)
+        )
+        .unique()
+      if (!member || member.status !== 'ativo') return null
+    }
 
     const mod = await ctx.db.get(lesson.moduleId)
 
@@ -625,6 +649,7 @@ export const rateCourse = mutation({
   },
   handler: async (ctx, { courseId, stars, review }) => {
     const identity = await requireIdentity(ctx)
+    await checkRateLimit(ctx, identity.subject, 'course.rate', { max: 5, windowMs: 60_000 })
 
     if (stars < 1 || stars > 5) throw new Error('Avaliação deve ser entre 1 e 5 estrelas')
 
@@ -721,9 +746,20 @@ export const getStudentDashboard = query({
     const totalWatchSeconds = progressRecords.reduce((s, p) => s + (p.watchedSeconds ?? 0), 0)
 
     // Para cada matrícula, calcula progresso e busca a próxima aula pendente.
+    // Course/lessons/modules são buscados em paralelo (3x mais rápido por curso).
     const courses = await Promise.all(
       enrollments.map(async (enrollment) => {
-        const course = await ctx.db.get(enrollment.courseId)
+        const [course, lessons, modules] = await Promise.all([
+          ctx.db.get(enrollment.courseId),
+          ctx.db
+            .query('lessons')
+            .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
+            .collect(),
+          ctx.db
+            .query('modules')
+            .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
+            .collect(),
+        ])
         if (!course) return null
 
         const courseProgress = progressRecords.filter((p) => p.courseId === enrollment.courseId)
@@ -731,17 +767,6 @@ export const getStudentDashboard = query({
         const totalLessons = course.totalLessons || 1
         const percentage = Math.round((completedLessons / totalLessons) * 100)
 
-        // Próxima aula: busca a primeira aula do curso (por módulo order, aula order)
-        // onde progress.completed é false ou não existe.
-        const lessons = await ctx.db
-          .query('lessons')
-          .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
-          .collect()
-
-        const modules = await ctx.db
-          .query('modules')
-          .withIndex('by_courseId', (q) => q.eq('courseId', enrollment.courseId))
-          .collect()
         const moduleOrder = new Map(modules.map((m) => [String(m._id), m.order]))
 
         const ordered = [...lessons].sort((a, b) => {

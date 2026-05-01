@@ -73,21 +73,32 @@ export function ensureIdentityMatches(identitySubject: string, expectedSubject: 
   }
 }
 
-// Lista de admins da plataforma. Hoje inclui a conta institucional
-// (hello@resenhadoteologo.com) e a conta pessoal do dono Luiz, usada no dia
-// a dia para criar cursos e artigos. Usar email em vez de clerkId facilita a
-// migração/rotação de contas sem redeploy. Comparação é case-insensitive para
-// evitar falha por diferença de caixa.
-const ADMIN_EMAILS = ['hello@resenhadoteologo.com', 'luizcdasilvajunior@gmail.com']
+// Bootstrap admins. Mantido pequeno e estático (apenas o dono) para que mesmo
+// um banco vazio tenha quem promova outros via UI/CLI. Demais admins ficam na
+// tabela `admins`. Comparação case-insensitive.
+const BOOTSTRAP_ADMIN_EMAILS = ['luizcdasilvajunior@gmail.com', 'hello@resenhadoteologo.com']
 
 export function isAdminEmail(email?: string | null) {
   if (!email) return false
-  return ADMIN_EMAILS.includes(email.toLowerCase())
+  return BOOTSTRAP_ADMIN_EMAILS.includes(email.toLowerCase())
+}
+
+// Versão async que também consulta a tabela `admins`. Usar em handlers que
+// têm ctx; a versão sync acima continua válida pra fluxos sem DB (pré-checks).
+export async function isAdmin(ctx: Ctx, email?: string | null): Promise<boolean> {
+  if (!email) return false
+  const lower = email.toLowerCase()
+  if (BOOTSTRAP_ADMIN_EMAILS.includes(lower)) return true
+  const row = await ctx.db
+    .query('admins')
+    .withIndex('by_email', (q) => q.eq('email', lower))
+    .unique()
+  return !!row
 }
 
 export async function requireAdmin(ctx: Ctx) {
   const { identity, user } = await requireCurrentUser(ctx)
-  if (!isAdminEmail(user.email)) {
+  if (!(await isAdmin(ctx, user.email))) {
     throw new Error('Não autorizado')
   }
   return { identity, user }

@@ -318,8 +318,10 @@ export default defineSchema({
     .index('by_courseId', ['courseId']),
 
   // Materiais complementares (apenas .pdf e .txt) anexados a uma aula.
-  // Armazenados no Convex File Storage via storageId. Multi-tenant: creatorId
-  // replica courseId para filtro direto sem join.
+  // Multi-tenant: creatorId replica courseId para filtro direto sem join.
+  // Storage: novos uploads vão pro Cloudflare R2 (campo r2Key). Materiais
+  // antigos continuam em Convex File Storage via storageId. A query
+  // listByLesson tenta R2 primeiro e cai pra storageId quando ausente.
   lessonMaterials: defineTable({
     lessonId: v.id('lessons'),
     courseId: v.id('courses'),
@@ -327,7 +329,8 @@ export default defineSchema({
     name: v.string(),
     size: v.number(),
     mimeType: v.string(),
-    storageId: v.id('_storage'),
+    storageId: v.optional(v.id('_storage')),
+    r2Key: v.optional(v.string()),
     order: v.number(),
     createdAt: v.number(),
   })
@@ -630,6 +633,7 @@ export default defineSchema({
     excerpt: v.string(),
     bodyMarkdown: v.string(),
     coverImageStorageId: v.optional(v.id('_storage')),
+    coverImageR2Key: v.optional(v.string()),
     categorySlug: v.string(),
     tagSlugs: v.array(v.string()),
     status: v.union(
@@ -758,6 +762,34 @@ export default defineSchema({
     .index('by_userId', ['userId'])
     .index('by_stripeSubscriptionId', ['stripeSubscriptionId'])
     .index('by_stripeCustomerId', ['stripeCustomerId']),
+
+  // Idempotência de webhooks Stripe. event.id é único por evento; gravamos antes
+  // de processar para que retries do Stripe não dupliquem o efeito.
+  stripeWebhookEvents: defineTable({
+    eventId: v.string(),
+    type: v.string(),
+    receivedAt: v.number(),
+  }).index('by_eventId', ['eventId']),
+
+  // Lista de admins promovidos via UI/Convex CLI. Combinada com a constante
+  // ADMIN_EMAILS em lib/auth.ts (bootstrap pro dono). Email é case-insensitive.
+  admins: defineTable({
+    email: v.string(),
+    addedAt: v.number(),
+    addedBy: v.optional(v.string()),
+    note: v.optional(v.string()),
+  }).index('by_email', ['email']),
+
+  // Rate limiting: chave (userId:action) com timestamps das últimas chamadas
+  // dentro da janela. checkRateLimit em lib/rateLimit.ts grava e cleva quando
+  // exceder. Sem TTL nativo no Convex; entradas antigas são ignoradas pela
+  // janela mas ficam no banco até o próximo write daquele usuário/ação. O
+  // helper sempre poda o array antes de gravar para o tamanho não crescer.
+  rateLimits: defineTable({
+    key: v.string(),
+    timestamps: v.array(v.number()),
+    updatedAt: v.number(),
+  }).index('by_key', ['key']),
 
   // Loja de produtos. Catálogo de itens fisicos/digitais (livros, ebooks, kits,
   // brindes). Não substitui cursos (cursos sao sempre gratuitos). status

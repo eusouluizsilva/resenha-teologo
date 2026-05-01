@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireCourseAccess, requireCurrentUser } from './lib/auth'
+import { checkRateLimit } from './lib/rateLimit'
 
 // Perguntas privadas do aluno ao professor. Pergunta é sempre do aluno;
 // professor responde. Aluno só vê as próprias; professor dono vê todas do seu
@@ -20,6 +21,7 @@ export const ask = mutation({
     if (role !== 'aluno') {
       throw new Error('Apenas alunos matriculados podem perguntar')
     }
+    await checkRateLimit(ctx, identity.subject, 'question.ask', { max: 5, windowMs: 60_000 })
 
     const trimmed = question.trim()
     if (!trimmed) throw new Error('Pergunta vazia')

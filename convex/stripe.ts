@@ -211,6 +211,26 @@ export const upsertFromWebhook = internalMutation({
   },
 })
 
+// Idempotência: tenta gravar o eventId. Retorna true se for novo (processar),
+// false se já existia (ignorar). Stripe retransmite eventos em caso de timeout
+// e a chave única no eventId garante que o efeito seja aplicado uma vez só.
+export const recordStripeEvent = internalMutation({
+  args: { eventId: v.string(), type: v.string() },
+  handler: async (ctx, { eventId, type }) => {
+    const existing = await ctx.db
+      .query('stripeWebhookEvents')
+      .withIndex('by_eventId', (q) => q.eq('eventId', eventId))
+      .unique()
+    if (existing) return { isNew: false }
+    await ctx.db.insert('stripeWebhookEvents', {
+      eventId,
+      type,
+      receivedAt: Date.now(),
+    })
+    return { isNew: true }
+  },
+})
+
 // Lookup reverso: dado um stripeSubscriptionId, retorna o clerkUserId. Usado
 // pelo webhook quando o evento é customer.subscription.deleted e o payload não
 // traz metadata.clerkUserId (alguns eventos são truncados).

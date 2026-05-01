@@ -445,16 +445,16 @@ Deploy:    a definir
 
 ---
 
-## Pendências Atuais (snapshot 2026-04-30)
+## Pendências Atuais (snapshot 2026-05-01)
 
 > Lista consolidada de tudo que ainda falta para a plataforma rodar 100% em produção. Atualizar conforme cada item for resolvido. As 33 melhorias internas de UX (TaskList) foram concluídas; o que sobra agora depende de credenciais externas, ações de plataformas terceiras ou decisões de produto.
 
 ### Bloqueadores de receita (prioridade máxima)
 
-- [ ] **Stripe Live mode** — ativação iniciada 2026-04-29 (sole proprietor US). Parou na etapa de produtos/site. Bloqueia: certificado pago R$29,90, assinatura premium aluno, criador sem ads, plano igreja, loja online.
-- [ ] **Pix no Stripe** — habilitar como método de pagamento depois que o Live mode estiver ativo. Necessário para o público brasileiro.
+- [x] **Stripe Live mode** — ATIVO desde 2026-04-30. Conta `acct_1SBFQxBSCnH7XGvJ`, 3 produtos com prices Live, webhook configurado. Pendente apenas smoke test E2E com cartão real.
+- [ ] **Pix via Mercado Pago** — Stripe US não processa Pix. Cadastrar Mercado Pago BR e integrar (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`). Necessário para o público brasileiro.
 - [ ] **AdSense — destravar conta** — caso de duplicate regrediu em 2026-04-28 (sistema automático reverteu). Precisa postar update na thread original e aguardar revisão humana.
-- [ ] **Cloudflare R2** — backend `convex/r2.ts` pronto desde 2026-04-28. Falta usuário criar bucket + token de acesso no dashboard Cloudflare e colar credenciais no Convex.
+- [x] **Cloudflare R2** — 100% operacional desde 2026-05-01. Bucket criado, token configurado, envs no Convex prod, URL pública R2.dev (`pub-ab9b3c1a...r2.dev`) ativa. UI plugada em capa de curso, materiais de aula, capa de blog post e imagens inline de blog. Falta apenas avatar (Clerk cobre por ora) e eBooks (Fase 2).
 
 ### AdSense — repasse para criadores (4 fases)
 
@@ -465,9 +465,9 @@ Deploy:    a definir
 
 ### Operacional / Infra
 
-- [ ] **Convex Free plan** — covers ainda servidos pelo Convex (lazy loading aplicado). Próximo corte: migrar covers de curso/post para R2 público para sair de uma vez do limite gratuito.
+- [x] **Convex Free plan** — desafogado em 2026-05-01: capas, materiais e imagens de blog migraram pra R2 público. Convex agora só guarda dados do banco. Crons reduzidos pra 30 min em 2026-04-28.
 - [ ] **Endereço Google Payments** — atualizar de Marlborough MA para Westborough MA (endereço residencial atual).
-- [ ] **GSC indexação** — plano de 4 dias iniciado 2026-04-29; submeter URLs diariamente até cobrir todas as páginas públicas.
+- [ ] **GSC indexação** — plano de 4 dias iniciado 2026-04-29; submeter URLs diariamente até cobrir todas as páginas públicas. Pode automatizar via Indexing API (Service Account já existe).
 
 ### Funcionalidades aprovadas aguardando implementação
 

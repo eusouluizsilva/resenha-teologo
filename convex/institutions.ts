@@ -3,6 +3,7 @@ import type { MutationCtx } from './_generated/server'
 import { mutation, query } from './_generated/server'
 import type { Id } from './_generated/dataModel'
 import { requireIdentity } from './lib/auth'
+import { isValidCNPJ, isValidEmail } from './lib/validators'
 
 export const listByUser = query({
   args: {},
@@ -61,6 +62,13 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx)
 
+    if (args.cnpj && args.cnpj.trim() && !isValidCNPJ(args.cnpj)) {
+      throw new Error('CNPJ inválido.')
+    }
+    if (args.email && args.email.trim() && !isValidEmail(args.email)) {
+      throw new Error('Email inválido.')
+    }
+
     const institutionId = await ctx.db.insert('institutions', {
       name: args.name,
       type: args.type,
@@ -116,6 +124,13 @@ export const update = mutation({
 
     if (!membership || !['dono', 'admin'].includes(membership.role)) {
       throw new Error('Sem permissão para editar esta instituição')
+    }
+
+    if (fields.cnpj !== undefined && fields.cnpj.trim() && !isValidCNPJ(fields.cnpj)) {
+      throw new Error('CNPJ inválido.')
+    }
+    if (fields.email !== undefined && fields.email.trim() && !isValidEmail(fields.email)) {
+      throw new Error('Email inválido.')
     }
 
     if (fields.themeColor !== undefined) {

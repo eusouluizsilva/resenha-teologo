@@ -11,6 +11,18 @@ import type { Doc, Id } from './_generated/dataModel'
 import { requireIdentity, requireCurrentUser } from './lib/auth'
 import { toSlug } from './lib/slug'
 import { internal } from './_generated/api'
+import { resolveR2PublicUrl } from './r2'
+
+// Resolve URL da capa preferindo R2 (novo) sobre Convex storage (legado).
+// Posts antigos têm só coverImageStorageId; novos têm só coverImageR2Key.
+async function resolveCoverImageUrl(
+  ctx: QueryCtx,
+  post: Doc<'posts'>,
+): Promise<string | null> {
+  if (post.coverImageR2Key) return await resolveR2PublicUrl(post.coverImageR2Key)
+  if (post.coverImageStorageId) return await ctx.storage.getUrl(post.coverImageStorageId)
+  return null
+}
 
 const MAX_TITLE = 120
 const MAX_EXCERPT = 220
@@ -80,9 +92,7 @@ async function shapeListItem(
   post: Doc<'posts'>,
 ): Promise<PublicPostListItem> {
   const author = await loadAuthor(ctx, post)
-  const coverImageUrl = post.coverImageStorageId
-    ? await ctx.storage.getUrl(post.coverImageStorageId)
-    : null
+  const coverImageUrl = await resolveCoverImageUrl(ctx, post)
   return {
     _id: post._id,
     title: post.title,
@@ -294,14 +304,6 @@ async function ensureCanPublishAs(
   if (!fns) throw new Error('Função não ativa. Ative em Configurações.')
 }
 
-export const generateUploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    await requireIdentity(ctx)
-    return await ctx.storage.generateUploadUrl()
-  },
-})
-
 export const createDraft = mutation({
   args: {
     title: v.string(),
@@ -312,6 +314,7 @@ export const createDraft = mutation({
     authorIdentity: identityValidator,
     authorInstitutionId: v.optional(v.id('institutions')),
     coverImageStorageId: v.optional(v.id('_storage')),
+    coverImageR2Key: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx)
@@ -345,6 +348,7 @@ export const createDraft = mutation({
       excerpt,
       bodyMarkdown: body,
       coverImageStorageId: args.coverImageStorageId,
+      coverImageR2Key: args.coverImageR2Key,
       categorySlug: args.categorySlug,
       tagSlugs,
       status: 'draft',
@@ -369,6 +373,7 @@ export const updateDraft = mutation({
     authorIdentity: identityValidator,
     authorInstitutionId: v.optional(v.id('institutions')),
     coverImageStorageId: v.optional(v.id('_storage')),
+    coverImageR2Key: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx)
@@ -404,6 +409,7 @@ export const updateDraft = mutation({
       excerpt,
       bodyMarkdown: body,
       coverImageStorageId: args.coverImageStorageId,
+      coverImageR2Key: args.coverImageR2Key,
       categorySlug: args.categorySlug,
       tagSlugs,
       authorIdentity: args.authorIdentity,
@@ -524,9 +530,7 @@ export const listMine = query({
         viewCount: p.viewCount,
         authorIdentity: p.authorIdentity,
         authorInstitutionId: p.authorInstitutionId ?? null,
-        coverImageUrl: p.coverImageStorageId
-          ? await ctx.storage.getUrl(p.coverImageStorageId)
-          : null,
+        coverImageUrl: await resolveCoverImageUrl(ctx, p),
       })),
     )
   },
@@ -539,10 +543,7 @@ export const getMineForEditor = query({
     const post = await ctx.db.get(postId)
     if (!post) return null
     if (post.authorUserId !== identity.subject) return null
-    let coverImageUrl: string | null = null
-    if (post.coverImageStorageId) {
-      coverImageUrl = await ctx.storage.getUrl(post.coverImageStorageId)
-    }
+    const coverImageUrl = await resolveCoverImageUrl(ctx, post)
     return {
       _id: post._id,
       title: post.title,
@@ -555,6 +556,7 @@ export const getMineForEditor = query({
       authorIdentity: post.authorIdentity,
       authorInstitutionId: post.authorInstitutionId ?? null,
       coverImageStorageId: post.coverImageStorageId ?? null,
+      coverImageR2Key: post.coverImageR2Key ?? null,
       coverImageUrl,
       publishedAt: post.publishedAt ?? null,
       updatedAt: post.updatedAt,

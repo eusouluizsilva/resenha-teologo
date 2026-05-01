@@ -26,7 +26,7 @@ async function sendViaResend(params: {
 }): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    console.log('[email] RESEND_API_KEY ausente. Email não enviado:', params.subject, '→', params.to)
+    console.log('[email] RESEND_API_KEY ausente. Email não enviado:', params.subject, '→', maskEmail(params.to))
     return { success: false, skipped: true }
   }
 
@@ -114,6 +114,16 @@ function baseHtml(params: { title: string; intro: string; cta?: { label: string;
   </table>
 </body>
 </html>`
+}
+
+// Mascaramento mínimo de email para logs (LGPD): "luiz@gmail.com" → "lu***@gmail.com".
+function maskEmail(email: string): string {
+  const at = email.indexOf('@')
+  if (at < 0) return '***'
+  const local = email.slice(0, at)
+  const domain = email.slice(at)
+  const visible = local.slice(0, Math.min(2, local.length))
+  return `${visible}${'*'.repeat(Math.max(1, local.length - visible.length))}${domain}`
 }
 
 function escapeHtml(s: string): string {
