@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -35,6 +35,7 @@ function StatusPill({ status }: { status: ProductRow['status'] }) {
 
 function NewProductModal({ onClose }: { onClose: () => void }) {
   const create = useMutation(api.products.create)
+  const formId = useId()
   const [title, setTitle] = useState('')
   const [shortDescription, setShortDescription] = useState('')
   const [description, setDescription] = useState('')
@@ -98,10 +99,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+            <label htmlFor={`${formId}-title`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
               Título
             </label>
             <input
+              id={`${formId}-title`}
               type="text"
               required
               minLength={3}
@@ -114,10 +116,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+            <label htmlFor={`${formId}-shortDescription`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
               Descrição curta (catálogo)
             </label>
             <input
+              id={`${formId}-shortDescription`}
               type="text"
               maxLength={180}
               value={shortDescription}
@@ -128,10 +131,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+            <label htmlFor={`${formId}-description`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
               Descrição completa
             </label>
             <textarea
+              id={`${formId}-description`}
               required
               rows={5}
               minLength={20}
@@ -144,10 +148,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+              <label htmlFor={`${formId}-type`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
                 Tipo
               </label>
               <select
+                id={`${formId}-type`}
                 value={type}
                 onChange={(e) => setType(e.target.value as ProductRow['type'])}
                 className={cn(brandInputClass, 'mt-1.5 w-full')}
@@ -159,10 +164,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+              <label htmlFor={`${formId}-price`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
                 Preço (R$)
               </label>
               <input
+                id={`${formId}-price`}
                 type="text"
                 required
                 inputMode="decimal"
@@ -175,10 +181,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+            <label htmlFor={`${formId}-coverUrl`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
               URL da capa (opcional)
             </label>
             <input
+              id={`${formId}-coverUrl`}
               type="url"
               value={coverUrl}
               onChange={(e) => setCoverUrl(e.target.value)}
@@ -188,10 +195,11 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
+            <label htmlFor={`${formId}-externalUrl`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
               Link externo (opcional)
             </label>
             <input
+              id={`${formId}-externalUrl`}
               type="url"
               value={externalUrl}
               onChange={(e) => setExternalUrl(e.target.value)}

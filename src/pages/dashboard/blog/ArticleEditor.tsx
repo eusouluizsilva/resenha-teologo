@@ -3,7 +3,7 @@
 // o autor pode publicar/despublicar/remover usando os botões de ação no
 // rodapé. Cover via Cloudflare R2 (useR2Upload → presigned PUT).
 
-import { useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useMutation, useQuery } from 'convex/react'
@@ -50,6 +50,7 @@ interface ArticleEditorProps {
 
 export function ArticleEditor({ mode }: ArticleEditorProps) {
   const navigate = useNavigate()
+  const formId = useId()
   const categoriesQuery = useQuery(api.postCategories.list, {})
   const categories = useMemo(() => categoriesQuery ?? [], [categoriesQuery])
 
@@ -285,8 +286,9 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
 
         <div className="grid gap-5 md:grid-cols-[1.4fr_0.6fr]">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Título</label>
+            <label htmlFor={`${formId}-title`} className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Título</label>
             <input
+              id={`${formId}-title`}
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -296,8 +298,9 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Categoria</label>
+            <label htmlFor={`${formId}-category`} className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Categoria</label>
             <select
+              id={`${formId}-category`}
               value={effectiveCategorySlug}
               onChange={(e) => setCategorySlug(e.target.value)}
               className={brandInputClass}
@@ -313,10 +316,11 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+          <label htmlFor={`${formId}-excerpt`} className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
             Resumo (até 220 caracteres)
           </label>
           <textarea
+            id={`${formId}-excerpt`}
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
             maxLength={220}
@@ -328,10 +332,11 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+          <label htmlFor={`${formId}-tags`} className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
             Tags (até 5, separadas por vírgula)
           </label>
           <input
+            id={`${formId}-tags`}
             type="text"
             value={tagsInput}
             onChange={(e) => setTagsInput(e.target.value)}
@@ -393,7 +398,7 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
 
       <motion.div variants={fadeUp} className={cn('space-y-3 p-6 sm:p-7', brandPanelClass)}>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+          <label htmlFor={`${formId}-body`} className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
             Conteúdo (Markdown)
           </label>
           <div className="flex items-center gap-4">
@@ -436,6 +441,7 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
           </div>
         ) : (
           <textarea
+            id={`${formId}-body`}
             ref={bodyRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}

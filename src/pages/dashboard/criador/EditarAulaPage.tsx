@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import { useState, useRef, useCallback, useEffect, useId, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation, useAction } from 'convex/react'
@@ -166,6 +166,7 @@ function InfoSection({
   order: number
 }) {
   const [showPlatforms, setShowPlatforms] = useState(false)
+  const sectionId = useId()
   const info = detectVideo(url)
   const hasEmbed = !!info.embedUrl
 
@@ -178,8 +179,9 @@ function InfoSection({
       <div className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-1.5">Título</label>
+            <label htmlFor={`${sectionId}-title`} className="block text-sm font-medium text-white/80 mb-1.5">Título</label>
             <input
+              id={`${sectionId}-title`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Título da aula"
@@ -196,7 +198,7 @@ function InfoSection({
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-white/80">URL do vídeo</label>
+            <label htmlFor={`${sectionId}-url`} className="text-sm font-medium text-white/80">URL do vídeo</label>
             <button
               type="button"
               onClick={() => setShowPlatforms((p) => !p)}
@@ -235,6 +237,7 @@ function InfoSection({
 
           <div className="relative">
             <input
+              id={`${sectionId}-url`}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.youtube.com/watch?v=..."
@@ -275,7 +278,7 @@ function InfoSection({
 
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <label className="block text-sm font-medium text-white/80">
+            <label htmlFor={`${sectionId}-description`} className="block text-sm font-medium text-white/80">
               Descrição da aula
               <span className="ml-2 text-white/30 font-normal text-xs">Visível abaixo do player</span>
             </label>
@@ -286,6 +289,7 @@ function InfoSection({
             />
           </div>
           <textarea
+            id={`${sectionId}-description`}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
@@ -313,6 +317,7 @@ function VerseRow({
 }) {
   const book = getBibleBook(verse.bookSlug)
   const maxChapter = book?.chapters ?? 1
+  const rowId = useId()
 
   function updateBook(slug: string) {
     const next = getBibleBook(slug)
@@ -372,8 +377,9 @@ function VerseRow({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-[1.6fr_0.7fr_0.7fr_0.7fr] gap-3">
         <div>
-          <label className="block text-xs text-white/50 mb-1">Livro</label>
+          <label htmlFor={`${rowId}-book`} className="block text-xs text-white/50 mb-1">Livro</label>
           <select
+            id={`${rowId}-book`}
             value={verse.bookSlug}
             onChange={(e) => updateBook(e.target.value)}
             className={inputCls}
@@ -391,8 +397,9 @@ function VerseRow({
           </select>
         </div>
         <div>
-          <label className="block text-xs text-white/50 mb-1">Capítulo</label>
+          <label htmlFor={`${rowId}-chapter`} className="block text-xs text-white/50 mb-1">Capítulo</label>
           <input
+            id={`${rowId}-chapter`}
             type="number"
             min={1}
             max={maxChapter}
@@ -402,8 +409,9 @@ function VerseRow({
           />
         </div>
         <div>
-          <label className="block text-xs text-white/50 mb-1">Verso inicial</label>
+          <label htmlFor={`${rowId}-verseStart`} className="block text-xs text-white/50 mb-1">Verso inicial</label>
           <input
+            id={`${rowId}-verseStart`}
             type="number"
             min={1}
             value={verse.verseStart}
@@ -412,8 +420,9 @@ function VerseRow({
           />
         </div>
         <div>
-          <label className="block text-xs text-white/50 mb-1">Verso final</label>
+          <label htmlFor={`${rowId}-verseEnd`} className="block text-xs text-white/50 mb-1">Verso final</label>
           <input
+            id={`${rowId}-verseEnd`}
             type="number"
             min={verse.verseStart}
             value={verse.verseEnd}
@@ -946,6 +955,7 @@ function PedagogicalSection({
 export function EditarAulaPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>()
   const creatorId = useCreatorId()
+  const formId = useId()
 
   const lesson = useQuery(
     api.lessons.getById,
@@ -1218,8 +1228,9 @@ export function EditarAulaPage() {
             Use em cursos publicados de forma incremental. Informe a data prevista de publicação para que os alunos vejam "Próxima aula em DD/MM" enquanto a aula ainda não está no ar. Não publica automaticamente, apenas comunica.
           </p>
           <div className="grid gap-3 sm:max-w-xs">
-            <label className="text-sm font-medium text-white/72">Data prevista de publicação</label>
+            <label htmlFor={`${formId}-publishAtDate`} className="text-sm font-medium text-white/72">Data prevista de publicação</label>
             <input
+              id={`${formId}-publishAtDate`}
               type="date"
               value={publishAtDate}
               onChange={(event) => setPublishAtDate(event.target.value)}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useMutation, useQuery } from 'convex/react'
@@ -35,6 +35,7 @@ type FormData = {
 export function NovoCursoPage() {
   const navigate = useNavigate()
   const creatorId = useCreatorId()
+  const formId = useId()
   const createCourse = useMutation(api.courses.create)
   const myInstitutions = useQuery(api.institutions.listByUser, {}) ?? []
   const adminInstitutions = myInstitutions.filter(
@@ -103,8 +104,9 @@ export function NovoCursoPage() {
         <motion.div variants={fadeUp} className={cn('space-y-6 p-6 sm:p-7', brandPanelClass)}>
           <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Título do curso</label>
+              <label htmlFor={`${formId}-title`} className="text-sm font-medium text-white/72">Título do curso</label>
               <input
+                id={`${formId}-title`}
                 type="text"
                 name="title"
                 value={form.title}
@@ -115,8 +117,8 @@ export function NovoCursoPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Categoria</label>
-              <select name="category" value={form.category} onChange={handleChange} className={brandInputClass}>
+              <label htmlFor={`${formId}-category`} className="text-sm font-medium text-white/72">Categoria</label>
+              <select id={`${formId}-category`} name="category" value={form.category} onChange={handleChange} className={brandInputClass}>
                 <option value="">Selecione</option>
                 {categories.map((category) => (
                   <option key={category} value={category}>{category}</option>
@@ -127,8 +129,8 @@ export function NovoCursoPage() {
 
           <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1.2fr]">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Nível</label>
-              <select name="level" value={form.level} onChange={handleChange} className={brandInputClass}>
+              <label htmlFor={`${formId}-level`} className="text-sm font-medium text-white/72">Nível</label>
+              <select id={`${formId}-level`} name="level" value={form.level} onChange={handleChange} className={brandInputClass}>
                 <option value="iniciante">Iniciante</option>
                 <option value="intermediario">Intermediário</option>
                 <option value="avancado">Avançado</option>
@@ -136,8 +138,8 @@ export function NovoCursoPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Idioma</label>
-              <select name="language" value={form.language} onChange={handleChange} className={brandInputClass}>
+              <label htmlFor={`${formId}-language`} className="text-sm font-medium text-white/72">Idioma</label>
+              <select id={`${formId}-language`} name="language" value={form.language} onChange={handleChange} className={brandInputClass}>
                 {languages.map((language) => (
                   <option key={language} value={language}>{language}</option>
                 ))}
@@ -145,8 +147,9 @@ export function NovoCursoPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Tags</label>
+              <label htmlFor={`${formId}-tags`} className="text-sm font-medium text-white/72">Tags</label>
               <input
+                id={`${formId}-tags`}
                 type="text"
                 name="tags"
                 value={form.tags}
@@ -159,7 +162,7 @@ export function NovoCursoPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <label className="text-sm font-medium text-white/72">Descrição</label>
+              <label htmlFor={`${formId}-description`} className="text-sm font-medium text-white/72">Descrição</label>
               <TemplatePicker
                 kind="course_description"
                 currentValue={form.description}
@@ -167,6 +170,7 @@ export function NovoCursoPage() {
               />
             </div>
             <textarea
+              id={`${formId}-description`}
               name="description"
               value={form.description}
               onChange={handleChange}
@@ -181,8 +185,8 @@ export function NovoCursoPage() {
           <motion.div variants={fadeUp} className={cn('space-y-5 p-6 sm:p-7', brandPanelClass)}>
             <DashboardSectionLabel>Vínculo institucional (opcional)</DashboardSectionLabel>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Instituição</label>
-              <select name="institutionId" value={form.institutionId} onChange={handleChange} className={brandInputClass}>
+              <label htmlFor={`${formId}-institutionId`} className="text-sm font-medium text-white/72">Instituição</label>
+              <select id={`${formId}-institutionId`} name="institutionId" value={form.institutionId} onChange={handleChange} className={brandInputClass}>
                 <option value="">Nenhuma, curso público</option>
                 {adminInstitutions.map((inst) => (
                   <option key={inst._id} value={inst._id as unknown as string}>{inst.name}</option>
@@ -194,8 +198,8 @@ export function NovoCursoPage() {
             </div>
             {form.institutionId && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Visibilidade</label>
-                <select name="visibility" value={form.visibility} onChange={handleChange} className={brandInputClass}>
+                <label htmlFor={`${formId}-visibility`} className="text-sm font-medium text-white/72">Visibilidade</label>
+                <select id={`${formId}-visibility`} name="visibility" value={form.visibility} onChange={handleChange} className={brandInputClass}>
                   <option value="public">Público, aparece no catálogo para todos</option>
                   <option value="institution">Privado, somente membros da instituição</option>
                 </select>

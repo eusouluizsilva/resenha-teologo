@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { useClerk } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
@@ -396,6 +396,7 @@ function ApprovedTestimonialCard({
 // ─── Página principal ──────────────────────────────────────────────────────────
 
 export function PerfilPage() {
+  const formId = useId()
   const [activeTab, setActiveTab] = useState<TabId>('visao-geral')
   const { clerkUser, currentUser, hasFunction, functions, isLoading } = useCurrentAppUser()
 
@@ -1163,8 +1164,9 @@ export function PerfilPage() {
               <div className="flex-1 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/72">Nome</label>
+                    <label htmlFor={`${formId}-firstName`} className="text-sm font-medium text-white/72">Nome</label>
                     <input
+                      id={`${formId}-firstName`}
                       name="firstName"
                       value={form.firstName}
                       onChange={handleChange}
@@ -1173,8 +1175,9 @@ export function PerfilPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/72">Sobrenome</label>
+                    <label htmlFor={`${formId}-lastName`} className="text-sm font-medium text-white/72">Sobrenome</label>
                     <input
+                      id={`${formId}-lastName`}
                       name="lastName"
                       value={form.lastName}
                       onChange={handleChange}
@@ -1186,11 +1189,12 @@ export function PerfilPage() {
 
                 {/* @usuário — estilo Instagram */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">Nome de usuário</label>
+                  <label htmlFor={`${formId}-handle`} className="text-sm font-medium text-white/72">Nome de usuário</label>
                   <div className="space-y-1.5">
                     <div className="relative">
                       <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none text-sm font-medium text-white/50">@</span>
                       <input
+                        id={`${formId}-handle`}
                         className={cn(brandInputClass, 'pl-8 pr-10')}
                         placeholder={handle ?? 'seuusuario'}
                         value={handleInput}
@@ -1240,15 +1244,16 @@ export function PerfilPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">Email</label>
-                  <input value={email} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
+                  <label htmlFor={`${formId}-email`} className="text-sm font-medium text-white/72">Email</label>
+                  <input id={`${formId}-email`} value={email} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
                 </div>
               </div>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Bio</label>
+                <label htmlFor={`${formId}-bio`} className="text-sm font-medium text-white/72">Bio</label>
                 <textarea
+                  id={`${formId}-bio`}
                   name="bio"
                   value={form.bio}
                   onChange={handleChange}
@@ -1259,8 +1264,9 @@ export function PerfilPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Website</label>
+                <label htmlFor={`${formId}-website`} className="text-sm font-medium text-white/72">Website</label>
                 <input
+                  id={`${formId}-website`}
                   name="website"
                   value={form.website}
                   onChange={handleChange}
@@ -1270,14 +1276,15 @@ export function PerfilPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Telefone</label>
+                <label htmlFor={`${formId}-phone`} className="text-sm font-medium text-white/72">Telefone</label>
                 <div className="grid grid-cols-[7rem_1fr] gap-2 sm:grid-cols-[11rem_1fr]">
-                  <select name="phoneCountry" value={form.phoneCountry} onChange={handleChange} className={brandInputClass}>
+                  <select id={`${formId}-phoneCountry`} aria-label="Código do país" name="phoneCountry" value={form.phoneCountry} onChange={handleChange} className={brandInputClass}>
                     {PHONE_COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code}>{c.label}</option>
                     ))}
                   </select>
                   <input
+                    id={`${formId}-phone`}
                     name="phone"
                     value={form.phone}
                     onChange={handleChange}
@@ -1290,12 +1297,12 @@ export function PerfilPage() {
               {isInstitution && (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/72">Nome da instituição</label>
-                    <input name="institution" value={form.institution} onChange={handleChange} placeholder="Nome da igreja ou instituição" className={brandInputClass} />
+                    <label htmlFor={`${formId}-institution`} className="text-sm font-medium text-white/72">Nome da instituição</label>
+                    <input id={`${formId}-institution`} name="institution" value={form.institution} onChange={handleChange} placeholder="Nome da igreja ou instituição" className={brandInputClass} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/72">CNPJ</label>
-                    <input name="cnpj" value={form.cnpj} onChange={handleChange} placeholder="00.000.000/0000-00" className={brandInputClass} />
+                    <label htmlFor={`${formId}-cnpj`} className="text-sm font-medium text-white/72">CNPJ</label>
+                    <input id={`${formId}-cnpj`} name="cnpj" value={form.cnpj} onChange={handleChange} placeholder="00.000.000/0000-00" className={brandInputClass} />
                   </div>
                 </div>
               )}
@@ -1308,25 +1315,25 @@ export function PerfilPage() {
             <div className="grid gap-4 md:grid-cols-2">
               {isCriador && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">YouTube</label>
-                  <input name="youtubeChannel" value={form.youtubeChannel} onChange={handleChange} placeholder="https://youtube.com/@seucanal" className={brandInputClass} />
+                  <label htmlFor={`${formId}-youtubeChannel`} className="text-sm font-medium text-white/72">YouTube</label>
+                  <input id={`${formId}-youtubeChannel`} name="youtubeChannel" value={form.youtubeChannel} onChange={handleChange} placeholder="https://youtube.com/@seucanal" className={brandInputClass} />
                 </div>
               )}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Instagram</label>
-                <input name="instagram" value={form.instagram} onChange={handleChange} placeholder="https://instagram.com/seuperfil" className={brandInputClass} />
+                <label htmlFor={`${formId}-instagram`} className="text-sm font-medium text-white/72">Instagram</label>
+                <input id={`${formId}-instagram`} name="instagram" value={form.instagram} onChange={handleChange} placeholder="https://instagram.com/seuperfil" className={brandInputClass} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Facebook</label>
-                <input name="facebook" value={form.facebook} onChange={handleChange} placeholder="https://facebook.com/seuperfil" className={brandInputClass} />
+                <label htmlFor={`${formId}-facebook`} className="text-sm font-medium text-white/72">Facebook</label>
+                <input id={`${formId}-facebook`} name="facebook" value={form.facebook} onChange={handleChange} placeholder="https://facebook.com/seuperfil" className={brandInputClass} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">LinkedIn</label>
-                <input name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/seuperfil" className={brandInputClass} />
+                <label htmlFor={`${formId}-linkedin`} className="text-sm font-medium text-white/72">LinkedIn</label>
+                <input id={`${formId}-linkedin`} name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/seuperfil" className={brandInputClass} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">X (Twitter)</label>
-                <input name="twitter" value={form.twitter} onChange={handleChange} placeholder="https://x.com/seuperfil" className={brandInputClass} />
+                <label htmlFor={`${formId}-twitter`} className="text-sm font-medium text-white/72">X (Twitter)</label>
+                <input id={`${formId}-twitter`} name="twitter" value={form.twitter} onChange={handleChange} placeholder="https://x.com/seuperfil" className={brandInputClass} />
               </div>
             </div>
           </div>
@@ -1336,24 +1343,24 @@ export function PerfilPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Igreja e comunidade</p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Denominação</label>
-                <select name="denomination" value={form.denomination} onChange={handleChange} className={brandInputClass}>
+                <label htmlFor={`${formId}-denomination`} className="text-sm font-medium text-white/72">Denominação</label>
+                <select id={`${formId}-denomination`} name="denomination" value={form.denomination} onChange={handleChange} className={brandInputClass}>
                   {DENOMINATIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Cargo na Igreja</label>
-                <select name="churchRole" value={form.churchRole} onChange={handleChange} className={brandInputClass}>
+                <label htmlFor={`${formId}-churchRole`} className="text-sm font-medium text-white/72">Cargo na Igreja</label>
+                <select id={`${formId}-churchRole`} name="churchRole" value={form.churchRole} onChange={handleChange} className={brandInputClass}>
                   {CHURCH_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Nome da Igreja</label>
-                <input name="churchName" value={form.churchName} onChange={handleChange} placeholder="Nome da sua igreja local" className={brandInputClass} />
+                <label htmlFor={`${formId}-churchName`} className="text-sm font-medium text-white/72">Nome da Igreja</label>
+                <input id={`${formId}-churchName`} name="churchName" value={form.churchName} onChange={handleChange} placeholder="Nome da sua igreja local" className={brandInputClass} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">Instagram da Igreja</label>
-                <input name="churchInstagram" value={form.churchInstagram} onChange={handleChange} placeholder="https://instagram.com/suaigreja" className={brandInputClass} />
+                <label htmlFor={`${formId}-churchInstagram`} className="text-sm font-medium text-white/72">Instagram da Igreja</label>
+                <input id={`${formId}-churchInstagram`} name="churchInstagram" value={form.churchInstagram} onChange={handleChange} placeholder="https://instagram.com/suaigreja" className={brandInputClass} />
               </div>
             </div>
           </div>
@@ -1371,34 +1378,34 @@ export function PerfilPage() {
             </div>
             <div className="grid gap-4 md:grid-cols-[1fr_8rem]">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">{addressProfile.address.label}</label>
-                <input name="address" value={form.address} onChange={handleChange} placeholder={addressProfile.address.placeholder} className={brandInputClass} />
+                <label htmlFor={`${formId}-address`} className="text-sm font-medium text-white/72">{addressProfile.address.label}</label>
+                <input id={`${formId}-address`} name="address" value={form.address} onChange={handleChange} placeholder={addressProfile.address.placeholder} className={brandInputClass} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">{addressProfile.number.label}</label>
-                <input name="addressNumber" value={form.addressNumber} onChange={handleChange} placeholder={addressProfile.number.placeholder} className={brandInputClass} />
+                <label htmlFor={`${formId}-addressNumber`} className="text-sm font-medium text-white/72">{addressProfile.number.label}</label>
+                <input id={`${formId}-addressNumber`} name="addressNumber" value={form.addressNumber} onChange={handleChange} placeholder={addressProfile.number.placeholder} className={brandInputClass} />
               </div>
             </div>
             <div className={`grid gap-4 ${addressProfile.neighborhood.show ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
               {addressProfile.neighborhood.show && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/72">{addressProfile.neighborhood.label}</label>
-                  <input name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder={addressProfile.neighborhood.placeholder} className={brandInputClass} />
+                  <label htmlFor={`${formId}-neighborhood`} className="text-sm font-medium text-white/72">{addressProfile.neighborhood.label}</label>
+                  <input id={`${formId}-neighborhood`} name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder={addressProfile.neighborhood.placeholder} className={brandInputClass} />
                 </div>
               )}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">{addressProfile.postal.label}</label>
-                <input name="cep" value={form.cep} onChange={handleChange} placeholder={addressProfile.postal.placeholder} className={brandInputClass} />
+                <label htmlFor={`${formId}-cep`} className="text-sm font-medium text-white/72">{addressProfile.postal.label}</label>
+                <input id={`${formId}-cep`} name="cep" value={form.cep} onChange={handleChange} placeholder={addressProfile.postal.placeholder} className={brandInputClass} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">{addressProfile.city.label}</label>
-                <input name="city" value={form.city} onChange={handleChange} placeholder={addressProfile.city.placeholder} className={brandInputClass} />
+                <label htmlFor={`${formId}-city`} className="text-sm font-medium text-white/72">{addressProfile.city.label}</label>
+                <input id={`${formId}-city`} name="city" value={form.city} onChange={handleChange} placeholder={addressProfile.city.placeholder} className={brandInputClass} />
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/72">{addressProfile.state.label}</label>
-                <input name="state" value={form.state} onChange={handleChange} placeholder={addressProfile.state.placeholder} className={brandInputClass} />
+                <label htmlFor={`${formId}-state`} className="text-sm font-medium text-white/72">{addressProfile.state.label}</label>
+                <input id={`${formId}-state`} name="state" value={form.state} onChange={handleChange} placeholder={addressProfile.state.placeholder} className={brandInputClass} />
               </div>
             </div>
           </div>
@@ -1730,10 +1737,11 @@ export function PerfilPage() {
               </p>
             )}
             <div className="mt-5">
-              <label className="mb-1.5 block text-xs font-medium text-white/52">
+              <label htmlFor={`${formId}-deleteConfirm`} className="mb-1.5 block text-xs font-medium text-white/52">
                 Digite <span className="font-bold text-red-300">EXCLUIR</span> para confirmar
               </label>
               <input
+                id={`${formId}-deleteConfirm`}
                 type="text"
                 value={deleteConfirm}
                 onChange={(e) => {
@@ -1770,6 +1778,7 @@ export function PerfilPage() {
 function CreatorPixSection() {
   const profile = useQuery(api.creatorProfile.getMine, {})
   const setPixKey = useMutation(api.creatorProfile.setPixKey)
+  const pixId = useId()
 
   const [value, setValue] = useState('')
   const [editing, setEditing] = useState(false)
@@ -1870,8 +1879,9 @@ function CreatorPixSection() {
       ) : (
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white/72">Chave PIX</label>
+            <label htmlFor={`${pixId}-pixKey`} className="text-sm font-medium text-white/72">Chave PIX</label>
             <input
+              id={`${pixId}-pixKey`}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder="CPF, CNPJ, email, celular ou chave aleatória"

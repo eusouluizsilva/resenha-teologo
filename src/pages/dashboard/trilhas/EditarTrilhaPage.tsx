@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -27,6 +27,7 @@ type CourseOption = {
 export function EditarTrilhaPage() {
   const params = useParams()
   const navigate = useNavigate()
+  const formId = useId()
   const pathIdRaw = params.id as Id<'learningPaths'> | undefined
 
   const path = useQuery(
@@ -298,10 +299,11 @@ export function EditarTrilhaPage() {
           </div>
           <div className="grid gap-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/52">
+              <label htmlFor={`${formId}-title`} className="mb-1.5 block text-xs font-medium text-white/52">
                 Título
               </label>
               <input
+                id={`${formId}-title`}
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -309,10 +311,11 @@ export function EditarTrilhaPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/52">
+              <label htmlFor={`${formId}-description`} className="mb-1.5 block text-xs font-medium text-white/52">
                 Descrição
               </label>
               <textarea
+                id={`${formId}-description`}
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -320,10 +323,11 @@ export function EditarTrilhaPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/52">
+              <label htmlFor={`${formId}-coverUrl`} className="mb-1.5 block text-xs font-medium text-white/52">
                 URL da capa (opcional)
               </label>
               <input
+                id={`${formId}-coverUrl`}
                 type="url"
                 value={coverUrl}
                 onChange={(e) => setCoverUrl(e.target.value)}

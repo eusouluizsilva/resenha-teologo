@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
@@ -92,12 +92,14 @@ function QuestionEditor({
 }) {
   const canAddOption = draft.options.length < 6
   const canRemoveOption = draft.options.length > 2
+  const editorId = useId()
 
   return (
     <div className={cn('space-y-5 p-6', brandPanelClass)}>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-white/52">Pergunta</label>
+        <label htmlFor={`${editorId}-text`} className="mb-1.5 block text-xs font-medium text-white/52">Pergunta</label>
         <textarea
+          id={`${editorId}-text`}
           rows={3}
           value={draft.text}
           onChange={(e) => setDraft((d) => ({ ...d, text: e.target.value }))}
@@ -195,10 +197,11 @@ function QuestionEditor({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-white/52">
+        <label htmlFor={`${editorId}-explanation`} className="mb-1.5 block text-xs font-medium text-white/52">
           Explicação (opcional)
         </label>
         <textarea
+          id={`${editorId}-explanation`}
           rows={2}
           value={draft.explanation}
           onChange={(e) => setDraft((d) => ({ ...d, explanation: e.target.value }))}
@@ -208,10 +211,11 @@ function QuestionEditor({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-white/52">
+        <label htmlFor={`${editorId}-tags`} className="mb-1.5 block text-xs font-medium text-white/52">
           Tags (separadas por vírgula)
         </label>
         <input
+          id={`${editorId}-tags`}
           type="text"
           value={draft.tagsRaw}
           onChange={(e) => setDraft((d) => ({ ...d, tagsRaw: e.target.value }))}
