@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSignIn } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
@@ -25,6 +25,7 @@ type Step = 'login' | 'forgot' | 'forgot-verify' | 'verify-2fa'
 export function SignInPage() {
   const { signIn, setActive, isLoaded } = useSignIn()
   const navigate = useNavigate()
+  const formId = useId()
   const [searchParams] = useSearchParams()
   const redirectTo = safeRedirectTarget(
     searchParams.get('redirect') ?? searchParams.get('redirect_url'),
@@ -248,8 +249,9 @@ export function SignInPage() {
         <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Email</label>
+              <label htmlFor={`${formId}-login-email`} className="text-sm font-medium text-white/72">Email</label>
               <input
+                id={`${formId}-login-email`}
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -265,7 +267,7 @@ export function SignInPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
-                <label className="text-sm font-medium text-white/72">Senha</label>
+                <label htmlFor={`${formId}-login-password`} className="text-sm font-medium text-white/72">Senha</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -278,6 +280,7 @@ export function SignInPage() {
                 </button>
               </div>
               <input
+                id={`${formId}-login-password`}
                 type="password"
                 autoComplete="current-password"
                 placeholder="Sua senha"
@@ -301,8 +304,9 @@ export function SignInPage() {
         <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
           <form onSubmit={handleForgotSend} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Email</label>
+              <label htmlFor={`${formId}-forgot-email`} className="text-sm font-medium text-white/72">Email</label>
               <input
+                id={`${formId}-forgot-email`}
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -329,8 +333,9 @@ export function SignInPage() {
         <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Código de verificação</label>
+              <label htmlFor={`${formId}-reset-code`} className="text-sm font-medium text-white/72">Código de verificação</label>
               <input
+                id={`${formId}-reset-code`}
                 type="text"
                 inputMode="numeric"
                 placeholder="000000"
@@ -343,8 +348,9 @@ export function SignInPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Nova senha</label>
+              <label htmlFor={`${formId}-reset-newPassword`} className="text-sm font-medium text-white/72">Nova senha</label>
               <input
+                id={`${formId}-reset-newPassword`}
                 type="password"
                 autoComplete="new-password"
                 placeholder="Mínimo 8 caracteres"
@@ -369,8 +375,9 @@ export function SignInPage() {
         <motion.div variants={fadeUp} className={cn('mt-8 space-y-4 p-6 sm:p-7', brandPanelSoftClass)}>
           <form onSubmit={handleVerifyTwoFactor} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/72">Código de verificação</label>
+              <label htmlFor={`${formId}-2fa-code`} className="text-sm font-medium text-white/72">Código de verificação</label>
               <input
+                id={`${formId}-2fa-code`}
                 type="text"
                 inputMode="numeric"
                 placeholder="000000"

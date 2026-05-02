@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMutation } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -78,13 +78,14 @@ function VideoSection({ url, setUrl, description, setDescription }: {
   setDescription: (v: string) => void
 }) {
   const [showPlatforms, setShowPlatforms] = useState(false)
+  const sectionId = useId()
   const info = detectVideo(url)
 
   return (
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-sm font-medium text-white/80">URL do vídeo</label>
+          <label htmlFor={`${sectionId}-url`} className="text-sm font-medium text-white/80">URL do vídeo</label>
           <button
             type="button"
             onClick={() => setShowPlatforms(p => !p)}
@@ -121,6 +122,7 @@ function VideoSection({ url, setUrl, description, setDescription }: {
         </AnimatePresence>
         <div className="relative">
           <input
+            id={`${sectionId}-url`}
             value={url}
             onChange={e => setUrl(e.target.value)}
             placeholder="https://www.youtube.com/watch?v=..."
@@ -149,11 +151,12 @@ function VideoSection({ url, setUrl, description, setDescription }: {
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-white/80 mb-1.5">
+        <label htmlFor={`${sectionId}-description`} className="block text-sm font-medium text-white/80 mb-1.5">
           Descrição da aula{' '}
           <span className="text-white/30 font-normal text-xs">Visível abaixo do player</span>
         </label>
         <textarea
+          id={`${sectionId}-description`}
           value={description}
           onChange={e => setDescription(e.target.value)}
           rows={3}

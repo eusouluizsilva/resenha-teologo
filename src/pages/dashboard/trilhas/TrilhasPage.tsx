@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -41,6 +41,7 @@ export function TrilhasPage() {
     | undefined
 
   const create = useMutation(api.learningPaths.create)
+  const formId = useId()
 
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({
@@ -101,10 +102,11 @@ export function TrilhasPage() {
             Criar nova trilha
           </p>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">
+            <label htmlFor={`${formId}-title`} className="mb-1.5 block text-xs font-medium text-white/52">
               Título
             </label>
             <input
+              id={`${formId}-title`}
               type="text"
               required
               value={form.title}
@@ -116,10 +118,11 @@ export function TrilhasPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">
+            <label htmlFor={`${formId}-description`} className="mb-1.5 block text-xs font-medium text-white/52">
               Descrição (até 2000 caracteres)
             </label>
             <textarea
+              id={`${formId}-description`}
               rows={3}
               value={form.description}
               onChange={(e) =>
@@ -132,10 +135,11 @@ export function TrilhasPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {adminInsts.length > 0 && (
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-white/52">
+                <label htmlFor={`${formId}-institutionId`} className="mb-1.5 block text-xs font-medium text-white/52">
                   Instituição (opcional)
                 </label>
                 <select
+                  id={`${formId}-institutionId`}
                   value={form.institutionId}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, institutionId: e.target.value }))
@@ -152,10 +156,11 @@ export function TrilhasPage() {
               </div>
             )}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/52">
+              <label htmlFor={`${formId}-coverUrl`} className="mb-1.5 block text-xs font-medium text-white/52">
                 URL da capa (opcional)
               </label>
               <input
+                id={`${formId}-coverUrl`}
                 type="url"
                 value={form.coverUrl}
                 onChange={(e) =>

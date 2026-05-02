@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
@@ -36,6 +36,7 @@ function typeLabel(t: string) {
 
 export function MembrosPage() {
   const institutions = useQuery(api.institutions.listByUser) as InstitutionRow[] | undefined
+  const formId = useId()
 
   const [createForm, setCreateForm] = useState({ name: '', type: 'igreja' as 'igreja' | 'ensino' | 'empresa' })
   const [creating, setCreating] = useState(false)
@@ -86,8 +87,9 @@ export function MembrosPage() {
       >
         <form onSubmit={handleCreate} className={cn('space-y-4 p-6', brandPanelClass)}>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">Nome da instituição</label>
+            <label htmlFor={`${formId}-empty-name`} className="mb-1.5 block text-xs font-medium text-white/52">Nome da instituição</label>
             <input
+              id={`${formId}-empty-name`}
               type="text"
               required
               value={createForm.name}
@@ -97,8 +99,9 @@ export function MembrosPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">Tipo</label>
+            <label htmlFor={`${formId}-empty-type`} className="mb-1.5 block text-xs font-medium text-white/52">Tipo</label>
             <select
+              id={`${formId}-empty-type`}
               value={createForm.type}
               onChange={(e) => setCreateForm((f) => ({ ...f, type: e.target.value as 'igreja' | 'ensino' | 'empresa' }))}
               className={brandInputClass}
@@ -170,8 +173,9 @@ export function MembrosPage() {
             Criar nova instituição
           </p>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">Nome da instituição</label>
+            <label htmlFor={`${formId}-create-name`} className="mb-1.5 block text-xs font-medium text-white/52">Nome da instituição</label>
             <input
+              id={`${formId}-create-name`}
               type="text"
               required
               value={createForm.name}
@@ -181,8 +185,9 @@ export function MembrosPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">Tipo</label>
+            <label htmlFor={`${formId}-create-type`} className="mb-1.5 block text-xs font-medium text-white/52">Tipo</label>
             <select
+              id={`${formId}-create-type`}
               value={createForm.type}
               onChange={(e) => setCreateForm((f) => ({ ...f, type: e.target.value as 'igreja' | 'ensino' | 'empresa' }))}
               className={brandInputClass}

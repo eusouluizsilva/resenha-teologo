@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSignUp } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
@@ -97,6 +97,7 @@ type FormState = {
 export function RegisterPage() {
   const { signUp, setActive, isLoaded } = useSignUp()
   const navigate = useNavigate()
+  const formId = useId()
   const [searchParams] = useSearchParams()
   const redirectTo = safeRedirectTarget(
     searchParams.get('redirect') ?? searchParams.get('redirect_url'),
@@ -365,8 +366,9 @@ export function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">Nome</label>
+            <label htmlFor={`${formId}-firstName`} className="mb-1.5 block text-xs font-medium text-white/52">Nome</label>
             <input
+              id={`${formId}-firstName`}
               className={brandInputClass}
               placeholder="Seu nome"
               value={form.firstName}
@@ -376,8 +378,9 @@ export function RegisterPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/52">Sobrenome</label>
+            <label htmlFor={`${formId}-lastName`} className="mb-1.5 block text-xs font-medium text-white/52">Sobrenome</label>
             <input
+              id={`${formId}-lastName`}
               className={brandInputClass}
               placeholder="Seu sobrenome"
               value={form.lastName}
@@ -389,8 +392,9 @@ export function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/52">Email</label>
+          <label htmlFor={`${formId}-email`} className="mb-1.5 block text-xs font-medium text-white/52">Email</label>
           <input
+            id={`${formId}-email`}
             type="email"
             className={brandInputClass}
             placeholder="seu@email.com"
@@ -402,8 +406,9 @@ export function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/52">País</label>
+          <label htmlFor={`${formId}-country`} className="mb-1.5 block text-xs font-medium text-white/52">País</label>
           <select
+            id={`${formId}-country`}
             className={cn(brandInputClass, 'cursor-pointer')}
             value={form.country}
             onChange={set('country')}
@@ -418,7 +423,7 @@ export function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/52">
+          <label htmlFor={`${formId}-phone`} className="mb-1.5 block text-xs font-medium text-white/52">
             Telefone{' '}
             <span className="font-normal text-white/30">(opcional)</span>
           </label>
@@ -427,6 +432,7 @@ export function RegisterPage() {
               {selectedCountry.ddi || '+?'}
             </div>
             <input
+              id={`${formId}-phone`}
               type="tel"
               className={brandInputClass}
               placeholder="Número de telefone"
@@ -438,8 +444,9 @@ export function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/52">Senha</label>
+          <label htmlFor={`${formId}-password`} className="mb-1.5 block text-xs font-medium text-white/52">Senha</label>
           <input
+            id={`${formId}-password`}
             type="password"
             className={brandInputClass}
             placeholder="Mínimo 8 caracteres"
@@ -452,8 +459,9 @@ export function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/52">Confirmar senha</label>
+          <label htmlFor={`${formId}-confirmPassword`} className="mb-1.5 block text-xs font-medium text-white/52">Confirmar senha</label>
           <input
+            id={`${formId}-confirmPassword`}
             type="password"
             className={brandInputClass}
             placeholder="Repita a senha"

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -44,6 +44,7 @@ function isValidHttpUrl(u: string) {
 }
 
 export function BrandingPage() {
+  const formId = useId()
   const institutions = useQuery(api.institutions.listByUser) as
     | InstitutionRow[]
     | undefined
@@ -224,10 +225,11 @@ export function BrandingPage() {
               ))}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/48">
+              <label htmlFor={`${formId}-themeColor`} className="text-xs font-semibold uppercase tracking-[0.16em] text-white/48">
                 Hex personalizado
               </label>
               <input
+                id={`${formId}-themeColor`}
                 type="text"
                 value={themeColor}
                 onChange={(e) => setThemeColor(e.target.value)}

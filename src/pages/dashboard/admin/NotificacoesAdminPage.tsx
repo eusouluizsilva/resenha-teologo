@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -97,6 +97,7 @@ function PreviewBell({
 
 export function NotificacoesAdminPage() {
   const isAdmin = useQuery(api.admin.amIAdmin, {})
+  const formId = useId()
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -202,7 +203,7 @@ export function NotificacoesAdminPage() {
             <div className="mt-5 space-y-5">
               <div>
                 <div className="flex items-end justify-between gap-3">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
+                  <label htmlFor={`${formId}-title`} className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
                     Título
                   </label>
                   <span
@@ -215,6 +216,7 @@ export function NotificacoesAdminPage() {
                   </span>
                 </div>
                 <input
+                  id={`${formId}-title`}
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -226,7 +228,7 @@ export function NotificacoesAdminPage() {
 
               <div>
                 <div className="flex items-end justify-between gap-3">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
+                  <label htmlFor={`${formId}-body`} className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
                     Mensagem (opcional)
                   </label>
                   <span
@@ -239,6 +241,7 @@ export function NotificacoesAdminPage() {
                   </span>
                 </div>
                 <textarea
+                  id={`${formId}-body`}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   placeholder="Resumo curto do anúncio. Aparece em duas linhas no popover do sininho."
@@ -249,10 +252,11 @@ export function NotificacoesAdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
+                <label htmlFor={`${formId}-link`} className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
                   Link (opcional)
                 </label>
                 <input
+                  id={`${formId}-link`}
                   type="text"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
@@ -341,10 +345,11 @@ export function NotificacoesAdminPage() {
             </p>
 
             <div className="mt-4">
-              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
+              <label htmlFor={`${formId}-dedupeKey`} className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/52">
                 Chave de deduplicação
               </label>
               <input
+                id={`${formId}-dedupeKey`}
                 type="text"
                 value={effectiveDedupe}
                 onChange={(e) => {

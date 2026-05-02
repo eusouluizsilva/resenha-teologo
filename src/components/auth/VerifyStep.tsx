@@ -34,6 +34,7 @@ export function VerifyStep({ email, onVerify, onResend, loading, error }: Props)
         value={code}
         onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
         placeholder="000000"
+        aria-label="Código de verificação de 6 dígitos"
         className={cn(
           'mb-4 text-center font-display text-3xl font-bold tracking-[0.55em]',
           brandInputClass,
