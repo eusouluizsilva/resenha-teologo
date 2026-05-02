@@ -3,6 +3,7 @@ import { mutation, query, internalMutation, type MutationCtx } from './_generate
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import { canEditCourse, requireUserFunction } from './lib/auth'
+import { scheduleBulkNotifications, type NotifyTarget } from './lib/notifications'
 import { toSlug } from './lib/slug'
 
 // Validador do formato estruturado de versículos (espelha schema.ts).
@@ -304,26 +305,23 @@ export const update = mutation({
         const courseRef = course.slug ?? course._id
         const lessonRef = (fields.title ? toSlug(fields.title) : lesson.slug) ?? lesson._id
         const lessonTitle = fields.title ?? lesson.title
-        await Promise.all(
-          enrollments.map((enrollment) =>
-            ctx.runMutation(internal.notifications.pushInternal, {
-              userId: enrollment.studentId,
-              kind: 'lesson_scheduled_published',
-              title: 'Nova aula publicada',
-              body: `A aula "${lessonTitle}" foi publicada em "${course.title}".`,
-              link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
-            }),
-          ),
-        )
+        const targets: NotifyTarget[] = enrollments.map((enrollment) => ({
+          userId: enrollment.studentId,
+          title: 'Nova aula publicada',
+          body: `A aula "${lessonTitle}" foi publicada em "${course.title}".`,
+          link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
+        }))
+        await scheduleBulkNotifications(ctx, 'lesson_scheduled_published', targets)
       }
     }
   },
 })
 
 // Cron: a cada 5 minutos, varre aulas com publishAt vencido (e ainda em
-// rascunho) e publica automaticamente. Notifica matriculados em paralelo.
-// Tolerância: até 5 min de atraso por design. Espelha o pattern de
-// posts.runScheduledPublish.
+// rascunho) e publica automaticamente. Notificações vão por scheduler em
+// chunks de 100 (lib/notifications.scheduleBulkNotifications) para isolar
+// orçamento de writes quando há cursos com milhares de matriculados.
+// Tolerância: até 5 min de atraso por design.
 export const runScheduledPublish = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -335,37 +333,44 @@ export const runScheduledPublish = internalMutation({
       )
       .take(50)
 
+    // Cache de cursos: várias aulas do mesmo curso podem cair na mesma janela.
+    const courseCache = new Map<Id<'courses'>, Awaited<ReturnType<typeof ctx.db.get<'courses'>>>>()
+    const indexNowUrls: string[] = []
+
     for (const lesson of candidates) {
       if (typeof lesson.publishAt !== 'number') continue
       if (lesson.publishAt > now) continue
 
       await ctx.db.patch(lesson._id, { isPublished: true })
 
-      const course = await ctx.db.get(lesson.courseId)
+      let course = courseCache.get(lesson.courseId)
+      if (course === undefined) {
+        course = await ctx.db.get(lesson.courseId)
+        courseCache.set(lesson.courseId, course)
+      }
       if (!course) continue
+
       const enrollments = await ctx.db
         .query('enrollments')
         .withIndex('by_courseId', (q) => q.eq('courseId', lesson.courseId))
         .collect()
       const courseRef = course.slug ?? course._id
       const lessonRef = lesson.slug ?? lesson._id
-      await Promise.all(
-        enrollments.map((enrollment) =>
-          ctx.runMutation(internal.notifications.pushInternal, {
-            userId: enrollment.studentId,
-            kind: 'lesson_scheduled_published',
-            title: 'Nova aula publicada',
-            body: `A aula "${lesson.title}" foi publicada em "${course.title}".`,
-            link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
-          }),
-        ),
-      )
+      const targets: NotifyTarget[] = enrollments.map((enrollment) => ({
+        userId: enrollment.studentId,
+        title: 'Nova aula publicada',
+        body: `A aula "${lesson.title}" foi publicada em "${course!.title}".`,
+        link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
+      }))
+      await scheduleBulkNotifications(ctx, 'lesson_scheduled_published', targets)
 
       if (course.slug && lesson.slug && course.visibility !== 'institution') {
-        await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, {
-          urls: [`https://resenhadoteologo.com/cursos/${course.slug}/${lesson.slug}`],
-        })
+        indexNowUrls.push(`https://resenhadoteologo.com/cursos/${course.slug}/${lesson.slug}`)
       }
+    }
+
+    if (indexNowUrls.length > 0) {
+      await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, { urls: indexNowUrls })
     }
   },
 })

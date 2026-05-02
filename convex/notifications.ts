@@ -66,27 +66,29 @@ export const markAllRead = mutation({
   },
 })
 
+const KIND_VALIDATOR = v.union(
+  v.literal('course_completed'),
+  v.literal('certificate_issued'),
+  v.literal('comment_reply'),
+  v.literal('comment_new'),
+  v.literal('course_published'),
+  v.literal('welcome'),
+  v.literal('reengagement'),
+  v.literal('generic'),
+  v.literal('post_published'),
+  v.literal('post_comment_new'),
+  v.literal('post_comment_reply'),
+  v.literal('profile_followed'),
+  v.literal('course_marked_complete'),
+  v.literal('lesson_scheduled_published'),
+)
+
 // Interna: insere notificação e poda as mais antigas para manter MAX_PER_USER.
 // Chamada por fluxos internos (enrollments.markComplete, comments.replyTo).
 export const pushInternal = internalMutation({
   args: {
     userId: v.string(),
-    kind: v.union(
-      v.literal('course_completed'),
-      v.literal('certificate_issued'),
-      v.literal('comment_reply'),
-      v.literal('comment_new'),
-      v.literal('course_published'),
-      v.literal('welcome'),
-      v.literal('reengagement'),
-      v.literal('generic'),
-      v.literal('post_published'),
-      v.literal('post_comment_new'),
-      v.literal('post_comment_reply'),
-      v.literal('profile_followed'),
-      v.literal('course_marked_complete'),
-      v.literal('lesson_scheduled_published'),
-    ),
+    kind: KIND_VALIDATOR,
     title: v.string(),
     body: v.optional(v.string()),
     link: v.optional(v.string()),
@@ -112,6 +114,51 @@ export const pushInternal = internalMutation({
     if (recent.length > MAX_PER_USER) {
       const toDelete = recent.slice(MAX_PER_USER)
       await Promise.all(toDelete.map((row) => ctx.db.delete(row._id)))
+    }
+  },
+})
+
+// Bulk insert. Usado por fluxos que despacham notificação para muitos usuários
+// (lessons.runScheduledPublish, courses.markComplete, posts.publish). Despachado
+// via ctx.scheduler em chunks de 100 para isolar o orçamento por mutation.
+export const bulkPushInternal = internalMutation({
+  args: {
+    kind: KIND_VALIDATOR,
+    items: v.array(
+      v.object({
+        userId: v.string(),
+        title: v.string(),
+        body: v.optional(v.string()),
+        link: v.optional(v.string()),
+      }),
+    ),
+  },
+  handler: async (ctx, { kind, items }) => {
+    const now = Date.now()
+    await Promise.all(
+      items.map((item) =>
+        ctx.db.insert('notifications', {
+          userId: item.userId,
+          kind,
+          title: item.title,
+          body: item.body,
+          link: item.link,
+          createdAt: now,
+        }),
+      ),
+    )
+
+    const uniqueUsers = Array.from(new Set(items.map((i) => i.userId)))
+    for (const userId of uniqueUsers) {
+      const recent = await ctx.db
+        .query('notifications')
+        .withIndex('by_user', (q) => q.eq('userId', userId))
+        .order('desc')
+        .take(MAX_PER_USER + 32)
+      if (recent.length > MAX_PER_USER) {
+        const toDelete = recent.slice(MAX_PER_USER)
+        await Promise.all(toDelete.map((row) => ctx.db.delete(row._id)))
+      }
     }
   },
 })

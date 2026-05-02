@@ -3,6 +3,7 @@ import { internalMutation, mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { autoEnrollAllUsersInCourse } from './lib/autoEnroll'
+import { scheduleBulkNotifications, type NotifyTarget } from './lib/notifications'
 import { toSlug } from './lib/slug'
 import { checkAndIssueCertificate } from './student'
 
@@ -265,7 +266,9 @@ export const markInProgress = mutation({
 })
 
 // Marca o curso como concluído. Reavalia todas as matrículas para emitir
-// certificados que estavam represados pelo gate de 'in_progress'.
+// certificados que estavam represados pelo gate de 'in_progress'. Notifica
+// e checa certificado em chunks via scheduler (cada chunk = mutation isolada),
+// para suportar cursos com milhares de matriculados sem estourar 8s/8000 writes.
 export const markComplete = mutation({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
@@ -283,23 +286,39 @@ export const markComplete = mutation({
       .collect()
 
     const courseRef = course.slug ?? id
-    // Notificações em paralelo. checkAndIssueCertificate continua sequencial
-    // pois faz writes no mesmo enrollment e dispara fluxos secundários.
-    await Promise.all(
-      enrollments
-        .filter((enrollment) => !enrollment.certificateIssued)
-        .map((enrollment) =>
-          ctx.runMutation(internal.notifications.pushInternal, {
-            userId: enrollment.studentId,
-            kind: 'course_marked_complete',
-            title: 'Curso finalizado',
-            body: `O curso "${course.title}" foi finalizado. Conclua as aulas restantes para receber seu certificado.`,
-            link: `/dashboard/meus-cursos/${courseRef}`,
-          }),
-        ),
-    )
-    for (const enrollment of enrollments) {
-      await checkAndIssueCertificate(ctx, enrollment.studentId, id, enrollment._id)
+    const pending = enrollments.filter((e) => !e.certificateIssued)
+
+    const targets: NotifyTarget[] = pending.map((enrollment) => ({
+      userId: enrollment.studentId,
+      title: 'Curso finalizado',
+      body: `O curso "${course.title}" foi finalizado. Conclua as aulas restantes para receber seu certificado.`,
+      link: `/dashboard/meus-cursos/${courseRef}`,
+    }))
+    await scheduleBulkNotifications(ctx, 'course_marked_complete', targets)
+
+    // Checagem de certificado é cara (3 collects + writes secundários). Dispara
+    // em mutations agendadas, 25 matrículas por chunk (cada uma faz N reads).
+    const CHUNK = 25
+    for (let i = 0; i < enrollments.length; i += CHUNK) {
+      const slice = enrollments.slice(i, i + CHUNK).map((e) => e._id)
+      await ctx.scheduler.runAfter(0, internal.courses.checkCertificatesForEnrollments, {
+        enrollmentIds: slice,
+      })
+    }
+  },
+})
+
+// Chunked certificate check disparado por markComplete via scheduler. Cada
+// invocação processa até 25 matrículas; cada checkAndIssueCertificate gera
+// reads pesados, então o limite por execução fica abaixo do orçamento de
+// 8000 reads/mutation.
+export const checkCertificatesForEnrollments = internalMutation({
+  args: { enrollmentIds: v.array(v.id('enrollments')) },
+  handler: async (ctx, { enrollmentIds }) => {
+    for (const enrollmentId of enrollmentIds) {
+      const enrollment = await ctx.db.get(enrollmentId)
+      if (!enrollment) continue
+      await checkAndIssueCertificate(ctx, enrollment.studentId, enrollment.courseId, enrollment._id)
     }
   },
 })

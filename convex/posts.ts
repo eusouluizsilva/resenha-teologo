@@ -9,6 +9,7 @@ import { v } from 'convex/values'
 import { query, mutation, type QueryCtx } from './_generated/server'
 import type { Doc, Id } from './_generated/dataModel'
 import { requireIdentity, requireCurrentUser } from './lib/auth'
+import { scheduleBulkNotifications, type NotifyTarget } from './lib/notifications'
 import { toSlug } from './lib/slug'
 import { internal } from './_generated/api'
 import { resolveR2PublicUrl } from './r2'
@@ -458,10 +459,6 @@ export const publish = mutation({
 
     if (!wasPublishedBefore) {
       const link = handle ? `/blog/${handle}/${post.slug}` : `/blog`
-      // Notificar todos os seguidores. .collect() é seguro aqui porque a
-      // operação roda dentro de uma mutation com limite de 8s (~10000
-      // notifications/sec via runMutation). take(100) silenciava avisos para
-      // autores com 500+ seguidores.
       const followers = await ctx.db
         .query('profileFollows')
         .withIndex('by_author', (q) => q.eq('authorUserId', post.authorUserId))
@@ -471,22 +468,18 @@ export const publish = mutation({
           ? (await ctx.db.get(post.authorInstitutionId))?.name ?? author?.name ?? 'Autor'
           : author?.name ?? 'Autor'
 
-      // Promise.all paraleliza a inserção das notificações para todos os
-      // seguidores ativos. Loop sequencial bloqueava a mutation com timeouts
-      // possíveis em autores com mais de uma centena de seguidores.
-      await Promise.all(
-        followers
-          .filter((f) => f.notifyArticles)
-          .map((f) =>
-            ctx.runMutation(internal.notifications.pushInternal, {
-              userId: f.followerUserId,
-              kind: 'post_published',
-              title: `Novo artigo de ${authorName}`,
-              body: post.title,
-              link,
-            }),
-          ),
-      )
+      // Despacha notificações em chunks via scheduler (lib/notifications).
+      // Isola orçamento de writes por mutation, suportando autores com
+      // milhares de seguidores sem estourar 8s/8000 writes.
+      const targets: NotifyTarget[] = followers
+        .filter((f) => f.notifyArticles)
+        .map((f) => ({
+          userId: f.followerUserId,
+          title: `Novo artigo de ${authorName}`,
+          body: post.title,
+          link,
+        }))
+      await scheduleBulkNotifications(ctx, 'post_published', targets)
     }
   },
 })
@@ -518,11 +511,14 @@ export const listMine = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return []
+    // take(200) ao invés de collect: editor lista até 200 posts mais recentes
+    // do autor; quem tiver mais usa filtros futuros. Cap evita resolução de
+    // cover (Convex storage.getUrl ou R2 lookup) explodir em autores prolíficos.
     const rows = await ctx.db
       .query('posts')
       .withIndex('by_author', (q) => q.eq('authorUserId', identity.subject))
       .order('desc')
-      .collect()
+      .take(200)
     const filtered = rows.filter((p) => p.status !== 'removed')
     return await Promise.all(
       filtered.map(async (p) => ({

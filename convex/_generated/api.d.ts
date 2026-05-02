@@ -42,6 +42,7 @@ import type * as lessonTimestamps from "../lessonTimestamps.js";
 import type * as lessons from "../lessons.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_autoEnroll from "../lib/autoEnroll.js";
+import type * as lib_notifications from "../lib/notifications.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_slug from "../lib/slug.js";
 import type * as lib_validators from "../lib/validators.js";
@@ -119,6 +120,7 @@ declare const fullApi: ApiFromModules<{
   lessons: typeof lessons;
   "lib/auth": typeof lib_auth;
   "lib/autoEnroll": typeof lib_autoEnroll;
+  "lib/notifications": typeof lib_notifications;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/slug": typeof lib_slug;
   "lib/validators": typeof lib_validators;

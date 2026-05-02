@@ -242,40 +242,60 @@ export const backfillResenhaFollows = internalMutation({
   },
 })
 
-// Busca de perfis publicos (lupa do dashboard). Filtra in-memory porque o
-// volume atual e pequeno; quando crescer, migrar para searchIndex no Convex.
-// Esconde perfis sem handle (nao tem URL publica) e perfis 'unlisted'.
-// Esconde tambem o proprio usuario dos resultados.
+// Busca de perfis públicos (lupa do dashboard). Usa searchIndex full-text do
+// Convex em name e handle separadamente; consolida por clerkId. Substituiu o
+// .collect() em toda a tabela users que escalava em O(N) por busca.
+// Esconde perfis sem handle (sem URL pública), perfis 'unlisted' e o próprio
+// usuário dos resultados.
 export const searchPublic = query({
   args: { q: v.string() },
   handler: async (ctx, { q }) => {
-    const term = q.trim().toLowerCase().replace(/^@/, '')
+    const term = q.trim().replace(/^@/, '')
     if (term.length < 2) return []
 
     const identity = await ctx.auth.getUserIdentity()
     const myClerkId = identity?.subject ?? null
 
-    const all = await ctx.db.query('users').collect()
-    const matches = all
+    // Convex searchIndex ranqueia por relevância textual e retorna até ~256
+    // resultados. Pegamos 50 de cada índice — suficiente para alimentar o
+    // top-10 final mesmo após dedupe e filtros.
+    const [byName, byHandle] = await Promise.all([
+      ctx.db
+        .query('users')
+        .withSearchIndex('search_name', (s) => s.search('name', term))
+        .take(50),
+      ctx.db
+        .query('users')
+        .withSearchIndex('search_handle', (s) => s.search('handle', term))
+        .take(50),
+    ])
+
+    // Dedupe por clerkId. Coloca byHandle primeiro porque match em handle
+    // tende a ser mais relevante que match em nome para a lupa @username.
+    const seen = new Set<string>()
+    const merged: typeof byName = []
+    for (const u of [...byHandle, ...byName]) {
+      if (seen.has(u.clerkId)) continue
+      seen.add(u.clerkId)
+      merged.push(u)
+    }
+
+    const lcTerm = term.toLowerCase()
+    const filtered = merged
       .filter((u) => !!u.handle)
       .filter((u) => u.profileVisibility !== 'unlisted')
       .filter((u) => u.clerkId !== myClerkId)
-      .filter((u) => {
-        const handle = (u.handle ?? '').toLowerCase()
-        const name = (u.name ?? '').toLowerCase()
-        return handle.includes(term) || name.includes(term)
-      })
 
-    matches.sort((a, b) => {
+    filtered.sort((a, b) => {
       const aHandle = (a.handle ?? '').toLowerCase()
       const bHandle = (b.handle ?? '').toLowerCase()
-      const aHandleStarts = aHandle.startsWith(term) ? 0 : 1
-      const bHandleStarts = bHandle.startsWith(term) ? 0 : 1
+      const aHandleStarts = aHandle.startsWith(lcTerm) ? 0 : 1
+      const bHandleStarts = bHandle.startsWith(lcTerm) ? 0 : 1
       if (aHandleStarts !== bHandleStarts) return aHandleStarts - bHandleStarts
       return (b.followerCount ?? 0) - (a.followerCount ?? 0)
     })
 
-    return matches.slice(0, 10).map((u) => ({
+    return filtered.slice(0, 10).map((u) => ({
       handle: u.handle!,
       name: u.name,
       avatarUrl: u.avatarUrl ?? null,

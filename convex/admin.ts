@@ -260,17 +260,27 @@ export const listRecentUsers = query({
 // os usuários" no admin. Inclui as funções ativas, cursos criados e
 // matriculas (com nomes) numa unica resposta. Faz O(N) full-scan de
 // users/userFunctions/courses/enrollments e monta maps em memoria, evitando
-// N+1. Aceitavel na escala atual.
+// N+1. Caps explícitos por tabela (take) protegem contra estouro de orçamento
+// quando a base passar de algumas dezenas de milhares; quando isso acontecer,
+// migrar para paginação real + busca server-side (ver auditoria item #11).
 export const listAllUsers = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
 
-    const users = await ctx.db.query('users').order('desc').collect()
-    const allFunctions = await ctx.db.query('userFunctions').collect()
-    const allCourses = await ctx.db.query('courses').collect()
-    const allEnrollments = await ctx.db.query('enrollments').collect()
-    const allProgress = await ctx.db.query('progress').collect()
+    const USERS_CAP = 5000
+    const FUNCTIONS_CAP = 20000
+    const COURSES_CAP = 5000
+    const ENROLLMENTS_CAP = 50000
+    const PROGRESS_CAP = 100000
+
+    const [users, allFunctions, allCourses, allEnrollments, allProgress] = await Promise.all([
+      ctx.db.query('users').order('desc').take(USERS_CAP),
+      ctx.db.query('userFunctions').take(FUNCTIONS_CAP),
+      ctx.db.query('courses').take(COURSES_CAP),
+      ctx.db.query('enrollments').take(ENROLLMENTS_CAP),
+      ctx.db.query('progress').take(PROGRESS_CAP),
+    ])
 
     const fnByUser = new Map<string, string[]>()
     for (const f of allFunctions) {
@@ -1366,19 +1376,26 @@ export const listRecentCommentsAcrossPlatform = query({
       parentId: string | null
     }
 
+    // Pré-fetch em paralelo: lessons → courses → users. Eram 3 loops sequenciais
+    // de até 60 ctx.db.get cada (180 round-trips no pior caso). Promise.all
+    // colapsa cada loop em 1 round-trip.
     const lessonIds = Array.from(new Set(lessonComments.map((c) => c.lessonId)))
+    const lessonDocs = await Promise.all(lessonIds.map((id) => ctx.db.get(id)))
     const lessonsMap = new Map<string, { title: string; courseId: string; slug: string | null }>()
-    for (const id of lessonIds) {
-      const l = await ctx.db.get(id)
-      if (l) lessonsMap.set(id, { title: l.title, courseId: l.courseId, slug: l.slug ?? null })
+    for (let i = 0; i < lessonIds.length; i++) {
+      const l = lessonDocs[i]
+      if (l) lessonsMap.set(lessonIds[i], { title: l.title, courseId: l.courseId, slug: l.slug ?? null })
     }
     const lessonCourseIds = Array.from(
       new Set(Array.from(lessonsMap.values()).map((l) => l.courseId)),
     )
+    const lessonCourseDocs = await Promise.all(
+      lessonCourseIds.map((id) => ctx.db.get(id as Id<'courses'>)),
+    )
     const courseSlugs = new Map<string, string | null>()
-    for (const id of lessonCourseIds) {
-      const c = await ctx.db.get(id as Id<'courses'>)
-      if (c) courseSlugs.set(id, c.slug ?? null)
+    for (let i = 0; i < lessonCourseIds.length; i++) {
+      const c = lessonCourseDocs[i]
+      if (c) courseSlugs.set(lessonCourseIds[i], c.slug ?? null)
     }
 
     const lessonItems: Item[] = lessonComments.map((c) => {
@@ -1406,10 +1423,11 @@ export const listRecentCommentsAcrossPlatform = query({
     })
 
     const courseIds2 = Array.from(new Set(courseComments.map((c) => c.courseId)))
+    const courseDocs2 = await Promise.all(courseIds2.map((id) => ctx.db.get(id)))
     const coursesMap = new Map<string, { title: string; slug: string | null }>()
-    for (const id of courseIds2) {
-      const c = await ctx.db.get(id)
-      if (c) coursesMap.set(id, { title: c.title, slug: c.slug ?? null })
+    for (let i = 0; i < courseIds2.length; i++) {
+      const c = courseDocs2[i]
+      if (c) coursesMap.set(courseIds2[i], { title: c.title, slug: c.slug ?? null })
     }
     const courseItems: Item[] = courseComments.map((c) => {
       const co = coursesMap.get(c.courseId)
@@ -1431,22 +1449,31 @@ export const listRecentCommentsAcrossPlatform = query({
     })
 
     const postIds = Array.from(new Set(postComments.map((c) => c.postId)))
+    const postDocs = await Promise.all(postIds.map((id) => ctx.db.get(id)))
+    const authorIds = Array.from(
+      new Set(postDocs.filter((p): p is NonNullable<typeof p> => !!p).map((p) => p.authorUserId)),
+    )
+    const authorDocs = await Promise.all(
+      authorIds.map((aid) =>
+        ctx.db.query('users').withIndex('by_clerkId', (q) => q.eq('clerkId', aid)).unique(),
+      ),
+    )
+    const handleByAuthor = new Map<string, string | null>()
+    for (let i = 0; i < authorIds.length; i++) {
+      handleByAuthor.set(authorIds[i], authorDocs[i]?.handle ?? null)
+    }
     const postsMap = new Map<
       string,
       { title: string; slug: string; authorUserId: string; authorHandle: string | null }
     >()
-    for (const id of postIds) {
-      const p = await ctx.db.get(id)
+    for (let i = 0; i < postIds.length; i++) {
+      const p = postDocs[i]
       if (!p) continue
-      const author = await ctx.db
-        .query('users')
-        .withIndex('by_clerkId', (q) => q.eq('clerkId', p.authorUserId))
-        .unique()
-      postsMap.set(id, {
+      postsMap.set(postIds[i], {
         title: p.title,
         slug: p.slug,
         authorUserId: p.authorUserId,
-        authorHandle: author?.handle ?? null,
+        authorHandle: handleByAuthor.get(p.authorUserId) ?? null,
       })
     }
     const postItems: Item[] = postComments.map((c) => {

@@ -78,44 +78,59 @@ export const markReengaged = internalMutation({
   },
 })
 
-// Busca dados do usuário para o email (nome + email).
-export const getUserForEmail = internalQuery({
-  args: { studentId: v.string() },
-  handler: async (ctx, { studentId }) => {
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', studentId))
-      .first()
-    if (!user) return null
-    return { name: user.name, email: user.email }
+// Busca dados de vários usuários em uma única query. Usado pelo run() para
+// evitar 50 round-trips (1 por candidato). Retorna mapa studentId → {name,email}.
+export const getUsersForEmail = internalQuery({
+  args: { studentIds: v.array(v.string()) },
+  handler: async (ctx, { studentIds }) => {
+    const users = await Promise.all(
+      studentIds.map((id) =>
+        ctx.db.query('users').withIndex('by_clerkId', (q) => q.eq('clerkId', id)).first(),
+      ),
+    )
+    const result: Record<string, { name: string; email: string }> = {}
+    for (let i = 0; i < studentIds.length; i++) {
+      const u = users[i]
+      if (u) result[studentIds[i]] = { name: u.name, email: u.email }
+    }
+    return result
   },
 })
 
 // Action top-level disparada pelo cron. Roda em Node (precisa do fetch do Resend).
+// Pré-fetcha emails em batch e dispara markReengaged + email em paralelo.
+// Tipo explícito de retorno: evita que o codegen do Convex caia em inferência
+// circular (run → internal.reengagement.* → run) e propague any pra api.d.ts.
 export const run = internalAction({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ processed: number }> => {
     const candidates = await ctx.runQuery(internal.reengagement.listInactiveCandidates, {})
     if (candidates.length === 0) {
       console.log('[reengagement] nenhum candidato hoje')
       return { processed: 0 }
     }
 
-    let sent = 0
-    for (const c of candidates) {
-      const user = await ctx.runQuery(internal.reengagement.getUserForEmail, { studentId: c.studentId })
-      if (!user) continue
-      // Marca antes de enviar — evita duplicar caso email falhe e o cron rode de novo
-      // antes do throttle expirar; um email perdido é melhor que dois enviados.
-      await ctx.runMutation(internal.reengagement.markReengaged, { studentId: c.studentId })
-      await ctx.runAction(internal.email.sendReengagement, {
-        to: user.email,
-        name: user.name,
-      })
-      sent++
-    }
+    const usersById = await ctx.runQuery(internal.reengagement.getUsersForEmail, {
+      studentIds: candidates.map((c: { studentId: string }) => c.studentId),
+    })
 
-    console.log(`[reengagement] candidatos=${candidates.length} emails=${sent}`)
-    return { processed: sent }
+    type Candidate = { studentId: string; lastStudyDateMs: number }
+    type UserInfo = { name: string; email: string }
+    const tasks: { candidate: Candidate; user: UserInfo }[] = candidates
+      .map((c: Candidate) => ({ candidate: c, user: usersById[c.studentId] as UserInfo | undefined }))
+      .filter((entry: { candidate: Candidate; user: UserInfo | undefined }): entry is { candidate: Candidate; user: UserInfo } => !!entry.user)
+
+    // Marca antes de enviar — evita duplicar caso email falhe e o cron rode de
+    // novo antes do throttle expirar. Marca + send em paralelo por candidato,
+    // mas o conjunto inteiro vai junto via Promise.all (paraleliza 50).
+    await Promise.all(
+      tasks.map(async ({ candidate, user }) => {
+        await ctx.runMutation(internal.reengagement.markReengaged, { studentId: candidate.studentId })
+        await ctx.runAction(internal.email.sendReengagement, { to: user.email, name: user.name })
+      }),
+    )
+
+    console.log(`[reengagement] candidatos=${candidates.length} emails=${tasks.length}`)
+    return { processed: tasks.length }
   },
 })

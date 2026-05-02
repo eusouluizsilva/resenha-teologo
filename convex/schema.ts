@@ -49,7 +49,18 @@ export default defineSchema({
     .index('by_clerkId', ['clerkId'])
     .index('by_handle', ['handle'])
     .index('by_email', ['email'])
-    .index('by_referralCode', ['referralCode']),
+    .index('by_referralCode', ['referralCode'])
+    // Search index full-text usado por users.searchPublic. profileVisibility é
+    // o filterField (apenas perfis públicos). Substitui o full-table .collect()
+    // que escalava em O(N) por busca.
+    .searchIndex('search_name', {
+      searchField: 'name',
+      filterFields: ['profileVisibility'],
+    })
+    .searchIndex('search_handle', {
+      searchField: 'handle',
+      filterFields: ['profileVisibility'],
+    }),
 
   userFunctions: defineTable({
     userId: v.string(),
@@ -72,7 +83,11 @@ export default defineSchema({
     revokedAt: v.optional(v.number()),
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
-  }).index('by_userId', ['userId']),
+  })
+    .index('by_userId', ['userId'])
+    // Cron dataRetention.purgeConsentPii: anonimiza IP/UA de consents com mais
+    // de 12 meses sem precisar varrer a tabela inteira.
+    .index('by_acceptedAt', ['acceptedAt']),
 
   institutions: defineTable({
     name: v.string(),
@@ -379,7 +394,10 @@ export default defineSchema({
   })
     .index('by_lessonId', ['lessonId'])
     .index('by_parentId', ['parentId'])
-    .index('by_authorId', ['authorId']),
+    .index('by_authorId', ['authorId'])
+    // Cron dataRetention.purgeSoftDeleted: varre apenas candidatos com
+    // deletedAt definido e abaixo do cutoff de 30 dias.
+    .index('by_deletedAt', ['deletedAt']),
 
   // Flashcards do aluno com revisão espaçada simplificada (SM-2). Decks são
   // coleções do próprio aluno, podendo opcionalmente referenciar um curso para
@@ -481,7 +499,8 @@ export default defineSchema({
   })
     .index('by_courseId', ['courseId'])
     .index('by_parentId', ['parentId'])
-    .index('by_authorId', ['authorId']),
+    .index('by_authorId', ['authorId'])
+    .index('by_deletedAt', ['deletedAt']),
 
   donations: defineTable({
     creatorId: v.string(),
@@ -730,7 +749,8 @@ export default defineSchema({
   })
     .index('by_post', ['postId'])
     .index('by_parentId', ['parentId'])
-    .index('by_authorId', ['authorId']),
+    .index('by_authorId', ['authorId'])
+    .index('by_deletedAt', ['deletedAt']),
 
   postCommentHelpful: defineTable({
     commentId: v.id('postComments'),
