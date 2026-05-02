@@ -912,7 +912,7 @@ function PedagogicalSection({
               Permitir refazer quiz mediante nova visualização
             </p>
             <p className="mt-1 text-xs leading-5 text-white/50">
-              Quando ativo, o aluno pode zerar a nota e refazer o quiz — mas precisa reassistir a aula
+              Quando ativo, o aluno pode zerar a nota e refazer o quiz, mas precisa reassistir a aula
               inteira antes de enviar novas respostas.
               {!hasQuiz && ' Adicione pelo menos 5 perguntas para habilitar esta opção.'}
             </p>

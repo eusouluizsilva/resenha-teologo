@@ -37,7 +37,7 @@ export default defineConfig({
           if (!id.includes('node_modules')) return undefined
           if (id.includes('framer-motion')) return 'framer-motion'
           if (id.includes('@clerk/')) return 'clerk'
-          if (id.includes('/convex/')) return 'convex'
+          if (id.includes('node_modules/convex/')) return 'convex'
           if (
             id.includes('/react/') ||
             id.includes('/react-dom/') ||

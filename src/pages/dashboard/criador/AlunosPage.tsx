@@ -365,7 +365,7 @@ export function AlunosPage() {
             aria-label="Ordenar"
           >
             <option value="recent">Matrícula mais recente</option>
-            <option value="name">Nome (A→Z)</option>
+            <option value="name">Nome (A-Z)</option>
             <option value="mostCourses">Mais cursos</option>
             <option value="mostCompleted">Mais concluídos</option>
             <option value="highestScore">Maior média</option>

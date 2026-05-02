@@ -20,8 +20,13 @@ jobs:
 
       - run: npm ci --prefer-offline
 
+      - name: Typecheck local antes de subir
+        run: npm run check
+
       - name: Deploy Convex functions to production
-        run: npx convex deploy --typecheck=disable
+        # --typecheck=enabled (default): falha se schema/funcoes nao compilam.
+        # Antes rodava com --typecheck=disable e ja subimos backend quebrado.
+        run: npx convex deploy
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 

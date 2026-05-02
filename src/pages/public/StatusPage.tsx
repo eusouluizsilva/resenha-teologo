@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
 import { brandPanelClass, brandStatusPillClass, cn } from '@/lib/brand'
@@ -81,6 +81,7 @@ export function StatusPage() {
   const [checks, setChecks] = useState<Check[]>(INITIAL_CHECKS)
   const [lastChecked, setLastChecked] = useState<number | null>(null)
   const [running, setRunning] = useState(false)
+  const ranOnce = useRef(false)
 
   async function runChecks() {
     setRunning(true)
@@ -101,10 +102,12 @@ export function StatusPage() {
   }
 
   useEffect(() => {
-    // Roda checks ao montar a página.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    runChecks()
-     
+    // Roda checks só uma vez. Em React 19 strict mode o effect dispara duas
+    // vezes; ranOnce guarda contra HEAD duplicado em prod sem mascarar via
+    // eslint-disable.
+    if (ranOnce.current) return
+    ranOnce.current = true
+    void runChecks()
   }, [])
 
   const overall: CheckStatus = checks.some((c) => c.status === 'down')

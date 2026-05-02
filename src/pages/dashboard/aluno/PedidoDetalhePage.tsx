@@ -51,7 +51,6 @@ type OrderDetail = {
   updatedAt: number
   creatorName: string
   creatorHandle: string | null
-  creatorEmail: string | null
 }
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -408,17 +407,13 @@ export function PedidoDetalhePage() {
                 Ver perfil do criador
               </Link>
             ) : null}
-            {order.creatorEmail ? (
-              <p className="mt-3 text-xs text-white/52">
-                Em caso de dúvida, fale com{' '}
-                <a
-                  href={`mailto:${order.creatorEmail}`}
-                  className="font-medium text-white/82 hover:text-[#F2BD8A]"
-                >
-                  {order.creatorEmail}
-                </a>
-              </p>
-            ) : null}
+            <p className="mt-3 text-xs text-white/52">
+              Em caso de dúvida, use a página de{' '}
+              <Link to="/contato" className="font-medium text-white/82 hover:text-[#F2BD8A]">
+                contato
+              </Link>
+              .
+            </p>
           </div>
 
           {order.shippingAddress ? (

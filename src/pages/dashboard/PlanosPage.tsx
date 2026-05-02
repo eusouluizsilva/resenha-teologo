@@ -61,7 +61,7 @@ const alunoPlans: Plan[] = [
       { label: 'Certificados de conclusão', included: true },
       { label: 'Quizzes e avaliações', included: true },
       { label: 'Caderno digital', included: true },
-      { label: 'Bíblia integrada (em breve)', included: true },
+      { label: 'Bíblia integrada', included: true },
       { label: 'Exibição de anúncios', included: false },
     ],
     ctaLabel: 'Plano atual',

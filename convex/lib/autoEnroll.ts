@@ -1,5 +1,6 @@
 import type { Doc, Id } from '../_generated/dataModel'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
+import { internal } from '../_generated/api'
 
 // Handle do perfil oficial. Todo cadastro novo passa a seguir este perfil
 // automaticamente E e matriculado em todos os cursos publicos publicados por
@@ -124,29 +125,27 @@ export async function autoEnrollUserInOfficialCourses(
   return created
 }
 
-// Matricula todos os usuarios existentes em um curso especifico. Chamado
-// quando o perfil oficial publica um curso pela primeira vez. Tambem usado
-// no backfill por curso.
+// Agenda matricula em massa de todos os usuarios em um curso oficial via
+// scheduler chunked (ver convex/autoEnroll.ts). Substitui o `.collect()` em
+// users + loop que estourava limites com 500+ usuarios. Retorna `{ scheduled }`
+// porque o trabalho roda async em paginas de 100 usuarios.
 export async function autoEnrollAllUsersInCourse(
   ctx: MutationCtx,
   courseId: Id<'courses'>,
-): Promise<number> {
+): Promise<{ scheduled: boolean }> {
   const course = await ctx.db.get(courseId)
-  if (!course) return 0
-  if (!course.isPublished) return 0
-  if (course.visibility === 'institution') return 0
+  if (!course) return { scheduled: false }
+  if (!course.isPublished) return { scheduled: false }
+  if (course.visibility === 'institution') return { scheduled: false }
 
   const official = await getOfficialUser(ctx)
-  if (!official || course.creatorId !== official.clerkId) return 0
+  if (!official || course.creatorId !== official.clerkId) return { scheduled: false }
 
-  const users = await ctx.db.query('users').collect()
-  let created = 0
-  for (const u of users) {
-    if (u.clerkId === course.creatorId) continue
-    const did = await enrollOnce(ctx, courseId, u.clerkId)
-    if (did) created += 1
-  }
-  return created
+  await ctx.scheduler.runAfter(0, internal.autoEnroll.enrollUsersChunk, {
+    courseId,
+    cursor: null,
+  })
+  return { scheduled: true }
 }
 
 // Faz um usuario seguir o perfil oficial. Idempotente. Chamado no

@@ -11,6 +11,7 @@
 import type * as account from "../account.js";
 import type * as admin from "../admin.js";
 import type * as analytics from "../analytics.js";
+import type * as autoEnroll from "../autoEnroll.js";
 import type * as bible from "../bible.js";
 import type * as catalog from "../catalog.js";
 import type * as certificates from "../certificates.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   account: typeof account;
   admin: typeof admin;
   analytics: typeof analytics;
+  autoEnroll: typeof autoEnroll;
   bible: typeof bible;
   catalog: typeof catalog;
   certificates: typeof certificates;

@@ -427,7 +427,7 @@ export const remove = mutation({
 
     const notebookEntries = await ctx.db
       .query('notebookEntries')
-      .filter((q) => q.eq(q.field('lessonId'), id))
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
       .collect()
     for (const entry of notebookEntries) {
       await ctx.db.delete(entry._id)
@@ -443,13 +443,13 @@ export const remove = mutation({
 
     const questions = await ctx.db
       .query('courseQuestions')
-      .filter((q) => q.eq(q.field('lessonId'), id))
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
       .collect()
     for (const q of questions) await ctx.db.delete(q._id)
 
     const timestamps = await ctx.db
       .query('lessonTimestamps')
-      .filter((q) => q.eq(q.field('lessonId'), id))
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', id))
       .collect()
     for (const t of timestamps) await ctx.db.delete(t._id)
 

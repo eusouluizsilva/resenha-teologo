@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireIdentity } from './lib/auth'
+import { checkRateLimit } from './lib/rateLimit'
 
 const RESERVED = new Set([
   'cursos', 'entrar', 'cadastro', 'dashboard', 'termos', 'privacidade',
@@ -36,6 +37,13 @@ export const claim = mutation({
   args: { handle: v.string() },
   handler: async (ctx, { handle }) => {
     const identity = await requireIdentity(ctx)
+
+    // Max 10 tentativas de claim por minuto: bloqueia bruteforce de squatting
+    // (chutar mil handles populares por hora pra reservar pra revenda).
+    await checkRateLimit(ctx, identity.subject, 'handle.claim', {
+      max: 10,
+      windowMs: 60_000,
+    })
 
     const error = validateHandle(handle)
     if (error) throw new Error(error)

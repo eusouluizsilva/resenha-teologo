@@ -2,22 +2,24 @@ import { v } from 'convex/values'
 import { query } from './_generated/server'
 
 // Busca global usada pelo command palette (Cmd+K). Procura cursos
-// publicados, perfis de criadores e artigos publicados a partir de um
-// termo livre. Filtra in-memory porque o volume atual e pequeno; quando
-// passar de poucos milhares de itens, migrar para searchIndex no Convex.
+// publicados, perfis de criadores e artigos publicados a partir de um termo
+// livre. Criadores: searchIndex (search_name + search_handle) substituiu o
+// .collect() de toda tabela users. Cursos/posts: cap em 500 publicados
+// (volume aceitável hoje; quando crescer, migrar para searchIndex próprio).
 export const globalSearch = query({
   args: { q: v.string() },
   handler: async (ctx, { q }) => {
-    const term = q.trim().toLowerCase().replace(/^@/, '')
+    const term = q.trim().replace(/^@/, '')
     if (term.length < 2) {
       return { courses: [], creators: [], posts: [] }
     }
+    const lcTerm = term.toLowerCase()
 
-    // Cursos publicados publicamente. Esconde institucionais para anonimo.
+    // Cursos publicados publicamente. Cap em 500 evita full-table indefinido.
     const allCourses = await ctx.db
       .query('courses')
       .withIndex('by_published', (qb) => qb.eq('isPublished', true))
-      .collect()
+      .take(500)
 
     const visibleCourses = allCourses.filter(
       (c) => c.visibility !== 'institution',
@@ -28,7 +30,7 @@ export const globalSearch = query({
         const title = (c.title ?? '').toLowerCase()
         const desc = (c.description ?? '').toLowerCase()
         const cat = (c.category ?? '').toLowerCase()
-        return title.includes(term) || desc.includes(term) || cat.includes(term)
+        return title.includes(lcTerm) || desc.includes(lcTerm) || cat.includes(lcTerm)
       })
       .slice(0, 10)
       .map((c) => ({
@@ -39,16 +41,28 @@ export const globalSearch = query({
         category: c.category ?? null,
       }))
 
-    // Criadores com handle publico.
-    const allUsers = await ctx.db.query('users').collect()
-    const creatorMatches = allUsers
+    // Criadores: searchIndex Convex (search_name + search_handle). Pega 30 de
+    // cada e dedupa por clerkId. Padrão consistente com users.searchPublic.
+    const [byName, byHandle] = await Promise.all([
+      ctx.db
+        .query('users')
+        .withSearchIndex('search_name', (s) => s.search('name', term))
+        .take(30),
+      ctx.db
+        .query('users')
+        .withSearchIndex('search_handle', (s) => s.search('handle', term))
+        .take(30),
+    ])
+    const seenCreators = new Set<string>()
+    const mergedCreators: typeof byName = []
+    for (const u of [...byHandle, ...byName]) {
+      if (seenCreators.has(u.clerkId)) continue
+      seenCreators.add(u.clerkId)
+      mergedCreators.push(u)
+    }
+    const creatorMatches = mergedCreators
       .filter((u) => !!u.handle)
       .filter((u) => u.profileVisibility !== 'unlisted')
-      .filter((u) => {
-        const handle = (u.handle ?? '').toLowerCase()
-        const name = (u.name ?? '').toLowerCase()
-        return handle.includes(term) || name.includes(term)
-      })
       .slice(0, 6)
       .map((u) => ({
         handle: u.handle!,
@@ -56,17 +70,18 @@ export const globalSearch = query({
         avatarUrl: u.avatarUrl ?? null,
       }))
 
-    // Posts publicados.
+    // Posts publicados. Cap em 500 mais recentes (já indexados em ordem).
     const allPosts = await ctx.db
       .query('posts')
       .withIndex('by_status_publishedAt', (qb) => qb.eq('status', 'published'))
-      .collect()
+      .order('desc')
+      .take(500)
 
     const postMatches = allPosts
       .filter((p) => {
         const title = (p.title ?? '').toLowerCase()
         const excerpt = (p.excerpt ?? '').toLowerCase()
-        return title.includes(term) || excerpt.includes(term)
+        return title.includes(lcTerm) || excerpt.includes(lcTerm)
       })
       .slice(0, 6)
 

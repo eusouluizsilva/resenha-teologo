@@ -7,6 +7,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireIdentity } from './lib/auth'
+import { checkRateLimit } from './lib/rateLimit'
 
 export const like = mutation({
   args: { postId: v.id('posts') },
@@ -69,7 +70,14 @@ export const share = mutation({
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.postId)
     if (!post) return
-    if (post.status !== 'published' && post.status !== 'unlisted') return
+    if (post.status !== 'published') return
+
+    // Rate-limit por sessionId (max 10 shares por minuto): backstop ao dedup
+    // por (sessionId, postId), impede flood automatizado pra inflar shareCount.
+    await checkRateLimit(ctx, args.sessionId, 'post.share', {
+      max: 10,
+      windowMs: 60_000,
+    })
 
     const dedup = await ctx.db
       .query('postShares')

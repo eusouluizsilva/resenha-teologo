@@ -1040,7 +1040,7 @@ export function LandingPage() {
                 price: 'R$ 0',
                 period: '',
                 description: 'Acesso completo a todos os cursos, com anúncios.',
-                features: ['Todos os cursos disponíveis', 'Quizzes e avaliações', 'Certificados de conclusão', 'Bíblia integrada (em breve)'],
+                features: ['Todos os cursos disponíveis', 'Quizzes e avaliações', 'Certificados de conclusão', 'Bíblia integrada'],
                 cta: 'Criar conta grátis',
                 href: '/cadastro?perfil=aluno',
                 highlight: false,
@@ -1051,8 +1051,8 @@ export function LandingPage() {
                 period: '/mês',
                 description: 'A mesma formação, sem anúncios e com experiência mais limpa.',
                 features: ['Tudo do plano Gratuito', 'Sem anúncios em toda a plataforma', 'Acesso prioritário a novidades', 'Suporte por email'],
-                cta: 'Em breve',
-                href: '/cadastro?perfil=aluno',
+                cta: 'Assinar Premium',
+                href: '/dashboard/planos',
                 highlight: true,
               },
               {
@@ -1091,25 +1091,16 @@ export function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                {plan.cta === 'Em breve' ? (
-                  <span
-                    aria-disabled="true"
-                    className="mt-8 cursor-not-allowed rounded-[1.1rem] border border-white/10 bg-white/6 px-5 py-3 text-center text-sm font-semibold text-white/30"
-                  >
-                    {plan.cta}
-                  </span>
-                ) : (
-                  <Link
-                    to={plan.href}
-                    className={`mt-8 rounded-[1.1rem] border px-5 py-3 text-center text-sm font-semibold transition-all duration-200 ${
-                      plan.highlight
-                        ? 'border-[#F37E20]/30 bg-[#F37E20]/14 text-[#F2BD8A] hover:bg-[#F37E20]/24'
-                        : 'border-[#CDBEAF] bg-[#F7F2EC] text-[#111827] hover:border-[#BBA48E] hover:bg-[#EEE7DC]'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-                )}
+                <Link
+                  to={plan.href}
+                  className={`mt-8 rounded-[1.1rem] border px-5 py-3 text-center text-sm font-semibold transition-all duration-200 ${
+                    plan.highlight
+                      ? 'border-[#F37E20]/30 bg-[#F37E20]/14 text-[#F2BD8A] hover:bg-[#F37E20]/24'
+                      : 'border-[#CDBEAF] bg-[#F7F2EC] text-[#111827] hover:border-[#BBA48E] hover:bg-[#EEE7DC]'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
               </m.div>
             ))}
           </div>

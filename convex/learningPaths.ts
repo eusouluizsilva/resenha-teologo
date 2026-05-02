@@ -825,24 +825,29 @@ export const listMyEnrollments = query({
 
     return Promise.all(
       rows.map(async (e) => {
-        const path = await ctx.db.get(e.pathId)
+        // Path + items em paralelo.
+        const [path, items] = await Promise.all([
+          ctx.db.get(e.pathId),
+          ctx.db
+            .query('pathItems')
+            .withIndex('by_pathId', (q) => q.eq('pathId', e.pathId))
+            .collect(),
+        ])
         if (!path) return null
-        const items = await ctx.db
-          .query('pathItems')
-          .withIndex('by_pathId', (q) => q.eq('pathId', e.pathId))
-          .collect()
-        let completedCount = 0
-        for (const it of items) {
-          const enrollment = await ctx.db
-            .query('enrollments')
-            .withIndex('by_student_course', (q) =>
-              q
-                .eq('studentId', identity.subject)
-                .eq('courseId', it.courseId),
-            )
-            .unique()
-          if (enrollment?.completedAt) completedCount += 1
-        }
+
+        // Cada matricula de curso da trilha em paralelo (substitui loop sequencial).
+        const enrollments = await Promise.all(
+          items.map((it) =>
+            ctx.db
+              .query('enrollments')
+              .withIndex('by_student_course', (q) =>
+                q.eq('studentId', identity.subject).eq('courseId', it.courseId),
+              )
+              .unique(),
+          ),
+        )
+        const completedCount = enrollments.filter((en) => en?.completedAt).length
+
         return {
           enrollmentId: e._id,
           pathId: e.pathId,

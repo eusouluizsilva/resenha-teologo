@@ -56,11 +56,15 @@ export const create = mutation({
     }
     const safeName = trimmedName.slice(0, MAX_NAME_LEN)
 
-    const existing = await ctx.db
+    // Pega so o ultimo material da aula (ordenado por _creationTime desc) para
+    // calcular o proximo `order` sem ler a lista inteira. Materiais sao
+    // sempre criados em sequencia, entao o ultimo criado tem o maior order.
+    const last = await ctx.db
       .query('lessonMaterials')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', args.lessonId))
-      .collect()
-    const nextOrder = existing.length
+      .order('desc')
+      .first()
+    const nextOrder = last ? last.order + 1 : 0
 
     const id = await ctx.db.insert('lessonMaterials', {
       lessonId: args.lessonId,
@@ -106,11 +110,15 @@ export const createFromR2 = mutation({
     const safeName = trimmedName.slice(0, MAX_NAME_LEN)
     if (!args.r2Key.trim()) throw new Error('Chave R2 ausente')
 
-    const existing = await ctx.db
+    // Pega so o ultimo material da aula (ordenado por _creationTime desc) para
+    // calcular o proximo `order` sem ler a lista inteira. Materiais sao
+    // sempre criados em sequencia, entao o ultimo criado tem o maior order.
+    const last = await ctx.db
       .query('lessonMaterials')
       .withIndex('by_lessonId', (q) => q.eq('lessonId', args.lessonId))
-      .collect()
-    const nextOrder = existing.length
+      .order('desc')
+      .first()
+    const nextOrder = last ? last.order + 1 : 0
 
     const id = await ctx.db.insert('lessonMaterials', {
       lessonId: args.lessonId,

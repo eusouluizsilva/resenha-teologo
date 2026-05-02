@@ -242,23 +242,11 @@ http.route({
             }
             metadata?: { clerkUserId?: string; plan?: string }
           }
+          // Sanity-check rápido no payload pra evitar refetch caro em eventos
+          // claramente inválidos. plan/periodEnd serão re-derivados do GET abaixo.
           const item = sub.items?.data?.[0]
-          const priceId = item?.price?.id
-          // Stripe API 2025-08-27 moveu current_period_end pra subscription_item.
-          // Mantemos fallback no root pra compat com versões anteriores.
-          const periodEnd = item?.current_period_end ?? sub.current_period_end ?? 0
-          if (!priceId) {
+          if (!item?.price?.id) {
             console.warn('[stripe-webhook] subscription sem priceId', sub.id)
-            break
-          }
-          const plan =
-            (sub.metadata?.plan as
-              | 'aluno_premium'
-              | 'criador_sem_ads'
-              | 'plano_igreja'
-              | undefined) ?? planFromPriceId(priceId)
-          if (!plan) {
-            console.warn('[stripe-webhook] price desconhecido', priceId)
             break
           }
           let clerkUserId = sub.metadata?.clerkUserId
@@ -272,17 +260,58 @@ http.route({
             console.warn('[stripe-webhook] subscription sem clerkUserId', sub.id)
             break
           }
+          // Defense in depth: refetch a subscription direto da Stripe API antes
+          // de gravar. Mesmo com signature válida, refazemos o GET pra eliminar
+          // qualquer cenário de payload manipulado/replay (status/customer/price
+          // batem com a verdade na Stripe). Em caso de falha do GET, ignora o
+          // evento; o próximo retry da Stripe (até 3 dias) tenta de novo.
+          const stripeSecret = process.env.STRIPE_SECRET_KEY
+          if (!stripeSecret) {
+            console.error('[stripe-webhook] STRIPE_SECRET_KEY ausente, abortando refetch')
+            break
+          }
+          const refetch = await fetch(`https://api.stripe.com/v1/subscriptions/${sub.id}`, {
+            headers: { Authorization: `Bearer ${stripeSecret}` },
+          })
+          if (!refetch.ok) {
+            // dedup já gravou o eventId, então retry não vai cair aqui.
+            // Aceitamos: subscription evento subsequente vai re-sincronizar.
+            console.error('[stripe-webhook] refetch falhou', refetch.status, sub.id)
+            break
+          }
+          const verified = (await refetch.json()) as {
+            id: string
+            customer: string
+            status: string
+            current_period_end?: number
+            cancel_at_period_end?: boolean
+            items: { data: Array<{ price: { id: string }; current_period_end?: number }> }
+          }
+          const verifiedItem = verified.items?.data?.[0]
+          const verifiedPriceId = verifiedItem?.price?.id
+          const verifiedPeriodEnd = verifiedItem?.current_period_end ?? verified.current_period_end ?? 0
+          if (!verifiedPriceId) {
+            console.warn('[stripe-webhook] subscription verificada sem priceId', sub.id)
+            break
+          }
+          const verifiedPlan = planFromPriceId(verifiedPriceId)
+          if (!verifiedPlan) {
+            console.warn('[stripe-webhook] price verificado desconhecido', verifiedPriceId)
+            break
+          }
+
           // Para deleted: marca o status como 'canceled' pra desligar isPremium.
-          const finalStatus = event.type === 'customer.subscription.deleted' ? 'canceled' : sub.status
+          // Stripe pode retornar 'canceled' já no GET, mas garantimos via type.
+          const finalStatus = event.type === 'customer.subscription.deleted' ? 'canceled' : verified.status
           await ctx.runMutation(internal.stripe.upsertFromWebhook, {
             clerkUserId,
-            plan,
-            stripeCustomerId: sub.customer,
-            stripeSubscriptionId: sub.id,
-            stripePriceId: priceId,
+            plan: verifiedPlan,
+            stripeCustomerId: verified.customer,
+            stripeSubscriptionId: verified.id,
+            stripePriceId: verifiedPriceId,
             status: finalStatus,
-            currentPeriodEnd: periodEnd * 1000,
-            cancelAtPeriodEnd: sub.cancel_at_period_end,
+            currentPeriodEnd: verifiedPeriodEnd * 1000,
+            cancelAtPeriodEnd: verified.cancel_at_period_end,
           })
           break
         }

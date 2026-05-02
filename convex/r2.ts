@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { action, internalAction, internalQuery } from './_generated/server'
 import { internal } from './_generated/api'
-import { isAdminEmail } from './lib/auth'
+import { isAdminEmail, isAdmin } from './lib/auth'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -297,11 +297,32 @@ export const getAuthMeta = internalQuery({
       .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
       .unique()
     if (!user) return null
-    return { email: user.email, perfil: user.perfil }
+    // Inclui funcoes do usuario para que actions possam validar role sem nova
+    // round-trip (uploads de cover/material/post-image exigem 'criador').
+    // Inclui isAdmin (bootstrap + admins table) para deleteObject autorizar
+    // admins promovidos via tabela `admins`, nao apenas o bootstrap email.
+    const [fns, adminFlag] = await Promise.all([
+      ctx.db
+        .query('userFunctions')
+        .withIndex('by_userId', (q) => q.eq('userId', clerkId))
+        .collect(),
+      isAdmin(ctx, user.email),
+    ])
+    return {
+      email: user.email,
+      perfil: user.perfil,
+      functions: fns.map((f) => f.function),
+      isAdmin: adminFlag,
+    }
   },
 })
 
-type AuthMeta = { email: string; perfil?: string } | null
+type AuthMeta = {
+  email: string
+  perfil?: string
+  functions?: string[]
+  isAdmin?: boolean
+} | null
 
 // ──────────────────────────────────────────────────────────────────────────
 // ACTION: gera URL pré-assinada de UPLOAD. Cliente faz PUT direto no R2.
@@ -325,9 +346,23 @@ export const generateUploadUrl = action({
     })
     if (!meta) throw new Error('Usuário não encontrado')
 
-    // Avatar: qualquer user autenticado. ebook: admin only. Demais: autenticado.
-    if (purposeKey === 'ebook' && !isAdminEmail(meta.email)) {
+    // Permissoes por purpose:
+    // - avatar: qualquer user autenticado.
+    // - ebook: admin only.
+    // - cover/material/post-image: precisa funcao 'criador' (ou admin).
+    //   Sem isso, qualquer user autenticado podia gerar PUT presigned ate 50MB
+    //   e encher o bucket com objetos orfaos.
+    const adminFlag = meta.isAdmin === true || isAdminEmail(meta.email)
+    const isCreator = (meta.functions ?? []).includes('criador')
+    if (purposeKey === 'ebook' && !adminFlag) {
       throw new Error('Não autorizado')
+    }
+    if (
+      (purposeKey === 'cover' || purposeKey === 'material' || purposeKey === 'post-image') &&
+      !isCreator &&
+      !adminFlag
+    ) {
+      throw new Error('Apenas criadores podem subir este tipo de arquivo.')
     }
 
     if (size > MAX_SIZE_BYTES[purposeKey]) {
@@ -419,7 +454,9 @@ export const deleteObject = action({
     const meta: AuthMeta = await ctx.runQuery(internal.r2.getAuthMeta, {
       clerkId: identity.subject,
     })
-    if (!meta || !isAdminEmail(meta.email)) throw new Error('Não autorizado')
+    // Aceita admin promovido via tabela `admins` (nao so bootstrap email).
+    const adminFlag = meta?.isAdmin === true || (meta && isAdminEmail(meta.email))
+    if (!adminFlag) throw new Error('Não autorizado')
 
     const env = getR2Env()
     const resp = await signedFetch({ env, method: 'DELETE', key })

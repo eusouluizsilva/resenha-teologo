@@ -107,9 +107,12 @@ function CommentCard({ comment }: { comment: CommentItem }) {
                 <Link
                   to={comment.contextLink}
                   target="_blank"
-                  className="truncate text-[#F2BD8A] hover:text-[#F37E20]"
+                  className="inline-flex max-w-full items-center gap-1 truncate text-[#F2BD8A] hover:text-[#F37E20]"
                 >
-                  {comment.contextTitle} →
+                  <span className="truncate">{comment.contextTitle}</span>
+                  <svg aria-hidden="true" className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
                 </Link>
               ) : (
                 <span>{comment.contextTitle}</span>

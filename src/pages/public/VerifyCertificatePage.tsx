@@ -1,10 +1,14 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
+import { useSeo } from '@/lib/seo'
 
 // Página pública para qualquer pessoa validar um certificado. O código vem do
 // PDF baixado pelo aluno. Não exige autenticação. Nenhum dado sensível é
-// exposto — apenas nome, curso, criador, data, nota.
+// exposto, apenas nome, curso, criador, data, nota.
+
+const ORIGIN =
+  typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
 
 function formatDate(ts: number): string {
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(ts))
@@ -15,6 +19,18 @@ export function VerifyCertificatePage() {
   const result = useQuery(api.certificates.verify, { code: code ?? '' })
 
   const isLoading = result === undefined
+
+  const url = `${ORIGIN}/verificar-certificado/${code ?? ''}`
+  useSeo({
+    title: result
+      ? `Certificado ${result.studentName}, ${result.courseTitle}, Resenha do Teólogo`
+      : 'Verificação de certificado, Resenha do Teólogo',
+    description: result
+      ? `Certificado autêntico emitido para ${result.studentName} no curso ${result.courseTitle}.`
+      : 'Verifique a autenticidade de um certificado emitido pela Resenha do Teólogo.',
+    url,
+    image: null,
+  })
 
   return (
     <div className="min-h-screen bg-[#0F141A] text-white">

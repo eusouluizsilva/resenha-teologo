@@ -518,7 +518,6 @@ export default function App() {
 
             {/* Compartilhado */}
             <Route path="perfil" element={<PerfilPage />} />
-            <Route path="meu-perfil-publico" element={<Navigate to="/dashboard/perfil" replace />} />
             <Route path="funcoes" element={<FuncoesPage />} />
             <Route path="planos" element={<PlanosPage />} />
 

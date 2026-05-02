@@ -578,9 +578,12 @@ export function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setShowAllUsers(true)}
-                  className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F2BD8A] transition hover:text-[#F37E20]"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F2BD8A] transition hover:text-[#F37E20]"
                 >
-                  Ver todos →
+                  Ver todos
+                  <svg aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
                 </button>
               </div>
               <button

@@ -187,7 +187,12 @@ export function InstituicaoDashboardPage() {
             >
               <p className="text-sm font-semibold text-white">Membros e convites</p>
               <p className="text-xs text-white/48">Gerencie quem participa, envie convites e altere papéis.</p>
-              <span className="mt-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">Abrir →</span>
+              <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">
+                Abrir
+                <svg aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </span>
             </Link>
             <Link
               to="/dashboard/cursos-instituicao"
@@ -195,7 +200,12 @@ export function InstituicaoDashboardPage() {
             >
               <p className="text-sm font-semibold text-white">Cursos da instituição</p>
               <p className="text-xs text-white/48">Veja os cursos vinculados, criadores e estado de publicação.</p>
-              <span className="mt-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">Abrir →</span>
+              <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">
+                Abrir
+                <svg aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </span>
             </Link>
             <Link
               to="/dashboard/relatorios"
@@ -203,7 +213,12 @@ export function InstituicaoDashboardPage() {
             >
               <p className="text-sm font-semibold text-white">Relatórios</p>
               <p className="text-xs text-white/48">Engajamento por membro, conclusões e última atividade.</p>
-              <span className="mt-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">Abrir →</span>
+              <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#F2BD8A] group-hover:text-[#F37E20]">
+                Abrir
+                <svg aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </span>
             </Link>
           </div>
 

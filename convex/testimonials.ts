@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireIdentity } from './lib/auth'
+import { checkRateLimit } from './lib/rateLimit'
 
 export const submit = mutation({
   args: {
@@ -9,6 +10,13 @@ export const submit = mutation({
   },
   handler: async (ctx, { profileHandle, text }) => {
     const identity = await requireIdentity(ctx)
+
+    // Max 5 depoimentos por hora por usuario. Sem isso, bot autenticado podia
+    // floodar fila de moderacao em milhares de perfis.
+    await checkRateLimit(ctx, identity.subject, 'testimonial.submit', {
+      max: 5,
+      windowMs: 60 * 60 * 1000,
+    })
 
     if (text.trim().length === 0) throw new Error('O depoimento não pode estar vazio.')
     if (text.length > 500) throw new Error('O depoimento não pode ter mais de 500 caracteres.')

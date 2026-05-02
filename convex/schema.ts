@@ -373,7 +373,9 @@ export default defineSchema({
   })
     .index('by_student_lesson', ['studentId', 'lessonId'])
     .index('by_notebook', ['notebookId'])
-    .index('by_student_notebook_lesson', ['studentId', 'notebookId', 'lessonId']),
+    .index('by_student_notebook_lesson', ['studentId', 'notebookId', 'lessonId'])
+    // lessons.remove cascade: cleanup direto por aula sem full-table filter().
+    .index('by_lessonId', ['lessonId']),
 
   // Comentários em aulas. Estrutura de thread de um nível: comentários com
   // parentId=undefined e respostas com parentId apontando ao comentário-pai.
@@ -479,7 +481,9 @@ export default defineSchema({
     .index('by_course_student', ['courseId', 'studentId'])
     .index('by_creatorId', ['creatorId'])
     .index('by_courseId', ['courseId'])
-    .index('by_creator_answered', ['creatorId', 'answeredAt']),
+    .index('by_creator_answered', ['creatorId', 'answeredAt'])
+    // lessons.remove cascade: cleanup direto por aula sem full-table filter().
+    .index('by_lessonId', ['lessonId']),
 
   // Fórum por curso (nível acima das aulas). Mesma estrutura do lessonComments,
   // mas escopado ao curso inteiro. Aluno matriculado e professor dono têm

@@ -178,21 +178,38 @@ export const _postsForSubmit = internalQuery({
 export const _profilesForSubmit = internalQuery({
   args: {},
   handler: async (ctx) => {
-    const users = await ctx.db.query('users').take(5000)
-    const withHandle = users.filter((u) => !!u.handle)
-    const checks = await Promise.all(
-      withHandle.map(async (u) => {
-        const [course, post] = await Promise.all([
-          ctx.db.query('courses').withIndex('by_creatorId', (q) => q.eq('creatorId', u.clerkId)).first(),
-          ctx.db.query('posts').withIndex('by_author', (q) => q.eq('authorUserId', u.clerkId)).first(),
-        ])
-        return {
-          handle: u.handle!,
-          hasContent: Boolean(course?.isPublished) || Boolean(post && post.status === 'published'),
-        }
-      }),
+    // Inverte: comeca pelos cursos/posts publicados (indices nativos), dedupa
+    // creatorId/authorUserId, e so depois resolve handles. Substitui o
+    // padrao N users x 2 .first() (10000 round-trips no pior caso).
+    const [publishedCourses, publishedPosts] = await Promise.all([
+      ctx.db
+        .query('courses')
+        .withIndex('by_published', (q) => q.eq('isPublished', true))
+        .take(2000),
+      ctx.db
+        .query('posts')
+        .withIndex('by_status_publishedAt', (q) => q.eq('status', 'published'))
+        .order('desc')
+        .take(2000),
+    ])
+
+    const clerkIds = new Set<string>()
+    for (const c of publishedCourses) clerkIds.add(c.creatorId)
+    for (const p of publishedPosts) clerkIds.add(p.authorUserId)
+    if (clerkIds.size === 0) return []
+
+    const ids = Array.from(clerkIds)
+    const users = await Promise.all(
+      ids.map((cid) =>
+        ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', cid))
+          .unique(),
+      ),
     )
-    return checks.filter((c) => c.hasContent).map((c) => ({ handle: c.handle }))
+    return users
+      .filter((u): u is NonNullable<typeof u> => !!u && !!u.handle)
+      .map((u) => ({ handle: u.handle! }))
   },
 })
 

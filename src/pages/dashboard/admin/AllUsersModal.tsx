@@ -304,9 +304,12 @@ function UserDetail({
             <Link
               to={`/${user.handle}`}
               target="_blank"
-              className="text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20]"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#F2BD8A] hover:text-[#F37E20]"
             >
-              Ver perfil público →
+              Ver perfil público
+              <svg aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
             </Link>
           )}
         </div>

@@ -236,8 +236,9 @@ export function RegisterPage() {
             documentVersion: DOCUMENT_VERSION,
             userAgent: navigator.userAgent,
           })
-        } catch {
-          // noop
+        } catch (err) {
+          // Falha não bloqueia: usuário pode reaceitar Termos no /dashboard/funcoes.
+          console.error('[register] recordConsent geral falhou', err)
         }
         try {
           await enableFunction({ function: selectedFunction })
@@ -246,8 +247,9 @@ export function RegisterPage() {
             documentVersion: DOCUMENT_VERSION,
             userAgent: navigator.userAgent,
           })
-        } catch {
-          // noop
+        } catch (err) {
+          // Falha não bloqueia: usuário pode ativar a função em /dashboard/funcoes.
+          console.error('[register] enableFunction/consent falhou', selectedFunction, err)
         }
         navigate(redirectTo)
       }
@@ -262,8 +264,8 @@ export function RegisterPage() {
     if (!isLoaded) return
     try {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-    } catch {
-      // noop
+    } catch (err) {
+      console.error('[register] resend code falhou', err)
     }
   }
 

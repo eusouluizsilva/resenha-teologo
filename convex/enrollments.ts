@@ -14,15 +14,17 @@ export const listByStudent = query({
 
     const result = await Promise.all(
       enrollments.map(async (enrollment) => {
-        const course = await ctx.db.get(enrollment.courseId)
+        // Course + progress em paralelo: 2 round-trips por matricula viram 1.
+        const [course, progressRecords] = await Promise.all([
+          ctx.db.get(enrollment.courseId),
+          ctx.db
+            .query('progress')
+            .withIndex('by_student_course', (q) =>
+              q.eq('studentId', identity.subject).eq('courseId', enrollment.courseId),
+            )
+            .collect(),
+        ])
         if (!course) return null
-
-        const progressRecords = await ctx.db
-          .query('progress')
-          .withIndex('by_student_course', (q) =>
-            q.eq('studentId', identity.subject).eq('courseId', enrollment.courseId)
-          )
-          .collect()
 
         const completedLessons = progressRecords.filter((p) => p.completed).length
         const totalLessons = course.totalLessons || 1
@@ -151,20 +153,35 @@ export const listStudentsByCreator = query({
 
     const courseById = new Map(courses.map((c) => [c._id as string, c]))
 
-    // Pré-carrega títulos de aula por curso uma única vez para evitar N+1
-    // ao decorar quizScores com o nome da aula correspondente.
+    // Pré-carrega lessons + enrollments de TODOS os cursos em paralelo.
+    // Substitui dois loops sequenciais (2N round-trips) por 2 Promise.all.
+    const [lessonsByCourse, enrollmentsByCourse] = await Promise.all([
+      Promise.all(
+        courses.map((c) =>
+          ctx.db
+            .query('lessons')
+            .withIndex('by_courseId', (q) => q.eq('courseId', c._id))
+            .collect(),
+        ),
+      ),
+      Promise.all(
+        courses.map((c) =>
+          ctx.db
+            .query('enrollments')
+            .withIndex('by_courseId', (q) => q.eq('courseId', c._id))
+            .collect(),
+        ),
+      ),
+    ])
+
     const lessonTitleById = new Map<string, string>()
     const totalLessonsByCourseId = new Map<string, number>()
-    for (const c of courses) {
-      const lessons = await ctx.db
-        .query('lessons')
-        .withIndex('by_courseId', (q) => q.eq('courseId', c._id))
-        .collect()
+    courses.forEach((c, idx) => {
+      const lessons = lessonsByCourse[idx]
       for (const l of lessons) lessonTitleById.set(l._id as string, l.title)
-      // total de aulas publicadas — fallback para o stored `totalLessons` se 0.
       const publishedCount = lessons.filter((l) => l.isPublished).length
       totalLessonsByCourseId.set(c._id as string, publishedCount || c.totalLessons || 1)
-    }
+    })
 
     // Reúne todas as matrículas dos cursos do professor.
     const allEnrollments: {
@@ -178,12 +195,8 @@ export const listStudentsByCreator = query({
       _creationTime: number
     }[] = []
 
-    for (const course of courses) {
-      const enrollments = await ctx.db
-        .query('enrollments')
-        .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
-        .collect()
-
+    courses.forEach((course, idx) => {
+      const enrollments = enrollmentsByCourse[idx]
       for (const e of enrollments) {
         allEnrollments.push({
           studentId: e.studentId,
@@ -196,7 +209,7 @@ export const listStudentsByCreator = query({
           _creationTime: e._creationTime,
         })
       }
-    }
+    })
 
     if (allEnrollments.length === 0) {
       return {
@@ -216,19 +229,25 @@ export const listStudentsByCreator = query({
     // Progresso por aluno em cada curso.
     const students = await Promise.all(
       Array.from(byStudent.entries()).map(async ([studentId, enrolls]) => {
-        const user = await ctx.db
-          .query('users')
-          .withIndex('by_clerkId', (q) => q.eq('clerkId', studentId))
-          .unique()
-
-        const studentCourses = await Promise.all(
-          enrolls.map(async (e) => {
-            const progressRecords = await ctx.db
+        // user + cada progress de cada matricula em paralelo.
+        const [user, ...progressByEnroll] = await Promise.all([
+          ctx.db
+            .query('users')
+            .withIndex('by_clerkId', (q) => q.eq('clerkId', studentId))
+            .unique(),
+          ...enrolls.map((e) =>
+            ctx.db
               .query('progress')
               .withIndex('by_student_course', (q) =>
-                q.eq('studentId', studentId).eq('courseId', courseById.get(e.courseId)!._id)
+                q.eq('studentId', studentId).eq('courseId', courseById.get(e.courseId)!._id),
               )
-              .collect()
+              .collect(),
+          ),
+        ])
+
+        const studentCourses = await Promise.all(
+          enrolls.map(async (e, i) => {
+            const progressRecords = progressByEnroll[i]
             const completedLessons = progressRecords.filter((p) => p.completed).length
             const percentage = Math.min(
               100,
@@ -304,53 +323,72 @@ export const listCertificates = query({
   handler: async (ctx) => {
     const identity = await requireIdentity(ctx)
 
-    const student = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .unique()
-
-    const enrollments = await ctx.db
-      .query('enrollments')
-      .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
-      .collect()
+    // Student + enrollments em paralelo.
+    const [student, enrollments] = await Promise.all([
+      ctx.db
+        .query('users')
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+        .unique(),
+      ctx.db
+        .query('enrollments')
+        .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
+        .collect(),
+    ])
 
     const certs = enrollments.filter((e) => e.certificateIssued)
+    if (certs.length === 0) return []
 
-    return await Promise.all(
-      certs.map(async (enrollment) => {
-        const course = await ctx.db.get(enrollment.courseId)
-        const creator = course
-          ? await ctx.db
-              .query('users')
-              .withIndex('by_clerkId', (q) => q.eq('clerkId', course.creatorId))
-              .unique()
-          : null
+    // Cursos em paralelo.
+    const courses = await Promise.all(certs.map((e) => ctx.db.get(e.courseId)))
 
-        // Carga horaria do curso = soma das duracoes das aulas publicadas.
-        // Usada no certificado estilo diploma academico.
-        let totalDurationSeconds = 0
-        let publishedLessonsCount = 0
-        if (course) {
-          const lessons = await ctx.db
-            .query('lessons')
-            .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
-            .collect()
-          for (const l of lessons) {
-            if (!l.isPublished) continue
-            publishedLessonsCount += 1
-            totalDurationSeconds += l.durationSeconds ?? 0
-          }
-        }
-
-        return {
-          enrollment,
-          course,
-          studentName: student?.name ?? '',
-          creatorName: creator?.name ?? '',
-          totalDurationSeconds,
-          publishedLessonsCount,
-        }
-      })
+    // Dedup creators + lessons por curso em paralelo.
+    const uniqueCreatorIds = Array.from(
+      new Set(courses.filter((c): c is NonNullable<typeof c> => !!c).map((c) => c.creatorId)),
     )
+    const [creatorsList, lessonsByCert] = await Promise.all([
+      Promise.all(
+        uniqueCreatorIds.map((cid) =>
+          ctx.db
+            .query('users')
+            .withIndex('by_clerkId', (q) => q.eq('clerkId', cid))
+            .unique(),
+        ),
+      ),
+      Promise.all(
+        courses.map((c) =>
+          c
+            ? ctx.db
+                .query('lessons')
+                .withIndex('by_courseId', (q) => q.eq('courseId', c._id))
+                .collect()
+            : Promise.resolve([]),
+        ),
+      ),
+    ])
+    const creatorByClerkId = new Map<string, { name: string }>()
+    creatorsList.forEach((u, i) => {
+      if (u) creatorByClerkId.set(uniqueCreatorIds[i], { name: u.name })
+    })
+
+    return certs.map((enrollment, i) => {
+      const course = courses[i]
+      const creator = course ? creatorByClerkId.get(course.creatorId) : null
+      const lessons = lessonsByCert[i]
+      let totalDurationSeconds = 0
+      let publishedLessonsCount = 0
+      for (const l of lessons) {
+        if (!l.isPublished) continue
+        publishedLessonsCount += 1
+        totalDurationSeconds += l.durationSeconds ?? 0
+      }
+      return {
+        enrollment,
+        course,
+        studentName: student?.name ?? '',
+        creatorName: creator?.name ?? '',
+        totalDurationSeconds,
+        publishedLessonsCount,
+      }
+    })
   },
 })

@@ -158,33 +158,40 @@ export const listProductsForSitemap = query({
 export const listProfilesForSitemap = query({
   args: {},
   handler: async (ctx) => {
-    // Perfis públicos: usuários com handle e que publicaram cursos OU artigos.
-    // Limita a 5000 para evitar inflação.
-    const users = await ctx.db.query('users').take(5000)
-    const withHandle = users.filter((u) => !!u.handle)
+    // Inverte a busca: em vez de varrer 5000 users e fazer 2 .first() por
+    // usuario (10000 round-trips no pior caso), pegamos o conjunto de
+    // creators/authors com conteudo publicado direto dos indices `by_published`
+    // e `by_status_publishedAt`, deduplicamos clerkIds e so depois resolvemos
+    // os handles via `by_clerkId`.
+    const [publishedCourses, publishedPosts] = await Promise.all([
+      ctx.db
+        .query('courses')
+        .withIndex('by_published', (q) => q.eq('isPublished', true))
+        .take(2000),
+      ctx.db
+        .query('posts')
+        .withIndex('by_status_publishedAt', (q) => q.eq('status', 'published'))
+        .order('desc')
+        .take(2000),
+    ])
 
-    // Quem tem ao menos um curso ou post publicado é o conjunto que deve ir
-    // para o sitemap. Para isso, fazemos lookup paralelo.
-    const checks = await Promise.all(
-      withHandle.map(async (u) => {
-        const [course, post] = await Promise.all([
-          ctx.db
-            .query('courses')
-            .withIndex('by_creatorId', (q) => q.eq('creatorId', u.clerkId))
-            .first(),
-          ctx.db
-            .query('posts')
-            .withIndex('by_author', (q) => q.eq('authorUserId', u.clerkId))
-            .first(),
-        ])
-        return {
-          handle: u.handle!,
-          updatedAt: u._creationTime,
-          hasContent: Boolean(course?.isPublished) || Boolean(post && post.status === 'published'),
-        }
-      }),
+    const clerkIds = new Set<string>()
+    for (const c of publishedCourses) clerkIds.add(c.creatorId)
+    for (const p of publishedPosts) clerkIds.add(p.authorUserId)
+    if (clerkIds.size === 0) return []
+
+    const ids = Array.from(clerkIds)
+    const users = await Promise.all(
+      ids.map((cid) =>
+        ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', cid))
+          .unique(),
+      ),
     )
 
-    return checks.filter((c) => c.hasContent).map((c) => ({ handle: c.handle, updatedAt: c.updatedAt }))
+    return users
+      .filter((u): u is NonNullable<typeof u> => !!u && !!u.handle)
+      .map((u) => ({ handle: u.handle!, updatedAt: u._creationTime }))
   },
 })

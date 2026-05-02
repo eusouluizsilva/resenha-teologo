@@ -91,7 +91,7 @@ export function ComoConseguirCertificadoPage() {
         <RuleCard
           step={1}
           title="Conclua todas as aulas publicadas"
-          description="Assista cada aula até o final. Cada aula só é marcada como concluída quando o vídeo é assistido integralmente — pular trechos não conta como concluído."
+          description="Assista cada aula até o final. Cada aula só é marcada como concluída quando o vídeo é assistido integralmente: pular trechos não conta como concluído."
           icon={
             <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
@@ -136,7 +136,7 @@ export function ComoConseguirCertificadoPage() {
         <RuleCard
           step={5}
           title="O curso precisa estar concluído pelo professor"
-          description="Para cursos com lançamento em produção (aulas saindo aos poucos), o certificado só é emitido quando o professor marca o curso como completo — mesmo que você já tenha assistido todas as aulas disponíveis até o momento."
+          description="Para cursos com lançamento em produção (aulas saindo aos poucos), o certificado só é emitido quando o professor marca o curso como completo, mesmo que você já tenha assistido todas as aulas disponíveis até o momento."
           icon={
             <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -163,7 +163,7 @@ export function ComoConseguirCertificadoPage() {
             <p className="mt-1">
               Em{' '}
               <Link to="/dashboard/certificados" className="text-[#F2BD8A] hover:underline">
-                Aluno → Certificados
+                Aluno / Certificados
               </Link>
               . Cada certificado tem um código de verificação público e pode ser
               compartilhado, baixado em PDF ou impresso.

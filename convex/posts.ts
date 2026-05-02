@@ -6,9 +6,10 @@
 // avatarUrl, bio?, institutionName? }.
 
 import { v } from 'convex/values'
-import { query, mutation, type QueryCtx } from './_generated/server'
+import { query, mutation, internalMutation, type QueryCtx } from './_generated/server'
 import type { Doc, Id } from './_generated/dataModel'
 import { requireIdentity, requireCurrentUser } from './lib/auth'
+import { checkRateLimit } from './lib/rateLimit'
 import { scheduleBulkNotifications, type NotifyTarget } from './lib/notifications'
 import { toSlug } from './lib/slug'
 import { internal } from './_generated/api'
@@ -221,12 +222,26 @@ export const getBySlugForReader = query({
 // Re-le o documento dentro da mesma transação para evitar perda de
 // incrementos sob concorrência (Convex serializa mutations no mesmo doc,
 // mas o read fora da transação tornava `post.viewCount + 1` racy).
+//
+// Rate-limit por (sessionId, postId): max 1 incremento a cada 6h por sessao
+// por artigo. Backstop ao dedup do sessionStorage do front (que pode ser
+// rotacionado por bot). Posts unlisted sao ignorados — ID enumeravel nao deve
+// distorcer metricas privadas do autor.
 export const incrementView = mutation({
-  args: { postId: v.id('posts') },
-  handler: async (ctx, { postId }) => {
+  args: {
+    postId: v.id('posts'),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, { postId, sessionId }) => {
     const post = await ctx.db.get(postId)
     if (!post) return
-    if (post.status !== 'published' && post.status !== 'unlisted') return
+    if (post.status !== 'published') return
+    if (sessionId) {
+      await checkRateLimit(ctx, sessionId, `post.view:${postId}`, {
+        max: 1,
+        windowMs: 6 * 60 * 60 * 1000,
+      })
+    }
     const fresh = await ctx.db.get(postId)
     if (!fresh) return
     await ctx.db.patch(postId, { viewCount: (fresh.viewCount ?? 0) + 1 })
@@ -459,27 +474,60 @@ export const publish = mutation({
 
     if (!wasPublishedBefore) {
       const link = handle ? `/blog/${handle}/${post.slug}` : `/blog`
-      const followers = await ctx.db
-        .query('profileFollows')
-        .withIndex('by_author', (q) => q.eq('authorUserId', post.authorUserId))
-        .collect()
       const authorName =
         post.authorIdentity === 'instituicao' && post.authorInstitutionId
           ? (await ctx.db.get(post.authorInstitutionId))?.name ?? author?.name ?? 'Autor'
           : author?.name ?? 'Autor'
 
-      // Despacha notificações em chunks via scheduler (lib/notifications).
-      // Isola orçamento de writes por mutation, suportando autores com
-      // milhares de seguidores sem estourar 8s/8000 writes.
-      const targets: NotifyTarget[] = followers
-        .filter((f) => f.notifyArticles)
-        .map((f) => ({
-          userId: f.followerUserId,
-          title: `Novo artigo de ${authorName}`,
-          body: post.title,
-          link,
-        }))
-      await scheduleBulkNotifications(ctx, 'post_published', targets)
+      // Pagina seguidores via scheduler. Cada chunk lê 500 follows e enfileira
+      // notificações; quando há mais, agenda o próximo cursor. Suporta autores
+      // com dezenas de milhares de seguidores sem estourar limites por mutation.
+      await ctx.scheduler.runAfter(0, internal.posts.dispatchFollowerNotifications, {
+        authorUserId: post.authorUserId,
+        title: `Novo artigo de ${authorName}`,
+        body: post.title,
+        link,
+        cursor: null,
+      })
+    }
+  },
+})
+
+// Pagina followers do autor e despacha notificações em batches para
+// `scheduleBulkNotifications`. Reagenda enquanto houver páginas. Mantém o
+// budget de cada mutation enxuto: máx 500 reads + 100 writes (chunk de notif).
+export const dispatchFollowerNotifications = internalMutation({
+  args: {
+    authorUserId: v.string(),
+    title: v.string(),
+    body: v.string(),
+    link: v.string(),
+    cursor: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, { authorUserId, title, body, link, cursor }) => {
+    const page = await ctx.db
+      .query('profileFollows')
+      .withIndex('by_author', (q) => q.eq('authorUserId', authorUserId))
+      .paginate({ cursor, numItems: 500 })
+
+    const targets: NotifyTarget[] = page.page
+      .filter((f) => f.notifyArticles)
+      .map((f) => ({
+        userId: f.followerUserId,
+        title,
+        body,
+        link,
+      }))
+    await scheduleBulkNotifications(ctx, 'post_published', targets)
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.posts.dispatchFollowerNotifications, {
+        authorUserId,
+        title,
+        body,
+        link,
+        cursor: page.continueCursor,
+      })
     }
   },
 })

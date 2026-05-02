@@ -35,12 +35,12 @@ export const exportMyData = query({
       ctx.db.query('enrollments').withIndex('by_studentId', (q) => q.eq('studentId', userId)).collect(),
       ctx.db.query('progress').withIndex('by_studentId', (q) => q.eq('studentId', userId)).collect(),
       ctx.db.query('notebooks').withIndex('by_studentId', (q) => q.eq('studentId', userId)).collect(),
-      ctx.db.query('notebookEntries').filter((q) => q.eq(q.field('studentId'), userId)).collect(),
+      ctx.db.query('notebookEntries').withIndex('by_student_lesson', (q) => q.eq('studentId', userId)).collect(),
       ctx.db.query('lessonComments').withIndex('by_authorId', (q) => q.eq('authorId', userId)).collect(),
-      ctx.db.query('testimonials').filter((q) => q.eq(q.field('authorId'), userId)).collect(),
+      ctx.db.query('testimonials').withIndex('by_author_profile', (q) => q.eq('authorId', userId)).collect(),
       ctx.db.query('testimonials').withIndex('by_profileUserId', (q) => q.eq('profileUserId', userId)).collect(),
-      ctx.db.query('ratings').filter((q) => q.eq(q.field('authorId'), userId)).collect(),
-      ctx.db.query('courseRatings').filter((q) => q.eq(q.field('studentId'), userId)).collect(),
+      ctx.db.query('ratings').withIndex('by_author_profile', (q) => q.eq('authorId', userId)).collect(),
+      ctx.db.query('courseRatings').withIndex('by_student_course', (q) => q.eq('studentId', userId)).collect(),
       ctx.db.query('courses').withIndex('by_creatorId', (q) => q.eq('creatorId', userId)).collect(),
     ])
 

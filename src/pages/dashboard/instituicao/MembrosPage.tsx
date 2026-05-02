@@ -401,7 +401,7 @@ function InstitutionSection({ institutionId }: { institutionId: Id<'institutions
                 'text-xs',
                 overLimit ? 'text-red-300' : 'text-white/56',
               )}>
-                {parsedEmails.length} email(s) {overLimit && '— acima do limite de 200'}
+                {parsedEmails.length} email(s) {overLimit && ', acima do limite de 200'}
               </span>
             </div>
 

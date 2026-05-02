@@ -71,7 +71,12 @@ export function BlogPostPage() {
     const key = VIEW_DEDUP_KEY_PREFIX + post._id
     if (sessionStorage.getItem(key)) return
     sessionStorage.setItem(key, '1')
-    incrementView({ postId: post._id }).catch(() => {})
+    let sessionId = sessionStorage.getItem('rdt_anon_session')
+    if (!sessionId) {
+      sessionId = crypto.randomUUID()
+      sessionStorage.setItem('rdt_anon_session', sessionId)
+    }
+    incrementView({ postId: post._id, sessionId }).catch(() => {})
   }, [post, incrementView])
 
   if (!handle || !postSlug) return <Navigate to="/blog" replace />

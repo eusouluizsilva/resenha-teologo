@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { internalMutation, mutation, query } from './_generated/server'
+import { internalMutation, mutation, query, type MutationCtx } from './_generated/server'
 import type { Id } from './_generated/dataModel'
 import { requireAdmin } from './lib/auth'
 import {
@@ -552,8 +552,8 @@ export const backfillProfileVisibilityPublic = internalMutation({
 export const backfillEnrollmentsForCourse = internalMutation({
   args: { courseId: v.id('courses') },
   handler: async (ctx, { courseId }) => {
-    const created = await autoEnrollAllUsersInCourse(ctx, courseId)
-    return { created }
+    const result = await autoEnrollAllUsersInCourse(ctx, courseId)
+    return result
   },
 })
 
@@ -564,8 +564,84 @@ export const backfillEnrollmentsForCourse = internalMutation({
 //
 // Segmento permite filtrar por funcao ativa (alunos, criadores, instituicoes)
 // ou enviar para todos. Sem segmento, envia para todos os usuarios cadastrados.
-//
-// Internal mutation: usado pela CLI e pelo wrapper publico abaixo.
+
+type BroadcastSegment = 'all' | 'aluno' | 'criador' | 'instituicao' | 'sem_funcao'
+
+// Logica compartilhada entre internal CLI e UI. Cap em 5000 usuarios por
+// chamada (volume atual cabe folgado). Quando ultrapassar, migrar para cursor
+// paginado via scheduler (mesmo padrao de posts.dispatchFollowerNotifications).
+async function processBroadcast(
+  ctx: MutationCtx,
+  args: {
+    title: string
+    body?: string
+    link?: string
+    dedupeKey: string
+    segment: BroadcastSegment
+  },
+): Promise<{ totalUsers: number; eligible: number; inserted: number; skipped: number }> {
+  // Cap defensivo: hoje base e pequena; quando passar, paginar via scheduler.
+  const allUsers = await ctx.db.query('users').take(5000)
+  const seg = args.segment
+
+  let recipients = allUsers
+  if (seg !== 'all') {
+    const allFunctions = await ctx.db.query('userFunctions').collect()
+    const fnByUser = new Map<string, Set<string>>()
+    for (const f of allFunctions) {
+      const set = fnByUser.get(f.userId) ?? new Set<string>()
+      set.add(f.function)
+      fnByUser.set(f.userId, set)
+    }
+
+    if (seg === 'sem_funcao') {
+      recipients = allUsers.filter((u) => {
+        const fns = fnByUser.get(u.clerkId)
+        return !fns || fns.size === 0
+      })
+    } else {
+      recipients = allUsers.filter((u) => fnByUser.get(u.clerkId)?.has(seg))
+    }
+  }
+
+  const baseLink = args.link ?? 'internal://broadcast'
+  const finalLink = `${baseLink}${baseLink.includes('?') ? '&' : '?'}bk=${args.dedupeKey}`
+
+  let inserted = 0
+  let skipped = 0
+  const now = Date.now()
+
+  for (const u of recipients) {
+    const existing = await ctx.db
+      .query('notifications')
+      .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
+      .filter((q) => q.eq(q.field('link'), finalLink))
+      .first()
+    if (existing) {
+      skipped += 1
+      continue
+    }
+
+    await ctx.db.insert('notifications', {
+      userId: u.clerkId,
+      kind: 'generic',
+      title: args.title,
+      body: args.body,
+      link: args.link ? finalLink : undefined,
+      createdAt: now,
+    })
+    inserted += 1
+  }
+
+  return {
+    totalUsers: allUsers.length,
+    eligible: recipients.length,
+    inserted,
+    skipped,
+  }
+}
+
+// Internal mutation: usado pela CLI (`npx convex run admin:broadcastNotification ...`).
 export const broadcastNotification = internalMutation({
   args: {
     title: v.string(),
@@ -583,68 +659,13 @@ export const broadcastNotification = internalMutation({
     ),
   },
   handler: async (ctx, { title, body, link, dedupeKey, segment }) => {
-    const allUsers = await ctx.db.query('users').collect()
-    const seg = segment ?? 'all'
-
-    let recipients = allUsers
-    if (seg !== 'all') {
-      const allFunctions = await ctx.db.query('userFunctions').collect()
-      const fnByUser = new Map<string, Set<string>>()
-      for (const f of allFunctions) {
-        const set = fnByUser.get(f.userId) ?? new Set<string>()
-        set.add(f.function)
-        fnByUser.set(f.userId, set)
-      }
-
-      if (seg === 'sem_funcao') {
-        recipients = allUsers.filter((u) => {
-          const fns = fnByUser.get(u.clerkId)
-          return !fns || fns.size === 0
-        })
-      } else {
-        recipients = allUsers.filter((u) => fnByUser.get(u.clerkId)?.has(seg))
-      }
-    }
-
-    // Marca todas as notificacoes com link interno deduplicavel. Mesmo quando o
-    // admin nao passa link, geramos um sentinela `internal://broadcast?bk=...`
-    // exclusivamente para podermos detectar duplicidade. O front trata link
-    // ausente/sentinela como sem destino (nao navega).
-    const baseLink = link ?? 'internal://broadcast'
-    const finalLink = `${baseLink}${baseLink.includes('?') ? '&' : '?'}bk=${dedupeKey}`
-
-    let inserted = 0
-    let skipped = 0
-    const now = Date.now()
-
-    for (const u of recipients) {
-      const existing = await ctx.db
-        .query('notifications')
-        .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
-        .filter((q) => q.eq(q.field('link'), finalLink))
-        .first()
-      if (existing) {
-        skipped += 1
-        continue
-      }
-
-      await ctx.db.insert('notifications', {
-        userId: u.clerkId,
-        kind: 'generic',
-        title,
-        body,
-        link: link ? finalLink : undefined,
-        createdAt: now,
-      })
-      inserted += 1
-    }
-
-    return {
-      totalUsers: allUsers.length,
-      eligible: recipients.length,
-      inserted,
-      skipped,
-    }
+    return await processBroadcast(ctx, {
+      title,
+      body,
+      link,
+      dedupeKey,
+      segment: segment ?? 'all',
+    })
   },
 })
 
@@ -688,8 +709,11 @@ export const sendBroadcastNotification = mutation({
         try {
           parsed = new URL(link)
         } catch (err) {
+          // ESLint preserve-caught-error: encadeia err pra debug sem perder stack.
+          const wrapped = new Error('URL inválida.')
+          ;(wrapped as Error & { cause?: unknown }).cause = err
           console.error('[admin.broadcast] URL inválida', link, err)
-          throw new Error('URL inválida.')
+          throw wrapped
         }
         if (!ALLOWED_HOSTS.has(parsed.hostname)) {
           throw new Error(`Link externo bloqueado. Hosts permitidos: ${[...ALLOWED_HOSTS].join(', ')}.`)
@@ -701,64 +725,13 @@ export const sendBroadcastNotification = mutation({
     const dedupeKey = args.dedupeKey.trim()
     if (dedupeKey.length === 0) throw new Error('Chave de deduplicação obrigatória.')
 
-    const allUsers = await ctx.db.query('users').collect()
-    const seg = args.segment
-
-    let recipients = allUsers
-    if (seg !== 'all') {
-      const allFunctions = await ctx.db.query('userFunctions').collect()
-      const fnByUser = new Map<string, Set<string>>()
-      for (const f of allFunctions) {
-        const set = fnByUser.get(f.userId) ?? new Set<string>()
-        set.add(f.function)
-        fnByUser.set(f.userId, set)
-      }
-
-      if (seg === 'sem_funcao') {
-        recipients = allUsers.filter((u) => {
-          const fns = fnByUser.get(u.clerkId)
-          return !fns || fns.size === 0
-        })
-      } else {
-        recipients = allUsers.filter((u) => fnByUser.get(u.clerkId)?.has(seg))
-      }
-    }
-
-    const baseLink = link ?? 'internal://broadcast'
-    const finalLink = `${baseLink}${baseLink.includes('?') ? '&' : '?'}bk=${dedupeKey}`
-
-    let inserted = 0
-    let skipped = 0
-    const now = Date.now()
-
-    for (const u of recipients) {
-      const existing = await ctx.db
-        .query('notifications')
-        .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
-        .filter((q) => q.eq(q.field('link'), finalLink))
-        .first()
-      if (existing) {
-        skipped += 1
-        continue
-      }
-
-      await ctx.db.insert('notifications', {
-        userId: u.clerkId,
-        kind: 'generic',
-        title,
-        body,
-        link: link ? finalLink : undefined,
-        createdAt: now,
-      })
-      inserted += 1
-    }
-
-    return {
-      totalUsers: allUsers.length,
-      eligible: recipients.length,
-      inserted,
-      skipped,
-    }
+    return await processBroadcast(ctx, {
+      title,
+      body,
+      link,
+      dedupeKey,
+      segment: args.segment,
+    })
   },
 })
 
@@ -1258,40 +1231,51 @@ export const listAllCourses = query({
   handler: async (ctx) => {
     await requireAdmin(ctx)
 
-    const courses = await ctx.db.query('courses').order('desc').collect()
+    // Cap em 500 cursos. Painel admin com volume maior precisa paginacao.
+    const courses = await ctx.db.query('courses').order('desc').take(500)
     const allInstitutions = await ctx.db.query('institutions').collect()
     const institutionById = new Map(allInstitutions.map((i) => [i._id, i]))
 
-    return await Promise.all(
-      courses.map(async (c) => {
-        const creator = await ctx.db
+    // Dedup creators: vários cursos compartilham creatorId, evita N lookups.
+    const uniqueCreatorIds = Array.from(new Set(courses.map((c) => c.creatorId)))
+    const creatorList = await Promise.all(
+      uniqueCreatorIds.map((cid) =>
+        ctx.db
           .query('users')
-          .withIndex('by_clerkId', (q) => q.eq('clerkId', c.creatorId))
-          .unique()
-        const institution = c.institutionId ? institutionById.get(c.institutionId) : undefined
-        return {
-          _id: c._id,
-          title: c.title,
-          slug: c.slug ?? null,
-          category: c.category,
-          level: c.level,
-          isPublished: c.isPublished,
-          totalLessons: c.totalLessons,
-          totalStudents: c.totalStudents,
-          createdAt: c._creationTime,
-          passingScore: c.passingScore ?? 70,
-          releaseStatus: c.releaseStatus ?? 'complete',
-          visibility: c.visibility ?? 'public',
-          institutionId: c.institutionId ?? null,
-          institutionName: institution?.name ?? null,
-          creatorId: c.creatorId,
-          creatorName: creator?.name ?? 'Professor',
-          creatorHandle: creator?.handle ?? null,
-          avgRating: c.avgRating ?? null,
-          ratingsCount: c.ratingsCount ?? 0,
-        }
-      }),
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', cid))
+          .unique(),
+      ),
     )
+    const creatorByClerkId = new Map<string, { name: string | null; handle: string | null }>()
+    creatorList.forEach((u, i) => {
+      if (u) creatorByClerkId.set(uniqueCreatorIds[i], { name: u.name ?? null, handle: u.handle ?? null })
+    })
+
+    return courses.map((c) => {
+      const creator = creatorByClerkId.get(c.creatorId)
+      const institution = c.institutionId ? institutionById.get(c.institutionId) : undefined
+      return {
+        _id: c._id,
+        title: c.title,
+        slug: c.slug ?? null,
+        category: c.category,
+        level: c.level,
+        isPublished: c.isPublished,
+        totalLessons: c.totalLessons,
+        totalStudents: c.totalStudents,
+        createdAt: c._creationTime,
+        passingScore: c.passingScore ?? 70,
+        releaseStatus: c.releaseStatus ?? 'complete',
+        visibility: c.visibility ?? 'public',
+        institutionId: c.institutionId ?? null,
+        institutionName: institution?.name ?? null,
+        creatorId: c.creatorId,
+        creatorName: creator?.name ?? 'Professor',
+        creatorHandle: creator?.handle ?? null,
+        avgRating: c.avgRating ?? null,
+        ratingsCount: c.ratingsCount ?? 0,
+      }
+    })
   },
 })
 

@@ -189,12 +189,13 @@ export const getMine = query({
       }),
     )
 
+    // Nao expor creatorEmail: comprador nao precisa do email pessoal do criador.
+    // Suporte é via /contato. Antes vazava email a qualquer comprador.
     return {
       ...order,
       items: products,
       creatorName: creator?.name ?? 'Criador',
       creatorHandle: creator?.handle ?? null,
-      creatorEmail: creator?.email ?? null,
     }
   },
 })

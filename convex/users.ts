@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { internalMutation, mutation, query } from './_generated/server'
 import { ensureIdentityMatches, requireIdentity } from './lib/auth'
+import { checkRateLimit } from './lib/rateLimit'
 import {
   OFFICIAL_HANDLE,
   autoEnrollUserInOfficialCourses,
@@ -116,6 +117,13 @@ export const updateProfile = mutation({
   handler: async (ctx, { clerkId, ...fields }) => {
     const identity = await requireIdentity(ctx)
     ensureIdentityMatches(identity.subject, clerkId)
+
+    // Max 30 atualizacoes de perfil por minuto: bloqueia bot que tenta inflar
+    // viewCount/searchIndex flippando bio em loop.
+    await checkRateLimit(ctx, identity.subject, 'user.updateProfile', {
+      max: 30,
+      windowMs: 60_000,
+    })
 
     const user = await ctx.db
       .query('users')

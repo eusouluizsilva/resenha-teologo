@@ -223,10 +223,12 @@ export const getArticleTrio = query({
 export const getCourseTrio = query({
   args: {},
   handler: async (ctx): Promise<CourseCard[]> => {
+    // Cap em 200 (mesmo padrão do trio de artigos). Suficiente pra escolher
+    // top/recent/resenha sem trazer toda a tabela quando o catálogo crescer.
     const allPublished = await ctx.db
       .query('courses')
       .withIndex('by_published', (q) => q.eq('isPublished', true))
-      .collect()
+      .take(200)
     const visible = allPublished.filter((c) => c.visibility !== 'institution')
     if (visible.length === 0) return []
 
