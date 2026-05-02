@@ -1,0 +1,87 @@
+name: Backup Convex (weekly snapshot to R2)
+
+# Roda toda quarta as 06:00 UTC (03:00 horario de Brasilia).
+# Free do Convex nao tem PITR, entao dependemos deste backup pra reconstruir
+# o estado em caso de drop acidental de tabela ou perda total.
+#
+# Lifecycle de 90 dias eh aplicado no proprio job (idempotente).
+on:
+  schedule:
+    - cron: '0 6 * * 3'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --prefer-offline
+
+      - name: Export Convex production snapshot
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: |
+          mkdir -p backup
+          STAMP=$(date -u +'%Y-%m-%d')
+          OUT="backup/convex-export-${STAMP}.zip"
+          npx convex export --path "$OUT" --include-file-storage
+          echo "BACKUP_FILE=$OUT" >> "$GITHUB_ENV"
+          echo "BACKUP_KEY=backups/convex/${STAMP}/convex-export-${STAMP}.zip" >> "$GITHUB_ENV"
+          ls -lh "$OUT"
+
+      - name: Configure AWS CLI for Cloudflare R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id "$R2_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
+          aws configure set region auto
+          aws configure set default.s3.signature_version s3v4
+
+      - name: Upload backup to R2
+        env:
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+        run: |
+          aws s3 cp "$BACKUP_FILE" "s3://$R2_BUCKET/$BACKUP_KEY" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --no-progress
+
+      - name: Apply 90-day lifecycle on backups/ prefix (idempotente)
+        env:
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+        run: |
+          cat > /tmp/lifecycle.json <<'JSON'
+          {
+            "Rules": [
+              {
+                "ID": "convex-backup-90d",
+                "Status": "Enabled",
+                "Filter": { "Prefix": "backups/convex/" },
+                "Expiration": { "Days": 90 },
+                "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+              }
+            ]
+          }
+          JSON
+          aws s3api put-bucket-lifecycle-configuration \
+            --bucket "$R2_BUCKET" \
+            --lifecycle-configuration file:///tmp/lifecycle.json \
+            --endpoint-url "$R2_ENDPOINT"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Backup do Convex falhou. Snapshot da semana NAO esta no R2."
+          echo "::error::Rodar manualmente: gh workflow run 'Backup Convex (weekly snapshot to R2)'"
+          echo "::error::Conferir secrets: CONVEX_DEPLOY_KEY, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY"
+          echo "::error::Conferir vars: R2_ENDPOINT, R2_BUCKET"
