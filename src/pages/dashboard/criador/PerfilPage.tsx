@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { useClerk } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
@@ -47,6 +47,12 @@ const CHURCH_ROLES = [
   { value: 'professor', label: 'Professor de Teologia' },
   { value: 'outro', label: 'Outro' },
 ]
+
+const FUNCTION_LABELS: Record<string, string> = {
+  aluno: 'Aluno',
+  criador: 'Professor',
+  instituicao: 'Instituição',
+}
 
 const PHONE_COUNTRIES = [
   { code: '+55', label: '+55 Brasil' },
@@ -486,28 +492,32 @@ export function PerfilPage() {
   }, [currentUser, clerkUser])
 
   // Handlers
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-    setSaved(false)
-    setFormError('')
-  }
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value } = e.target
+      setForm((prev) => ({ ...prev, [name]: value }))
+      setSaved(false)
+      setFormError('')
+    },
+    [],
+  )
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !clerkUser) return
-    setUploadingAvatar(true)
-    setAvatarError('')
-    try {
-      await clerkUser.setProfileImage({ file })
-    } catch {
-      setAvatarError('Não foi possível atualizar a foto de perfil.')
-    } finally {
-      setUploadingAvatar(false)
-    }
-  }
+  const handleAvatarChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file || !clerkUser) return
+      setUploadingAvatar(true)
+      setAvatarError('')
+      try {
+        await clerkUser.setProfileImage({ file })
+      } catch {
+        setAvatarError('Não foi possível atualizar a foto de perfil.')
+      } finally {
+        setUploadingAvatar(false)
+      }
+    },
+    [clerkUser],
+  )
 
   async function handleSubmitForm(e: React.FormEvent) {
     e.preventDefault()
@@ -564,21 +574,24 @@ export function PerfilPage() {
     }
   }
 
-  async function handleClaimHandle(e: React.FormEvent) {
-    e.preventDefault()
-    setHandleSaving(true)
-    setHandleError('')
-    try {
-      await claimHandle({ handle: handleInput })
-      setHandleInput('')
-    } catch (err) {
-      setHandleError(err instanceof Error ? err.message : 'Erro ao salvar handle.')
-    } finally {
-      setHandleSaving(false)
-    }
-  }
+  const handleClaimHandle = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      setHandleSaving(true)
+      setHandleError('')
+      try {
+        await claimHandle({ handle: handleInput })
+        setHandleInput('')
+      } catch (err) {
+        setHandleError(err instanceof Error ? err.message : 'Erro ao salvar handle.')
+      } finally {
+        setHandleSaving(false)
+      }
+    },
+    [claimHandle, handleInput],
+  )
 
-  async function handleSaveVisibility() {
+  const handleSaveVisibility = useCallback(async () => {
     setVisibilitySaving(true)
     try {
       await updateVisibility({ visibility, showProgressPublicly: showProgress })
@@ -589,17 +602,26 @@ export function PerfilPage() {
     } finally {
       setVisibilitySaving(false)
     }
-  }
+  }, [updateVisibility, visibility, showProgress])
 
-  async function handleApprove(id: Id<'testimonials'>) {
-    try { await approveTestimonial({ testimonialId: id }) } catch { /* noop */ }
-  }
-  async function handleReject(id: Id<'testimonials'>) {
-    try { await rejectTestimonial({ testimonialId: id }) } catch { /* noop */ }
-  }
-  async function handleRemove(id: Id<'testimonials'>) {
-    try { await removeTestimonial({ testimonialId: id }) } catch { /* noop */ }
-  }
+  const handleApprove = useCallback(
+    async (id: Id<'testimonials'>) => {
+      try { await approveTestimonial({ testimonialId: id }) } catch { /* noop */ }
+    },
+    [approveTestimonial],
+  )
+  const handleReject = useCallback(
+    async (id: Id<'testimonials'>) => {
+      try { await rejectTestimonial({ testimonialId: id }) } catch { /* noop */ }
+    },
+    [rejectTestimonial],
+  )
+  const handleRemove = useCallback(
+    async (id: Id<'testimonials'>) => {
+      try { await removeTestimonial({ testimonialId: id }) } catch { /* noop */ }
+    },
+    [removeTestimonial],
+  )
 
   async function handleExportData() {
     if (!exportData) return
@@ -638,44 +660,45 @@ export function PerfilPage() {
     }
   }
 
-  // Computed
-  if (isLoading || !clerkUser) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
-      </div>
-    )
-  }
-
+  // Hooks de computação (devem rodar antes de qualquer early return)
   const handle = currentUser?.handle
   const handleInputTrimmed = handleInput.trim()
-  const handleStatus = (() => {
+  const handleStatus = useMemo(() => {
     if (handleInputTrimmed.length < 3) return null
     if (isAvailable === undefined) return 'checking'
     if (isAvailable) return 'available'
     return 'taken'
-  })()
+  }, [handleInputTrimmed, isAvailable])
 
-  const displayName =
-    clerkUser.fullName?.trim() ||
-    clerkUser.primaryEmailAddress?.emailAddress ||
-    clerkUser.emailAddresses[0]?.emailAddress ||
-    'Usuário'
+  const displayName = useMemo(
+    () =>
+      clerkUser?.fullName?.trim() ||
+      clerkUser?.primaryEmailAddress?.emailAddress ||
+      clerkUser?.emailAddresses[0]?.emailAddress ||
+      'Usuário',
+    [clerkUser?.fullName, clerkUser?.primaryEmailAddress?.emailAddress, clerkUser?.emailAddresses],
+  )
 
-  const initials =
-    ((clerkUser.firstName?.[0] ?? '') + (clerkUser.lastName?.[0] ?? '')) ||
-    displayName.slice(0, 2).toUpperCase()
+  const initials = useMemo(
+    () =>
+      ((clerkUser?.firstName?.[0] ?? '') + (clerkUser?.lastName?.[0] ?? '')) ||
+      displayName.slice(0, 2).toUpperCase(),
+    [clerkUser?.firstName, clerkUser?.lastName, displayName],
+  )
 
-  const email =
-    clerkUser.primaryEmailAddress?.emailAddress ||
-    clerkUser.emailAddresses[0]?.emailAddress ||
-    ''
+  const email = useMemo(
+    () =>
+      clerkUser?.primaryEmailAddress?.emailAddress ||
+      clerkUser?.emailAddresses[0]?.emailAddress ||
+      '',
+    [clerkUser?.primaryEmailAddress?.emailAddress, clerkUser?.emailAddresses],
+  )
 
   const isInstitution = hasFunction('instituicao')
   const isCriador = hasFunction('criador')
   const isAluno = hasFunction('aluno')
 
-  const addressProfile = (() => {
+  const addressProfile = useMemo(() => {
     switch (form.phoneCountry) {
       case '+55': return {
         address:     { label: 'Logradouro',        placeholder: 'Rua, Avenida, Travessa...' },
@@ -806,25 +829,30 @@ export function PerfilPage() {
         state:       { label: 'State / Region',     placeholder: 'Region' },
       }
     }
-  })()
+  }, [form.phoneCountry])
 
-  const hasStats = myStats && myStats.totalCoursesEnrolled > 0
+  const hasStats = !!myStats && myStats.totalCoursesEnrolled > 0
 
-  const FUNCTION_LABELS: Record<string, string> = {
-    aluno: 'Aluno',
-    criador: 'Professor',
-    instituicao: 'Instituição',
+  const visibleTabs = useMemo(() => {
+    const allTabs: { id: TabId; label: string; show: boolean }[] = [
+      { id: 'visao-geral', label: 'Visão geral', show: true },
+      { id: 'dados-pessoais', label: 'Dados pessoais', show: true },
+      { id: 'perfil-publico', label: 'Perfil público', show: true },
+      { id: 'conquistas', label: 'Conquistas', show: isAluno || hasStats },
+      { id: 'depoimentos', label: 'Depoimentos', show: !!handle },
+      { id: 'privacidade', label: 'Privacidade', show: true },
+    ]
+    return allTabs.filter((t) => t.show) as { id: TabId; label: string }[]
+  }, [isAluno, hasStats, handle])
+
+  // Loading guard: tem que vir DEPOIS de todos os hooks (Rules of Hooks)
+  if (isLoading || !clerkUser) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
+      </div>
+    )
   }
-
-  const allTabs: { id: TabId; label: string; show: boolean }[] = [
-    { id: 'visao-geral', label: 'Visão geral', show: true },
-    { id: 'dados-pessoais', label: 'Dados pessoais', show: true },
-    { id: 'perfil-publico', label: 'Perfil público', show: true },
-    { id: 'conquistas', label: 'Conquistas', show: isAluno || !!hasStats },
-    { id: 'depoimentos', label: 'Depoimentos', show: !!handle },
-    { id: 'privacidade', label: 'Privacidade', show: true },
-  ]
-  const visibleTabs = allTabs.filter((t) => t.show) as { id: TabId; label: string }[]
 
   // Se a aba ativa foi removida, voltar para visão geral
   const activeTabVisible = visibleTabs.some((t) => t.id === activeTab)
@@ -839,7 +867,7 @@ export function PerfilPage() {
       actions={
         <div className="flex items-center gap-3">
           {saved && effectiveTab === 'dados-pessoais' && (
-            <DashboardStatusPill tone="success">Alterações salvas</DashboardStatusPill>
+            <DashboardStatusPill tone="success" liveRegion>Alterações salvas</DashboardStatusPill>
           )}
           {handle && (
             <a
@@ -934,7 +962,7 @@ export function PerfilPage() {
                 )}
               </div>
             </div>
-            {avatarError && <p className="mt-3 text-xs text-red-300">{avatarError}</p>}
+            {avatarError && <p role="alert" className="mt-3 text-xs text-red-300">{avatarError}</p>}
           </div>
 
           {/* Visibilidade do perfil publico, sempre visivel. O toggle salva
@@ -1201,7 +1229,7 @@ export function PerfilPage() {
                     {handleStatus === 'taken' && (
                       <p className="text-xs text-red-400">Nome de usuário indisponível</p>
                     )}
-                    {handleError && <p className="text-xs text-red-400">{handleError}</p>}
+                    {handleError && <p role="alert" className="text-xs text-red-400">{handleError}</p>}
                     {!handleInput && handle && (
                       <p className="text-xs text-white/36">Atual: @{handle}</p>
                     )}
@@ -1376,7 +1404,7 @@ export function PerfilPage() {
           </div>
 
           {formError && (
-            <div className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
+            <div role="alert" className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
               {formError}
             </div>
           )}
@@ -1444,7 +1472,7 @@ export function PerfilPage() {
                   {handleStatus === 'available' && <p className="mt-1.5 text-xs text-emerald-300">Disponível</p>}
                   {handleStatus === 'taken' && <p className="mt-1.5 text-xs text-red-300">Indisponível ou inválido</p>}
                   {handleStatus === 'checking' && <p className="mt-1.5 text-xs text-white/36">Verificando...</p>}
-                  {handleError && <p className="mt-1.5 text-xs text-red-300">{handleError}</p>}
+                  {handleError && <p role="alert" className="mt-1.5 text-xs text-red-300">{handleError}</p>}
                 </form>
               </div>
             ) : (
@@ -1466,7 +1494,7 @@ export function PerfilPage() {
                 {handleStatus === 'available' && <p className="text-xs text-emerald-300">Disponível</p>}
                 {handleStatus === 'taken' && <p className="text-xs text-red-300">Indisponível ou inválido</p>}
                 {handleStatus === 'checking' && <p className="text-xs text-white/36">Verificando...</p>}
-                {handleError && <p className="text-xs text-red-300">{handleError}</p>}
+                {handleError && <p role="alert" className="text-xs text-red-300">{handleError}</p>}
                 <button
                   type="submit"
                   disabled={handleSaving || handleStatus !== 'available'}
@@ -1718,7 +1746,7 @@ export function PerfilPage() {
               />
             </div>
             {deleteError && (
-              <p className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+              <p role="alert" className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
                 {deleteError}
               </p>
             )}
@@ -1875,12 +1903,12 @@ function CreatorPixSection() {
       )}
 
       {error && (
-        <p className="rounded-[0.9rem] border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
+        <p role="alert" className="rounded-[0.9rem] border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
           {error}
         </p>
       )}
       {success && (
-        <p className="rounded-[0.9rem] border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
+        <p role="status" aria-live="polite" className="rounded-[0.9rem] border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
           {success}
         </p>
       )}

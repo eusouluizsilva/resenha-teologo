@@ -309,9 +309,9 @@ export function BrandingPage() {
               Voltar ao painel
             </Link>
             {savedAt && !error && (
-              <span className="text-xs font-medium text-emerald-300">Branding salvo.</span>
+              <span role="status" aria-live="polite" className="text-xs font-medium text-emerald-300">Branding salvo.</span>
             )}
-            {error && <span className="text-xs font-medium text-red-300">{error}</span>}
+            {error && <span role="alert" className="text-xs font-medium text-red-300">{error}</span>}
           </div>
         </div>
 

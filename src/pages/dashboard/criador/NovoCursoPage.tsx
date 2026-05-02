@@ -223,7 +223,7 @@ export function NovoCursoPage() {
         </motion.div>
 
         {error && (
-          <motion.div variants={fadeUp} className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
+          <motion.div variants={fadeUp} role="alert" className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
             {error}
           </motion.div>
         )}

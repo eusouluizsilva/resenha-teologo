@@ -287,7 +287,7 @@ export function BibliaReader({ backHref, backLabel = 'Voltar' }: BibliaReaderPro
       <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         {loading && <p className="text-sm text-[#6B7280]">Carregando capítulo...</p>}
         {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
             {error}
           </div>
         )}

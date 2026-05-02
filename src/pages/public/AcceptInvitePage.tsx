@@ -53,7 +53,7 @@ export function AcceptInvitePage() {
         )}
 
         {!isLoading && invite === null && (
-          <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm leading-7 text-red-200">
+          <div role="alert" className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-sm leading-7 text-red-200">
             Convite inválido, expirado ou já utilizado. Peça ao responsável pela instituição que envie um novo.
           </div>
         )}
@@ -101,7 +101,7 @@ export function AcceptInvitePage() {
                 {accepting ? 'Aceitando...' : 'Aceitar convite e entrar na instituição'}
               </button>
               {error && (
-                <p className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+                <p role="alert" className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
                   {error}
                 </p>
               )}

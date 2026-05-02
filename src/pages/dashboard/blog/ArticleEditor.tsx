@@ -268,6 +268,7 @@ export function ArticleEditor({ mode }: ArticleEditorProps) {
       {error && (
         <motion.div
           variants={fadeUp}
+          role="alert"
           className="rounded-2xl border border-red-400/24 bg-red-400/8 px-4 py-3 text-sm text-red-200"
         >
           {error}

@@ -556,7 +556,7 @@ export function CadernoPage() {
       maxWidthClass="max-w-6xl"
     >
       {error && (
-        <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">
+        <div role="alert" className="mb-4 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">
           {error}
         </div>
       )}

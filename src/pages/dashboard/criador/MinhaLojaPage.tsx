@@ -205,7 +205,7 @@ function NewProductModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {error && (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/8 p-3 text-sm text-red-300">
+          <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-500/8 p-3 text-sm text-red-300">
             {error}
           </div>
         )}

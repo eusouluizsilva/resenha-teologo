@@ -82,9 +82,20 @@ export function DashboardSectionLabel({ children }: { children: ReactNode }) {
 export function DashboardStatusPill({
   tone = 'neutral',
   children,
+  liveRegion,
 }: {
   tone?: 'success' | 'accent' | 'neutral' | 'info'
   children: ReactNode
+  // Quando true, anuncia para leitores de tela (use só em feedback transitório
+  // de mutação, NÃO em badges estáticos como "Publicado"/"Rascunho").
+  liveRegion?: boolean
 }) {
+  if (liveRegion) {
+    return (
+      <span role="status" aria-live="polite" className={brandStatusPillClass(tone)}>
+        {children}
+      </span>
+    )
+  }
   return <span className={brandStatusPillClass(tone)}>{children}</span>
 }

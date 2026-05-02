@@ -333,7 +333,7 @@ export function EditarTrilhaPage() {
             </div>
           </div>
           {error && (
-            <p className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+            <p role="alert" className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
               {error}
             </p>
           )}

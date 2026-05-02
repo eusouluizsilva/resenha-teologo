@@ -41,7 +41,7 @@ export function VerifyStep({ email, onVerify, onResend, loading, error }: Props)
       />
 
       {error && (
-        <p className="text-red-400 text-sm mb-4">{error}</p>
+        <p role="alert" className="text-red-400 text-sm mb-4">{error}</p>
       )}
 
       <button

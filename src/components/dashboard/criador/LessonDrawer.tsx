@@ -435,7 +435,7 @@ export function LessonDrawer({ open, onClose, moduleId, courseId, creatorId, les
             </div>
 
             {error && (
-              <div className="mx-6 mt-4 rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
+              <div role="alert" className="mx-6 mt-4 rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
                 {error}
               </div>
             )}

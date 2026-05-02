@@ -343,7 +343,7 @@ export function PlanosPage() {
       maxWidthClass="max-w-6xl"
     >
       {error && (
-        <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm leading-6 text-red-200">
+        <div role="alert" className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm leading-6 text-red-200">
           {error}
         </div>
       )}

@@ -1163,6 +1163,8 @@ export function EditarAulaPage() {
         {banner && (
           <motion.div
             variants={fadeUp}
+            role={banner.type === 'error' ? 'alert' : 'status'}
+            aria-live={banner.type === 'error' ? 'assertive' : 'polite'}
             className={cn(
               'rounded-[1.3rem] border px-4 py-4 text-sm',
               banner.type === 'error'

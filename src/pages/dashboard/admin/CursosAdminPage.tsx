@@ -269,7 +269,7 @@ function CourseRow({
       </div>
 
       {error && (
-        <p className="rounded-xl border border-rose-400/30 bg-rose-400/[0.06] p-2 text-[11px] text-rose-200">
+        <p role="alert" className="rounded-xl border border-rose-400/30 bg-rose-400/[0.06] p-2 text-[11px] text-rose-200">
           {error}
         </p>
       )}
