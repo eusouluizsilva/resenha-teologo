@@ -281,3 +281,159 @@ export function planFromPriceId(priceId: string): PlanKind | null {
   }
   return null
 }
+
+// === Certificado pago R$ 29,90 (one-time payment) =========================
+
+type CertificateCheckoutResult = { sessionId: string; url: string }
+
+// Action: cria Stripe Checkout Session one-time pra emissão de certificado.
+// Pré-requisito: aluno concluiu o curso (enrollment.certificateIssued=true).
+// Idempotência: se já existir order paid pra (userId, courseId), retorna erro
+// pra forçar o frontend a baixar em vez de pagar de novo. Reaproveita
+// stripeCustomerId quando o aluno já tem assinatura.
+export const createCertificateCheckout = action({
+  args: {
+    courseId: v.id('courses'),
+    successUrl: v.string(),
+    cancelUrl: v.string(),
+  },
+  handler: async (
+    ctx,
+    { courseId, successUrl, cancelUrl },
+  ): Promise<CertificateCheckoutResult> => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Não autenticado')
+
+    const priceId = process.env.STRIPE_CERTIFICATE_PRICE_ID
+    if (!priceId) throw new Error('STRIPE_CERTIFICATE_PRICE_ID não configurado')
+
+    const ctxData = await ctx.runQuery(internal.stripe.getCertificateCheckoutContext, {
+      userId: identity.subject,
+      courseId,
+    })
+    if (!ctxData) {
+      throw new Error('Contexto do certificado indisponível')
+    }
+    if (!ctxData.eligible) {
+      throw new Error('Conclua o curso com média mínima de 70% antes de emitir o certificado')
+    }
+    if (ctxData.alreadyPaid) {
+      throw new Error('Você já adquiriu este certificado. Acesse a página de certificados para baixar.')
+    }
+
+    let customerId: string | undefined = ctxData.stripeCustomerId
+    if (!customerId) {
+      const customer = await stripeRequest<{ id: string }>('/customers', {
+        email: identity.email ?? undefined,
+        name: identity.name ?? undefined,
+        'metadata[clerkUserId]': identity.subject,
+      })
+      customerId = customer.id
+    }
+
+    const session = await stripeRequest<{ id: string; url: string }>(
+      '/checkout/sessions',
+      {
+        mode: 'payment',
+        customer: customerId,
+        'line_items[0][price]': priceId,
+        'line_items[0][quantity]': 1,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        'metadata[kind]': 'certificate',
+        'metadata[clerkUserId]': identity.subject,
+        'metadata[courseId]': courseId,
+        'metadata[enrollmentId]': ctxData.enrollmentId,
+        'payment_intent_data[metadata][kind]': 'certificate',
+        'payment_intent_data[metadata][clerkUserId]': identity.subject,
+        'payment_intent_data[metadata][courseId]': courseId,
+        'payment_intent_data[metadata][enrollmentId]': ctxData.enrollmentId,
+        'payment_intent_data[statement_descriptor_suffix]': 'CERT',
+        allow_promotion_codes: true,
+      },
+    )
+
+    await ctx.runMutation(internal.stripe.recordCertificateOrderPending, {
+      userId: identity.subject,
+      courseId,
+      enrollmentId: ctxData.enrollmentId,
+      stripeSessionId: session.id,
+      stripeCustomerId: customerId,
+      amount: 2990,
+      currency: 'brl',
+    })
+
+    return { sessionId: session.id, url: session.url }
+  },
+})
+
+// Helper interno: traz o que a action precisa pra montar o checkout sem fazer
+// múltiplos round-trips. Não expõe PII além do que a própria sessão já tem.
+export const getCertificateCheckoutContext = internalQuery({
+  args: { userId: v.string(), courseId: v.id('courses') },
+  handler: async (ctx, { userId, courseId }) => {
+    const enrollment = await ctx.db
+      .query('enrollments')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', userId).eq('courseId', courseId),
+      )
+      .unique()
+    if (!enrollment) return null
+
+    const eligible = enrollment.certificateIssued === true
+
+    const existingPaid = await ctx.db
+      .query('certificateOrders')
+      .withIndex('by_user_course', (q) =>
+        q.eq('userId', userId).eq('courseId', courseId),
+      )
+      .filter((q) => q.eq(q.field('status'), 'paid'))
+      .first()
+
+    const sub = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_userId', (q) => q.eq('userId', userId))
+      .first()
+
+    return {
+      enrollmentId: enrollment._id,
+      eligible,
+      alreadyPaid: !!existingPaid,
+      stripeCustomerId: sub?.stripeCustomerId,
+    }
+  },
+})
+
+// Mutation interna: cria a linha pending. Idempotente por stripeSessionId.
+export const recordCertificateOrderPending = internalMutation({
+  args: {
+    userId: v.string(),
+    courseId: v.id('courses'),
+    enrollmentId: v.id('enrollments'),
+    stripeSessionId: v.string(),
+    stripeCustomerId: v.optional(v.string()),
+    amount: v.number(),
+    currency: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('certificateOrders')
+      .withIndex('by_session_id', (q) => q.eq('stripeSessionId', args.stripeSessionId))
+      .unique()
+    if (existing) return existing._id
+
+    const now = Date.now()
+    return await ctx.db.insert('certificateOrders', {
+      userId: args.userId,
+      courseId: args.courseId,
+      enrollmentId: args.enrollmentId,
+      status: 'pending',
+      stripeSessionId: args.stripeSessionId,
+      stripeCustomerId: args.stripeCustomerId,
+      amount: args.amount,
+      currency: args.currency,
+      createdAt: now,
+      updatedAt: now,
+    })
+  },
+})

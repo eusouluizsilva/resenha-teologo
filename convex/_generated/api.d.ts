@@ -15,6 +15,7 @@ import type * as autoEnroll from "../autoEnroll.js";
 import type * as bible from "../bible.js";
 import type * as catalog from "../catalog.js";
 import type * as certificates from "../certificates.js";
+import type * as certificatesPdf from "../certificatesPdf.js";
 import type * as consents from "../consents.js";
 import type * as courseAnalytics from "../courseAnalytics.js";
 import type * as courseCoauthors from "../courseCoauthors.js";
@@ -94,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   bible: typeof bible;
   catalog: typeof catalog;
   certificates: typeof certificates;
+  certificatesPdf: typeof certificatesPdf;
   consents: typeof consents;
   courseAnalytics: typeof courseAnalytics;
   courseCoauthors: typeof courseCoauthors;

@@ -219,9 +219,63 @@ http.route({
     try {
       switch (event.type) {
         case 'checkout.session.completed': {
-          // checkout.session.completed dispara antes do customer.subscription.created
-          // em alguns fluxos. Não tratamos aqui pra evitar duplicação. O update real
-          // de status acontece nos eventos customer.subscription.*.
+          const session = event.data.object as {
+            id: string
+            mode?: string
+            payment_status?: string
+            payment_intent?: string | null
+            metadata?: Record<string, string | undefined>
+          }
+          // Para subscription, o update real acontece nos customer.subscription.*.
+          // Para certificate (one-time payment), processamos aqui: marca order
+          // paid e dispara generatePaidPdf.
+          if (session.metadata?.kind === 'certificate' && session.payment_status === 'paid') {
+            const orderId = await ctx.runMutation(internal.certificates.markOrderPaidByWebhook, {
+              stripeSessionId: session.id,
+              stripePaymentIntentId:
+                typeof session.payment_intent === 'string' ? session.payment_intent : undefined,
+              paidAt: Date.now(),
+            })
+            if (orderId) {
+              await ctx.scheduler.runAfter(
+                0,
+                internal.certificatesPdf.generatePaidPdf,
+                { orderId },
+              )
+            }
+          }
+          break
+        }
+
+        case 'checkout.session.expired': {
+          const session = event.data.object as {
+            id: string
+            metadata?: Record<string, string | undefined>
+          }
+          if (session.metadata?.kind === 'certificate') {
+            await ctx.runMutation(internal.certificates.markOrderExpiredByWebhook, {
+              stripeSessionId: session.id,
+              expiredAt: Date.now(),
+            })
+          }
+          break
+        }
+
+        case 'charge.refunded': {
+          const charge = event.data.object as {
+            id: string
+            payment_intent?: string | null
+            metadata?: Record<string, string | undefined>
+          }
+          // Refund pode chegar tanto pra subscription quanto pra one-time.
+          // O metadata.kind é setado pelo payment_intent_data.metadata na criação.
+          if (charge.metadata?.kind === 'certificate' && typeof charge.payment_intent === 'string') {
+            const n = await ctx.runMutation(internal.certificates.markOrderRefundedByWebhook, {
+              stripePaymentIntentId: charge.payment_intent,
+              refundedAt: Date.now(),
+            })
+            console.warn('[stripe-webhook] charge.refunded certificate', charge.payment_intent, 'orders=', n)
+          }
           break
         }
 

@@ -797,6 +797,39 @@ export default defineSchema({
     receivedAt: v.number(),
   }).index('by_eventId', ['eventId']),
 
+  // Pedido de certificado pago R$ 29,90. Modelo paid-only: sem versão gratuita.
+  // O PDF só é gerado server-side após o webhook checkout.session.completed
+  // confirmar status='paid'. Nada do PDF existe no cliente antes disso.
+  // Identidade do código de verificação (/verificar/{code}) é derivada do _id
+  // deste documento, não do enrollmentId (legado).
+  certificateOrders: defineTable({
+    userId: v.string(), // clerkId do aluno
+    courseId: v.id('courses'),
+    enrollmentId: v.id('enrollments'),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('paid'),
+      v.literal('refunded'),
+      v.literal('expired'),
+    ),
+    stripeSessionId: v.string(),
+    stripeCustomerId: v.optional(v.string()),
+    stripePaymentIntentId: v.optional(v.string()),
+    amount: v.number(), // em centavos (2990)
+    currency: v.string(), // 'brl'
+    paidAt: v.optional(v.number()),
+    refundedAt: v.optional(v.number()),
+    expiredAt: v.optional(v.number()),
+    certificatePdfStorageId: v.optional(v.id('_storage')),
+    pdfGeneratedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_session_id', ['stripeSessionId'])
+    .index('by_user_course', ['userId', 'courseId'])
+    .index('by_userId', ['userId'])
+    .index('by_courseId', ['courseId']),
+
   // Lista de admins promovidos via UI/Convex CLI. Combinada com a constante
   // ADMIN_EMAILS em lib/auth.ts (bootstrap pro dono). Email é case-insensitive.
   admins: defineTable({
