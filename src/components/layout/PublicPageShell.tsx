@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/clerk-react'
 import type { ReactNode } from 'react'
 import { Navbar } from './Navbar'
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar'
-import { NotificationsBell } from '@/components/dashboard/NotificationsBell'
+import { SinoNotificacoes } from '@/components/dashboard/SinoNotificacoes'
 import { cn } from '@/lib/brand'
 
 // Wrapper para rotas publicas (blog, catalogo, sobre, curso, aula preview).
@@ -70,7 +70,7 @@ export function PublicPageShell({ children, bare = false }: PublicPageShellProps
         <Link to="/" className="inline-flex items-center">
           <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-8 w-auto" />
         </Link>
-        <NotificationsBell />
+        <SinoNotificacoes />
       </header>
 
       {mobileOpen && (
@@ -87,7 +87,7 @@ export function PublicPageShell({ children, bare = false }: PublicPageShellProps
         {/* Sino fixo no canto superior direito no desktop, igual DashboardLayout. */}
         <div className="pointer-events-none absolute right-6 top-6 z-30 hidden sm:right-8 sm:top-8 lg:right-12 lg:top-12 lg:block">
           <div className="pointer-events-auto">
-            <NotificationsBell />
+            <SinoNotificacoes />
           </div>
         </div>
         {children}

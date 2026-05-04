@@ -3,11 +3,11 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
-import { ArticleBody } from '@/components/blog/ArticleBody'
-import { ArticleReactions } from '@/components/blog/ArticleReactions'
-import { ArticleComments } from '@/components/blog/ArticleComments'
-import { FollowButton } from '@/components/blog/FollowButton'
-import { VerifiedBadge } from '@/components/VerifiedBadge'
+import { CorpoArtigo } from '@/components/blog/CorpoArtigo'
+import { ReacoesArtigo } from '@/components/blog/ReacoesArtigo'
+import { ComentariosArtigo } from '@/components/blog/ComentariosArtigo'
+import { BotaoSeguir } from '@/components/blog/BotaoSeguir'
+import { SeloVerificado } from '@/components/SeloVerificado'
 import { AdSlot } from '@/components/AdSlot'
 import { useArticleJsonLd, useBreadcrumbJsonLd, useSeo } from '@/lib/seo'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -175,7 +175,7 @@ export function BlogPostPage() {
                 <div>
                   <p className="flex items-center gap-1.5 font-medium text-[#111827]">
                     <span>{authorLabel}</span>
-                    <VerifiedBadge handle={post.author.handle} size="sm" />
+                    <SeloVerificado handle={post.author.handle} size="sm" />
                   </p>
                   <p className="text-xs text-[#6B7280]">
                     {formatDate(post.publishedAt)} • {post.viewCount.toLocaleString('pt-BR')} leituras
@@ -190,13 +190,13 @@ export function BlogPostPage() {
                 <div>
                   <p className="flex items-center gap-1.5 font-medium text-[#111827]">
                     <span>{authorLabel}</span>
-                    <VerifiedBadge handle={post.author.handle} size="sm" />
+                    <SeloVerificado handle={post.author.handle} size="sm" />
                   </p>
                   <p className="text-xs text-[#6B7280]">{formatDate(post.publishedAt)}</p>
                 </div>
               </div>
             )}
-            <FollowButton authorUserId={post.authorUserId} authorName={authorLabel} />
+            <BotaoSeguir authorUserId={post.authorUserId} authorName={authorLabel} />
           </header>
 
           {post.coverImageUrl && (
@@ -212,10 +212,10 @@ export function BlogPostPage() {
             </figure>
           )}
 
-          <ArticleBody markdown={post.bodyMarkdown} />
+          <CorpoArtigo markdown={post.bodyMarkdown} />
 
           <footer className="mt-16 space-y-8 border-t border-[#E6DBCF] pt-8">
-            <ArticleReactions
+            <ReacoesArtigo
               postId={post._id}
               url={url}
               title={post.title}
@@ -235,14 +235,14 @@ export function BlogPostPage() {
                 <div>
                   <p className="flex items-center gap-1.5 font-semibold text-[#111827]">
                     <span>{authorLabel}</span>
-                    <VerifiedBadge handle={post.author.handle} size="sm" />
+                    <SeloVerificado handle={post.author.handle} size="sm" />
                   </p>
                   {post.author.bio && (
                     <p className="text-sm text-[#6B7280] line-clamp-2 max-w-md">{post.author.bio}</p>
                   )}
                 </div>
               </div>
-              <FollowButton authorUserId={post.authorUserId} authorName={authorLabel} />
+              <BotaoSeguir authorUserId={post.authorUserId} authorName={authorLabel} />
             </div>
           </footer>
 
@@ -255,7 +255,7 @@ export function BlogPostPage() {
           </div>
 
           <div className="mt-16">
-            <ArticleComments postId={post._id} postAuthorUserId={post.authorUserId} />
+            <ComentariosArtigo postId={post._id} postAuthorUserId={post.authorUserId} />
           </div>
         </article>
       </main>

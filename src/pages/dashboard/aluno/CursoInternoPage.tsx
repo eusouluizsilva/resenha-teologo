@@ -4,8 +4,8 @@ import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
-import { CourseForum } from '@/components/courseForum/CourseForum'
-import { CourseRatingModal } from '@/components/aluno/CourseRatingModal'
+import { CourseForum } from '@/components/cursoForum/CourseForum'
+import { AvaliacaoCursoModal } from '@/components/aluno/AvaliacaoCursoModal'
 import { Skeleton } from '@/components/ui/Skeleton'
 
 type LessonWithSlug = {
@@ -559,7 +559,7 @@ export function CursoInternoPage() {
       </main>
 
       {resolvedCourseId ? (
-        <CourseRatingModal
+        <AvaliacaoCursoModal
           open={ratingOpen}
           onClose={() => {
             setRatingOpen(false)

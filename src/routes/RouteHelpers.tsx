@@ -132,7 +132,7 @@ export function DashboardIndexPage() {
 }
 
 // Dispara pageview no GA4, no Meta Pixel e no Convex (analytics interno) a cada
-// navegação SPA. A atribuição por criador (CourseDetailPage, AulaPage) é feita
+// navegação SPA. A atribuição por criador (CursoDetalhePage, AulaPage) é feita
 // dentro dessas páginas com creatorId/courseId/lessonId. Aqui cobrimos só
 // path/referrer/device para o dashboard admin global. logPageView falha
 // silenciosamente se Convex estiver offline.

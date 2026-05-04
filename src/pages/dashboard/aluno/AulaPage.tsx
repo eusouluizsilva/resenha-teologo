@@ -17,14 +17,14 @@ import {
   getBibleSource,
   type BibleSource,
 } from '@/lib/bible/translations'
-import { BiblePanel, type BiblePanelInitialRef } from '@/components/BiblePanel'
+import { PainelBiblia, type BiblePanelInitialRef } from '@/components/PainelBiblia'
 import { fetchChapter, type BibleVerse } from '@/lib/bible/api'
-import { DonateButton } from '@/components/donate/DonateButton'
-import { FlashcardsLessonSection } from '@/components/aula/FlashcardsLessonSection'
-import { CourseInDevelopmentNotice } from '@/components/aula/CourseInDevelopmentNotice'
+import { BotaoDoar } from '@/components/doar/BotaoDoar'
+import { SecaoFlashcardsAula } from '@/components/aula/SecaoFlashcardsAula'
+import { AvisoCursoEmConstrucao } from '@/components/aula/AvisoCursoEmConstrucao'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { LessonCelebrationToast } from '@/components/aula/LessonCelebrationToast'
-import { CommentMarkdown } from '@/components/comments/CommentMarkdown'
+import { ToastCelebracaoAula } from '@/components/aula/ToastCelebracaoAula'
+import { ComentarioMarkdown } from '@/components/comentarios/ComentarioMarkdown'
 import { useCurrentAppUser } from '@/lib/currentUser'
 
 // ─── YouTube Player ───────────────────────────────────────────────────────────
@@ -2139,7 +2139,7 @@ function CommentRow({
             Comentário removido.
           </p>
         ) : (
-          <CommentMarkdown text={comment.text} variant="light" className="mt-1 break-words" />
+          <ComentarioMarkdown text={comment.text} variant="light" className="mt-1 break-words" />
         )}
         {!deleted && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -2838,7 +2838,7 @@ export function AulaPage() {
   // Modo Estudo Profundo: cobre toda a tela (z-[60]) escondendo sidebar e
   // notificações, layout fica mais largo e silencioso. Atalhos: F para alternar,
   // Esc para sair. Usa data-study-deep no <html> pra outros componentes
-  // (NotificationsBell) silenciarem som/abertura automática.
+  // (SinoNotificacoes) silenciarem som/abertura automática.
   const [studyDeep, setStudyDeep] = useState(false)
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -3015,7 +3015,7 @@ export function AulaPage() {
           : 'min-h-screen',
       )}
     >
-      <LessonCelebrationToast trigger={celebrationTrigger} />
+      <ToastCelebracaoAula trigger={celebrationTrigger} />
       {/* Header fixo com breadcrumb, contador e voltar */}
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
@@ -3185,7 +3185,7 @@ export function AulaPage() {
                 )}
               </button>
 
-              <DonateButton tone="light" variant="inline" />
+              <BotaoDoar tone="light" variant="inline" />
             </div>
           </div>
 
@@ -3213,7 +3213,7 @@ export function AulaPage() {
           <NotebookSection lessonId={lesson._id as Id<'lessons'>} />
 
           {/* 6b. Flashcards desta aula */}
-          <FlashcardsLessonSection courseId={courseId as Id<'courses'>} />
+          <SecaoFlashcardsAula courseId={courseId as Id<'courses'>} />
 
           {/* 6c. Materiais */}
           <MaterialsSection lessonId={lesson._id as Id<'lessons'>} />
@@ -3326,7 +3326,7 @@ export function AulaPage() {
                publicada de um curso em producao. Mensagem editorial + carrossel
                de cursos recomendados (mesmo professor, depois mesma categoria). */}
           {!nextLesson && course.releaseStatus === 'in_progress' ? (
-            <CourseInDevelopmentNotice
+            <AvisoCursoEmConstrucao
               courseId={courseId as Id<'courses'>}
               scheduleText={course.nextLessonScheduleText ?? null}
               nextScheduledLessonAt={nextScheduledLesson?.publishAt ?? null}
@@ -3352,7 +3352,7 @@ export function AulaPage() {
         Bíblia
       </button>
 
-      <BiblePanel
+      <PainelBiblia
         open={bibleOpen}
         onClose={() => setBibleOpen(false)}
         initialRef={bibleRef}

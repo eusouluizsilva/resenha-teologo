@@ -1,6 +1,6 @@
 // Hook que enumera as identidades disponíveis para o usuário publicar como
 // (aluno, criador, instituição-dono/admin). Lê userFunctions e
-// institutions.listByUser. Extraído de IdentitySelector para satisfazer
+// institutions.listByUser. Extraído de SeletorIdentidade para satisfazer
 // react-refresh/only-export-components.
 
 import { useQuery } from 'convex/react'

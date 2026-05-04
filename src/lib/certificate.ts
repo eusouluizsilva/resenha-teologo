@@ -1,5 +1,5 @@
 // Helpers do certificado academico. A renderizacao visual fica em
-// src/components/certificate/CertificatePreview.tsx, que usa o template
+// src/components/certificate/CertificadoPreview.tsx, que usa o template
 // /certificates/template-academic.png como fundo e gera o PDF via
 // html2canvas-pro + jsPDF capturando o proprio DOM (paridade pixel-perfect
 // entre tela e impressao).

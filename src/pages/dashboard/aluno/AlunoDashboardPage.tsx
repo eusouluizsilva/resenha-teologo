@@ -5,8 +5,8 @@ import { DashboardPageShell } from '@/components/dashboard/PageShell'
 import { brandEyebrowClass, brandPanelClass, brandPanelSoftClass, cn } from '@/lib/brand'
 import type { Id } from '@convex/_generated/dataModel'
 import { ReferralCard } from '@/components/aluno/ReferralCard'
-import { RequiredCoursesBanner } from '@/components/aluno/RequiredCoursesBanner'
-import { RecommendedCourses } from '@/components/aluno/RecommendedCourses'
+import { BannerCursosObrigatorios } from '@/components/aluno/BannerCursosObrigatorios'
+import { CursosRecomendados } from '@/components/aluno/CursosRecomendados'
 
 function formatHours(totalSeconds: number): string {
   if (totalSeconds < 60) return `${totalSeconds}s`
@@ -266,7 +266,7 @@ export function AlunoDashboardPage() {
       maxWidthClass="max-w-5xl"
     >
       <div className="space-y-8">
-        <RequiredCoursesBanner />
+        <BannerCursosObrigatorios />
         <JornadaHojeCard
           streak={stats?.streak ?? 0}
           bestStreak={stats?.bestStreak ?? 0}
@@ -395,7 +395,7 @@ export function AlunoDashboardPage() {
         )}
 
         {/* Recomendações personalizadas */}
-        <RecommendedCourses limit={4} />
+        <CursosRecomendados limit={4} />
 
         {/* Programa de indicacao */}
         <ReferralCard />

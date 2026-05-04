@@ -4,7 +4,7 @@ import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { brandSecondaryButtonClass } from '@/lib/brand'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
-import { ArticleEditor } from './ArticleEditor'
+import { EditorArtigo } from './EditorArtigo'
 
 export function EditarArtigoPage() {
   const { postId } = useParams<{ postId: string }>()
@@ -55,7 +55,7 @@ export function EditarArtigoPage() {
         </Link>
       }
     >
-      <ArticleEditor
+      <EditorArtigo
         mode={{
           kind: 'edit',
           postId: post._id,

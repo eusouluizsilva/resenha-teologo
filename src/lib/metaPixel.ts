@@ -1,7 +1,7 @@
 // Meta Pixel "rt" (ID 1884382392256153). Carrega o fbevents.js só com consent
 // de anúncios concedido (ad_storage = granted). RouteTracker (App.tsx) dispara
 // PageView a cada navegação SPA. Idempotente, escuta o evento
-// rdt:consent-change emitido pelo CookieBanner.
+// rdt:consent-change emitido pelo BannerCookies.
 
 import { isAdConsentGranted } from './consent'
 

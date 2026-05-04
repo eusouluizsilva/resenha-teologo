@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { brandSecondaryButtonClass } from '@/lib/brand'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
-import { ArticleEditor } from './ArticleEditor'
+import { EditorArtigo } from './EditorArtigo'
 
 export function NovoArtigoPage() {
   return (
@@ -16,7 +16,7 @@ export function NovoArtigoPage() {
         </Link>
       }
     >
-      <ArticleEditor mode={{ kind: 'create' }} />
+      <EditorArtigo mode={{ kind: 'create' }} />
     </DashboardPageShell>
   )
 }

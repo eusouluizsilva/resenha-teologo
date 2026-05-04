@@ -2,7 +2,7 @@ import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
 import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
-import { ArticleCard } from '@/components/blog/ArticleCard'
+import { CardArtigo } from '@/components/blog/CardArtigo'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 const BLOG_ORIGIN =
@@ -99,11 +99,11 @@ export function BlogIndexPage() {
               </p>
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="md:col-span-2">
-                  <ArticleCard article={featured[0]} variant="feature" />
+                  <CardArtigo article={featured[0]} variant="feature" />
                 </div>
                 <div className="space-y-4">
                   {featured.slice(1, 4).map((article) => (
-                    <ArticleCard key={String(article._id)} article={article} variant="compact" />
+                    <CardArtigo key={String(article._id)} article={article} variant="compact" />
                   ))}
                 </div>
               </div>
@@ -117,7 +117,7 @@ export function BlogIndexPage() {
               </p>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {rest.map((article) => (
-                  <ArticleCard key={String(article._id)} article={article} />
+                  <CardArtigo key={String(article._id)} article={article} />
                 ))}
               </div>
             </section>

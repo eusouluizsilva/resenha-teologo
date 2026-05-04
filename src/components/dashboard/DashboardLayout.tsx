@@ -4,7 +4,7 @@ import { useUser } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { DashboardSidebar } from './DashboardSidebar'
-import { NotificationsBell } from './NotificationsBell'
+import { SinoNotificacoes } from './SinoNotificacoes'
 import { MobileBottomNav } from './MobileBottomNav'
 import { StreakIndicator } from '@/components/aluno/StreakIndicator'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
@@ -175,7 +175,7 @@ export function DashboardLayout() {
         </Link>
         <div className="flex items-center gap-2">
           <StreakIndicator compact />
-          <NotificationsBell />
+          <SinoNotificacoes />
         </div>
       </header>
 
@@ -195,7 +195,7 @@ export function DashboardLayout() {
           <div className="pointer-events-none absolute right-6 top-6 z-30 hidden sm:right-8 sm:top-8 lg:right-12 lg:top-12 lg:block">
             <div className="pointer-events-auto flex items-center gap-3">
               <StreakIndicator />
-              <NotificationsBell />
+              <SinoNotificacoes />
             </div>
           </div>
           <div className="relative min-h-[calc(100vh-4rem)] rounded-[2rem] border border-white/7 bg-[linear-gradient(180deg,rgba(13,18,24,0.92)_0%,rgba(10,14,20,0.96)_100%)] shadow-[0_30px_120px_rgba(0,0,0,0.25)]">

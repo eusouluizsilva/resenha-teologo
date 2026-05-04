@@ -2,7 +2,7 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { PublicPageShell } from '@/components/layout/PublicPageShell'
-import { ArticleCard } from '@/components/blog/ArticleCard'
+import { CardArtigo } from '@/components/blog/CardArtigo'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
 
 const CATEGORY_ORIGIN =
@@ -100,7 +100,7 @@ export function BlogCategoryPage() {
           {hasArticles && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {articles!.map((article) => (
-                <ArticleCard key={article._id} article={article} />
+                <CardArtigo key={article._id} article={article} />
               ))}
             </div>
           )}

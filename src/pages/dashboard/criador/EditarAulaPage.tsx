@@ -11,7 +11,7 @@ import { useR2Upload } from '@/lib/r2Upload'
 import { DashboardPageShell, DashboardSectionLabel, DashboardStatusPill } from '@/components/dashboard/PageShell'
 import { BIBLE_BOOKS, formatVerseReference, getBibleBook, type BibleTestament } from '@/lib/bible/books'
 import { TemplatePicker } from '@/components/criador/TemplatePicker'
-import { QuestionBankImportDialog } from '@/components/criador/QuestionBankImportDialog'
+import { BancoQuestoesImportarDialog } from '@/components/criador/BancoQuestoesImportarDialog'
 import { uuid } from '@/lib/uuid'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -874,7 +874,7 @@ function QuizSection({
         )}
       </div>
 
-      <QuestionBankImportDialog
+      <BancoQuestoesImportarDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImport={(picked) => {

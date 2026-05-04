@@ -12,7 +12,7 @@ import {
   brandStatusPillClass,
   cn,
 } from '@/lib/brand'
-import { VerifiedBadge } from '@/components/VerifiedBadge'
+import { SeloVerificado } from '@/components/SeloVerificado'
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString('pt-BR', {
@@ -332,7 +332,7 @@ function UserDetail({
         <div className="min-w-0 flex-1">
           <h3 className="flex items-center gap-1.5 font-display text-xl font-bold text-white">
             <span className="truncate">{user.name}</span>
-            <VerifiedBadge handle={user.handle} size="md" />
+            <SeloVerificado handle={user.handle} size="md" />
           </h3>
           <p className="truncate text-sm text-white/62">{user.email}</p>
           <p className="mt-1 text-xs text-white/42">
@@ -801,7 +801,7 @@ export function AllUsersModal({ onClose }: { onClose: () => void }) {
                         <div className="min-w-0 flex-1">
                           <p className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-white">
                             <span className="truncate">{u.name}</span>
-                            <VerifiedBadge handle={u.handle} size="xs" />
+                            <SeloVerificado handle={u.handle} size="xs" />
                           </p>
                           <p className="truncate text-xs text-white/42">{u.email}</p>
                         </div>

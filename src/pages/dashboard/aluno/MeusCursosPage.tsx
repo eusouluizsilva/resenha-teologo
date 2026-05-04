@@ -3,8 +3,8 @@ import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { brandPanelClass, brandPanelSoftClass, brandStatusPillClass, cn } from '@/lib/brand'
-import { RequiredCoursesBanner } from '@/components/aluno/RequiredCoursesBanner'
-import { RecommendedCourses } from '@/components/aluno/RecommendedCourses'
+import { BannerCursosObrigatorios } from '@/components/aluno/BannerCursosObrigatorios'
+import { CursosRecomendados } from '@/components/aluno/CursosRecomendados'
 import { EmptyBooksIllustration } from '@/components/ui/EmptyIllustration'
 
 function levelLabel(level: string) {
@@ -124,7 +124,7 @@ export function MeusCursosPage() {
       }
     >
       <div className="mb-6">
-        <RequiredCoursesBanner />
+        <BannerCursosObrigatorios />
       </div>
       {isLoading ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
@@ -191,7 +191,7 @@ export function MeusCursosPage() {
           </div>
 
           <div className="mt-8">
-            <RecommendedCourses limit={4} />
+            <CursosRecomendados limit={4} />
           </div>
         </>
       )}

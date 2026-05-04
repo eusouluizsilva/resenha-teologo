@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { LandingPage } from '@/pages/LandingPage'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
-import { CookieBanner } from '@/components/CookieBanner'
+import { BannerCookies } from '@/components/BannerCookies'
 import { CommandPalette } from '@/components/CommandPalette'
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
 import { PWAUpdateNotification } from '@/components/PWAUpdateNotification'
@@ -15,25 +15,28 @@ import {
   RouteTracker,
 } from '@/routes/RouteHelpers'
 import {
-  AcceptInvitePage,
+  AceitarConvitePage,
   AdminPage,
   AlunosPage,
+  ApoiePage,
   AulaPage,
+  AulaPreviewPage,
   BancoQuestoesPage,
   BibliaPage,
   BlogCategoryPage,
   BlogIndexPage,
   BlogPostPage,
   BrandingPage,
+  CadastroPage,
   CadernoPage,
-  CatalogPage,
+  CatalogoPage,
   CertificadosPage,
   CheckoutCertificadoPage,
   CoautoresPage,
   ComentariosAdminPage,
   ComoConseguirCertificadoPage,
-  ContactPage,
-  CourseDetailPage,
+  ContatoPage,
+  CursoDetalhePage,
   CursosAdminPage,
   CursosCompartilhadosPage,
   CursosInstituicaoPage,
@@ -45,12 +48,12 @@ import {
   EditarCursoPage,
   EditarInfoCursoPage,
   EditarTrilhaPage,
+  EntrarPage,
   FinanceiroPage,
   FlashcardsPage,
   FuncoesPage,
   InstituicaoDashboardPage,
-  LessonPreviewCreatorPage,
-  LessonPreviewPage,
+  AulaPreviewCriadorPage,
   LojaPage,
   MembrosPage,
   MetricasCursoPage,
@@ -64,23 +67,20 @@ import {
   NovoCursoPage,
   PedidoDetalhePage,
   PerfilPage,
+  PerfilPublicoPage,
   PerguntasPage,
   PlanosPage,
   PrivacidadePage,
   ProdutoPage,
   PublicBibliaPage,
-  PublicProfilePage,
-  RegisterPage,
   RelatoriosPage,
   SSOCallbackPage,
-  SignInPage,
   SobrePage,
   StatusPage,
-  SupportPage,
   TermosPage,
   TrilhaPublicaPage,
   TrilhasPage,
-  VerifyCertificatePage,
+  VerificarCertificadoPage,
 } from '@/routes/lazyPages'
 
 export default function App() {
@@ -90,7 +90,7 @@ export default function App() {
         Pular para o conteúdo
       </a>
       <RouteTracker />
-      <CookieBanner />
+      <BannerCookies />
       <CommandPalette />
       <PWAInstallPrompt />
       <PWAUpdateNotification />
@@ -99,14 +99,14 @@ export default function App() {
           <Routes>
             {/* Público */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/cursos" element={<CatalogPage />} />
-            <Route path="/cursos/:courseId" element={<CourseDetailPage />} />
-            <Route path="/cursos/:courseSlug/:lessonSlug" element={<LessonPreviewPage />} />
+            <Route path="/cursos" element={<CatalogoPage />} />
+            <Route path="/cursos/:courseId" element={<CursoDetalhePage />} />
+            <Route path="/cursos/:courseSlug/:lessonSlug" element={<AulaPreviewPage />} />
             <Route path="/biblia" element={<PublicBibliaPage />} />
-            <Route path="/apoie" element={<SupportPage />} />
-            <Route path="/contato" element={<ContactPage />} />
-            <Route path="/verificar/:code" element={<VerifyCertificatePage />} />
-            <Route path="/convite/:token" element={<AcceptInvitePage />} />
+            <Route path="/apoie" element={<ApoiePage />} />
+            <Route path="/contato" element={<ContatoPage />} />
+            <Route path="/verificar/:code" element={<VerificarCertificadoPage />} />
+            <Route path="/convite/:token" element={<AceitarConvitePage />} />
             <Route path="/sobre" element={<SobrePage />} />
             <Route path="/status" element={<StatusPage />} />
             <Route path="/loja" element={<LojaPage />} />
@@ -118,11 +118,11 @@ export default function App() {
             <Route path="/blog/categoria/:categorySlug" element={<BlogCategoryPage />} />
             <Route path="/blog/:handle/:postSlug" element={<BlogPostPage />} />
 
-            <Route path="/:handle" element={<PublicProfilePage />} />
+            <Route path="/:handle" element={<PerfilPublicoPage />} />
 
             {/* Autenticação */}
-            <Route path="/entrar" element={<SignInPage />} />
-            <Route path="/cadastro" element={<RegisterPage />} />
+            <Route path="/entrar" element={<EntrarPage />} />
+            <Route path="/cadastro" element={<CadastroPage />} />
             <Route path="/cadastro/aluno" element={<Navigate to="/cadastro" replace />} />
             <Route path="/cadastro/criador" element={<Navigate to="/cadastro" replace />} />
             <Route path="/cadastro/instituicao" element={<Navigate to="/cadastro" replace />} />
@@ -140,7 +140,7 @@ export default function App() {
               <Route path="cursos/:id" element={<RequireFunction allowed={['criador']}><EditarInfoCursoPage /></RequireFunction>} />
               <Route path="cursos/:id/modulos" element={<RequireFunction allowed={['criador']}><EditarCursoPage /></RequireFunction>} />
               <Route path="cursos/:courseId/aula/:lessonId" element={<RequireFunction allowed={['criador']}><EditarAulaPage /></RequireFunction>} />
-              <Route path="cursos/:courseId/aula/:lessonId/preview" element={<RequireFunction allowed={['criador']}><LessonPreviewCreatorPage /></RequireFunction>} />
+              <Route path="cursos/:courseId/aula/:lessonId/preview" element={<RequireFunction allowed={['criador']}><AulaPreviewCriadorPage /></RequireFunction>} />
               <Route path="cursos/:courseId/metricas" element={<RequireFunction allowed={['criador']}><MetricasCursoPage /></RequireFunction>} />
               <Route path="cursos/:courseId/coautores" element={<RequireFunction allowed={['criador']}><CoautoresPage /></RequireFunction>} />
               <Route path="cursos-compartilhados" element={<RequireFunction allowed={['criador']}><CursosCompartilhadosPage /></RequireFunction>} />
@@ -174,7 +174,7 @@ export default function App() {
               <Route path="trilhas/:id" element={<RequireFunction allowed={['instituicao', 'criador']}><EditarTrilhaPage /></RequireFunction>} />
 
               {/* Blog (autoria) — disponível para qualquer função, gating é feito no
-                  IdentitySelector dentro do editor (que só lista identidades válidas) */}
+                  SeletorIdentidade dentro do editor (que só lista identidades válidas) */}
               <Route path="blog" element={<MeuBlogPage />} />
               <Route path="blog/novo" element={<NovoArtigoPage />} />
               <Route path="blog/:postId" element={<EditarArtigoPage />} />

@@ -11,7 +11,7 @@ import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
-import { EmbeddedCertificatePreview } from '@/components/certificate/EmbeddedCertificatePreview'
+import { CertificadoPreviewEmbutido } from '@/components/certificado/CertificadoPreviewEmbutido'
 import {
   brandPanelClass,
   brandPrimaryButtonClass,
@@ -156,7 +156,7 @@ export function CheckoutCertificadoPage() {
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           {/* Coluna esquerda: prévia do certificado oficial com nome real */}
           <div className={cn('overflow-hidden p-2', brandPanelClass)}>
-            <EmbeddedCertificatePreview
+            <CertificadoPreviewEmbutido
               studentName={currentUser?.name ?? 'Seu nome aqui'}
               courseTitle={enrollmentRow.course.title}
               completedAt={

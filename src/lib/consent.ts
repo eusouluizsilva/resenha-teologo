@@ -133,7 +133,7 @@ export function initConsent(): void {
   window.__rdtConsentReady = true
 }
 
-// Atualiza o consent state. Chamada pelo CookieBanner via evento
+// Atualiza o consent state. Chamada pelo BannerCookies via evento
 // 'rdt:consent-change' (que main.tsx escuta).
 export function applyCurrentConsent(): void {
   if (typeof window === 'undefined' || !window.gtag) return

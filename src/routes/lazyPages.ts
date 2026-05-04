@@ -5,11 +5,11 @@
 import { lazy } from 'react'
 
 // Auth
-export const SignInPage = lazy(() =>
-  import('@/pages/SignInPage').then((m) => ({ default: m.SignInPage })),
+export const EntrarPage = lazy(() =>
+  import('@/pages/EntrarPage').then((m) => ({ default: m.EntrarPage })),
 )
-export const RegisterPage = lazy(() =>
-  import('@/pages/auth/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+export const CadastroPage = lazy(() =>
+  import('@/pages/auth/CadastroPage').then((m) => ({ default: m.CadastroPage })),
 )
 export const SSOCallbackPage = lazy(() =>
   import('@/pages/auth/SSOCallbackPage').then((m) => ({ default: m.SSOCallbackPage })),
@@ -36,9 +36,9 @@ export const EditarInfoCursoPage = lazy(() =>
 export const EditarAulaPage = lazy(() =>
   import('@/pages/dashboard/criador/EditarAulaPage').then((m) => ({ default: m.EditarAulaPage })),
 )
-export const LessonPreviewCreatorPage = lazy(() =>
-  import('@/pages/dashboard/criador/LessonPreviewCreatorPage').then((m) => ({
-    default: m.LessonPreviewCreatorPage,
+export const AulaPreviewCriadorPage = lazy(() =>
+  import('@/pages/dashboard/criador/AulaPreviewCriadorPage').then((m) => ({
+    default: m.AulaPreviewCriadorPage,
   })),
 )
 export const MetricasCursoPage = lazy(() =>
@@ -209,35 +209,35 @@ export const EditarArtigoPage = lazy(() =>
 )
 
 // Público
-export const CatalogPage = lazy(() =>
-  import('@/pages/public/CatalogPage').then((m) => ({ default: m.CatalogPage })),
+export const CatalogoPage = lazy(() =>
+  import('@/pages/public/CatalogoPage').then((m) => ({ default: m.CatalogoPage })),
 )
-export const CourseDetailPage = lazy(() =>
-  import('@/pages/public/CourseDetailPage').then((m) => ({ default: m.CourseDetailPage })),
+export const CursoDetalhePage = lazy(() =>
+  import('@/pages/public/CursoDetalhePage').then((m) => ({ default: m.CursoDetalhePage })),
 )
-export const LessonPreviewPage = lazy(() =>
-  import('@/pages/public/LessonPreviewPage').then((m) => ({ default: m.LessonPreviewPage })),
+export const AulaPreviewPage = lazy(() =>
+  import('@/pages/public/AulaPreviewPage').then((m) => ({ default: m.AulaPreviewPage })),
 )
 export const PublicBibliaPage = lazy(() =>
   import('@/pages/public/BibliaPage').then((m) => ({ default: m.BibliaPage })),
 )
-export const SupportPage = lazy(() =>
-  import('@/pages/public/SupportPage').then((m) => ({ default: m.SupportPage })),
+export const ApoiePage = lazy(() =>
+  import('@/pages/public/ApoiePage').then((m) => ({ default: m.ApoiePage })),
 )
-export const ContactPage = lazy(() =>
-  import('@/pages/public/ContactPage').then((m) => ({ default: m.ContactPage })),
+export const ContatoPage = lazy(() =>
+  import('@/pages/public/ContatoPage').then((m) => ({ default: m.ContatoPage })),
 )
-export const PublicProfilePage = lazy(() =>
-  import('@/pages/public/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
+export const PerfilPublicoPage = lazy(() =>
+  import('@/pages/public/PerfilPublicoPage').then((m) => ({ default: m.PerfilPublicoPage })),
 )
-export const VerifyCertificatePage = lazy(() =>
-  import('@/pages/public/VerifyCertificatePage').then((m) => ({
-    default: m.VerifyCertificatePage,
+export const VerificarCertificadoPage = lazy(() =>
+  import('@/pages/public/VerificarCertificadoPage').then((m) => ({
+    default: m.VerificarCertificadoPage,
   })),
 )
-export const AcceptInvitePage = lazy(() =>
-  import('@/pages/public/AcceptInvitePage').then((m) => ({
-    default: m.AcceptInvitePage,
+export const AceitarConvitePage = lazy(() =>
+  import('@/pages/public/AceitarConvitePage').then((m) => ({
+    default: m.AceitarConvitePage,
   })),
 )
 export const TrilhaPublicaPage = lazy(() =>
