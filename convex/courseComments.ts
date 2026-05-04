@@ -48,6 +48,7 @@ export const create = mutation({
       text: safeText,
       parentId,
       isOfficial: isCourseCreator && parentId !== undefined ? true : undefined,
+      helpfulCount: 0,
       createdAt: Date.now(),
     })
 
@@ -135,17 +136,41 @@ export const listByCourse = query({
   args: { courseId: v.id('courses') },
   handler: async (ctx, { courseId }) => {
     const { role } = await requireCourseAccess(ctx, courseId)
+    const identity = await ctx.auth.getUserIdentity()
+    const callerSubject = identity?.subject ?? null
+
     const all = await ctx.db
       .query('courseComments')
       .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
       .collect()
 
-    const roots = all
+    // Set de comentários marcados como úteis pelo viewer (server-side, não
+    // expõe outras marcações).
+    const myHelpful = new Set<string>()
+    if (callerSubject) {
+      for (const c of all) {
+        const found = await ctx.db
+          .query('courseCommentHelpful')
+          .withIndex('by_comment_user', (q) =>
+            q.eq('commentId', c._id).eq('userId', callerSubject),
+          )
+          .unique()
+        if (found) myHelpful.add(c._id as unknown as string)
+      }
+    }
+
+    const shaped = all.map((c) => ({
+      ...c,
+      helpfulCount: c.helpfulCount ?? 0,
+      isHelpfulByMe: myHelpful.has(c._id as unknown as string),
+    }))
+
+    const roots = shaped
       .filter((c) => !c.parentId)
       .sort((a, b) => a.createdAt - b.createdAt)
 
-    const repliesByParent = new Map<string, typeof all>()
-    for (const c of all) {
+    const repliesByParent = new Map<string, typeof shaped>()
+    for (const c of shaped) {
       if (c.parentId) {
         const key = c.parentId as unknown as string
         const arr = repliesByParent.get(key) ?? []
@@ -163,5 +188,41 @@ export const listByCourse = query({
         ),
       })),
     }
+  },
+})
+
+// "Útil" em comentário do fórum do curso. Idempotente, toggle. Apenas
+// usuários com acesso ao curso (matriculados ou criador) podem marcar.
+export const markHelpful = mutation({
+  args: { commentId: v.id('courseComments') },
+  handler: async (ctx, { commentId }) => {
+    const { identity } = await requireCurrentUser(ctx)
+    const comment = await ctx.db.get(commentId)
+    if (!comment) throw new Error('Comentário não encontrado.')
+    await requireCourseAccess(ctx, comment.courseId)
+
+    const existing = await ctx.db
+      .query('courseCommentHelpful')
+      .withIndex('by_comment_user', (q) =>
+        q.eq('commentId', commentId).eq('userId', identity.subject),
+      )
+      .unique()
+
+    if (existing) {
+      await ctx.db.delete(existing._id)
+      const next = Math.max(0, (comment.helpfulCount ?? 0) - 1)
+      await ctx.db.patch(commentId, { helpfulCount: next })
+      return { helpful: false }
+    }
+
+    await ctx.db.insert('courseCommentHelpful', {
+      commentId,
+      userId: identity.subject,
+      at: Date.now(),
+    })
+    await ctx.db.patch(commentId, {
+      helpfulCount: (comment.helpfulCount ?? 0) + 1,
+    })
+    return { helpful: true }
   },
 })

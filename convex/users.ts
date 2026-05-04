@@ -313,6 +313,22 @@ export const searchPublic = query({
   },
 })
 
+// Marca o tour de boas-vindas como concluído para o usuário atual. Idempotente:
+// segunda chamada apenas atualiza o timestamp (não cria registro novo). Usado
+// pelo OnboardingModal quando o aluno/criador/instituição clica Pular ou Concluir.
+export const markOnboardingCompleted = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireIdentity(ctx)
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+      .unique()
+    if (!user) return
+    await ctx.db.patch(user._id, { onboardingCompletedAt: Date.now() })
+  },
+})
+
 // Chamado pelo webhook do Clerk quando a conta é deletada fora do app.
 // Remove apenas o registro do usuário; dados vinculados (cursos, doações, etc.)
 // ficam órfãos mas preservados — a deleção LGPD completa deve ser feita via

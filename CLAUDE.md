@@ -7,10 +7,10 @@ Este arquivo é lido automaticamente pelo Claude Code em toda sessão. Seguir se
 ## Sobre o Projeto
 
 Plataforma SaaS de ensino teológico multi-tenant chamada **Resenha do Teólogo**.
-Dono: Luiz Carlos da Silva Junior — mora em Massachusetts, EUA. Público principal: Brasil.
+Dono: Luiz Carlos da Silva Junior, mora em Massachusetts, EUA. Público principal: Brasil.
 Visão: ser a maior plataforma de ensino teológico do mundo.
-Documento completo do projeto: `contexto.md`
-Fases de desenvolvimento: `fases-do-projeto.md`
+Documento completo do projeto: `docs/contexto.md`
+Fases de desenvolvimento: `docs/fases-do-projeto.md`
 
 ---
 
@@ -31,7 +31,7 @@ Payments:  Stripe
 
 ## Identidade Visual — Resumo Executivo
 
-Documento completo: `identidade-visual.md` — ler sempre antes de criar qualquer componente ou página.
+Documento completo: `docs/identidade-visual.md`, ler sempre antes de criar qualquer componente ou página.
 
 **Direção estética:** editorial teológico premium com estrutura SaaS moderna.
 
@@ -119,8 +119,10 @@ Apple e GitHub desativados — desnecessários para o público teológico.
 
 | Arquivo | Conteúdo |
 |---------|---------|
-| `contexto.md` | Visão geral, modelo de negócio, histórico de decisões |
-| `fases-do-projeto.md` | Plano completo de desenvolvimento em 5 fases |
-| `identidade-visual.md` | Design system, cores, tipografia, animações |
-| `credenciais.md` | Template .env e guia de cadastros (nunca commitar) |
-| `plano-do-projeto.md` | Documento para consulta externa (ChatGPT/Gemini) |
+| `docs/contexto.md` | Visão geral, modelo de negócio, histórico de decisões |
+| `docs/fases-do-projeto.md` | Plano completo de desenvolvimento em 5 fases |
+| `docs/identidade-visual.md` | Design system, cores, tipografia, animações |
+| `credenciais.md` | Template .env e guia de cadastros (nunca commitar, raiz) |
+| `docs/plano-do-projeto.md` | Documento para consulta externa (ChatGPT/Gemini) |
+| `docs/lista-de-pendencias.md` | Pendências consolidadas |
+| `docs/auditoria-*.md` | Histórico de auditorias |

@@ -512,6 +512,16 @@ export const getPublicPreview = query({
         isCurrent: l._id === lesson._id,
       }))
 
+    // Social proof: contagem de matrículas e certificados emitidos. Anônimo,
+    // sem expor identidade dos alunos. Usado pela tela /cursos/:slug/:lesson
+    // pra mostrar prova social próxima do CTA.
+    const enrollments = await ctx.db
+      .query('enrollments')
+      .withIndex('by_courseId', (q) => q.eq('courseId', course._id))
+      .collect()
+    const enrolledCount = enrollments.length
+    const certificatesCount = enrollments.filter((e) => e.certificateIssued).length
+
     return {
       lesson: {
         _id: lesson._id,
@@ -541,6 +551,10 @@ export const getPublicPreview = query({
         totalModules: course.totalModules,
       },
       siblingLessons: publishedLessons,
+      socialProof: {
+        enrolledCount,
+        certificatesCount,
+      },
     }
   },
 })

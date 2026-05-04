@@ -30,20 +30,21 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Separa libs grandes em chunks proprios para que mudancas de codigo
-        // nao invalidem o cache delas e o navegador possa baixar em paralelo.
-        // Vite 8/rolldown exige funcao em vez de objeto.
+        // Mapa simples lib -> chunk. Cada bucket ganha seu próprio bundle para
+        // que mudanças de código de aplicação não invalidem o cache da lib.
+        // Vite 8/rolldown exige função em vez de objeto. Casamos por substring
+        // de path; libs que não aparecem aqui herdam o split padrão do rollup.
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined
-          if (id.includes('framer-motion')) return 'framer-motion'
-          if (id.includes('@clerk/')) return 'clerk'
-          if (id.includes('node_modules/convex/')) return 'convex'
-          if (
-            id.includes('/react/') ||
-            id.includes('/react-dom/') ||
-            id.includes('/react-router-dom/')
-          ) {
-            return 'react-vendor'
+          const buckets: Record<string, string[]> = {
+            'react-vendor': ['/react/', '/react-dom/', '/react-router-dom/'],
+            clerk: ['@clerk/'],
+            convex: ['node_modules/convex/'],
+            'framer-motion': ['framer-motion'],
+            markdown: ['react-markdown', 'remark-gfm', 'rehype-sanitize', 'marked'],
+          }
+          for (const [chunk, patterns] of Object.entries(buckets)) {
+            if (patterns.some((p) => id.includes(p))) return chunk
           }
           return undefined
         },

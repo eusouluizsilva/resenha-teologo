@@ -5,6 +5,7 @@ import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
 import { brandPanelClass, brandPanelSoftClass, cn } from '@/lib/brand'
+import { EmptyChatIllustration } from '@/components/ui/EmptyIllustration'
 
 type Filter = 'pending' | 'answered' | 'all'
 
@@ -91,6 +92,7 @@ export default function PerguntasPage() {
         </div>
       ) : isEmpty ? (
         <DashboardEmptyState
+          illustration={<EmptyChatIllustration />}
           icon={iconChat}
           title={filter === 'pending' ? 'Nenhuma pergunta pendente' : 'Nenhuma pergunta ainda'}
           description={

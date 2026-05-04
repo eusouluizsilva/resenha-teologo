@@ -1,13 +1,70 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation, usePaginatedQuery, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { cn } from '@/lib/brand'
 import type { Id } from '@convex/_generated/dataModel'
 
-// Sino de notificações do dashboard. Lê as 20 mais recentes e o count de não
-// lidas via queries reativas do Convex. Clique em uma notificação marca como
-// lida e, se houver link, navega até ele. Fechar o popover clicando fora.
+// Sino de notificações do dashboard. Lista paginada com infinite-scroll, count
+// de não lidas reativo, agrupamento client-side de notificações consecutivas
+// do mesmo (kind, link) para evitar caixas de "5 pessoas seguiram" repetidas.
+// Clique marca como lida e navega; fechar com clique fora ou Esc.
+
+// Tipos derivados dos retornos da query Convex.
+type NotifRow = {
+  _id: Id<'notifications'>
+  kind: string
+  title: string
+  body?: string
+  link?: string
+  readAt?: number
+  createdAt: number
+}
+
+type NotifGroup = {
+  key: string
+  // Linha mais recente do grupo (define título e link clicado).
+  representative: NotifRow
+  // Outras linhas (mais antigas) que foram dobradas no grupo.
+  others: NotifRow[]
+  hasUnread: boolean
+}
+
+// Agrupa apenas tipos com volume potencialmente alto (followers, comentários
+// na mesma thread). Tipos one-shot (welcome, certificate_issued etc.) seguem
+// um por linha mesmo quando consecutivos.
+const GROUPABLE_KINDS = new Set([
+  'profile_followed',
+  'comment_new',
+  'post_comment_new',
+  'comment_reply',
+  'post_comment_reply',
+])
+
+function groupNotifications(rows: readonly NotifRow[]): NotifGroup[] {
+  const out: NotifGroup[] = []
+  for (const row of rows) {
+    const isGroupable = GROUPABLE_KINDS.has(row.kind)
+    const last = out[out.length - 1]
+    if (
+      isGroupable &&
+      last &&
+      last.representative.kind === row.kind &&
+      (last.representative.link ?? '') === (row.link ?? '')
+    ) {
+      last.others.push(row)
+      if (!row.readAt) last.hasUnread = true
+      continue
+    }
+    out.push({
+      key: String(row._id),
+      representative: row,
+      others: [],
+      hasUnread: !row.readAt,
+    })
+  }
+  return out
+}
 
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts
@@ -29,10 +86,39 @@ export function NotificationsBell() {
   const popoverRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  const notifications = useQuery(api.notifications.listMine, {})
+  const {
+    results: notifications,
+    status,
+    loadMore,
+  } = usePaginatedQuery(api.notifications.listMine, {}, { initialNumItems: 20 })
   const unread = useQuery(api.notifications.countUnread, {}) ?? 0
   const markRead = useMutation(api.notifications.markRead)
   const markAllRead = useMutation(api.notifications.markAllRead)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const isInitialLoading = status === 'LoadingFirstPage'
+  const canLoadMore = status === 'CanLoadMore'
+  const isLoadingMore = status === 'LoadingMore'
+
+  const handleLoadMore = useCallback(() => {
+    if (status === 'CanLoadMore') loadMore(20)
+  }, [status, loadMore])
+
+  // Infinite scroll: observa um sentinela no fim da lista; quando entra no
+  // viewport do popover, dispara a próxima página. Reseta sempre que o
+  // popover abre/fecha porque o IntersectionObserver precisa do DOM montado.
+  useEffect(() => {
+    if (!open) return
+    const node = sentinelRef.current
+    if (!node) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) handleLoadMore()
+      },
+      { rootMargin: '120px' },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [open, handleLoadMore, notifications.length])
 
   useEffect(() => {
     if (!open) return
@@ -57,11 +143,13 @@ export function NotificationsBell() {
     setOpen((v) => !v)
   }
 
-  const handleClick = async (id: Id<'notifications'>) => {
-    try {
-      await markRead({ id })
-    } catch { /* best-effort */ }
+  // Marca representante + dobrados como lidos quando o usuário clica no grupo.
+  const handleGroupClick = (group: NotifGroup) => {
+    const ids = [group.representative._id, ...group.others.map((o) => o._id)]
+    Promise.all(ids.filter(Boolean).map((id) => markRead({ id }).catch(() => {}))).catch(() => {})
   }
+
+  const groups = useMemo(() => groupNotifications(notifications as readonly NotifRow[]), [notifications])
 
   const handleMarkAll = async () => {
     try {
@@ -107,18 +195,20 @@ export function NotificationsBell() {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {notifications === undefined ? (
+            {isInitialLoading ? (
               <div className="flex items-center justify-center py-10">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
               </div>
-            ) : notifications.length === 0 ? (
+            ) : groups.length === 0 ? (
               <div className="px-6 py-10 text-center">
                 <p className="text-sm text-white/48">Você ainda não tem notificações.</p>
               </div>
             ) : (
               <ul className="divide-y divide-white/6">
-                {notifications.map((n) => {
-                  const isUnread = !n.readAt
+                {groups.map((g) => {
+                  const n = g.representative
+                  const isUnread = g.hasUnread
+                  const groupedCount = g.others.length
                   const body = (
                     <>
                       <div className="flex items-start gap-3">
@@ -132,6 +222,11 @@ export function NotificationsBell() {
                             isUnread ? 'font-semibold text-white' : 'text-white/72',
                           )}>
                             {n.title}
+                            {groupedCount > 0 ? (
+                              <span className="ml-1 text-xs font-medium text-white/48">
+                                +{groupedCount}
+                              </span>
+                            ) : null}
                           </p>
                           {n.body ? (
                             <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-white/48">
@@ -140,6 +235,11 @@ export function NotificationsBell() {
                           ) : null}
                           <p className="mt-1 text-[11px] uppercase tracking-wider text-white/32">
                             {timeAgo(n.createdAt)}
+                            {groupedCount > 0 ? (
+                              <span className="ml-2 normal-case tracking-normal text-white/40">
+                                {groupedCount + 1} no total
+                              </span>
+                            ) : null}
                           </p>
                         </div>
                       </div>
@@ -153,12 +253,12 @@ export function NotificationsBell() {
 
                   if (n.link) {
                     return (
-                      <li key={n._id}>
+                      <li key={g.key}>
                         <Link
                           to={n.link}
                           className={cls}
                           onClick={() => {
-                            void handleClick(n._id)
+                            handleGroupClick(g)
                             setOpen(false)
                           }}
                         >
@@ -169,10 +269,10 @@ export function NotificationsBell() {
                   }
 
                   return (
-                    <li key={n._id}>
+                    <li key={g.key}>
                       <button
                         type="button"
-                        onClick={() => void handleClick(n._id)}
+                        onClick={() => handleGroupClick(g)}
                         className={cn(cls, 'w-full')}
                       >
                         {body}
@@ -182,6 +282,21 @@ export function NotificationsBell() {
                 })}
               </ul>
             )}
+            {!isInitialLoading && (canLoadMore || isLoadingMore) ? (
+              <div ref={sentinelRef} className="flex items-center justify-center py-4">
+                {isLoadingMore ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleLoadMore}
+                    className="text-xs font-medium text-white/48 hover:text-white"
+                  >
+                    Carregar mais
+                  </button>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

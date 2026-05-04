@@ -11,6 +11,7 @@ import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { DashboardPageShell } from '@/components/dashboard/PageShell'
+import { EmbeddedCertificatePreview } from '@/components/certificate/EmbeddedCertificatePreview'
 import {
   brandPanelClass,
   brandPrimaryButtonClass,
@@ -20,14 +21,6 @@ import {
 } from '@/lib/brand'
 
 const PRICE_LABEL = 'R$ 29,90'
-
-function formatDate(ts: number) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(ts))
-}
 
 const INCLUDED_ITEMS = [
   {
@@ -161,12 +154,15 @@ export function CheckoutCertificadoPage() {
         </div>
       ) : (
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          {/* Coluna esquerda: mockup do certificado */}
+          {/* Coluna esquerda: prévia do certificado oficial com nome real */}
           <div className={cn('overflow-hidden p-2', brandPanelClass)}>
-            <CertificateMockup
+            <EmbeddedCertificatePreview
               studentName={currentUser?.name ?? 'Seu nome aqui'}
               courseTitle={enrollmentRow.course.title}
-              completedAt={enrollmentRow.enrollment.completedAt}
+              completedAt={
+                enrollmentRow.enrollment.completedAt ??
+                enrollmentRow.enrollment._creationTime
+              }
               finalScore={enrollmentRow.enrollment.finalScore}
             />
             <p className="px-6 py-4 text-center text-[11px] uppercase tracking-[0.22em] text-white/40">
@@ -251,78 +247,3 @@ export function CheckoutCertificadoPage() {
   )
 }
 
-function CertificateMockup({
-  studentName,
-  courseTitle,
-  completedAt,
-  finalScore,
-}: {
-  studentName: string
-  courseTitle: string
-  completedAt?: number
-  finalScore?: number
-}) {
-  const dateLabel = completedAt ? formatDate(completedAt) : 'data da conclusão'
-  return (
-    <div
-      className="relative overflow-hidden rounded-[1.6rem]"
-      style={{
-        background: 'linear-gradient(180deg, #F7F5F2 0%, #F1ECE3 100%)',
-        boxShadow: 'inset 0 0 0 1px rgba(243,126,32,0.18)',
-      }}
-    >
-      {/* Borda decorativa orange */}
-      <div
-        className="absolute inset-3 rounded-[1.2rem]"
-        style={{
-          border: '1.5px solid #F37E20',
-          boxShadow: 'inset 0 0 0 3px rgba(247,245,242,1), inset 0 0 0 4px rgba(243,126,32,0.4)',
-        }}
-        aria-hidden
-      />
-
-      {/* Marca de água */}
-      <span
-        className="pointer-events-none absolute inset-0 flex items-center justify-center text-[5rem] font-bold uppercase tracking-[0.4em]"
-        style={{ color: 'rgba(243,126,32,0.08)', transform: 'rotate(-22deg)' }}
-        aria-hidden
-      >
-        Pré-visualização
-      </span>
-
-      <div className="relative px-10 py-12 text-center" style={{ color: '#0F141A', fontFamily: 'Times New Roman, serif' }}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.36em]" style={{ color: '#F37E20' }}>
-          Resenha do Teólogo
-        </p>
-        <h2 className="mt-5 text-3xl font-bold" style={{ color: '#0F141A' }}>
-          Certificado de Conclusão
-        </h2>
-
-        <p className="mt-7 italic" style={{ color: '#4B5563' }}>
-          Conferimos o presente certificado a
-        </p>
-        <p className="mt-3 text-2xl font-bold" style={{ color: '#0F141A' }}>
-          {studentName}
-        </p>
-
-        <p className="mt-5 italic" style={{ color: '#4B5563' }}>
-          por concluir com aproveitamento o curso
-        </p>
-        <p className="mt-3 text-lg font-bold leading-snug" style={{ color: '#0F141A' }}>
-          {courseTitle}
-        </p>
-
-        <p className="mt-7 text-sm" style={{ color: '#374151' }}>
-          {finalScore !== undefined
-            ? `Concluído em ${dateLabel} com nota final ${Math.round(finalScore)}%.`
-            : `Concluído em ${dateLabel}.`}
-        </p>
-
-        <div className="mt-10 flex items-end justify-between text-[10px]" style={{ color: '#6B7280' }}>
-          <span>Código: XXXXXXXXXXXXXXXX</span>
-          <span>Verificação: resenhadoteologo.com/verificar</span>
-        </div>
-      </div>
-    </div>
-  )
-}

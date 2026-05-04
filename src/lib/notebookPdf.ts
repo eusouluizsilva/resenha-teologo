@@ -9,6 +9,9 @@ type NotebookPdfData = {
   notebookTitle: string
   studentName: string
   entries: NotebookEntry[]
+  // Quando definido, gera capa com nome do curso e filename "curso-{slug}.pdf"
+  // ao invés de "caderno-{titulo}". Usado pelo botão "Exportar curso inteiro".
+  courseTitle?: string
 }
 
 type SingleEntryPdfData = {
@@ -52,18 +55,18 @@ export async function downloadNotebookPdf(data: NotebookPdfData) {
   doc.setFont('times', 'bold')
   doc.setFontSize(28)
   doc.setTextColor(17, 24, 39)
-  const titleLines = doc.splitTextToSize(data.notebookTitle, contentW)
+  const headerTitle = data.courseTitle ?? data.notebookTitle
+  const titleLines = doc.splitTextToSize(headerTitle, contentW)
   doc.text(titleLines, marginX, 44)
   const titleH = Array.isArray(titleLines) ? titleLines.length * 9 : 9
 
   doc.setFont('times', 'normal')
   doc.setFontSize(11)
   doc.setTextColor(90, 90, 90)
-  doc.text(
-    `Por ${data.studentName} · ${data.entries.length} ${data.entries.length === 1 ? 'entrada' : 'entradas'} · Gerado em ${formatDate(Date.now())}`,
-    marginX,
-    44 + titleH + 4,
-  )
+  const subtitle = data.courseTitle
+    ? `Caderno: ${data.notebookTitle} · Por ${data.studentName} · ${data.entries.length} ${data.entries.length === 1 ? 'anotação' : 'anotações'} · ${formatDate(Date.now())}`
+    : `Por ${data.studentName} · ${data.entries.length} ${data.entries.length === 1 ? 'entrada' : 'entradas'} · Gerado em ${formatDate(Date.now())}`
+  doc.text(subtitle, marginX, 44 + titleH + 4)
 
   doc.setDrawColor(243, 126, 32)
   doc.setLineWidth(0.5)
@@ -127,11 +130,13 @@ export async function downloadNotebookPdf(data: NotebookPdfData) {
     doc.text(`resenhadoteologo.com · ${i} / ${pageCount}`, pageW / 2, pageH - 10, { align: 'center' })
   }
 
-  const safeName = data.notebookTitle
+  const baseTitle = data.courseTitle ?? data.notebookTitle
+  const safeName = baseTitle
     .replace(/[^a-zA-Z0-9À-ÿ\s]/g, '')
     .replace(/\s+/g, '-')
     .slice(0, 40)
-  doc.save(`caderno-${safeName || 'digital'}.pdf`)
+  const prefix = data.courseTitle ? 'curso' : 'caderno'
+  doc.save(`${prefix}-${safeName || 'digital'}.pdf`)
 }
 
 export async function downloadEntryPdf(data: SingleEntryPdfData) {

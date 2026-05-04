@@ -30,3 +30,6 @@ jobs:
         env:
           VITE_CONVEX_URL: https://blessed-platypus-993.convex.cloud
           VITE_CLERK_PUBLISHABLE_KEY: pk_dummy_for_ci
+
+      - name: Bundle size budget
+        run: npm run size

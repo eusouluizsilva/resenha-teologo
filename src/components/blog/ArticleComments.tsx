@@ -8,6 +8,7 @@ import { useUser } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
+import { CommentMarkdown } from '@/components/comments/CommentMarkdown'
 
 const MAX_LEN = 2000
 
@@ -256,7 +257,11 @@ function CommentRow({
             </div>
           </div>
         ) : (
-          <p className="mt-1 whitespace-pre-wrap font-serif text-[15px] leading-7 text-[#1F2937]">{comment.text}</p>
+          <CommentMarkdown
+            text={comment.text}
+            variant="light"
+            className="mt-1 font-serif text-[15px] leading-7 text-[#1F2937]"
+          />
         )}
 
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
@@ -380,8 +385,13 @@ function Composer({ onSubmit }: ComposerProps) {
         className="w-full rounded-xl border border-[#DED4C7] bg-white px-3 py-2 text-sm text-[#111827] focus:border-[#F37E20]/40 focus:outline-none"
       />
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-      <div className="mt-3 flex items-center justify-between">
-        <span className="text-[11px] text-[#9CA3AF]">{text.length}/{MAX_LEN}</span>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] text-[#9CA3AF]">{text.length}/{MAX_LEN}</span>
+          <span className="text-[11px] text-[#9CA3AF]">
+            Markdown: **negrito**, *itálico*, `código`, &gt; citação, listas com - ou 1.
+          </span>
+        </div>
         <button
           onClick={handleSubmit}
           disabled={busy || !text.trim()}

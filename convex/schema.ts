@@ -45,6 +45,9 @@ export default defineSchema({
     // visita à página /indicar. Outras pessoas que se cadastram com ?ref=CODE
     // ficam linkadas ao referrer via tabela referrals.
     referralCode: v.optional(v.string()),
+    // Timestamp em que o usuário concluiu (ou pulou) o tour de boas-vindas.
+    // Quando ausente, o OnboardingModal é exibido ao entrar no dashboard.
+    onboardingCompletedAt: v.optional(v.number()),
   })
     .index('by_clerkId', ['clerkId'])
     .index('by_handle', ['handle'])
@@ -390,6 +393,7 @@ export default defineSchema({
     text: v.string(),
     parentId: v.optional(v.id('lessonComments')),
     isOfficial: v.optional(v.boolean()),
+    helpfulCount: v.optional(v.number()),
     createdAt: v.number(),
     editedAt: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
@@ -400,6 +404,14 @@ export default defineSchema({
     // Cron dataRetention.purgeSoftDeleted: varre apenas candidatos com
     // deletedAt definido e abaixo do cutoff de 30 dias.
     .index('by_deletedAt', ['deletedAt']),
+
+  lessonCommentHelpful: defineTable({
+    commentId: v.id('lessonComments'),
+    userId: v.string(),
+    at: v.number(),
+  })
+    .index('by_comment_user', ['commentId', 'userId'])
+    .index('by_comment', ['commentId']),
 
   // Flashcards do aluno com revisão espaçada simplificada (SM-2). Decks são
   // coleções do próprio aluno, podendo opcionalmente referenciar um curso para
@@ -497,6 +509,7 @@ export default defineSchema({
     text: v.string(),
     parentId: v.optional(v.id('courseComments')),
     isOfficial: v.optional(v.boolean()),
+    helpfulCount: v.optional(v.number()),
     createdAt: v.number(),
     editedAt: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
@@ -505,6 +518,14 @@ export default defineSchema({
     .index('by_parentId', ['parentId'])
     .index('by_authorId', ['authorId'])
     .index('by_deletedAt', ['deletedAt']),
+
+  courseCommentHelpful: defineTable({
+    commentId: v.id('courseComments'),
+    userId: v.string(),
+    at: v.number(),
+  })
+    .index('by_comment_user', ['commentId', 'userId'])
+    .index('by_comment', ['commentId']),
 
   donations: defineTable({
     creatorId: v.string(),

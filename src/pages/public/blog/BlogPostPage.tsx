@@ -10,6 +10,7 @@ import { FollowButton } from '@/components/blog/FollowButton'
 import { VerifiedBadge } from '@/components/VerifiedBadge'
 import { AdSlot } from '@/components/AdSlot'
 import { useArticleJsonLd, useBreadcrumbJsonLd, useSeo } from '@/lib/seo'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const VIEW_DEDUP_KEY_PREFIX = 'rdt_post_view_'
 const POST_ORIGIN =
@@ -85,9 +86,25 @@ export function BlogPostPage() {
     return (
       <PublicPageShell>
         <div className="min-h-screen bg-[#F7F5F2]">
-          <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
-          </div>
+          <article className="mx-auto max-w-3xl px-4 py-10 space-y-6">
+            <div className="flex items-center gap-3">
+              <Skeleton variant="light" className="h-10 w-10" rounded="full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton variant="light" className="h-3.5 w-32" />
+                <Skeleton variant="light" className="h-3 w-24" />
+              </div>
+            </div>
+            <Skeleton variant="light" className="h-9 w-11/12" />
+            <Skeleton variant="light" className="h-5 w-3/4" />
+            <Skeleton variant="light" className="aspect-video w-full" rounded="2xl" />
+            <div className="space-y-3 pt-4">
+              <Skeleton variant="light" className="h-3.5 w-full" />
+              <Skeleton variant="light" className="h-3.5 w-11/12" />
+              <Skeleton variant="light" className="h-3.5 w-10/12" />
+              <Skeleton variant="light" className="h-3.5 w-9/12" />
+              <Skeleton variant="light" className="h-3.5 w-11/12" />
+            </div>
+          </article>
         </div>
       </PublicPageShell>
     )

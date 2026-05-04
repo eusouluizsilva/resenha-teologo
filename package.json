@@ -10,6 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "check": "tsc -b --noEmit",
+    "size": "node scripts/check-bundle-size.mjs",
+    "size:report": "node scripts/check-bundle-size.mjs --report",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "prepare": "husky"
   },

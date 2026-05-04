@@ -32,6 +32,97 @@ function StatBlock({ label, value, accent = false, sub }: { label: string; value
   )
 }
 
+// Card "Sua jornada hoje". Ritualiza o hábito diário do aluno: confirma se já
+// estudou hoje (com base em studentStats.lastStudyDate vs. data UTC atual),
+// mostra o estado da sequência e oferece o atalho mais relevante (continuar
+// próxima aula ou explorar catálogo). É uma camada acima do "Continue de onde
+// parou": foca em manter o dia ativo, não no curso em si.
+function JornadaHojeCard({
+  streak,
+  bestStreak,
+  lastStudyDate,
+  hasNextLesson,
+  nextLink,
+}: {
+  streak: number
+  bestStreak: number
+  lastStudyDate: string | null
+  hasNextLesson: boolean
+  nextLink: string
+}) {
+  // Dia atual em UTC (mesmo formato usado em gamification.utcDateKey).
+  const todayUtc = new Date().toISOString().slice(0, 10)
+  const studiedToday = lastStudyDate === todayUtc
+  const showRecord = bestStreak > streak && bestStreak > 0
+
+  return (
+    <div className={cn('p-6', brandPanelClass)}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className={cn('mb-3', brandEyebrowClass)}>Sua jornada hoje</p>
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border',
+                studiedToday
+                  ? 'border-emerald-400/24 bg-emerald-400/10 text-emerald-300'
+                  : 'border-[#F37E20]/24 bg-[#F37E20]/10 text-[#F37E20]',
+              )}
+            >
+              {studiedToday ? (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+                </svg>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="font-display text-xl font-bold text-white">
+                {studiedToday
+                  ? 'Você já estudou hoje'
+                  : streak > 0
+                    ? 'Estude hoje para manter sua sequência'
+                    : 'Comece sua sequência hoje'}
+              </p>
+              <p className="mt-0.5 text-sm text-white/56">
+                {streak > 0 ? (
+                  <>
+                    {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}
+                    {showRecord ? <span className="text-white/36"> · recorde {bestStreak}</span> : null}
+                  </>
+                ) : (
+                  'Cada dia conta. Concluir uma aula já garante o dia.'
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Link
+          to={nextLink}
+          className="inline-flex items-center gap-2 rounded-2xl bg-[#F37E20] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#E06A10]"
+        >
+          {hasNextLesson ? 'Continuar próxima aula' : 'Explorar catálogo'}
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </Link>
+        <Link
+          to="/dashboard/conquistas"
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.03] px-5 py-2.5 text-sm font-semibold text-white/72 transition-all hover:border-white/24 hover:bg-white/[0.06] hover:text-white"
+        >
+          Ver conquistas
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 function CourseProgressCard({
   courseId,
   courseTitle,
@@ -176,6 +267,17 @@ export function AlunoDashboardPage() {
     >
       <div className="space-y-8">
         <RequiredCoursesBanner />
+        <JornadaHojeCard
+          streak={stats?.streak ?? 0}
+          bestStreak={stats?.bestStreak ?? 0}
+          lastStudyDate={stats?.lastStudyDate ?? null}
+          hasNextLesson={!!continueCourse?.nextLessonId}
+          nextLink={
+            continueCourse?.nextLessonId
+              ? `/dashboard/meus-cursos/${continueCourse.courseId}/aula/${continueCourse.nextLessonId}`
+              : '/cursos'
+          }
+        />
         {/* Continue de onde parou */}
         {continueCourse && continueCourse.nextLessonId && (
           <div className={cn('p-6', brandPanelClass)}>

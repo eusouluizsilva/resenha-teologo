@@ -20,6 +20,10 @@ interface DashboardMetricCardProps {
 
 interface DashboardEmptyStateProps {
   icon: ReactNode
+  // Ilustração opcional (SVG maior) renderizada NO LUGAR do badge de ícone.
+  // Use para os estados vazios mais visíveis (Meus cursos, Certificados,
+  // Caderno, Loja, Perguntas) para um ar mais editorial.
+  illustration?: ReactNode
   title: string
   description: string
   action?: ReactNode
@@ -64,10 +68,14 @@ export function DashboardMetricCard({ icon, label, value, sub, accent = false }:
   )
 }
 
-export function DashboardEmptyState({ icon, title, description, action }: DashboardEmptyStateProps) {
+export function DashboardEmptyState({ icon, illustration, title, description, action }: DashboardEmptyStateProps) {
   return (
     <div className={cn('p-10 text-center sm:p-12', brandPanelClass)}>
-      <div className={cn('mx-auto mb-5', brandIconBadgeClass)}>{icon}</div>
+      {illustration ? (
+        <div className="mx-auto mb-6 flex justify-center">{illustration}</div>
+      ) : (
+        <div className={cn('mx-auto mb-5', brandIconBadgeClass)}>{icon}</div>
+      )}
       <h3 className="font-display text-2xl font-bold text-white">{title}</h3>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/54">{description}</p>
       {action ? <div className="mt-6 flex justify-center">{action}</div> : null}

@@ -6,6 +6,7 @@ import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 import { CourseForum } from '@/components/courseForum/CourseForum'
 import { CourseRatingModal } from '@/components/aluno/CourseRatingModal'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type LessonWithSlug = {
   _id: string
@@ -132,6 +133,43 @@ function ModuleSection({
   )
 }
 
+// Skeleton da página interna do curso. Reproduz hero + barra de progresso +
+// lista de módulos com aulas. Usado enquanto `student.getCourseDetail` carrega.
+function CursoInternoSkeleton() {
+  return (
+    <div className="min-h-[60vh] bg-[#F7F5F2]">
+      <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
+        <div className="flex flex-col gap-4 rounded-2xl border border-[#E6DBCF] bg-white p-6 md:flex-row md:items-center">
+          <Skeleton variant="light" className="h-32 w-full md:w-56" rounded="xl" />
+          <div className="flex-1 space-y-3">
+            <Skeleton variant="light" className="h-6 w-3/4" />
+            <Skeleton variant="light" className="h-4 w-1/2" />
+            <Skeleton variant="light" className="h-2 w-full" rounded="full" />
+            <div className="flex gap-2">
+              <Skeleton variant="light" className="h-9 w-32" rounded="full" />
+              <Skeleton variant="light" className="h-9 w-28" rounded="full" />
+            </div>
+          </div>
+        </div>
+        {Array.from({ length: 2 }).map((_, m) => (
+          <div key={m} className="rounded-2xl border border-[#E6DBCF] bg-white p-5 space-y-3">
+            <Skeleton variant="light" className="h-5 w-1/3" />
+            {Array.from({ length: 4 }).map((_, l) => (
+              <div key={l} className="flex items-center gap-3 border-t border-[#F0E7DC] pt-3">
+                <Skeleton variant="light" className="h-8 w-8" rounded="full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton variant="light" className="h-3.5 w-2/3" />
+                  <Skeleton variant="light" className="h-3 w-1/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function CursoInternoPage() {
   const { courseId: rawCourseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
@@ -190,19 +228,11 @@ export function CursoInternoPage() {
   }, [data, myCourseRating, ratingDismissed, ratingOpen])
 
   if (data === undefined || (rawCourseId?.includes('-') && slugLookup === undefined)) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-[#F7F5F2]">
-        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
-      </div>
-    )
+    return <CursoInternoSkeleton />
   }
 
   if (!data) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-[#F7F5F2]">
-        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
-      </div>
-    )
+    return <CursoInternoSkeleton />
   }
 
   const { course, creator, modules, completedLessons, totalLessons, percentage, avgScore, nextLesson, nextScheduledLesson, enrollment } = data

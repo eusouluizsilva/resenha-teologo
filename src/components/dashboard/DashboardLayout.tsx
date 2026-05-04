@@ -7,6 +7,7 @@ import { DashboardSidebar } from './DashboardSidebar'
 import { NotificationsBell } from './NotificationsBell'
 import { MobileBottomNav } from './MobileBottomNav'
 import { StreakIndicator } from '@/components/aluno/StreakIndicator'
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { normalizePerfil } from '@/lib/perfil'
@@ -34,9 +35,20 @@ export function DashboardLayout() {
   const { user, isLoaded } = useUser()
   const [timedOut, setTimedOut] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
   const { pathname } = useLocation()
-  const { functions, isLoading } = useCurrentAppUser()
+  const { functions, isLoading, currentUser, perfil } = useCurrentAppUser()
   const migrateFromPerfil = useMutation(api.userFunctions.migrateFromPerfil)
+
+  // Tour de boas-vindas: dispara uma única vez por usuário, quando
+  // onboardingCompletedAt ainda não foi gravado. Espera o currentUser carregar
+  // pra evitar abrir e fechar imediatamente quando a query terminar.
+  useEffect(() => {
+    if (isLoading || !currentUser) return
+    if (currentUser.onboardingCompletedAt !== undefined) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOnboardingOpen(true)
+  }, [isLoading, currentUser])
 
   useEffect(() => {
     if (isLoaded) return
@@ -193,6 +205,12 @@ export function DashboardLayout() {
       </main>
 
       <MobileBottomNav />
+
+      <OnboardingModal
+        open={onboardingOpen}
+        perfil={perfil}
+        onClose={() => setOnboardingOpen(false)}
+      />
     </div>
   )
 }

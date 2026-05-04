@@ -6,21 +6,28 @@
 // as mais antigas são removidas na criação.
 
 import { v } from 'convex/values'
+import { paginationOptsValidator } from 'convex/server'
 import { mutation, query, internalMutation } from './_generated/server'
 
 const MAX_PER_USER = 100
 
+// Lista paginada das notificações do usuário autenticado, usado pelo sino do
+// header com infinite-scroll. Retorna `{ page, isDone, continueCursor }` no
+// formato do Convex e é consumido com `usePaginatedQuery` no cliente. Para
+// usuários não autenticados devolvemos uma página vazia já encerrada para
+// não quebrar o hook.
 export const listMine = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, { paginationOpts }) => {
     const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return []
-    const rows = await ctx.db
+    if (!identity) {
+      return { page: [], isDone: true, continueCursor: '' }
+    }
+    return await ctx.db
       .query('notifications')
       .withIndex('by_user', (q) => q.eq('userId', identity.subject))
       .order('desc')
-      .take(20)
-    return rows
+      .paginate(paginationOpts)
   },
 })
 

@@ -4,6 +4,7 @@ import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
+import { CommentMarkdown } from '@/components/comments/CommentMarkdown'
 
 type Comment = {
   _id: Id<'courseComments'>
@@ -14,6 +15,8 @@ type Comment = {
   text: string
   parentId?: Id<'courseComments'>
   isOfficial?: boolean
+  helpfulCount: number
+  isHelpfulByMe: boolean
   createdAt: number
   editedAt?: number
   deletedAt?: number
@@ -60,6 +63,7 @@ function CommentRow({
   const edit = useMutation(api.courseComments.edit)
   const softDelete = useMutation(api.courseComments.softDelete)
   const setOfficial = useMutation(api.courseComments.setOfficial)
+  const markHelpful = useMutation(api.courseComments.markHelpful)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(comment.text)
   const [busy, setBusy] = useState(false)
@@ -103,6 +107,16 @@ function CommentRow({
     setBusy(true)
     try {
       await setOfficial({ id: comment._id, isOfficial: !comment.isOfficial })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleToggleHelpful() {
+    if (busy || !currentUserId) return
+    setBusy(true)
+    try {
+      await markHelpful({ commentId: comment._id })
     } finally {
       setBusy(false)
     }
@@ -160,10 +174,38 @@ function CommentRow({
             </div>
           </div>
         ) : (
-          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-700">{comment.text}</p>
+          <CommentMarkdown text={comment.text} variant="light" className="mt-1" />
         )}
-        {!editing && (isAuthor || canModerate) && (
-          <div className="mt-2 flex flex-wrap gap-3 text-xs">
+        {!editing && (
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+            {currentUserId && !isAuthor && (
+              <button
+                type="button"
+                onClick={handleToggleHelpful}
+                aria-pressed={comment.isHelpfulByMe}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-semibold transition-colors',
+                  comment.isHelpfulByMe
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600',
+                )}
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
+                </svg>
+                <span>
+                  Útil{comment.helpfulCount > 0 ? ` · ${comment.helpfulCount}` : ''}
+                </span>
+              </button>
+            )}
+            {comment.helpfulCount > 0 && (!currentUserId || isAuthor) && (
+              <span className="inline-flex items-center gap-1 text-emerald-700">
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
+                </svg>
+                <span className="font-semibold">{comment.helpfulCount} útil</span>
+              </span>
+            )}
             {isAuthor && (
               <button type="button" onClick={() => setEditing(true)} className="font-semibold text-gray-500 hover:text-[#F37E20]">
                 Editar
@@ -269,7 +311,10 @@ export function CourseForum({ courseId }: { courseId: Id<'courses'> }) {
           className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#F37E20] focus:outline-none"
           maxLength={2000}
         />
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-gray-400">
+            Markdown: **negrito**, *itálico*, `código`, &gt; citação, listas com - ou 1.
+          </p>
           <button
             type="submit"
             disabled={!text.trim() || busy}

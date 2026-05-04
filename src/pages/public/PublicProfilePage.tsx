@@ -9,6 +9,7 @@ import { DonateButton } from '@/components/donate/DonateButton'
 import { VerifiedBadge } from '@/components/VerifiedBadge'
 import { ProfileSearchButton } from '@/components/dashboard/ProfileSearchButton'
 import { useBreadcrumbJsonLd, useJsonLd, useSeo } from '@/lib/seo'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const PROFILE_ORIGIN =
   typeof window !== 'undefined' ? window.location.origin : 'https://resenhadoteologo.com'
@@ -342,8 +343,30 @@ export function PublicProfilePage() {
 
   if (profile === undefined) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0F141A]">
-        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
+      <div className="min-h-screen bg-[#0F141A] text-white">
+        <div className="mx-auto max-w-4xl px-4 py-12 space-y-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <Skeleton variant="dark" className="h-24 w-24" rounded="full" />
+            <Skeleton variant="dark" className="h-7 w-56" />
+            <Skeleton variant="dark" className="h-4 w-40" />
+            <Skeleton variant="dark" className="h-4 w-72" />
+            <div className="flex gap-2">
+              <Skeleton variant="dark" className="h-9 w-28" rounded="full" />
+              <Skeleton variant="dark" className="h-9 w-24" rounded="full" />
+            </div>
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-white/8 bg-white/[0.025] p-4">
+                <Skeleton variant="dark" className="h-32 w-full" rounded="xl" />
+                <div className="mt-3 space-y-2">
+                  <Skeleton variant="dark" className="h-4 w-2/3" />
+                  <Skeleton variant="dark" className="h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

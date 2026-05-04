@@ -18,6 +18,14 @@ function formatSeconds(s: number | null) {
   return `${m}min`
 }
 
+function formatCount(n: number) {
+  if (n >= 1000) {
+    const k = n / 1000
+    return `${k.toFixed(k >= 10 ? 0 : 1).replace('.', ',')}k`
+  }
+  return String(n)
+}
+
 export function LessonPreviewPage() {
   const { courseSlug, lessonSlug } = useParams<{ courseSlug: string; lessonSlug: string }>()
   const { isSignedIn } = useUser()
@@ -139,11 +147,16 @@ export function LessonPreviewPage() {
     )
   }
 
-  const { lesson, course, siblingLessons } = data
+  const { lesson, course, siblingLessons, socialProof } = data
   const thumbnailUrl = lesson.youtubeVideoId
     ? `https://i.ytimg.com/vi/${lesson.youtubeVideoId}/hqdefault.jpg`
     : course.thumbnail ?? null
   const courseHref = `/cursos/${course.slug ?? course._id}`
+  const ctaHref = isSignedIn
+    ? courseHref
+    : `/cadastro?redirect=${encodeURIComponent(courseHref)}`
+  const ctaLabel = isSignedIn ? 'Ir para o curso' : 'Criar conta gratuita'
+  const showSocialProof = socialProof.enrolledCount > 0 || socialProof.certificatesCount > 0
 
   return (
     <PublicPageShell>
@@ -258,6 +271,41 @@ export function LessonPreviewPage() {
                   </section>
                 )}
 
+                {showSocialProof && (
+                  <section
+                    className="mt-8 rounded-2xl border border-white/8 bg-white/[0.03] p-5"
+                    aria-label="Prova social"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F2BD8A]">
+                      Quem está estudando
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-x-8 gap-y-3">
+                      {socialProof.enrolledCount > 0 && (
+                        <div>
+                          <p className="font-display text-2xl font-bold text-white">
+                            {formatCount(socialProof.enrolledCount)}
+                          </p>
+                          <p className="mt-0.5 text-xs text-white/56">
+                            {socialProof.enrolledCount === 1 ? 'aluno matriculado' : 'alunos matriculados'}
+                          </p>
+                        </div>
+                      )}
+                      {socialProof.certificatesCount > 0 && (
+                        <div>
+                          <p className="font-display text-2xl font-bold text-white">
+                            {formatCount(socialProof.certificatesCount)}
+                          </p>
+                          <p className="mt-0.5 text-xs text-white/56">
+                            {socialProof.certificatesCount === 1
+                              ? 'certificado emitido'
+                              : 'certificados emitidos'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+
                 <section className="mt-8 rounded-[1.6rem] border border-[#F37E20]/24 bg-gradient-to-br from-[#F37E20]/12 to-[#F37E20]/4 p-6 md:p-8">
                   <h2 className="font-display text-xl font-bold text-white md:text-2xl">
                     {isSignedIn
@@ -269,14 +317,10 @@ export function LessonPreviewPage() {
                   </p>
                   <div className="mt-5 flex flex-wrap gap-3">
                     <Link
-                      to={
-                        isSignedIn
-                          ? courseHref
-                          : `/cadastro?redirect=${encodeURIComponent(courseHref)}`
-                      }
+                      to={ctaHref}
                       className="inline-flex items-center justify-center rounded-2xl bg-[#F37E20] px-5 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(243,126,32,0.30)] transition-all hover:bg-[#e06e10]"
                     >
-                      {isSignedIn ? 'Ir para o curso' : 'Criar conta gratuita'}
+                      {ctaLabel}
                     </Link>
                     <Link
                       to={courseHref}
@@ -353,6 +397,29 @@ export function LessonPreviewPage() {
           </div>
         </div>
       </main>
+
+      {/* Sticky CTA bottom (mobile/tablet). Aparece sobre a página com
+          backdrop blur. Esconde no desktop pois o card de CTA já é grande. */}
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-[#0F141A]/92 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
+        role="region"
+        aria-label="Continuar estudando"
+      >
+        <div className="pointer-events-auto mx-auto flex max-w-3xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F2BD8A]">
+              Curso gratuito
+            </p>
+            <p className="truncate text-sm font-semibold text-white">{course.title}</p>
+          </div>
+          <Link
+            to={ctaHref}
+            className="flex-shrink-0 rounded-2xl bg-[#F37E20] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_32px_rgba(243,126,32,0.30)] transition-all hover:bg-[#e06e10]"
+          >
+            {ctaLabel}
+          </Link>
+        </div>
+      </div>
     </div>
     </PublicPageShell>
   )

@@ -22,6 +22,10 @@ import { fetchChapter, type BibleVerse } from '@/lib/bible/api'
 import { DonateButton } from '@/components/donate/DonateButton'
 import { FlashcardsLessonSection } from '@/components/aula/FlashcardsLessonSection'
 import { CourseInDevelopmentNotice } from '@/components/aula/CourseInDevelopmentNotice'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { LessonCelebrationToast } from '@/components/aula/LessonCelebrationToast'
+import { CommentMarkdown } from '@/components/comments/CommentMarkdown'
+import { useCurrentAppUser } from '@/lib/currentUser'
 
 // ─── YouTube Player ───────────────────────────────────────────────────────────
 
@@ -36,6 +40,7 @@ declare global {
           events: {
             onReady?: (e: { target: YTPlayer }) => void
             onStateChange?: (e: { data: number; target: YTPlayer }) => void
+            onPlaybackQualityChange?: (e: { data: string; target: YTPlayer }) => void
           }
         }
       ) => YTPlayer
@@ -54,6 +59,27 @@ interface YTPlayer {
   destroy: () => void
   setPlaybackRate: (rate: number) => void
   getPlaybackRate: () => number
+  getAvailableQualityLevels?: () => string[]
+  getPlaybackQuality?: () => string
+  setPlaybackQuality?: (level: string) => void
+  addEventListener?: (event: string, handler: (e: unknown) => void) => void
+}
+
+const QUALITY_LABELS: Record<string, string> = {
+  auto: 'Auto',
+  tiny: '144p',
+  small: '240p',
+  medium: '360p',
+  large: '480p',
+  hd720: '720p',
+  hd1080: '1080p',
+  hd1440: '1440p',
+  hd2160: '2160p',
+  highres: 'Alta',
+}
+
+function qualityLabel(level: string): string {
+  return QUALITY_LABELS[level] ?? level
 }
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
@@ -129,6 +155,10 @@ function VideoPlayer({
   const [overlayVisible, setOverlayVisible] = useState(true)
   const [blockToast, setBlockToast] = useState(false)
   const [playbackRate, setPlaybackRate] = useState<number>(() => readSavedPlaybackRate())
+  const [availableQualities, setAvailableQualities] = useState<string[]>([])
+  const [currentQuality, setCurrentQuality] = useState<string>('auto')
+  const [qualityMenuOpen, setQualityMenuOpen] = useState(false)
+  const qualityMenuRef = useRef<HTMLDivElement>(null)
 
   const videoId = extractYouTubeId(youtubeUrl)
 
@@ -182,6 +212,17 @@ function VideoPlayer({
               // setPlaybackRate quando onReady dispara em conexoes lentas.
             }
           }
+          // Qualidades disponíveis só ficam acessíveis depois que o vídeo
+          // começa a carregar. Tentamos no ready e o onPlaybackQualityChange
+          // confirma o estado real.
+          try {
+            const levels = e.target.getAvailableQualityLevels?.() ?? []
+            if (levels.length > 0) setAvailableQualities(levels)
+            const q = e.target.getPlaybackQuality?.()
+            if (q) setCurrentQuality(q)
+          } catch {
+            // ignora
+          }
         },
         onStateChange: (e) => {
           if (e.data === window.YT.PlayerState.PLAYING) {
@@ -206,6 +247,37 @@ function VideoPlayer({
           }
           if (e.data === window.YT.PlayerState.ENDED) {
             handleComplete()
+          }
+          // Atualiza qualidades quando o player começa a tocar (algumas
+          // qualidades só ficam acessíveis após buffer inicial).
+          try {
+            const levels = e.target.getAvailableQualityLevels?.() ?? []
+            if (levels.length > 0) {
+              setAvailableQualities((prev) =>
+                levels.length === prev.length && levels.every((l, i) => l === prev[i])
+                  ? prev
+                  : levels,
+              )
+            }
+            const q = e.target.getPlaybackQuality?.()
+            if (q) setCurrentQuality((prev) => (prev === q ? prev : q))
+          } catch {
+            // ignora
+          }
+        },
+        onPlaybackQualityChange: (e) => {
+          if (e.data) setCurrentQuality(e.data)
+          try {
+            const levels = e.target.getAvailableQualityLevels?.() ?? []
+            if (levels.length > 0) {
+              setAvailableQualities((prev) =>
+                levels.length === prev.length && levels.every((l, i) => l === prev[i])
+                  ? prev
+                  : levels,
+              )
+            }
+          } catch {
+            // ignora
           }
         },
       },
@@ -304,6 +376,36 @@ function VideoPlayer({
     playerRef.current.seekTo(clamped, true)
     setCurrentTime(clamped)
   }
+
+  function selectQuality(level: string) {
+    if (!playerRef.current) return
+    try {
+      playerRef.current.setPlaybackQuality?.(level)
+      setCurrentQuality(level)
+    } catch {
+      // ignora
+    }
+    setQualityMenuOpen(false)
+  }
+
+  useEffect(() => {
+    if (!qualityMenuOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (!qualityMenuRef.current) return
+      if (!qualityMenuRef.current.contains(e.target as Node)) {
+        setQualityMenuOpen(false)
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setQualityMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [qualityMenuOpen])
 
   function cyclePlaybackRate() {
     if (!playerRef.current) return
@@ -524,6 +626,54 @@ function VideoPlayer({
             >
               {playbackRate}x
             </button>
+            {availableQualities.length > 0 && (
+              <div className="relative" ref={qualityMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setQualityMenuOpen((v) => !v)}
+                  className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-white/90 transition-colors hover:bg-white/20"
+                  aria-label="Mudar qualidade do vídeo"
+                  aria-haspopup="listbox"
+                  aria-expanded={qualityMenuOpen}
+                  title="Qualidade"
+                >
+                  {qualityLabel(currentQuality)}
+                </button>
+                {qualityMenuOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Qualidade do vídeo"
+                    className="absolute bottom-full right-0 mb-2 w-32 overflow-hidden rounded-xl border border-white/14 bg-[#0F141A]/95 py-1 shadow-[0_16px_40px_rgba(0,0,0,0.5)] backdrop-blur-md"
+                  >
+                    {availableQualities.map((level) => {
+                      const selected = level === currentQuality
+                      return (
+                        <button
+                          key={level}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          onClick={() => selectQuality(level)}
+                          className={cn(
+                            'flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors',
+                            selected
+                              ? 'bg-white/[0.08] text-[#F2BD8A]'
+                              : 'text-white/80 hover:bg-white/[0.06] hover:text-white',
+                          )}
+                        >
+                          <span>{qualityLabel(level)}</span>
+                          {selected && (
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
             <span className="tabular-nums tracking-wide text-white/90">
               {formatClock(currentTime)} / {formatClock(safeDuration)}
             </span>
@@ -1893,6 +2043,8 @@ type CommentItem = {
   text: string
   isOfficial?: boolean
   parentId?: Id<'lessonComments'>
+  helpfulCount: number
+  isHelpfulByMe: boolean
   createdAt: number
   editedAt?: number
   deletedAt?: number
@@ -1902,15 +2054,19 @@ function CommentRow({
   comment,
   isReply = false,
   canModerate = false,
+  currentUserId,
 }: {
   comment: CommentItem
   isReply?: boolean
   canModerate?: boolean
+  currentUserId: string | null
 }) {
   const deleted = Boolean(comment.deletedAt)
   const softDelete = useMutation(api.lessonComments.softDelete)
   const setOfficial = useMutation(api.lessonComments.setOfficial)
+  const markHelpful = useMutation(api.lessonComments.markHelpful)
   const [moderating, setModerating] = useState(false)
+  const isAuthor = currentUserId === comment.authorId
 
   async function handleRemove() {
     if (moderating) return
@@ -1928,6 +2084,16 @@ function CommentRow({
     setModerating(true)
     try {
       await setOfficial({ id: comment._id, isOfficial: !comment.isOfficial })
+    } finally {
+      setModerating(false)
+    }
+  }
+
+  async function handleToggleHelpful() {
+    if (moderating || !currentUserId) return
+    setModerating(true)
+    try {
+      await markHelpful({ commentId: comment._id })
     } finally {
       setModerating(false)
     }
@@ -1968,17 +2134,45 @@ function CommentRow({
             {comment.editedAt ? ' (editado)' : ''}
           </span>
         </div>
-        <p
-          className={cn(
-            'mt-1 whitespace-pre-wrap break-words text-sm leading-6',
-            deleted ? 'italic text-gray-400' : 'text-gray-700'
-          )}
-        >
-          {deleted ? 'Comentário removido.' : comment.text}
-        </p>
-        {canModerate && !deleted && (
+        {deleted ? (
+          <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 italic text-gray-400">
+            Comentário removido.
+          </p>
+        ) : (
+          <CommentMarkdown text={comment.text} variant="light" className="mt-1 break-words" />
+        )}
+        {!deleted && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            {isReply && (
+            {currentUserId && !isAuthor && (
+              <button
+                type="button"
+                onClick={handleToggleHelpful}
+                disabled={moderating}
+                aria-pressed={comment.isHelpfulByMe}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-60',
+                  comment.isHelpfulByMe
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600',
+                )}
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
+                </svg>
+                <span>
+                  Útil{comment.helpfulCount > 0 ? ` · ${comment.helpfulCount}` : ''}
+                </span>
+              </button>
+            )}
+            {comment.helpfulCount > 0 && (!currentUserId || isAuthor) && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
+                </svg>
+                <span>{comment.helpfulCount} útil</span>
+              </span>
+            )}
+            {canModerate && isReply && (
               <button
                 type="button"
                 onClick={handleToggleOfficial}
@@ -1988,14 +2182,16 @@ function CommentRow({
                 {comment.isOfficial ? 'Remover marcação oficial' : 'Marcar como resposta oficial'}
               </button>
             )}
-            <button
-              type="button"
-              onClick={handleRemove}
-              disabled={moderating}
-              className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-60"
-            >
-              {moderating ? 'Processando...' : 'Remover'}
-            </button>
+            {canModerate && (
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={moderating}
+                className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-60"
+              >
+                {moderating ? 'Processando...' : 'Remover'}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -2004,6 +2200,8 @@ function CommentRow({
 }
 
 function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
+  const { currentUser } = useCurrentAppUser()
+  const currentUserId = currentUser?.clerkId ?? null
   const threadData = useQuery(api.lessonComments.listByLesson, { lessonId })
   const thread = threadData?.threads
   const canModerate = threadData?.viewerRole === 'criador'
@@ -2084,10 +2282,15 @@ function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
           maxLength={2000}
           className="min-h-[80px] w-full rounded-xl border border-gray-200 bg-[#F7F5F2] px-4 py-3 text-sm leading-6 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
         />
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs text-gray-400">
-            {rootText.length} / 2.000
-          </span>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs text-gray-400">
+              {rootText.length} / 2.000
+            </span>
+            <span className="text-[11px] text-gray-400">
+              Markdown: **negrito**, *itálico*, `código`, &gt; citação, listas com - ou 1.
+            </span>
+          </div>
           <button
             type="button"
             onClick={handlePostRoot}
@@ -2116,13 +2319,18 @@ function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
               key={root._id}
               className="rounded-2xl border border-gray-200 bg-white p-4"
             >
-              <CommentRow comment={root as CommentItem} canModerate={canModerate} />
+              <CommentRow
+                comment={root as CommentItem}
+                canModerate={canModerate}
+                currentUserId={currentUserId}
+              />
               {root.replies.map((reply) => (
                 <CommentRow
                   key={reply._id}
                   comment={reply as CommentItem}
                   isReply
                   canModerate={canModerate}
+                  currentUserId={currentUserId}
                 />
               ))}
 
@@ -2519,6 +2727,46 @@ function QuizSection({
 
 // ─── AulaPage ─────────────────────────────────────────────────────────────────
 
+// Skeleton da página de aula. Reproduz o layout: barra superior, área do
+// player 16:9 ocupando o topo, título + meta abaixo, lista de aulas no aside
+// (md+). Mostrado enquanto a query principal `student.getLesson` resolve.
+function AulaPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#F7F5F2]">
+      <div className="border-b border-[#E6DBCF] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          <Skeleton variant="light" className="h-4 w-40" />
+          <Skeleton variant="light" className="h-8 w-24" rounded="full" />
+        </div>
+      </div>
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[1fr_320px]">
+        <div className="space-y-4">
+          <Skeleton variant="light" className="aspect-video w-full" rounded="2xl" />
+          <Skeleton variant="light" className="h-7 w-3/4" />
+          <Skeleton variant="light" className="h-4 w-1/2" />
+          <div className="mt-6 space-y-2">
+            <Skeleton variant="light" className="h-3.5 w-full" />
+            <Skeleton variant="light" className="h-3.5 w-11/12" />
+            <Skeleton variant="light" className="h-3.5 w-9/12" />
+          </div>
+        </div>
+        <aside className="space-y-3">
+          <Skeleton variant="light" className="h-5 w-32" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-[#E6DBCF] bg-white p-3">
+              <Skeleton variant="light" className="h-8 w-8" rounded="full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton variant="light" className="h-3.5 w-3/4" />
+                <Skeleton variant="light" className="h-3 w-1/3" />
+              </div>
+            </div>
+          ))}
+        </aside>
+      </div>
+    </div>
+  )
+}
+
 export function AulaPage() {
   const { courseId: rawCourseRef, lessonId: rawLessonRef } = useParams<{
     courseId: string
@@ -2643,6 +2891,28 @@ export function AulaPage() {
     setReachedThresholdLocal(false)
   }, [lessonId, data?.progress?.watchResetAt])
 
+  // Celebração ao concluir aula. Dispara apenas na transição não-concluída →
+  // concluída; evita firing no primeiro render quando a aula já estava
+  // concluída ao abrir a página.
+  const [celebrationTrigger, setCelebrationTrigger] = useState(0)
+  const prevCompletedRef = useRef<boolean | null>(null)
+  useEffect(() => {
+    if (!data) return
+    const completed = Boolean(data.progress?.completed)
+    if (prevCompletedRef.current === null) {
+      prevCompletedRef.current = completed
+      return
+    }
+    if (prevCompletedRef.current === false && completed) {
+      setCelebrationTrigger((t) => t + 1)
+    }
+    prevCompletedRef.current = completed
+  }, [data])
+  useEffect(() => {
+    // Resetar ao trocar de aula para que a próxima possa celebrar.
+    prevCompletedRef.current = null
+  }, [lessonId])
+
   const progressPercent = data?.progress
     ? data.progress.totalSeconds > 0
       ? Math.round(
@@ -2694,19 +2964,11 @@ export function AulaPage() {
   }, [data, rawCourseRef, navigate])
 
   if (data === undefined || (isSlugBased && resolved === undefined)) {
-    return (
-      <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
-      </div>
-    )
+    return <AulaPageSkeleton />
   }
 
   if (!data) {
-    return (
-      <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20] animate-spin" />
-      </div>
-    )
+    return <AulaPageSkeleton />
   }
 
   const {
@@ -2753,6 +3015,7 @@ export function AulaPage() {
           : 'min-h-screen',
       )}
     >
+      <LessonCelebrationToast trigger={celebrationTrigger} />
       {/* Header fixo com breadcrumb, contador e voltar */}
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">

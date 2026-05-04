@@ -745,10 +745,37 @@ export const getStudentDashboard = query({
 
     const totalWatchSeconds = progressRecords.reduce((s, p) => s + (p.watchedSeconds ?? 0), 0)
 
-    // Para cada matrícula, calcula progresso e busca a próxima aula pendente.
-    // Course/lessons/modules são buscados em paralelo (3x mais rápido por curso).
+    // Para cada matrícula, calcula progresso. Para cursos JÁ concluídos,
+    // pulamos lessons/modules (não precisamos da próxima aula). Isso recorta
+    // o trabalho pela metade quando o aluno tem muitos cursos concluídos.
     const courses = await Promise.all(
       enrollments.map(async (enrollment) => {
+        const courseProgress = progressRecords.filter((p) => p.courseId === enrollment.courseId)
+        const completedLessons = courseProgress.filter((p) => p.completed).length
+        const mostRecent = courseProgress.reduce(
+          (acc, p) => Math.max(acc, p._creationTime ?? 0),
+          0,
+        )
+
+        if (enrollment.certificateIssued) {
+          const course = await ctx.db.get(enrollment.courseId)
+          if (!course) return null
+          const totalLessons = course.totalLessons || 1
+          return {
+            courseId: enrollment.courseId,
+            courseTitle: course.title,
+            courseThumbnail: course.thumbnail,
+            completedLessons,
+            totalLessons,
+            percentage: 100,
+            certificateIssued: true,
+            completedAt: enrollment.completedAt,
+            nextLessonId: undefined as Id<'lessons'> | undefined,
+            nextLessonTitle: undefined as string | undefined,
+            lastActivityAt: mostRecent,
+          }
+        }
+
         const [course, lessons, modules] = await Promise.all([
           ctx.db.get(enrollment.courseId),
           ctx.db
@@ -762,8 +789,6 @@ export const getStudentDashboard = query({
         ])
         if (!course) return null
 
-        const courseProgress = progressRecords.filter((p) => p.courseId === enrollment.courseId)
-        const completedLessons = courseProgress.filter((p) => p.completed).length
         const totalLessons = course.totalLessons || 1
         const percentage = Math.round((completedLessons / totalLessons) * 100)
 
@@ -782,12 +807,6 @@ export const getStudentDashboard = query({
           return !p || !p.completed
         })
 
-        // Última interação: data do progress mais recente (para ordenação "continue")
-        const mostRecent = courseProgress.reduce(
-          (acc, p) => Math.max(acc, p._creationTime ?? 0),
-          0,
-        )
-
         return {
           courseId: enrollment.courseId,
           courseTitle: course.title,
@@ -795,7 +814,7 @@ export const getStudentDashboard = query({
           completedLessons,
           totalLessons,
           percentage,
-          certificateIssued: !!enrollment.certificateIssued,
+          certificateIssued: false,
           completedAt: enrollment.completedAt,
           nextLessonId: nextLesson?._id,
           nextLessonTitle: nextLesson?.title,
