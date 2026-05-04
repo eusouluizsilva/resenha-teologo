@@ -1,428 +1,48 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { useClerk } from '@clerk/clerk-react'
-import { useNavigate } from 'react-router-dom'
 import { api } from '@convex/_generated/api'
-import {
-  brandInputClass,
-  brandPanelClass,
-  brandPanelSoftClass,
-  brandPrimaryButtonClass,
-  brandEyebrowClass,
-  cn,
-} from '@/lib/brand'
+import type { Id } from '@convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { DashboardPageShell, DashboardStatusPill } from '@/components/dashboard/PageShell'
-import type { Id } from '@convex/_generated/dataModel'
-
-// ─── Constantes ────────────────────────────────────────────────────────────────
-
-const DENOMINATIONS = [
-  { value: '', label: 'Selecione a denominação' },
-  { value: 'assembleia-de-deus', label: 'Assembleia de Deus' },
-  { value: 'batista', label: 'Batista' },
-  { value: 'presbiteriana', label: 'Presbiteriana' },
-  { value: 'metodista', label: 'Metodista' },
-  { value: 'adventista', label: 'Adventista' },
-  { value: 'luterana', label: 'Luterana' },
-  { value: 'anglicana', label: 'Anglicana' },
-  { value: 'quadrangular', label: 'Quadrangular' },
-  { value: 'sara-nossa-terra', label: 'Sara Nossa Terra' },
-  { value: 'renovada', label: 'Igreja Renascer / Renovada' },
-  { value: 'catolica', label: 'Católica' },
-  { value: 'sem-denominacao', label: 'Sem denominação' },
-  { value: 'outra', label: 'Outra' },
-]
-
-const CHURCH_ROLES = [
-  { value: '', label: 'Selecione o cargo' },
-  { value: 'membro', label: 'Membro' },
-  { value: 'lider-celula', label: 'Líder de Célula' },
-  { value: 'diacono', label: 'Diácono' },
-  { value: 'presbitero', label: 'Presbítero' },
-  { value: 'pastor', label: 'Pastor' },
-  { value: 'bispo', label: 'Bispo' },
-  { value: 'missionario', label: 'Missionário' },
-  { value: 'seminarista', label: 'Seminarista' },
-  { value: 'professor', label: 'Professor de Teologia' },
-  { value: 'outro', label: 'Outro' },
-]
-
-const FUNCTION_LABELS: Record<string, string> = {
-  aluno: 'Aluno',
-  criador: 'Professor',
-  instituicao: 'Instituição',
-}
-
-const PHONE_COUNTRIES = [
-  { code: '+55', label: '+55 Brasil' },
-  { code: '+1', label: '+1 EUA / Canadá' },
-  { code: '+351', label: '+351 Portugal' },
-  { code: '+34', label: '+34 Espanha' },
-  { code: '+54', label: '+54 Argentina' },
-  { code: '+52', label: '+52 México' },
-  { code: '+57', label: '+57 Colômbia' },
-  { code: '+56', label: '+56 Chile' },
-  { code: '+598', label: '+598 Uruguai' },
-  { code: '+595', label: '+595 Paraguai' },
-  { code: '+44', label: '+44 Reino Unido' },
-  { code: '+49', label: '+49 Alemanha' },
-  { code: '+33', label: '+33 França' },
-  { code: '+39', label: '+39 Itália' },
-  { code: '+61', label: '+61 Austrália' },
-]
-
-// ─── Tipos ─────────────────────────────────────────────────────────────────────
-
-type TabId = 'visao-geral' | 'dados-pessoais' | 'perfil-publico' | 'conquistas' | 'depoimentos' | 'privacidade'
-
-type FormState = {
-  firstName: string
-  lastName: string
-  bio: string
-  website: string
-  youtubeChannel: string
-  instagram: string
-  facebook: string
-  linkedin: string
-  twitter: string
-  phone: string
-  phoneCountry: string
-  address: string
-  addressNumber: string
-  neighborhood: string
-  cep: string
-  city: string
-  state: string
-  institution: string
-  cnpj: string
-  denomination: string
-  churchRole: string
-  churchName: string
-  churchInstagram: string
-}
-
-const EMPTY_FORM: FormState = {
-  firstName: '',
-  lastName: '',
-  bio: '',
-  website: '',
-  youtubeChannel: '',
-  instagram: '',
-  facebook: '',
-  linkedin: '',
-  twitter: '',
-  phone: '',
-  phoneCountry: '+55',
-  address: '',
-  addressNumber: '',
-  neighborhood: '',
-  cep: '',
-  city: '',
-  state: '',
-  institution: '',
-  cnpj: '',
-  denomination: '',
-  churchRole: '',
-  churchName: '',
-  churchInstagram: '',
-}
-
-// ─── Normalização de URLs sociais ──────────────────────────────────────────────
-// Usuários colam URL completa, @handle, ou só o handle. Guardamos o formato
-// mais compacto (handle puro para Instagram/Twitter/LinkedIn/Facebook/YouTube,
-// URL completa para website). Isso permite renderizar consistentemente depois.
-
-function normalizeSocialHandle(
-  raw: string,
-  platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin' | 'youtube',
-): string {
-  const trimmed = raw.trim()
-  if (!trimmed) return ''
-
-  // Remove protocolo e domínio conhecido, pegando só o caminho/handle.
-  let value = trimmed
-  try {
-    if (value.includes('://')) {
-      const u = new URL(value)
-      value = u.pathname.replace(/^\/+/, '').replace(/\/+$/, '')
-      // YouTube aceita /@handle, /c/nome, /channel/ID, /user/nome
-      if (platform === 'youtube') {
-        const segments = value.split('/').filter(Boolean)
-        // Se primeiro segmento é c/user/channel/@handle, pegar o segundo
-        if (['c', 'user', 'channel'].includes(segments[0])) {
-          return segments[1] ?? ''
-        }
-        return segments[0] ?? ''
-      }
-      // Facebook: profile.php?id=XXX tem o id na query
-      if (platform === 'facebook' && u.search.includes('id=')) {
-        const id = new URLSearchParams(u.search).get('id')
-        return id ?? value.split('/')[0] ?? ''
-      }
-      // LinkedIn: /in/nome ou /company/nome
-      if (platform === 'linkedin') {
-        const segments = value.split('/').filter(Boolean)
-        if (['in', 'company'].includes(segments[0])) return segments[1] ?? ''
-        return segments[0] ?? ''
-      }
-      // Instagram/Twitter: primeiro segmento do path
-      return value.split('/')[0] ?? ''
-    }
-  } catch {
-    // URL inválida: cai na normalização básica abaixo.
-  }
-
-  // @handle ou handle puro
-  return value.replace(/^@/, '').replace(/\/+$/, '')
-}
-
-function normalizeWebsite(raw: string): string {
-  const trimmed = raw.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  // Sem protocolo: prefixa https:// se tiver ponto (parece domínio)
-  if (/\./.test(trimmed)) return `https://${trimmed}`
-  return trimmed
-}
-
-// ─── TabBar ────────────────────────────────────────────────────────────────────
-
-function TabBar({
-  tabs,
-  active,
-  onChange,
-}: {
-  tabs: { id: TabId; label: string }[]
-  active: TabId
-  onChange: (id: TabId) => void
-}) {
-  return (
-    <div className="mb-8 flex gap-0.5 overflow-x-auto border-b border-white/8 pb-0">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={cn(
-            'relative shrink-0 px-4 pb-3 pt-1 text-sm font-medium transition-all duration-200',
-            active === tab.id
-              ? 'text-white after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:rounded-full after:bg-[#F37E20] after:content-[""]'
-              : 'text-white/44 hover:text-white/70',
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ─── Toggle switch ─────────────────────────────────────────────────────────────
-
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      className={cn(
-        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
-        value ? 'bg-[#F37E20]' : 'bg-white/14',
-      )}
-    >
-      <span
-        className={cn(
-          'inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200',
-          value ? 'translate-x-5' : 'translate-x-0',
-        )}
-      />
-    </button>
-  )
-}
-
-// ─── StatCard ──────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5 text-center">
-      <p className="font-display text-2xl font-bold text-white">{value}</p>
-      <p className="mt-1 text-xs text-white/48">{label}</p>
-    </div>
-  )
-}
-
-// ─── CourseProgressRow ─────────────────────────────────────────────────────────
-
-function CourseProgressRow({
-  courseTitle,
-  percentage,
-  completedLessons,
-  totalLessons,
-  certificateIssued,
-}: {
-  courseTitle: string
-  percentage: number
-  completedLessons: number
-  totalLessons: number
-  certificateIssued: boolean
-}) {
-  return (
-    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-white leading-snug">{courseTitle}</p>
-        {certificateIssued ? (
-          <span className="flex-shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300">
-            Concluído
-          </span>
-        ) : null}
-      </div>
-      <div className="mt-3">
-        <div className="mb-1.5 flex items-center justify-between text-xs text-white/40">
-          <span>{completedLessons} de {totalLessons} aulas</span>
-          <span>{percentage}%</span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-          <div
-            className="h-full rounded-full bg-[#F37E20] transition-all"
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── PendingTestimonialCard ────────────────────────────────────────────────────
-
-function PendingTestimonialCard({
-  id,
-  text,
-  authorName,
-  createdAt,
-  onApprove,
-  onReject,
-  onRemove,
-}: {
-  id: Id<'testimonials'>
-  text: string
-  authorName: string
-  createdAt: number
-  onApprove: (id: Id<'testimonials'>) => void
-  onReject: (id: Id<'testimonials'>) => void
-  onRemove: (id: Id<'testimonials'>) => void
-}) {
-  const date = new Date(createdAt).toLocaleDateString('pt-BR')
-  return (
-    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-white">{authorName}</p>
-          <p className="text-xs text-white/36">{date}</p>
-        </div>
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <button
-            onClick={() => onApprove(id)}
-            className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/20"
-          >
-            Aprovar
-          </button>
-          <button
-            onClick={() => onReject(id)}
-            className="rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-300 transition-all hover:bg-red-400/20"
-          >
-            Rejeitar
-          </button>
-          <button
-            onClick={() => onRemove(id)}
-            className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/40 transition-all hover:border-red-400/20 hover:bg-red-400/8 hover:text-red-300"
-          >
-            Excluir
-          </button>
-        </div>
-      </div>
-      <p className="mt-3 text-sm leading-7 text-white/62">{text}</p>
-    </div>
-  )
-}
-
-// ─── ApprovedTestimonialCard ───────────────────────────────────────────────────
-
-function ApprovedTestimonialCard({
-  id,
-  text,
-  authorName,
-  authorHandle,
-  createdAt,
-  onRemove,
-}: {
-  id: Id<'testimonials'>
-  text: string
-  authorName: string
-  authorHandle?: string
-  createdAt: number
-  onRemove: (id: Id<'testimonials'>) => void
-}) {
-  const date = new Date(createdAt).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
-  const initials = authorName.slice(0, 2).toUpperCase()
-  return (
-    <div className="rounded-[1.4rem] border border-white/7 bg-white/[0.025] p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#F37E20]/16 bg-[#F37E20]/10">
-            <span className="text-xs font-semibold text-[#F2BD8A]">{initials}</span>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-white">{authorName}</p>
-            {authorHandle && (
-              <p className="text-xs text-white/36">@{authorHandle}</p>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-shrink-0 items-center gap-3">
-          <span className="text-xs text-white/28">{date}</span>
-          <button
-            onClick={() => onRemove(id)}
-            className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/40 transition-all hover:border-red-400/20 hover:bg-red-400/8 hover:text-red-300"
-          >
-            Remover
-          </button>
-        </div>
-      </div>
-      <p className="mt-3 text-sm leading-7 text-white/62">{text}</p>
-    </div>
-  )
-}
-
-// ─── Página principal ──────────────────────────────────────────────────────────
+import { TabBar } from './perfil/components/TabBar'
+import type { TabId } from './perfil/types'
+import { VisaoGeralTab } from './perfil/tabs/VisaoGeralTab'
+import { DadosPessoaisTab } from './perfil/tabs/DadosPessoaisTab'
+import { PerfilPublicoTab } from './perfil/tabs/PerfilPublicoTab'
+import { ConquistasTab } from './perfil/tabs/ConquistasTab'
+import { DepoimentosTab } from './perfil/tabs/DepoimentosTab'
+import { PrivacidadeTab } from './perfil/tabs/PrivacidadeTab'
 
 export function PerfilPage() {
   const formId = useId()
   const [activeTab, setActiveTab] = useState<TabId>('visao-geral')
   const { clerkUser, currentUser, hasFunction, functions, isLoading } = useCurrentAppUser()
 
-  // Form state
-  const [form, setForm] = useState<FormState>(EMPTY_FORM)
-  const [saving, setSaving] = useState(false)
+  // Cross-tab state ─────────────────────────────────────────────────────────
   const [saved, setSaved] = useState(false)
-  const [formError, setFormError] = useState('')
 
-  // Handle state
   const [handleInput, setHandleInput] = useState('')
   const [handleError, setHandleError] = useState('')
   const [handleSaving, setHandleSaving] = useState(false)
 
-  // Visibility state
   const [visibility, setVisibility] = useState<'public' | 'unlisted'>('public')
   const [showProgress, setShowProgress] = useState(true)
   const [visibilitySaving, setVisibilitySaving] = useState(false)
   const [visibilitySaved, setVisibilitySaved] = useState(false)
 
-  // Avatar
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState('')
 
-  // Queries
+  // Sincroniza visibility/showProgress quando o currentUser chega do Convex.
+  useEffect(() => {
+    if (!currentUser) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisibility(currentUser.profileVisibility ?? 'public')
+    setShowProgress(currentUser.showProgressPublicly ?? true)
+  }, [currentUser])
+
+  // Queries ─────────────────────────────────────────────────────────────────
   const isAvailable = useQuery(
     api.handles.isAvailable,
     handleInput.length >= 3 ? { handle: handleInput } : 'skip',
@@ -436,73 +56,19 @@ export function PerfilPage() {
     api.testimonials.listApproved,
     currentUser?.clerkId && currentUser?.handle ? { profileUserId: currentUser.clerkId } : 'skip',
   )
+  const exportData = useQuery(
+    api.account.exportMyData,
+    activeTab === 'privacidade' && currentUser ? {} : 'skip',
+  )
 
-  // Mutations
-  const updateProfile = useMutation(api.users.updateProfile)
+  // Mutations ───────────────────────────────────────────────────────────────
   const claimHandle = useMutation(api.handles.claim)
   const updateVisibility = useMutation(api.handles.updateVisibility)
   const approveTestimonial = useMutation(api.testimonials.approve)
   const rejectTestimonial = useMutation(api.testimonials.reject)
   const removeTestimonial = useMutation(api.testimonials.remove)
-  const deleteAccount = useMutation(api.account.deleteAccount)
 
-  // Privacidade / LGPD
-  const exportData = useQuery(
-    api.account.exportMyData,
-    activeTab === 'privacidade' && currentUser ? {} : 'skip',
-  )
-  const { signOut } = useClerk()
-  const navigate = useNavigate()
-  const [exporting, setExporting] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
-
-  // Sync form from Convex user + Clerk
-  useEffect(() => {
-    if (!currentUser || !clerkUser) return
-    // Hidrata o form com dados do Convex + Clerk quando ambos chegam.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setForm({
-      firstName: clerkUser.firstName ?? '',
-      lastName: clerkUser.lastName ?? '',
-      bio: currentUser.bio ?? '',
-      website: currentUser.website ?? '',
-      youtubeChannel: currentUser.youtubeChannel ?? '',
-      instagram: currentUser.instagram ?? '',
-      facebook: currentUser.facebook ?? '',
-      linkedin: currentUser.linkedin ?? '',
-      twitter: currentUser.twitter ?? '',
-      phone: currentUser.phone ?? '',
-      phoneCountry: currentUser.phoneCountry ?? '+55',
-      address: currentUser.address ?? '',
-      addressNumber: currentUser.addressNumber ?? '',
-      neighborhood: currentUser.neighborhood ?? '',
-      cep: currentUser.cep ?? '',
-      city: currentUser.city ?? '',
-      state: currentUser.state ?? '',
-      institution: currentUser.institution ?? '',
-      cnpj: currentUser.cnpj ?? '',
-      denomination: currentUser.denomination ?? '',
-      churchRole: currentUser.churchRole ?? '',
-      churchName: currentUser.churchName ?? '',
-      churchInstagram: currentUser.churchInstagram ?? '',
-    })
-    setVisibility(currentUser.profileVisibility ?? 'public')
-    setShowProgress(currentUser.showProgressPublicly ?? true)
-  }, [currentUser, clerkUser])
-
-  // Handlers
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value } = e.target
-      setForm((prev) => ({ ...prev, [name]: value }))
-      setSaved(false)
-      setFormError('')
-    },
-    [],
-  )
-
+  // Avatar handler ──────────────────────────────────────────────────────────
   const handleAvatarChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
@@ -520,61 +86,11 @@ export function PerfilPage() {
     [clerkUser],
   )
 
-  async function handleSubmitForm(e: React.FormEvent) {
-    e.preventDefault()
-    if (!clerkUser) return
-    setSaving(true)
-    setSaved(false)
-    setFormError('')
-    try {
-      // Atualiza nome no Clerk
-      const firstNameTrimmed = form.firstName.trim()
-      const lastNameTrimmed = form.lastName.trim()
-      if (
-        firstNameTrimmed !== (clerkUser.firstName ?? '') ||
-        lastNameTrimmed !== (clerkUser.lastName ?? '')
-      ) {
-        await clerkUser.update({
-          firstName: firstNameTrimmed || undefined,
-          lastName: lastNameTrimmed || undefined,
-        })
-      }
+  const handlePickAvatar = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
 
-      const fullName = [firstNameTrimmed, lastNameTrimmed].filter(Boolean).join(' ')
-
-      await updateProfile({
-        clerkId: clerkUser.id,
-        name: fullName || undefined,
-        bio: form.bio.trim() || undefined,
-        website: normalizeWebsite(form.website) || undefined,
-        youtubeChannel: normalizeSocialHandle(form.youtubeChannel, 'youtube') || undefined,
-        instagram: normalizeSocialHandle(form.instagram, 'instagram') || undefined,
-        facebook: normalizeSocialHandle(form.facebook, 'facebook') || undefined,
-        linkedin: normalizeSocialHandle(form.linkedin, 'linkedin') || undefined,
-        twitter: normalizeSocialHandle(form.twitter, 'twitter') || undefined,
-        phone: form.phone.trim() || undefined,
-        phoneCountry: form.phone.trim() ? form.phoneCountry : undefined,
-        address: form.address.trim() || undefined,
-        addressNumber: form.addressNumber.trim() || undefined,
-        neighborhood: form.neighborhood.trim() || undefined,
-        cep: form.cep.trim() || undefined,
-        city: form.city.trim() || undefined,
-        state: form.state.trim() || undefined,
-        institution: form.institution.trim() || undefined,
-        cnpj: form.cnpj.trim() || undefined,
-        denomination: form.denomination || undefined,
-        churchRole: form.churchRole || undefined,
-        churchName: form.churchName.trim() || undefined,
-        churchInstagram: normalizeSocialHandle(form.churchInstagram, 'instagram') || undefined,
-      })
-      setSaved(true)
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Não foi possível salvar o perfil.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
+  // Handle (username) handlers ──────────────────────────────────────────────
   const handleClaimHandle = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
@@ -605,6 +121,15 @@ export function PerfilPage() {
     }
   }, [updateVisibility, visibility, showProgress])
 
+  const handleVisibilityToggleVisaoGeral = useCallback(
+    (next: 'public' | 'unlisted') => {
+      setVisibility(next)
+      void updateVisibility({ visibility: next, showProgressPublicly: showProgress })
+    },
+    [updateVisibility, showProgress],
+  )
+
+  // Testimonial handlers ────────────────────────────────────────────────────
   const handleApprove = useCallback(
     async (id: Id<'testimonials'>) => {
       try { await approveTestimonial({ testimonialId: id }) } catch { /* noop */ }
@@ -617,51 +142,14 @@ export function PerfilPage() {
     },
     [rejectTestimonial],
   )
-  const handleRemove = useCallback(
+  const handleRemoveTestimonial = useCallback(
     async (id: Id<'testimonials'>) => {
       try { await removeTestimonial({ testimonialId: id }) } catch { /* noop */ }
     },
     [removeTestimonial],
   )
 
-  async function handleExportData() {
-    if (!exportData) return
-    setExporting(true)
-    try {
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json',
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `meus-dados-${new Date().toISOString().slice(0, 10)}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } finally {
-      setExporting(false)
-    }
-  }
-
-  async function handleDeleteAccount() {
-    if (deleteConfirm.trim().toUpperCase() !== 'EXCLUIR') {
-      setDeleteError('Digite EXCLUIR para confirmar.')
-      return
-    }
-    setDeleting(true)
-    setDeleteError('')
-    try {
-      await deleteAccount({})
-      await signOut()
-      navigate('/', { replace: true })
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Falha ao excluir conta.')
-      setDeleting(false)
-    }
-  }
-
-  // Hooks de computação (devem rodar antes de qualquer early return)
+  // Derived values ──────────────────────────────────────────────────────────
   const handle = currentUser?.handle
   const handleInputTrimmed = handleInput.trim()
   const handleStatus = useMemo(() => {
@@ -699,139 +187,6 @@ export function PerfilPage() {
   const isCriador = hasFunction('criador')
   const isAluno = hasFunction('aluno')
 
-  const addressProfile = useMemo(() => {
-    switch (form.phoneCountry) {
-      case '+55': return {
-        address:     { label: 'Logradouro',        placeholder: 'Rua, Avenida, Travessa...' },
-        number:      { label: 'Número',             placeholder: '123' },
-        neighborhood:{ label: 'Bairro',             placeholder: 'Seu bairro', show: true },
-        postal:      { label: 'CEP',                placeholder: '00000-000' },
-        city:        { label: 'Cidade',             placeholder: 'Sua cidade' },
-        state:       { label: 'Estado',             placeholder: 'SP, RJ, MG...' },
-      }
-      case '+1': return {
-        address:     { label: 'Street Address',     placeholder: '123 Main St' },
-        number:      { label: 'Apt / Suite',        placeholder: 'Apt 4B' },
-        neighborhood:{ label: 'Neighborhood',       placeholder: '', show: false },
-        postal:      { label: 'ZIP / Postal Code',  placeholder: '10001' },
-        city:        { label: 'City',               placeholder: 'New York' },
-        state:       { label: 'State / Province',   placeholder: 'NY' },
-      }
-      case '+351': return {
-        address:     { label: 'Rua',                placeholder: 'Rua das Flores...' },
-        number:      { label: 'Número',             placeholder: '12' },
-        neighborhood:{ label: 'Freguesia',          placeholder: '', show: false },
-        postal:      { label: 'Código Postal',      placeholder: '1000-001' },
-        city:        { label: 'Localidade',         placeholder: 'Lisboa' },
-        state:       { label: 'Distrito / Região',  placeholder: 'Lisboa' },
-      }
-      case '+44': return {
-        address:     { label: 'Street',             placeholder: '10 Downing Street' },
-        number:      { label: 'House No.',          placeholder: '10' },
-        neighborhood:{ label: 'Area',               placeholder: '', show: false },
-        postal:      { label: 'Postcode',           placeholder: 'SW1A 2AA' },
-        city:        { label: 'City / Town',        placeholder: 'London' },
-        state:       { label: 'County',             placeholder: 'Greater London' },
-      }
-      case '+49': return {
-        address:     { label: 'Straße',             placeholder: 'Hauptstraße' },
-        number:      { label: 'Hausnummer',         placeholder: '1' },
-        neighborhood:{ label: 'Stadtteil',          placeholder: '', show: false },
-        postal:      { label: 'PLZ',                placeholder: '10115' },
-        city:        { label: 'Ort',                placeholder: 'Berlin' },
-        state:       { label: 'Bundesland',         placeholder: 'Berlin' },
-      }
-      case '+33': return {
-        address:     { label: 'Rue',                placeholder: 'Rue de Rivoli' },
-        number:      { label: 'Numéro',             placeholder: '1' },
-        neighborhood:{ label: 'Quartier',           placeholder: '', show: false },
-        postal:      { label: 'Code Postal',        placeholder: '75001' },
-        city:        { label: 'Ville',              placeholder: 'Paris' },
-        state:       { label: 'Département',        placeholder: 'Paris' },
-      }
-      case '+39': return {
-        address:     { label: 'Via / Piazza',       placeholder: 'Via Roma' },
-        number:      { label: 'Civico',             placeholder: '1' },
-        neighborhood:{ label: 'Quartiere',          placeholder: '', show: false },
-        postal:      { label: 'CAP',                placeholder: '00100' },
-        city:        { label: 'Comune',             placeholder: 'Roma' },
-        state:       { label: 'Provincia / Regione',placeholder: 'Lazio' },
-      }
-      case '+61': return {
-        address:     { label: 'Street Address',     placeholder: '1 George Street' },
-        number:      { label: 'Unit',               placeholder: 'Unit 2' },
-        neighborhood:{ label: 'Suburb',             placeholder: 'Sydney CBD', show: true },
-        postal:      { label: 'Postcode',           placeholder: '2000' },
-        city:        { label: 'City',               placeholder: 'Sydney' },
-        state:       { label: 'State / Territory',  placeholder: 'NSW' },
-      }
-      case '+54': return {
-        address:     { label: 'Calle',              placeholder: 'Av. Corrientes...' },
-        number:      { label: 'Número',             placeholder: '1234' },
-        neighborhood:{ label: 'Barrio',             placeholder: 'Palermo', show: true },
-        postal:      { label: 'Código Postal',      placeholder: '1043' },
-        city:        { label: 'Ciudad',             placeholder: 'Buenos Aires' },
-        state:       { label: 'Provincia',          placeholder: 'Buenos Aires' },
-      }
-      case '+52': return {
-        address:     { label: 'Calle',              placeholder: 'Av. Reforma...' },
-        number:      { label: 'Número',             placeholder: '1' },
-        neighborhood:{ label: 'Colonia',            placeholder: 'Polanco', show: true },
-        postal:      { label: 'Código Postal',      placeholder: '11560' },
-        city:        { label: 'Ciudad / Municipio', placeholder: 'Ciudad de México' },
-        state:       { label: 'Estado',             placeholder: 'CDMX' },
-      }
-      case '+57': return {
-        address:     { label: 'Calle / Carrera',    placeholder: 'Cra 7 # 32-16' },
-        number:      { label: 'Número / Piso',      placeholder: '301' },
-        neighborhood:{ label: 'Barrio',             placeholder: 'Chapinero', show: true },
-        postal:      { label: 'Código Postal',      placeholder: '110221' },
-        city:        { label: 'Ciudad',             placeholder: 'Bogotá' },
-        state:       { label: 'Departamento',       placeholder: 'Cundinamarca' },
-      }
-      case '+56': return {
-        address:     { label: 'Calle',              placeholder: 'Av. Providencia...' },
-        number:      { label: 'Número',             placeholder: '1234' },
-        neighborhood:{ label: 'Villa / Población',  placeholder: 'Providencia', show: true },
-        postal:      { label: 'Código Postal',      placeholder: '7500000' },
-        city:        { label: 'Ciudad',             placeholder: 'Santiago' },
-        state:       { label: 'Región',             placeholder: 'Metropolitana' },
-      }
-      case '+34': return {
-        address:     { label: 'Calle',              placeholder: 'C/ Gran Vía...' },
-        number:      { label: 'Número / Piso',      placeholder: '1, 2º' },
-        neighborhood:{ label: 'Barrio',             placeholder: '', show: false },
-        postal:      { label: 'Código Postal',      placeholder: '28001' },
-        city:        { label: 'Municipio',          placeholder: 'Madrid' },
-        state:       { label: 'Provincia',          placeholder: 'Madrid' },
-      }
-      case '+598': return {
-        address:     { label: 'Calle',              placeholder: 'Av. 18 de Julio...' },
-        number:      { label: 'Número',             placeholder: '1234' },
-        neighborhood:{ label: 'Barrio',             placeholder: 'Centro', show: true },
-        postal:      { label: 'Código Postal',      placeholder: '11000' },
-        city:        { label: 'Ciudad',             placeholder: 'Montevideo' },
-        state:       { label: 'Departamento',       placeholder: 'Montevideo' },
-      }
-      case '+595': return {
-        address:     { label: 'Calle',              placeholder: 'Av. Mariscal López...' },
-        number:      { label: 'Número',             placeholder: '1234' },
-        neighborhood:{ label: 'Barrio',             placeholder: 'Centro', show: true },
-        postal:      { label: 'Código Postal',      placeholder: '1209' },
-        city:        { label: 'Ciudad',             placeholder: 'Asunción' },
-        state:       { label: 'Departamento',       placeholder: 'Central' },
-      }
-      default: return {
-        address:     { label: 'Street Address',     placeholder: 'Street, Avenue...' },
-        number:      { label: 'Number / Unit',      placeholder: '1' },
-        neighborhood:{ label: 'Neighborhood',       placeholder: '', show: false },
-        postal:      { label: 'Postal Code',        placeholder: '00000' },
-        city:        { label: 'City',               placeholder: 'Your city' },
-        state:       { label: 'State / Region',     placeholder: 'Region' },
-      }
-    }
-  }, [form.phoneCountry])
-
   const hasStats = !!myStats && myStats.totalCoursesEnrolled > 0
 
   const visibleTabs = useMemo(() => {
@@ -855,7 +210,6 @@ export function PerfilPage() {
     )
   }
 
-  // Se a aba ativa foi removida, voltar para visão geral
   const activeTabVisible = visibleTabs.some((t) => t.id === activeTab)
   const effectiveTab = activeTabVisible ? activeTab : 'visao-geral'
 
@@ -888,1040 +242,90 @@ export function PerfilPage() {
     >
       <TabBar tabs={visibleTabs} active={effectiveTab} onChange={setActiveTab} />
 
-      {/* ── Visão Geral ─────────────────────────────────────────────────────── */}
       {effectiveTab === 'visao-geral' && (
-        <div className="space-y-6">
-
-          {/* Card de identidade */}
-          <div className={cn('p-6', brandPanelClass)}>
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              {/* Avatar */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
-                className="group relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-[1.4rem] border border-white/10 transition-all hover:border-[#F37E20]/40"
-              >
-                {clerkUser.imageUrl ? (
-                  <img src={clerkUser.imageUrl} alt={displayName} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[#F37E20]/10">
-                    <span className="text-xl font-bold text-[#F2BD8A]">{initials}</span>
-                  </div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                  {uploadingAvatar ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  ) : (
-                    <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                    </svg>
-                  )}
-                </div>
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-display text-xl font-bold text-white leading-tight">{displayName}</p>
-                {email && <p className="mt-0.5 text-sm text-white/40">{email}</p>}
-                {handle ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <span className="text-sm text-white/52">@{handle}</span>
-                    <a
-                      href={`/${handle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl border border-[#F37E20]/24 bg-[#F37E20]/10 px-3.5 py-1.5 text-xs font-semibold text-[#F2BD8A] transition-all hover:border-[#F37E20]/40 hover:bg-[#F37E20]/16 hover:text-white"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                      </svg>
-                      Ver meu perfil público
-                    </a>
-                  </div>
-                ) : (
-                  <p className="mt-2 text-xs text-[#F2BD8A]/70">
-                    Sem handle definido.{' '}
-                    <button type="button" onClick={() => setActiveTab('perfil-publico')} className="hover:underline">
-                      Criar agora
-                    </button>
-                  </p>
-                )}
-                {functions.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {functions.map((fn) => (
-                      <span
-                        key={fn}
-                        className="rounded-full border border-[#F37E20]/20 bg-[#F37E20]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#F2BD8A]"
-                      >
-                        {FUNCTION_LABELS[fn] ?? fn}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            {avatarError && <p role="alert" className="mt-3 text-xs text-red-300">{avatarError}</p>}
-          </div>
-
-          {/* Visibilidade do perfil publico, sempre visivel. O toggle salva
-              a preferencia mesmo sem handle definido (a URL publica so existe
-              quando o handle e reservado, mas a escolha fica gravada). */}
-          <div className={cn('p-5', brandPanelClass)}>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4">
-                <div
-                  className={cn(
-                    'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border',
-                    visibility === 'public'
-                      ? 'border-emerald-400/24 bg-emerald-400/10 text-emerald-300'
-                      : 'border-white/10 bg-white/[0.04] text-white/56',
-                  )}
-                >
-                  {visibility === 'public' ? (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/36">
-                    Perfil público
-                  </p>
-                  <p className="mt-1 text-base font-semibold text-white">
-                    {visibility === 'public' ? 'Visível publicamente' : 'Privado'}
-                  </p>
-                  <p className="mt-1 text-xs text-white/48">
-                    {handle
-                      ? visibility === 'public'
-                        ? `Qualquer pessoa pode acessar resenhadoteologo.com/${handle}.`
-                        : 'Seu perfil existe mas não aparece em buscas nem em listagens públicas.'
-                      : visibility === 'public'
-                        ? 'Sua escolha está salva. Reserve um @handle na aba Perfil público para ativar a URL pública.'
-                        : 'Sua escolha está salva. Mesmo se reservar um @handle, o perfil ficará oculto enquanto este toggle estiver desligado.'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 sm:flex-shrink-0">
-                <Toggle
-                  value={visibility === 'public'}
-                  onChange={(v) => {
-                    const next = v ? 'public' : 'unlisted'
-                    setVisibility(next)
-                    void updateVisibility({ visibility: next, showProgressPublicly: showProgress })
-                  }}
-                />
-                <span className="text-sm font-medium text-white/68">
-                  {visibility === 'public' ? 'Público' : 'Privado'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats (se houver dados) */}
-          {hasStats && (
-            <div>
-              <p className={cn('mb-4', brandEyebrowClass)}>Resumo de estudos</p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatCard
-                  label="Horas assistidas"
-                  value={`${Math.round((myStats?.totalWatchSeconds ?? 0) / 3600)}h`}
-                />
-                <StatCard
-                  label="Cursos matriculados"
-                  value={String(myStats?.totalCoursesEnrolled ?? 0)}
-                />
-                <StatCard
-                  label="Cursos concluídos"
-                  value={String(myStats?.totalCoursesCompleted ?? 0)}
-                />
-                <StatCard
-                  label="Certificados"
-                  value={String(myStats?.certificateCount ?? 0)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Atalhos */}
-          <div>
-            <p className={cn('mb-4', brandEyebrowClass)}>Acesso rápido</p>
-            <div className="space-y-2">
-              {[
-                {
-                  tab: 'dados-pessoais' as TabId,
-                  label: 'Editar dados pessoais',
-                  desc: 'Bio, website, telefone, redes sociais, endereço e vínculo ministerial',
-                  icon: (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                  ),
-                },
-                {
-                  tab: 'perfil-publico' as TabId,
-                  label: 'Configurar perfil público',
-                  desc: 'Handle, URL pública e controles de visibilidade',
-                  icon: (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-                    </svg>
-                  ),
-                },
-                ...(isAluno || hasStats ? [{
-                  tab: 'conquistas' as TabId,
-                  label: 'Ver conquistas e progresso',
-                  desc: 'Cursos, progresso por aula e certificados emitidos',
-                  icon: (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                    </svg>
-                  ),
-                }] : []),
-                ...(handle ? [{
-                  tab: 'depoimentos' as TabId,
-                  label: 'Gerenciar depoimentos',
-                  desc: 'Aprovar, rejeitar ou remover depoimentos do seu perfil',
-                  icon: (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                    </svg>
-                  ),
-                }] : []),
-              ].map((item) => (
-                <button
-                  key={item.tab}
-                  type="button"
-                  onClick={() => setActiveTab(item.tab)}
-                  className="flex w-full items-center gap-4 rounded-[1.5rem] border border-white/7 bg-white/[0.025] p-4 text-left transition-all hover:border-[#F37E20]/18 hover:bg-[#F37E20]/6"
-                >
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#F37E20]/14 bg-[#F37E20]/10 text-[#F37E20]">
-                    {item.icon}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-white">{item.label}</p>
-                    <p className="mt-0.5 text-xs text-white/42">{item.desc}</p>
-                  </div>
-                  <svg className="h-4 w-4 flex-shrink-0 text-white/28" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <VisaoGeralTab
+          imageUrl={clerkUser.imageUrl}
+          displayName={displayName}
+          initials={initials}
+          email={email}
+          handle={handle}
+          functions={functions}
+          isAluno={isAluno}
+          hasStats={hasStats}
+          myStats={myStats}
+          visibility={visibility}
+          onChangeVisibility={handleVisibilityToggleVisaoGeral}
+          uploadingAvatar={uploadingAvatar}
+          avatarError={avatarError}
+          fileInputRef={fileInputRef}
+          onAvatarChange={handleAvatarChange}
+          onPickAvatar={handlePickAvatar}
+          setActiveTab={setActiveTab}
+        />
       )}
 
-      {/* ── Dados Pessoais ──────────────────────────────────────────────────── */}
       {effectiveTab === 'dados-pessoais' && (
-        <form onSubmit={handleSubmitForm} className="space-y-6">
-
-          {/* Avatar + Bio + Website */}
-          <div className={cn('space-y-5 p-6', brandPanelClass)}>
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              {/* Avatar */}
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  className="group relative h-24 w-24 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10 transition-all hover:border-[#F37E20]/40"
-                  title="Trocar foto de perfil"
-                >
-                  {clerkUser.imageUrl ? (
-                    <img src={clerkUser.imageUrl} alt={displayName} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#F37E20]/10">
-                      <span className="text-xl font-bold text-[#F2BD8A]">{initials}</span>
-                    </div>
-                  )}
-                  {/* Overlay sempre visível com baixa opacidade, mais forte no hover */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 opacity-60 transition-opacity group-hover:opacity-100">
-                    {uploadingAvatar ? (
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    ) : (
-                      <>
-                        <svg className="h-5 w-5 text-white drop-shadow" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                        </svg>
-                        <span className="text-[10px] font-semibold text-white drop-shadow">Trocar foto</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              </div>
-
-              {/* Campos de identidade */}
-              <div className="flex-1 space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor={`${formId}-firstName`} className="text-sm font-medium text-white/72">Nome</label>
-                    <input
-                      id={`${formId}-firstName`}
-                      name="firstName"
-                      value={form.firstName}
-                      onChange={handleChange}
-                      placeholder="Seu nome"
-                      className={brandInputClass}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor={`${formId}-lastName`} className="text-sm font-medium text-white/72">Sobrenome</label>
-                    <input
-                      id={`${formId}-lastName`}
-                      name="lastName"
-                      value={form.lastName}
-                      onChange={handleChange}
-                      placeholder="Seu sobrenome"
-                      className={brandInputClass}
-                    />
-                  </div>
-                </div>
-
-                {/* @usuário — estilo Instagram */}
-                <div className="space-y-2">
-                  <label htmlFor={`${formId}-handle`} className="text-sm font-medium text-white/72">Nome de usuário</label>
-                  <div className="space-y-1.5">
-                    <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 select-none text-sm font-medium text-white/50">@</span>
-                      <input
-                        id={`${formId}-handle`}
-                        className={cn(brandInputClass, 'pl-8 pr-10')}
-                        placeholder={handle ?? 'seuusuario'}
-                        value={handleInput}
-                        onChange={(e) => setHandleInput(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
-                        autoComplete="username"
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        {handleStatus === 'checking' && (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
-                        )}
-                        {handleStatus === 'available' && (
-                          <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                        )}
-                        {handleStatus === 'taken' && (
-                          <svg className="h-4 w-4 text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                    {handleStatus === 'available' && (
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-emerald-400">Disponível</p>
-                        <button
-                          type="button"
-                          onClick={handleClaimHandle}
-                          disabled={handleSaving}
-                          className="text-xs font-semibold text-[#F2BD8A] hover:underline disabled:opacity-50"
-                        >
-                          {handleSaving ? 'Salvando...' : handle ? 'Confirmar alteração' : 'Reservar este usuário'}
-                        </button>
-                      </div>
-                    )}
-                    {handleStatus === 'taken' && (
-                      <p className="text-xs text-red-400">Nome de usuário indisponível</p>
-                    )}
-                    {handleError && <p role="alert" className="text-xs text-red-400">{handleError}</p>}
-                    {!handleInput && handle && (
-                      <p className="text-xs text-white/36">Atual: @{handle}</p>
-                    )}
-                    {!handleInput && !handle && (
-                      <p className="text-xs text-white/36">Digite para verificar disponibilidade</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor={`${formId}-email`} className="text-sm font-medium text-white/72">Email</label>
-                  <input id={`${formId}-email`} value={email} readOnly className={cn(brandInputClass, 'cursor-not-allowed opacity-60')} />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-bio`} className="text-sm font-medium text-white/72">Bio</label>
-                <textarea
-                  id={`${formId}-bio`}
-                  name="bio"
-                  value={form.bio}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="Apresente sua trajetória, foco de estudo ou contexto ministerial."
-                  className={cn(brandInputClass, 'resize-none')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-website`} className="text-sm font-medium text-white/72">Website</label>
-                <input
-                  id={`${formId}-website`}
-                  name="website"
-                  value={form.website}
-                  onChange={handleChange}
-                  placeholder="https://seusite.com"
-                  className={brandInputClass}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-phone`} className="text-sm font-medium text-white/72">Telefone</label>
-                <div className="grid grid-cols-[7rem_1fr] gap-2 sm:grid-cols-[11rem_1fr]">
-                  <select id={`${formId}-phoneCountry`} aria-label="Código do país" name="phoneCountry" value={form.phoneCountry} onChange={handleChange} className={brandInputClass}>
-                    {PHONE_COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code}>{c.label}</option>
-                    ))}
-                  </select>
-                  <input
-                    id={`${formId}-phone`}
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    placeholder="(11) 99999-9999"
-                    className={brandInputClass}
-                  />
-                </div>
-              </div>
-
-              {isInstitution && (
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor={`${formId}-institution`} className="text-sm font-medium text-white/72">Nome da instituição</label>
-                    <input id={`${formId}-institution`} name="institution" value={form.institution} onChange={handleChange} placeholder="Nome da igreja ou instituição" className={brandInputClass} />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor={`${formId}-cnpj`} className="text-sm font-medium text-white/72">CNPJ</label>
-                    <input id={`${formId}-cnpj`} name="cnpj" value={form.cnpj} onChange={handleChange} placeholder="00.000.000/0000-00" className={brandInputClass} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Redes sociais */}
-          <div className={cn('space-y-5 p-6', brandPanelClass)}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Redes sociais</p>
-            <div className="grid gap-4 md:grid-cols-2">
-              {isCriador && (
-                <div className="space-y-2">
-                  <label htmlFor={`${formId}-youtubeChannel`} className="text-sm font-medium text-white/72">YouTube</label>
-                  <input id={`${formId}-youtubeChannel`} name="youtubeChannel" value={form.youtubeChannel} onChange={handleChange} placeholder="https://youtube.com/@seucanal" className={brandInputClass} />
-                </div>
-              )}
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-instagram`} className="text-sm font-medium text-white/72">Instagram</label>
-                <input id={`${formId}-instagram`} name="instagram" value={form.instagram} onChange={handleChange} placeholder="https://instagram.com/seuperfil" className={brandInputClass} />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-facebook`} className="text-sm font-medium text-white/72">Facebook</label>
-                <input id={`${formId}-facebook`} name="facebook" value={form.facebook} onChange={handleChange} placeholder="https://facebook.com/seuperfil" className={brandInputClass} />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-linkedin`} className="text-sm font-medium text-white/72">LinkedIn</label>
-                <input id={`${formId}-linkedin`} name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/seuperfil" className={brandInputClass} />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-twitter`} className="text-sm font-medium text-white/72">X (Twitter)</label>
-                <input id={`${formId}-twitter`} name="twitter" value={form.twitter} onChange={handleChange} placeholder="https://x.com/seuperfil" className={brandInputClass} />
-              </div>
-            </div>
-          </div>
-
-          {/* Igreja e comunidade */}
-          <div className={cn('space-y-5 p-6', brandPanelClass)}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Igreja e comunidade</p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-denomination`} className="text-sm font-medium text-white/72">Denominação</label>
-                <select id={`${formId}-denomination`} name="denomination" value={form.denomination} onChange={handleChange} className={brandInputClass}>
-                  {DENOMINATIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-churchRole`} className="text-sm font-medium text-white/72">Cargo na Igreja</label>
-                <select id={`${formId}-churchRole`} name="churchRole" value={form.churchRole} onChange={handleChange} className={brandInputClass}>
-                  {CHURCH_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-churchName`} className="text-sm font-medium text-white/72">Nome da Igreja</label>
-                <input id={`${formId}-churchName`} name="churchName" value={form.churchName} onChange={handleChange} placeholder="Nome da sua igreja local" className={brandInputClass} />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-churchInstagram`} className="text-sm font-medium text-white/72">Instagram da Igreja</label>
-                <input id={`${formId}-churchInstagram`} name="churchInstagram" value={form.churchInstagram} onChange={handleChange} placeholder="https://instagram.com/suaigreja" className={brandInputClass} />
-              </div>
-            </div>
-          </div>
-
-          {/* Recebimento (PIX) — somente criadores */}
-          {isCriador && <CreatorPixSection />}
-
-          {/* Endereço */}
-          <div className={cn('space-y-5 p-6', brandPanelClass)}>
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Endereço</p>
-              <span className="rounded-full border border-[#F37E20]/20 bg-[#F37E20]/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#F2BD8A]">
-                Necessário para certificados
-              </span>
-            </div>
-            <div className="grid gap-4 md:grid-cols-[1fr_8rem]">
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-address`} className="text-sm font-medium text-white/72">{addressProfile.address.label}</label>
-                <input id={`${formId}-address`} name="address" value={form.address} onChange={handleChange} placeholder={addressProfile.address.placeholder} className={brandInputClass} />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-addressNumber`} className="text-sm font-medium text-white/72">{addressProfile.number.label}</label>
-                <input id={`${formId}-addressNumber`} name="addressNumber" value={form.addressNumber} onChange={handleChange} placeholder={addressProfile.number.placeholder} className={brandInputClass} />
-              </div>
-            </div>
-            <div className={`grid gap-4 ${addressProfile.neighborhood.show ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-              {addressProfile.neighborhood.show && (
-                <div className="space-y-2">
-                  <label htmlFor={`${formId}-neighborhood`} className="text-sm font-medium text-white/72">{addressProfile.neighborhood.label}</label>
-                  <input id={`${formId}-neighborhood`} name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder={addressProfile.neighborhood.placeholder} className={brandInputClass} />
-                </div>
-              )}
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-cep`} className="text-sm font-medium text-white/72">{addressProfile.postal.label}</label>
-                <input id={`${formId}-cep`} name="cep" value={form.cep} onChange={handleChange} placeholder={addressProfile.postal.placeholder} className={brandInputClass} />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-city`} className="text-sm font-medium text-white/72">{addressProfile.city.label}</label>
-                <input id={`${formId}-city`} name="city" value={form.city} onChange={handleChange} placeholder={addressProfile.city.placeholder} className={brandInputClass} />
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor={`${formId}-state`} className="text-sm font-medium text-white/72">{addressProfile.state.label}</label>
-                <input id={`${formId}-state`} name="state" value={form.state} onChange={handleChange} placeholder={addressProfile.state.placeholder} className={brandInputClass} />
-              </div>
-            </div>
-          </div>
-
-          {formError && (
-            <div role="alert" className="rounded-[1.3rem] border border-red-400/18 bg-red-400/8 px-4 py-4 text-sm text-red-200">
-              {formError}
-            </div>
-          )}
-
-          <div className="flex justify-end">
-            <button type="submit" disabled={saving} className={brandPrimaryButtonClass}>
-              {saving ? 'Salvando...' : 'Salvar dados'}
-            </button>
-          </div>
-        </form>
+        <DadosPessoaisTab
+          clerkUser={clerkUser}
+          currentUser={currentUser}
+          displayName={displayName}
+          initials={initials}
+          email={email}
+          handle={handle}
+          isInstitution={isInstitution}
+          isCriador={isCriador}
+          uploadingAvatar={uploadingAvatar}
+          fileInputRef={fileInputRef}
+          onAvatarChange={handleAvatarChange}
+          onPickAvatar={handlePickAvatar}
+          handleInput={handleInput}
+          setHandleInput={setHandleInput}
+          handleStatus={handleStatus}
+          handleSaving={handleSaving}
+          handleError={handleError}
+          onClaimHandle={handleClaimHandle}
+          onSavedChange={setSaved}
+        />
       )}
 
-      {/* ── Perfil Público ──────────────────────────────────────────────────── */}
       {effectiveTab === 'perfil-publico' && (
-        <div className="space-y-6">
-
-          {/* Handle */}
-          <div className={cn('p-6', brandPanelSoftClass)}>
-            <p className={brandEyebrowClass}>Seu handle público</p>
-            <p className="mt-1 text-xs text-white/40">
-              Defina um identificador único. A URL pública será: resenhadoteologo.com/seuhandle
-            </p>
-
-            {handle ? (
-              <div className="mt-5 space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-bold text-white">@{handle}</span>
-                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                    Ativo
-                  </span>
-                  <a
-                    href={`/${handle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-auto inline-flex items-center gap-1.5 text-sm text-[#F2BD8A] hover:underline"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                    Abrir perfil
-                  </a>
-                </div>
-
-                <form onSubmit={handleClaimHandle}>
-                  <p className="mb-2 text-xs text-white/40">Alterar handle:</p>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-white/36">@</span>
-                      <input
-                        className={cn(brandInputClass, 'pl-8')}
-                        placeholder={handle}
-                        value={handleInput}
-                        onChange={(e) => setHandleInput(e.target.value.toLowerCase())}
-                        pattern="[a-z0-9_]{3,30}"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={handleSaving || handleStatus !== 'available'}
-                      className={cn(brandPrimaryButtonClass, 'px-4 py-2.5')}
-                    >
-                      {handleSaving ? '...' : 'Alterar'}
-                    </button>
-                  </div>
-                  {handleStatus === 'available' && <p className="mt-1.5 text-xs text-emerald-300">Disponível</p>}
-                  {handleStatus === 'taken' && <p className="mt-1.5 text-xs text-red-300">Indisponível ou inválido</p>}
-                  {handleStatus === 'checking' && <p className="mt-1.5 text-xs text-white/36">Verificando...</p>}
-                  {handleError && <p role="alert" className="mt-1.5 text-xs text-red-300">{handleError}</p>}
-                </form>
-              </div>
-            ) : (
-              <form onSubmit={handleClaimHandle} className="mt-5 space-y-3">
-                <p className="text-sm text-white/52">
-                  Você ainda não tem um handle. Escolha um identificador único para ativar seu perfil público.
-                </p>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-white/36">@</span>
-                  <input
-                    className={cn(brandInputClass, 'pl-8')}
-                    placeholder="seuhandle"
-                    value={handleInput}
-                    onChange={(e) => setHandleInput(e.target.value.toLowerCase())}
-                    pattern="[a-z0-9_]{3,30}"
-                    required
-                  />
-                </div>
-                {handleStatus === 'available' && <p className="text-xs text-emerald-300">Disponível</p>}
-                {handleStatus === 'taken' && <p className="text-xs text-red-300">Indisponível ou inválido</p>}
-                {handleStatus === 'checking' && <p className="text-xs text-white/36">Verificando...</p>}
-                {handleError && <p role="alert" className="text-xs text-red-300">{handleError}</p>}
-                <button
-                  type="submit"
-                  disabled={handleSaving || handleStatus !== 'available'}
-                  className={cn(brandPrimaryButtonClass, 'w-full py-3')}
-                >
-                  {handleSaving ? 'Reservando...' : 'Reservar handle'}
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Visibilidade. Sempre visivel; sem handle a escolha e gravada
-              mas so passa a ter efeito quando o usuario reservar um @handle. */}
-          <div className={cn('p-6', brandPanelSoftClass)}>
-            <p className={brandEyebrowClass}>Privacidade e visibilidade</p>
-
-            <div className="mt-5 space-y-3">
-              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-white/7 p-4">
-                <div>
-                  <p className="text-sm font-medium text-white">Perfil listado publicamente</p>
-                  <p className="mt-0.5 text-xs text-white/40">
-                    {handle
-                      ? visibility === 'public'
-                        ? 'Seu perfil é acessível pela URL pública.'
-                        : 'Seu perfil existe, mas não é acessível publicamente.'
-                      : visibility === 'public'
-                        ? 'Padrão público. Reserve um @handle para ter URL pública.'
-                        : 'Mesmo com @handle reservado, seu perfil ficará oculto enquanto este toggle estiver desligado.'}
-                  </p>
-                </div>
-                <Toggle value={visibility === 'public'} onChange={(v) => setVisibility(v ? 'public' : 'unlisted')} />
-              </label>
-
-              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-white/7 p-4">
-                <div>
-                  <p className="text-sm font-medium text-white">Mostrar progresso nos cursos</p>
-                  <p className="mt-0.5 text-xs text-white/40">
-                    {showProgress
-                      ? 'Outros usuários podem ver seu andamento nos cursos.'
-                      : 'Seu progresso nos cursos fica oculto no perfil público.'}
-                  </p>
-                </div>
-                <Toggle value={showProgress} onChange={setShowProgress} />
-              </label>
-
-              <button
-                type="button"
-                onClick={handleSaveVisibility}
-                disabled={visibilitySaving}
-                className={cn(brandPrimaryButtonClass, 'w-full py-3')}
-              >
-                {visibilitySaving ? 'Salvando...' : visibilitySaved ? 'Configurações salvas' : 'Salvar configurações'}
-              </button>
-            </div>
-          </div>
-
-          {/* O que aparece no perfil público */}
-          <div className={cn('p-5', brandPanelSoftClass)}>
-            <div className="flex items-start gap-4">
-              <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#F37E20]/20 bg-[#F37E20]/10">
-                <svg className="h-4 w-4 text-[#F37E20]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white/84">O que fica visível no perfil público</p>
-                <p className="mt-1.5 text-sm leading-7 text-white/50">
-                  Avatar, nome, handle, bio, website, redes sociais e informações de igreja. Email, telefone e endereço nunca são expostos publicamente. Progresso e conquistas seguem sua configuração acima.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PerfilPublicoTab
+          handle={handle}
+          handleInput={handleInput}
+          setHandleInput={setHandleInput}
+          handleStatus={handleStatus}
+          handleSaving={handleSaving}
+          handleError={handleError}
+          onClaimHandle={handleClaimHandle}
+          visibility={visibility}
+          setVisibility={setVisibility}
+          showProgress={showProgress}
+          setShowProgress={setShowProgress}
+          visibilitySaving={visibilitySaving}
+          visibilitySaved={visibilitySaved}
+          onSaveVisibility={handleSaveVisibility}
+        />
       )}
 
-      {/* ── Conquistas ──────────────────────────────────────────────────────── */}
-      {effectiveTab === 'conquistas' && (
-        <div className="space-y-6">
-          {myStats === undefined ? (
-            <div className="flex justify-center py-12">
-              <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
-            </div>
-          ) : myStats === null || myStats.totalCoursesEnrolled === 0 ? (
-            <div className="rounded-[1.6rem] border border-white/7 bg-white/[0.025] px-8 py-12 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03] text-white/28">
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                </svg>
-              </div>
-              <p className="mt-4 text-sm font-medium text-white/62">Nenhum curso iniciado ainda</p>
-              <p className="mt-2 text-xs text-white/36">Acesse o catálogo para começar sua jornada de estudos.</p>
-            </div>
-          ) : (
-            <>
-              {/* Stats */}
-              <div>
-                <p className={cn('mb-4', brandEyebrowClass)}>Resumo geral</p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatCard label="Horas assistidas" value={`${Math.round(myStats.totalWatchSeconds / 3600)}h`} />
-                  <StatCard label="Cursos matriculados" value={String(myStats.totalCoursesEnrolled)} />
-                  <StatCard label="Cursos concluídos" value={String(myStats.totalCoursesCompleted)} />
-                  <StatCard label="Certificados" value={String(myStats.certificateCount)} />
-                </div>
-              </div>
+      {effectiveTab === 'conquistas' && <ConquistasTab myStats={myStats} />}
 
-              {/* Cursos */}
-              <div>
-                <p className={cn('mb-4', brandEyebrowClass)}>Progresso por curso</p>
-                <div className="space-y-3">
-                  {myStats.courses.map((course) => (
-                    <CourseProgressRow
-                      key={String(course.courseId)}
-                      courseTitle={course.courseTitle}
-                      percentage={course.percentage}
-                      completedLessons={course.completedLessons}
-                      totalLessons={course.totalLessons}
-                      certificateIssued={course.certificateIssued}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── Depoimentos ─────────────────────────────────────────────────────── */}
       {effectiveTab === 'depoimentos' && handle && (
-        <div className="space-y-8">
-
-          {/* Pendentes */}
-          <div>
-            <p className={cn('mb-4', brandEyebrowClass)}>
-              Aguardando aprovação
-              {pendingTestimonials !== undefined && pendingTestimonials.length > 0 && (
-                <span className="ml-2 rounded-full border border-[#F37E20]/20 bg-[#F37E20]/10 px-2 py-0.5 text-[10px] normal-case tracking-normal text-[#F2BD8A]">
-                  {pendingTestimonials.length}
-                </span>
-              )}
-            </p>
-            {pendingTestimonials === undefined ? (
-              <div className="flex justify-center py-6">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
-              </div>
-            ) : pendingTestimonials.length === 0 ? (
-              <p className="text-sm text-white/36">Nenhum depoimento aguardando aprovação.</p>
-            ) : (
-              <div className="space-y-3">
-                {pendingTestimonials.map((t) => (
-                  <PendingTestimonialCard
-                    key={String(t._id)}
-                    id={t._id}
-                    text={t.text}
-                    authorName={t.authorName}
-                    createdAt={t.createdAt}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onRemove={handleRemove}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Aprovados */}
-          <div>
-            <p className={cn('mb-4', brandEyebrowClass)}>Publicados no perfil</p>
-            {approvedTestimonials === undefined ? (
-              <div className="flex justify-center py-6">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F37E20]/30 border-t-[#F37E20]" />
-              </div>
-            ) : approvedTestimonials.length === 0 ? (
-              <p className="text-sm text-white/36">Nenhum depoimento publicado ainda.</p>
-            ) : (
-              <div className="space-y-3">
-                {approvedTestimonials.map((t) => (
-                  <ApprovedTestimonialCard
-                    key={String(t._id)}
-                    id={t._id}
-                    text={t.text}
-                    authorName={t.authorName}
-                    authorHandle={t.authorHandle}
-                    createdAt={t.createdAt}
-                    onRemove={handleRemove}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <DepoimentosTab
+          pendingTestimonials={pendingTestimonials}
+          approvedTestimonials={approvedTestimonials}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onRemove={handleRemoveTestimonial}
+        />
       )}
 
-      {/* ── Privacidade (LGPD) ──────────────────────────────────────────────── */}
       {effectiveTab === 'privacidade' && (
-        <div className="space-y-6">
-          <div className={cn('p-6', brandPanelClass)}>
-            <p className={cn('mb-2', brandEyebrowClass)}>Exportar meus dados</p>
-            <h3 className="font-display text-lg font-bold text-white">Baixe uma cópia completa</h3>
-            <p className="mt-2 text-sm leading-6 text-white/52">
-              Gera um arquivo JSON com todos os seus dados pessoais: perfil, funções, consentimentos,
-              matrículas, progresso, cadernos, comentários, avaliações e cursos criados. É seu direito
-              pela LGPD e você pode usar esse arquivo para consulta ou portabilidade.
-            </p>
-            <button
-              type="button"
-              onClick={handleExportData}
-              disabled={exporting || exportData === undefined}
-              className={cn(brandPrimaryButtonClass, 'mt-5 px-5 py-2.5 text-sm')}
-            >
-              {exportData === undefined
-                ? 'Preparando dados...'
-                : exporting
-                  ? 'Gerando arquivo...'
-                  : 'Baixar meus dados (JSON)'}
-            </button>
-          </div>
-
-          <div className={cn('p-6', brandPanelSoftClass, 'border-red-500/20')}>
-            <p className={cn('mb-2', brandEyebrowClass)} style={{ color: '#fca5a5' }}>
-              Excluir minha conta
-            </p>
-            <h3 className="font-display text-lg font-bold text-white">Remover conta permanentemente</h3>
-            <p className="mt-2 text-sm leading-6 text-white/52">
-              Esta ação remove seu perfil, matrículas, progresso, cadernos, avaliações e depoimentos.
-              Comentários em aulas ficam anônimos. Doações já concluídas são preservadas de forma
-              anônima por obrigação fiscal. <strong className="text-white/72">A ação é irreversível.</strong>
-            </p>
-            {hasFunction('criador') && (
-              <p className="mt-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs text-amber-200">
-                Se você é criador, despublique todos os seus cursos antes de excluir a conta.
-                Alunos matriculados perderiam acesso.
-              </p>
-            )}
-            <div className="mt-5">
-              <label htmlFor={`${formId}-deleteConfirm`} className="mb-1.5 block text-xs font-medium text-white/52">
-                Digite <span className="font-bold text-red-300">EXCLUIR</span> para confirmar
-              </label>
-              <input
-                id={`${formId}-deleteConfirm`}
-                type="text"
-                value={deleteConfirm}
-                onChange={(e) => {
-                  setDeleteConfirm(e.target.value)
-                  setDeleteError('')
-                }}
-                placeholder="EXCLUIR"
-                className={brandInputClass}
-                disabled={deleting}
-              />
-            </div>
-            {deleteError && (
-              <p role="alert" className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
-                {deleteError}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={handleDeleteAccount}
-              disabled={deleting || deleteConfirm.trim().toUpperCase() !== 'EXCLUIR'}
-              className="mt-5 rounded-[1.1rem] border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition-all duration-200 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {deleting ? 'Excluindo conta...' : 'Excluir minha conta'}
-            </button>
-          </div>
-        </div>
+        <PrivacidadeTab
+          exportData={exportData}
+          formId={formId}
+          isCriador={isCriador}
+        />
       )}
     </DashboardPageShell>
-  )
-}
-
-// ─── PIX (somente criadores) ──────────────────────────────────────────────────
-
-function CreatorPixSection() {
-  const profile = useQuery(api.creatorProfile.getMine, {})
-  const setPixKey = useMutation(api.creatorProfile.setPixKey)
-  const pixId = useId()
-
-  const [value, setValue] = useState('')
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Reflete a chave PIX salva no campo de edição.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (profile?.pixKey) setValue(profile.pixKey)
-  }, [profile?.pixKey])
-
-  const currentKey = profile?.pixKey ?? null
-  const loading = profile === undefined
-
-  const handleSave = async () => {
-    setError(null)
-    setSuccess(null)
-    if (!value.trim()) {
-      setError('Informe sua chave PIX.')
-      return
-    }
-    setSaving(true)
-    try {
-      await setPixKey({ pixKey: value.trim() })
-      setEditing(false)
-      setSuccess('Chave PIX salva com sucesso.')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível salvar a chave PIX.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleRemove = async () => {
-    setError(null)
-    setSuccess(null)
-    setSaving(true)
-    try {
-      await setPixKey({ pixKey: null })
-      setValue('')
-      setEditing(false)
-      setSuccess('Chave PIX removida.')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível remover a chave PIX.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleCancel = () => {
-    setError(null)
-    setSuccess(null)
-    setValue(currentKey ?? '')
-    setEditing(false)
-  }
-
-  return (
-    <div className={cn('space-y-5 p-6', brandPanelClass)}>
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Recebimento (PIX)</p>
-        <span className="rounded-full border border-[#F37E20]/20 bg-[#F37E20]/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#F2BD8A]">
-          Repasse de receita
-        </span>
-      </div>
-      <p className="text-sm text-white/60">
-        Cadastre sua chave PIX para receber repasses do AdSense, certificados pagos e demais receitas geradas pelos seus cursos.
-        Aceitamos CPF, CNPJ, email, celular ou chave aleatória.
-      </p>
-
-      {loading ? (
-        <p className="text-sm text-white/50">Carregando...</p>
-      ) : currentKey && !editing ? (
-        <div className="space-y-4">
-          <div className="rounded-[1.1rem] border border-white/8 bg-white/4 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/38">Chave cadastrada</p>
-            <p className="mt-1 font-mono text-sm text-white/86 break-all">{currentKey}</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => { setEditing(true); setSuccess(null); setError(null) }}
-              className={brandPrimaryButtonClass}
-            >
-              Trocar chave
-            </button>
-            <button
-              type="button"
-              onClick={handleRemove}
-              disabled={saving}
-              className="rounded-[1.1rem] border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition-all duration-200 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {saving ? 'Removendo...' : 'Remover chave'}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor={`${pixId}-pixKey`} className="text-sm font-medium text-white/72">Chave PIX</label>
-            <input
-              id={`${pixId}-pixKey`}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder="CPF, CNPJ, email, celular ou chave aleatória"
-              className={brandInputClass}
-              disabled={saving}
-            />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className={brandPrimaryButtonClass}
-            >
-              {saving ? 'Salvando...' : 'Salvar chave'}
-            </button>
-            {currentKey && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={saving}
-                className="rounded-[1.1rem] border border-white/14 bg-white/4 px-5 py-2.5 text-sm font-semibold text-white/72 transition-all duration-200 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Cancelar
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <p role="alert" className="rounded-[0.9rem] border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
-          {error}
-        </p>
-      )}
-      {success && (
-        <p role="status" aria-live="polite" className="rounded-[0.9rem] border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
-          {success}
-        </p>
-      )}
-    </div>
   )
 }
