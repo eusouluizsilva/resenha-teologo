@@ -48,6 +48,7 @@ import type * as lib_notifications from "../lib/notifications.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_slug from "../lib/slug.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as migrations from "../migrations.js";
 import type * as modules from "../modules.js";
 import type * as notebooks from "../notebooks.js";
 import type * as notifications from "../notifications.js";
@@ -128,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/slug": typeof lib_slug;
   "lib/validators": typeof lib_validators;
+  migrations: typeof migrations;
   modules: typeof modules;
   notebooks: typeof notebooks;
   notifications: typeof notifications;

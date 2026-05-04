@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { internalMutation, mutation, query } from './_generated/server'
+import { internalAction, internalMutation, mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { ensureIdentityMatches, requireUserFunction } from './lib/auth'
 import { autoEnrollAllUsersInCourse } from './lib/autoEnroll'
@@ -323,6 +323,9 @@ export const checkCertificatesForEnrollments = internalMutation({
   },
 })
 
+// Item 35 da auditoria 2026-05-04: cascade de delete de curso em chunks.
+// Mutation pública valida + despublica + agenda cleanup async em pedaços de 200
+// docs por mutation, evitando estourar 4096 docs/transação em curso popular.
 export const remove = mutation({
   args: { id: v.id('courses'), creatorId: v.string() },
   handler: async (ctx, { id, creatorId }) => {
@@ -332,91 +335,184 @@ export const remove = mutation({
     const course = await ctx.db.get(id)
     if (!course || course.creatorId !== identity.subject) throw new Error('Não autorizado')
 
-    const lessons = await ctx.db
-      .query('lessons')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
+    // Despublica imediato pra sumir das listagens públicas. Cleanup async
+    // pode demorar segundos a minutos em curso popular.
+    if (course.isPublished) {
+      await ctx.db.patch(id, { isPublished: false, totalStudents: 0 })
+    }
 
-    await Promise.all(
-      lessons.map(async (lesson) => {
-        const quiz = await ctx.db
+    await ctx.scheduler.runAfter(0, internal.courses._cascadeDeleteCourse, {
+      courseId: id,
+    })
+  },
+})
+
+// Internal mutation que apaga até CHUNK docs por chamada e retorna se ainda há
+// trabalho. Limite escolhido bem abaixo dos 4096 docs/tx do Convex pra deixar
+// folga e cumprir o limit de 8MB de bandwidth por transação.
+const CASCADE_CHUNK = 200
+
+export const _deleteCourseChunk = internalMutation({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, { courseId }): Promise<{ deleted: number; done: boolean }> => {
+    let budget = CASCADE_CHUNK
+    let deleted = 0
+
+    // Não dá pra extrair em helper genérico: ctx.db.delete exige
+    // Id<TableName>. Inline em cada bloco.
+
+    // Ordem do mais "leaf" pro mais raiz: materiais → progresso →
+    // matrículas → comments → ratings → questions → coauthors → quizzes →
+    // lessons → modules → curso.
+
+    if (budget > 0) {
+      const materials = await ctx.db
+        .query('lessonMaterials')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const mat of materials) {
+        if (budget <= 0) break
+        if (mat.storageId) await ctx.storage.delete(mat.storageId)
+        if (mat.r2Key) {
+          await ctx.scheduler.runAfter(0, internal.r2.internalDeleteObject, { key: mat.r2Key })
+        }
+        await ctx.db.delete(mat._id)
+        budget--
+        deleted++
+      }
+    }
+
+    if (budget > 0) {
+      const progresses = await ctx.db
+        .query('progress')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of progresses) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
+
+    if (budget > 0) {
+      const enrollments = await ctx.db
+        .query('enrollments')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of enrollments) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
+
+    if (budget > 0) {
+      const cComments = await ctx.db
+        .query('courseComments')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of cComments) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
+
+    // lessonComments só tem by_lessonId, não by_courseId. Pega em batch via
+    // lessons do curso. Se o curso tem 1000 aulas com comentários esparsos,
+    // ainda assim o orçamento limita o total deletado.
+    if (budget > 0) {
+      const lessons = await ctx.db
+        .query('lessons')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(50)
+      for (const lesson of lessons) {
+        if (budget <= 0) break
+        const lComments = await ctx.db
+          .query('lessonComments')
+          .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
+          .take(budget)
+        for (const d of lComments) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+      }
+    }
+
+    if (budget > 0) {
+      const ratings = await ctx.db
+        .query('courseRatings')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of ratings) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
+
+    if (budget > 0) {
+      const questions = await ctx.db
+        .query('courseQuestions')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of questions) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
+
+    if (budget > 0) {
+      const coauthors = await ctx.db
+        .query('courseCoauthors')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of coauthors) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
+
+    // Quizzes vinculados às aulas (sem by_courseId direto).
+    if (budget > 0) {
+      const lessons = await ctx.db
+        .query('lessons')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(50)
+      for (const lesson of lessons) {
+        if (budget <= 0) break
+        const quizzes = await ctx.db
           .query('quizzes')
           .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
-          .first()
-        if (quiz) await ctx.db.delete(quiz._id)
-        await ctx.db.delete(lesson._id)
-      }),
-    )
-
-    const modules = await ctx.db
-      .query('modules')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(modules.map((mod) => ctx.db.delete(mod._id)))
-
-    // Cascade nas tabelas filhas do curso. Materiais R2 são apagados via
-    // scheduler (internalDeleteObject) para não bloquear a mutation.
-    const materials = await ctx.db
-      .query('lessonMaterials')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    for (const mat of materials) {
-      if (mat.storageId) await ctx.storage.delete(mat.storageId)
-      if (mat.r2Key) {
-        await ctx.scheduler.runAfter(0, internal.r2.internalDeleteObject, { key: mat.r2Key })
+          .take(budget)
+        for (const d of quizzes) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
       }
-      await ctx.db.delete(mat._id)
     }
 
-    const enrollments = await ctx.db
-      .query('enrollments')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(enrollments.map((e) => ctx.db.delete(e._id)))
-
-    const progresses = await ctx.db
-      .query('progress')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(progresses.map((p) => ctx.db.delete(p._id)))
-
-    const cComments = await ctx.db
-      .query('courseComments')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(cComments.map((c) => ctx.db.delete(c._id)))
-
-    // lessonComments tem by_lessonId mas não by_courseId; iterar por aula
-    // (lessons já estão coletadas no início da mutation).
-    for (const lesson of lessons) {
-      const lComments = await ctx.db
-        .query('lessonComments')
-        .withIndex('by_lessonId', (q) => q.eq('lessonId', lesson._id))
-        .collect()
-      await Promise.all(lComments.map((c) => ctx.db.delete(c._id)))
+    if (budget > 0) {
+      const lessons = await ctx.db
+        .query('lessons')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of lessons) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
     }
 
-    const ratings = await ctx.db
-      .query('courseRatings')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(ratings.map((r) => ctx.db.delete(r._id)))
+    if (budget > 0) {
+      const modules = await ctx.db
+        .query('modules')
+        .withIndex('by_courseId', (q) => q.eq('courseId', courseId))
+        .take(budget)
+      for (const d of modules) { if (budget <= 0) break; await ctx.db.delete(d._id); budget--; deleted++ }
+    }
 
-    const questions = await ctx.db
-      .query('courseQuestions')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(questions.map((q) => ctx.db.delete(q._id)))
+    // Done quando nada foi deletado nesse chunk: todos os filhos sumiram.
+    if (deleted === 0) {
+      const stillCourse = await ctx.db.get(courseId)
+      if (stillCourse) await ctx.db.delete(courseId)
+      return { deleted: 0, done: true }
+    }
 
-    const coauthors = await ctx.db
-      .query('courseCoauthors')
-      .withIndex('by_courseId', (q) => q.eq('courseId', id))
-      .collect()
-    await Promise.all(coauthors.map((c) => ctx.db.delete(c._id)))
+    return { deleted, done: false }
+  },
+})
 
-    // courses.thumbnail é uma URL pública R2. Sem o key armazenado, a capa
-    // continua no bucket após delete (sobrescrita acontece em re-upload).
-    await ctx.db.delete(id)
+export const _cascadeDeleteCourse = internalAction({
+  args: { courseId: v.id('courses') },
+  handler: async (ctx, { courseId }): Promise<{ totalDeleted: number; chunks: number }> => {
+    let totalDeleted = 0
+    let chunks = 0
+    // Limite de segurança: 100 chunks × 200 = 20k docs. Curso teológico real
+    // não chega perto. Se chegar, registra warn e desiste pra evitar loop.
+    while (chunks < 100) {
+      const result: { deleted: number; done: boolean } = await ctx.runMutation(
+        internal.courses._deleteCourseChunk,
+        { courseId },
+      )
+      totalDeleted += result.deleted
+      chunks++
+      if (result.done) break
+    }
+    if (chunks >= 100) {
+      console.warn(
+        `[courses._cascadeDeleteCourse] atingiu limite de 100 chunks pro courseId ${courseId}; restante deve ser apagado manualmente`,
+      )
+    }
+    return { totalDeleted, chunks }
   },
 })
 

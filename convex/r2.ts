@@ -429,6 +429,33 @@ export async function presignR2DownloadUrl(
   })
 }
 
+// Helper exportado pra outros módulos (migrations, jobs). Caller já validou
+// autorização. Faz PUT direto via presigned URL e retorna a key gravada.
+export async function uploadBytesToR2(opts: {
+  key: string
+  bytes: Uint8Array
+  contentType: string
+}): Promise<void> {
+  const { key, bytes, contentType } = opts
+  const env = getR2Env()
+  const uploadUrl = await presignS3Url({
+    env,
+    method: 'PUT',
+    key,
+    expiresInSec: 60 * 5,
+    contentType,
+  })
+  const resp = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'content-type': contentType },
+    body: toArrayBuffer(bytes),
+  })
+  if (!resp.ok) {
+    const text = await resp.text()
+    throw new Error(`R2 PUT falhou ${resp.status}: ${text.slice(0, 200)}`)
+  }
+}
+
 // Resolve URL pública a partir de uma key. Se R2_PUBLIC_BASE_URL estiver
 // setado (custom domain), retorna URL estável. Senão, presigned GET de 7 dias.
 // Usado em queries que devolvem coverImageUrl resolvida (blog posts, etc).
