@@ -59,6 +59,50 @@ async function stripeRequest<T>(
   return (await resp.json()) as T
 }
 
+// Recupera um recurso da Stripe via GET. Retorna null em 404, throw em outros
+// erros. Usado pra checar se um customer ainda existe antes de reaproveitar.
+async function stripeGet<T>(path: string): Promise<T | null> {
+  const secret = process.env.STRIPE_SECRET_KEY
+  if (!secret) throw new Error('STRIPE_SECRET_KEY não configurado no Convex')
+  const resp = await fetch(`https://api.stripe.com/v1${path}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${secret}` },
+  })
+  if (resp.status === 404) return null
+  if (!resp.ok) {
+    const text = await resp.text()
+    console.error('[stripe] erro upstream GET', resp.status, text)
+    throw new Error(`Stripe API erro ${resp.status}`)
+  }
+  return (await resp.json()) as T
+}
+
+// Devolve um stripeCustomerId válido pra conta atual. Se o cache (subscriptions
+// ou certificateOrders antigos) trouxer um ID que não existe mais nessa conta
+// (ex: criado em test mode, hoje rodando em live), cria um customer fresh em
+// vez de quebrar o checkout. Sem o cache, sempre cria um novo.
+async function ensureStripeCustomer(
+  identity: { email?: string | null; name?: string | null; subject: string },
+  cachedCustomerId: string | undefined,
+): Promise<string> {
+  if (cachedCustomerId) {
+    const existing = await stripeGet<{ id: string; deleted?: boolean }>(
+      `/customers/${cachedCustomerId}`,
+    )
+    if (existing && !existing.deleted) return existing.id
+    console.warn(
+      '[stripe.ensureStripeCustomer] cached customer ausente em current mode, criando novo',
+      cachedCustomerId,
+    )
+  }
+  const created = await stripeRequest<{ id: string }>('/customers', {
+    email: identity.email ?? undefined,
+    name: identity.name ?? undefined,
+    'metadata[clerkUserId]': identity.subject,
+  })
+  return created.id
+}
+
 // Action: cria uma sessão de Stripe Checkout pro usuário atual e retorna a
 // URL pra redirecionar. Reaproveita stripeCustomerId quando já existe linha
 // em subscriptions (evita duplicar Customer no Stripe).
@@ -87,15 +131,7 @@ export const createCheckoutSession = action({
       userId: identity.subject,
     })
 
-    let customerId: string | undefined = existing?.stripeCustomerId
-    if (!customerId) {
-      const customer = await stripeRequest<{ id: string }>('/customers', {
-        email: identity.email ?? undefined,
-        name: identity.name ?? undefined,
-        'metadata[clerkUserId]': identity.subject,
-      })
-      customerId = customer.id
-    }
+    const customerId = await ensureStripeCustomer(identity, existing?.stripeCustomerId)
 
     const session = await stripeRequest<{ id: string; url: string }>('/checkout/sessions', {
       mode: 'subscription',
@@ -133,8 +169,17 @@ export const createPortalSession = action({
       throw new Error('Nenhuma assinatura encontrada')
     }
 
+    // Se a conta migrou de modo (test→live), o customer cacheado pode não
+    // existir mais; sem ele, o portal não tem o que abrir.
+    const verified = await stripeGet<{ id: string; deleted?: boolean }>(
+      `/customers/${existing.stripeCustomerId}`,
+    )
+    if (!verified || verified.deleted) {
+      throw new Error('Cliente Stripe não encontrado, contate o suporte')
+    }
+
     const session = await stripeRequest<{ id: string; url: string }>('/billing_portal/sessions', {
-      customer: existing.stripeCustomerId,
+      customer: verified.id,
       return_url: returnUrl,
     })
     return { url: session.url }
@@ -321,15 +366,7 @@ export const createCertificateCheckout = action({
       throw new Error('Você já adquiriu este certificado. Acesse a página de certificados para baixar.')
     }
 
-    let customerId: string | undefined = ctxData.stripeCustomerId
-    if (!customerId) {
-      const customer = await stripeRequest<{ id: string }>('/customers', {
-        email: identity.email ?? undefined,
-        name: identity.name ?? undefined,
-        'metadata[clerkUserId]': identity.subject,
-      })
-      customerId = customer.id
-    }
+    const customerId = await ensureStripeCustomer(identity, ctxData.stripeCustomerId)
 
     const session = await stripeRequest<{ id: string; url: string }>(
       '/checkout/sessions',
