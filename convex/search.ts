@@ -2,16 +2,17 @@ import { v } from 'convex/values'
 import { query } from './_generated/server'
 
 // Busca global usada pelo command palette (Cmd+K). Procura cursos
-// publicados, perfis de criadores e artigos publicados a partir de um termo
-// livre. Criadores: searchIndex (search_name + search_handle) substituiu o
-// .collect() de toda tabela users. Cursos/posts: cap em 500 publicados
-// (volume aceitável hoje; quando crescer, migrar para searchIndex próprio).
+// publicados, perfis de criadores, artigos publicados E (se autenticado)
+// aulas das matrículas do usuário. Criadores: searchIndex (search_name +
+// search_handle) substituiu o .collect() de toda tabela users. Cursos/posts:
+// cap em 500 publicados (volume aceitável hoje; quando crescer, migrar para
+// searchIndex próprio).
 export const globalSearch = query({
   args: { q: v.string() },
   handler: async (ctx, { q }) => {
     const term = q.trim().replace(/^@/, '')
     if (term.length < 2) {
-      return { courses: [], creators: [], posts: [] }
+      return { courses: [], creators: [], posts: [], lessons: [] }
     }
     const lcTerm = term.toLowerCase()
 
@@ -113,10 +114,60 @@ export const globalSearch = query({
       })
       .filter((p): p is { slug: string; title: string; handle: string; authorName: string } => p !== null)
 
+    // Aulas: só pra usuário autenticado e somente entre suas matrículas
+    // (nunca expõe aulas privadas a quem não tem acesso). Cap defensivo
+    // em 50 matrículas pra não escanear acervo enorme em alunos heavy.
+    const identity = await ctx.auth.getUserIdentity()
+    let lessons: Array<{
+      courseRef: string
+      lessonRef: string
+      title: string
+      courseTitle: string
+    }> = []
+    if (identity) {
+      const enrollments = await ctx.db
+        .query('enrollments')
+        .withIndex('by_studentId', (qb) => qb.eq('studentId', identity.subject))
+        .take(50)
+
+      const courseById = new Map<string, { title: string; ref: string }>()
+      for (const e of enrollments) {
+        const course = await ctx.db.get(e.courseId)
+        if (!course) continue
+        courseById.set(String(e.courseId), {
+          title: course.title,
+          ref: course.slug ?? String(course._id),
+        })
+      }
+
+      const lessonMatches: typeof lessons = []
+      for (const [courseId, info] of courseById.entries()) {
+        const courseLessons = await ctx.db
+          .query('lessons')
+          .withIndex('by_courseId', (qb) => qb.eq('courseId', courseId as never))
+          .take(200)
+        for (const l of courseLessons) {
+          if (!l.isPublished) continue
+          const title = (l.title ?? '').toLowerCase()
+          if (!title.includes(lcTerm)) continue
+          lessonMatches.push({
+            courseRef: info.ref,
+            lessonRef: l.slug ?? String(l._id),
+            title: l.title,
+            courseTitle: info.title,
+          })
+          if (lessonMatches.length >= 8) break
+        }
+        if (lessonMatches.length >= 8) break
+      }
+      lessons = lessonMatches
+    }
+
     return {
       courses: courseMatches,
       creators: creatorMatches,
       posts,
+      lessons,
     }
   },
 })

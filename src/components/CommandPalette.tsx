@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { cn } from '@/lib/brand'
+import { COMMAND_PALETTE_OPEN_EVENT } from '@/lib/commandPalette'
 
 // Command palette global (Cmd+K / Ctrl+K). Permite buscar cursos, criadores
 // e artigos a partir de qualquer rota. Atalhos rapidos para paginas chave
@@ -14,6 +15,7 @@ type FlatItem =
   | { kind: 'course'; label: string; description?: string; href: string }
   | { kind: 'creator'; label: string; description?: string; href: string }
   | { kind: 'post'; label: string; description?: string; href: string }
+  | { kind: 'lesson'; label: string; description?: string; href: string }
 
 const SHORTCUTS: Array<{ label: string; description: string; href: string }> = [
   { label: 'Início', description: 'Ir para o painel principal', href: '/dashboard' },
@@ -44,8 +46,15 @@ export function CommandPalette() {
         setOpen(false)
       }
     }
+    function onOpenEvent() {
+      setOpen(true)
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener(COMMAND_PALETTE_OPEN_EVENT, onOpenEvent)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener(COMMAND_PALETTE_OPEN_EVENT, onOpenEvent)
+    }
   }, [open])
 
   useEffect(() => {
@@ -84,6 +93,16 @@ export function CommandPalette() {
     if (!results) return []
 
     const flat: FlatItem[] = []
+    // Aulas das matrículas vêm primeiro: mais relevantes pra quem está
+    // estudando (o usuário típico abre o palette pra retomar uma aula).
+    results.lessons?.forEach((l) => {
+      flat.push({
+        kind: 'lesson',
+        label: l.title,
+        description: `Aula em ${l.courseTitle}`,
+        href: `/dashboard/meus-cursos/${l.courseRef}/aula/${l.lessonRef}`,
+      })
+    })
     results.courses.forEach((c) => {
       flat.push({
         kind: 'course',
@@ -233,7 +252,13 @@ export function CommandPalette() {
                     ) : null}
                   </div>
                   <span className="rounded-full border border-white/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/52">
-                    {item.kind === 'course' ? 'Curso' : item.kind === 'creator' ? 'Criador' : 'Artigo'}
+                    {item.kind === 'lesson'
+                      ? 'Aula'
+                      : item.kind === 'course'
+                        ? 'Curso'
+                        : item.kind === 'creator'
+                          ? 'Criador'
+                          : 'Artigo'}
                   </span>
                 </button>
               ))}

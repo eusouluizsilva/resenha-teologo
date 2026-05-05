@@ -7,6 +7,7 @@ import { DashboardSidebar } from './DashboardSidebar'
 import { SinoNotificacoes } from './SinoNotificacoes'
 import { MobileBottomNav } from './MobileBottomNav'
 import { StreakIndicator } from '@/components/aluno/StreakIndicator'
+import { SearchTrigger } from '@/components/SearchTrigger'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { brandIconBadgeClass, brandPanelClass, brandPrimaryButtonClass, cn } from '@/lib/brand'
 import { useCurrentAppUser } from '@/lib/currentUser'
@@ -174,6 +175,7 @@ export function DashboardLayout() {
           <img src="/logos/LOGO RETANGULO LETRA BRANCA.png" alt="Resenha do Teólogo" className="h-8 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
+          <SearchTrigger variant="icon" />
           <StreakIndicator compact />
           <SinoNotificacoes />
         </div>
@@ -194,6 +196,7 @@ export function DashboardLayout() {
         <div className="relative min-h-screen px-4 py-4 pb-24 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8">
           <div className="pointer-events-none absolute right-6 top-6 z-30 hidden sm:right-8 sm:top-8 lg:right-12 lg:top-12 lg:block">
             <div className="pointer-events-auto flex items-center gap-3">
+              <SearchTrigger variant="pill" />
               <StreakIndicator />
               <SinoNotificacoes />
             </div>
