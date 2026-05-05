@@ -17,6 +17,8 @@ import { fadeUp, staggerContainer } from '@/lib/motion'
 import { downloadEntryPdf, downloadNotebookPdf } from '@/lib/notebookPdf'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { EmptyBooksIllustration } from '@/components/ui/EmptyIllustration'
+import { useAlunoTheme } from '@/lib/alunoTheme'
+import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
 
 function formatDate(ts?: number) {
   if (!ts) return ''
@@ -155,6 +157,7 @@ function ReadingMode({
   }, [onClose])
 
   const words = countWords(entry.content)
+  const [alunoTheme] = useAlunoTheme()
 
   function handleExport() {
     void downloadEntryPdf({
@@ -172,6 +175,7 @@ function ReadingMode({
     <div
       role="dialog"
       aria-modal="true"
+      data-aluno-theme={alunoTheme}
       className="fixed inset-0 z-50 flex flex-col bg-[#F7F5F2] text-[#111827]"
     >
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-black/8 bg-[#F7F5F2]/95 px-4 py-3 backdrop-blur sm:px-8">
@@ -186,6 +190,7 @@ function ReadingMode({
           Voltar
         </button>
         <div className="flex items-center gap-2">
+          <AlunoThemeToggle size="sm" />
           <button
             type="button"
             onClick={handleExport}

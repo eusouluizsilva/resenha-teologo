@@ -22,6 +22,8 @@ import { MaterialsSection } from './aula/MaterialsSection'
 import { ForumSection } from './aula/ForumSection'
 import { QuizSection } from './aula/QuizSection'
 import { AulaPageSkeleton } from './aula/AulaPageSkeleton'
+import { useAlunoTheme } from '@/lib/alunoTheme'
+import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
 
 export function AulaPage() {
   const { courseId: rawCourseRef, lessonId: rawLessonRef } = useParams<{
@@ -96,6 +98,7 @@ export function AulaPage() {
   // Esc para sair. Usa data-study-deep no <html> pra outros componentes
   // (SinoNotificacoes) silenciarem som/abertura automática.
   const [studyDeep, setStudyDeep] = useState(false)
+  const [alunoTheme] = useAlunoTheme()
   useEffect(() => {
     if (typeof document === 'undefined') return
     if (studyDeep) {
@@ -264,6 +267,7 @@ export function AulaPage() {
 
   return (
     <div
+      data-aluno-theme={alunoTheme}
       className={cn(
         'flex flex-col bg-[#F7F5F2]',
         studyDeep
@@ -319,6 +323,7 @@ export function AulaPage() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <AlunoThemeToggle size="sm" />
             <button
               type="button"
               onClick={() => setStudyDeep((v) => !v)}

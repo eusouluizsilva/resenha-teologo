@@ -109,3 +109,83 @@ select:focus-visible {
   left: 12px;
   top: 12px;
 }
+
+/* Dark mode aluno (item 31 da auditoria 2026-05-04). Aplicado via
+   data-aluno-theme="dark" no wrapper das paginas de estudo (AulaPage,
+   CadernoPage, CursoInternoPage). Inverte fundos brancos, texto cinza e
+   bordas claras. Brand orange e dashboard chrome ficam intactos porque
+   nao usam essas classes solidas. */
+[data-aluno-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-aluno-theme="dark"].bg-\[\#F7F5F2\],
+[data-aluno-theme="dark"] .bg-\[\#F7F5F2\] {
+  background-color: #0F141A;
+  color: #E5E7EB;
+}
+[data-aluno-theme="dark"] .bg-\[\#F7F5F2\]\/95 {
+  background-color: rgba(15, 20, 26, 0.95);
+}
+[data-aluno-theme="dark"] .bg-white {
+  background-color: #1B2430;
+  color: #E5E7EB;
+}
+[data-aluno-theme="dark"] .bg-gray-50 { background-color: #161D26; }
+[data-aluno-theme="dark"] .bg-gray-100 { background-color: #1F2731; }
+
+[data-aluno-theme="dark"] .text-gray-900,
+[data-aluno-theme="dark"] .text-gray-800,
+[data-aluno-theme="dark"] .text-gray-700,
+[data-aluno-theme="dark"] .text-\[\#111827\],
+[data-aluno-theme="dark"] .text-\[\#1F2937\] {
+  color: #F3F4F6;
+}
+[data-aluno-theme="dark"] .text-gray-600,
+[data-aluno-theme="dark"] .text-gray-500,
+[data-aluno-theme="dark"] .text-\[\#6B7280\] {
+  color: #B0B6BF;
+}
+[data-aluno-theme="dark"] .text-gray-400,
+[data-aluno-theme="dark"] .text-gray-300 {
+  color: #8B919B;
+}
+[data-aluno-theme="dark"] .placeholder-gray-400::placeholder,
+[data-aluno-theme="dark"] .placeholder\:text-gray-400::placeholder {
+  color: #6B7280;
+}
+
+[data-aluno-theme="dark"] .border-gray-100,
+[data-aluno-theme="dark"] .border-gray-200,
+[data-aluno-theme="dark"] .border-gray-300,
+[data-aluno-theme="dark"] .border-black\/8,
+[data-aluno-theme="dark"] .border-\[\#E6DBCF\],
+[data-aluno-theme="dark"] .border-\[\#F0E7DC\] {
+  border-color: #2A313B;
+}
+
+[data-aluno-theme="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.10); }
+[data-aluno-theme="dark"] .bg-emerald-50 { background-color: rgba(34, 197, 94, 0.10); }
+[data-aluno-theme="dark"] .bg-red-50 { background-color: rgba(239, 68, 68, 0.10); }
+[data-aluno-theme="dark"] .bg-blue-50 { background-color: rgba(59, 130, 246, 0.10); }
+[data-aluno-theme="dark"] .border-amber-200 { border-color: rgba(245, 158, 11, 0.28); }
+[data-aluno-theme="dark"] .border-emerald-200 { border-color: rgba(34, 197, 94, 0.28); }
+[data-aluno-theme="dark"] .border-red-200 { border-color: rgba(239, 68, 68, 0.28); }
+[data-aluno-theme="dark"] .text-amber-800,
+[data-aluno-theme="dark"] .text-amber-700 { color: #FCD34D; }
+[data-aluno-theme="dark"] .text-emerald-700 { color: #6EE7B7; }
+[data-aluno-theme="dark"] .text-red-700 { color: #FCA5A5; }
+
+[data-aluno-theme="dark"] .shadow-sm,
+[data-aluno-theme="dark"] .shadow,
+[data-aluno-theme="dark"] .shadow-md,
+[data-aluno-theme="dark"] .shadow-lg,
+[data-aluno-theme="dark"] .shadow-xl {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-aluno-theme="dark"] hr,
+[data-aluno-theme="dark"] .divide-gray-100 > * + *,
+[data-aluno-theme="dark"] .divide-gray-200 > * + * {
+  border-color: #2A313B;
+}

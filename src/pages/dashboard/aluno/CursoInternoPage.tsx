@@ -7,6 +7,8 @@ import { cn } from '@/lib/brand'
 import { CourseForum } from '@/components/cursoForum/CourseForum'
 import { AvaliacaoCursoModal } from '@/components/aluno/AvaliacaoCursoModal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useAlunoTheme } from '@/lib/alunoTheme'
+import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
 
 type LessonWithSlug = {
   _id: string
@@ -136,8 +138,9 @@ function ModuleSection({
 // Skeleton da página interna do curso. Reproduz hero + barra de progresso +
 // lista de módulos com aulas. Usado enquanto `student.getCourseDetail` carrega.
 function CursoInternoSkeleton() {
+  const [alunoTheme] = useAlunoTheme()
   return (
-    <div className="min-h-[60vh] bg-[#F7F5F2]">
+    <div data-aluno-theme={alunoTheme} className="min-h-[60vh] bg-[#F7F5F2]">
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <div className="flex flex-col gap-4 rounded-2xl border border-[#E6DBCF] bg-white p-6 md:flex-row md:items-center">
           <Skeleton variant="light" className="h-32 w-full md:w-56" rounded="xl" />
@@ -177,6 +180,7 @@ export function CursoInternoPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [ratingOpen, setRatingOpen] = useState(false)
   const [ratingDismissed, setRatingDismissed] = useState(false)
+  const [alunoTheme] = useAlunoTheme()
 
   useEffect(() => {
     if (searchParams.get('matriculado') === '1') {
@@ -260,7 +264,7 @@ export function CursoInternoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F2]">
+    <div data-aluno-theme={alunoTheme} className="min-h-screen bg-[#F7F5F2]">
       {/* Banner de sucesso de matrícula */}
       {showSuccess && (
         <div className="bg-emerald-500 px-4 py-3 text-center text-sm font-semibold text-white animate-fadeIn">
@@ -272,10 +276,13 @@ export function CursoInternoPage() {
       <div className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
           {/* Breadcrumb */}
-          <nav className="mb-4 flex items-center gap-2 text-xs text-gray-400">
-            <Link to="/dashboard/meus-cursos" className="hover:text-gray-600 transition-colors">Meus cursos</Link>
-            <span>/</span>
-            <span className="text-gray-600 font-medium line-clamp-1">{course.title}</span>
+          <nav className="mb-4 flex items-center justify-between gap-2 text-xs text-gray-400">
+            <div className="flex items-center gap-2 min-w-0">
+              <Link to="/dashboard/meus-cursos" className="hover:text-gray-600 transition-colors">Meus cursos</Link>
+              <span>/</span>
+              <span className="text-gray-600 font-medium line-clamp-1">{course.title}</span>
+            </div>
+            <AlunoThemeToggle size="sm" />
           </nav>
 
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">

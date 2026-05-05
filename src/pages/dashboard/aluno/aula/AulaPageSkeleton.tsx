@@ -1,11 +1,14 @@
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useAlunoTheme } from '@/lib/alunoTheme'
 
-// Skeleton da página de aula. Reproduz o layout: barra superior, área do
-// player 16:9 ocupando o topo, título + meta abaixo, lista de aulas no aside
+// Skeleton da pagina de aula. Reproduz o layout: barra superior, area do
+// player 16:9 ocupando o topo, titulo + meta abaixo, lista de aulas no aside
 // (md+). Mostrado enquanto a query principal `student.getLesson` resolve.
+// Le o tema do aluno pra nao piscar light enquanto carrega em modo dark.
 export function AulaPageSkeleton() {
+  const [alunoTheme] = useAlunoTheme()
   return (
-    <div className="min-h-screen bg-[#F7F5F2]">
+    <div data-aluno-theme={alunoTheme} className="min-h-screen bg-[#F7F5F2]">
       <div className="border-b border-[#E6DBCF] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Skeleton variant="light" className="h-4 w-40" />
