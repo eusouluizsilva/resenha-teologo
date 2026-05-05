@@ -8,6 +8,36 @@ import { requireIdentity, requireUserFunction } from './lib/auth'
 
 const MAX_TITLE_LEN = 50
 const MAX_CONTENT_LEN = 20000
+const MAX_TAGS_PER_ENTRY = 8
+const MAX_TAG_LEN = 24
+
+// Normaliza tag: trim, lowercase, sem acentos, espaços por hífen, só keeps
+// [a-z0-9-]. Mantém o conjunto pequeno e estável pra agrupar bem.
+function normalizeTag(raw: string): string {
+  return raw
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .slice(0, MAX_TAG_LEN)
+}
+
+function sanitizeTags(input: string[] | undefined): string[] {
+  if (!input) return []
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of input) {
+    const t = normalizeTag(raw)
+    if (!t) continue
+    if (seen.has(t)) continue
+    seen.add(t)
+    out.push(t)
+    if (out.length >= MAX_TAGS_PER_ENTRY) break
+  }
+  return out
+}
 
 export const listMine = query({
   args: {},
@@ -143,6 +173,7 @@ export const listNotebookEntries = query({
               timestampSeconds: t.timestampSeconds,
               note: t.note,
             })),
+          tags: entry.tags ?? [],
         }
       })
     )
@@ -155,8 +186,9 @@ export const upsertEntry = mutation({
     notebookId: v.id('notebooks'),
     lessonId: v.id('lessons'),
     content: v.string(),
+    tags: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { notebookId, lessonId, content }) => {
+  handler: async (ctx, { notebookId, lessonId, content, tags }) => {
     const { identity } = await requireUserFunction(ctx, ['aluno'])
 
     const notebook = await ctx.db.get(notebookId)
@@ -166,6 +198,7 @@ export const upsertEntry = mutation({
     if (!lesson) throw new Error('Aula não encontrada')
 
     const safeContent = content.slice(0, MAX_CONTENT_LEN)
+    const safeTags = tags !== undefined ? sanitizeTags(tags) : undefined
     const now = Date.now()
 
     const existing = await ctx.db
@@ -176,7 +209,12 @@ export const upsertEntry = mutation({
       .first()
 
     if (existing) {
-      await ctx.db.patch(existing._id, { content: safeContent, updatedAt: now })
+      const patch: { content: string; updatedAt: number; tags?: string[] } = {
+        content: safeContent,
+        updatedAt: now,
+      }
+      if (safeTags !== undefined) patch.tags = safeTags
+      await ctx.db.patch(existing._id, patch)
       await ctx.db.patch(notebookId, { updatedAt: now })
       return existing._id
     }
@@ -188,8 +226,25 @@ export const upsertEntry = mutation({
       courseId: lesson.courseId,
       content: safeContent,
       updatedAt: now,
+      ...(safeTags !== undefined ? { tags: safeTags } : {}),
     })
     await ctx.db.patch(notebookId, { updatedAt: now })
     return id
+  },
+})
+
+export const setEntryTags = mutation({
+  args: {
+    entryId: v.id('notebookEntries'),
+    tags: v.array(v.string()),
+  },
+  handler: async (ctx, { entryId, tags }) => {
+    const { identity } = await requireUserFunction(ctx, ['aluno'])
+    const entry = await ctx.db.get(entryId)
+    if (!entry || entry.studentId !== identity.subject) throw new Error('Não autorizado')
+    const safeTags = sanitizeTags(tags)
+    const now = Date.now()
+    await ctx.db.patch(entryId, { tags: safeTags, updatedAt: now })
+    await ctx.db.patch(entry.notebookId, { updatedAt: now })
   },
 })

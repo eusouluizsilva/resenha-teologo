@@ -458,6 +458,50 @@ export function AulaPage() {
           {/* 3b. Comunidade no WhatsApp do Pr Luiz Silva */}
           <BotaoComunidadeWhatsApp />
 
+          {/* 3c. Bio do professor responsável pelo curso. Aparece em toda aula
+              pra reforçar autoridade e abrir caminho pro perfil público. */}
+          {data.creator && data.creator.bio && (
+            <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="flex items-start gap-4">
+                {data.creator.avatarUrl ? (
+                  <img
+                    src={data.creator.avatarUrl}
+                    alt={data.creator.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-14 w-14 flex-shrink-0 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[#F37E20]/10 text-base font-semibold text-[#F37E20]">
+                    {data.creator.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F37E20]">
+                    Sobre o professor
+                  </p>
+                  <p className="mt-1 font-display text-base font-semibold text-gray-900">
+                    {data.creator.name}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-600">
+                    {data.creator.bio}
+                  </p>
+                  {data.creator.handle && (
+                    <Link
+                      to={`/${data.creator.handle}`}
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#F37E20] hover:text-[#e06e10]"
+                    >
+                      Ver perfil completo
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* 4. Versículos citados (abaixo do vídeo) */}
           <VersesSection
             versesRefs={versesRefs}

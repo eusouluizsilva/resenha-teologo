@@ -383,6 +383,10 @@ export default defineSchema({
     courseId: v.id('courses'),
     content: v.string(),
     updatedAt: v.number(),
+    // Tags livres aplicadas pelo aluno pra organizar o estudo dentro do caderno.
+    // Strings normalizadas em lowercase + sem acentos no client (slug-like).
+    // Default ausente (= sem tags).
+    tags: v.optional(v.array(v.string())),
   })
     .index('by_student_lesson', ['studentId', 'lessonId'])
     .index('by_notebook', ['notebookId'])

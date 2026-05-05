@@ -11,6 +11,8 @@ import { SeloVerificado } from '@/components/SeloVerificado'
 import { AdSlot } from '@/components/AdSlot'
 import { useArticleJsonLd, useBreadcrumbJsonLd, useSeo } from '@/lib/seo'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useReadingFontSize } from '@/lib/useReadingFontSize'
+import { ReadingFontSizeControl } from '@/components/ui/ReadingFontSizeControl'
 
 const VIEW_DEDUP_KEY_PREFIX = 'rdt_post_view_'
 const POST_ORIGIN =
@@ -28,6 +30,7 @@ export function BlogPostPage() {
     handle && postSlug ? { handle, slug: postSlug } : 'skip',
   )
   const incrementView = useMutation(api.posts.incrementView)
+  const [fontSize, setFontSize] = useReadingFontSize()
 
   const url = `${POST_ORIGIN}/blog/${handle}/${postSlug}`
 
@@ -196,7 +199,10 @@ export function BlogPostPage() {
                 </div>
               </div>
             )}
-            <BotaoSeguir authorUserId={post.authorUserId} authorName={authorLabel} />
+            <div className="flex items-center gap-2">
+              <ReadingFontSizeControl size={fontSize} onChange={setFontSize} theme="light" />
+              <BotaoSeguir authorUserId={post.authorUserId} authorName={authorLabel} />
+            </div>
           </header>
 
           {post.coverImageUrl && (
@@ -212,7 +218,7 @@ export function BlogPostPage() {
             </figure>
           )}
 
-          <CorpoArtigo markdown={post.bodyMarkdown} />
+          <CorpoArtigo markdown={post.bodyMarkdown} fontSize={fontSize} />
 
           <footer className="mt-16 space-y-8 border-t border-[#E6DBCF] pt-8">
             <ReacoesArtigo

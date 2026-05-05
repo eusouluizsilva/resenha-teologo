@@ -17,6 +17,8 @@ export function NotebookSection({
   const [newNotebookOpen, setNewNotebookOpen] = useState(false)
   const [newNotebookTitle, setNewNotebookTitle] = useState('')
   const [content, setContent] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
     'idle'
   )
@@ -58,13 +60,14 @@ export function NotebookSection({
     if (entry === undefined) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setContent(entry?.content ?? '')
+    setTags(entry?.tags ?? [])
 
     setIsDirty(false)
 
     setSaveStatus('idle')
   }, [entry, activeNotebookId])
 
-  // Auto-save com debounce de 1.5s após última alteração.
+  // Auto-save com debounce de 1.5s após última alteração (texto ou tags).
   useEffect(() => {
     if (!isDirty || !activeNotebookId) return
     const handle = setTimeout(async () => {
@@ -74,6 +77,7 @@ export function NotebookSection({
           notebookId: activeNotebookId,
           lessonId,
           content,
+          tags,
         })
         setSaveStatus('saved')
         setIsDirty(false)
@@ -82,7 +86,39 @@ export function NotebookSection({
       }
     }, 1500)
     return () => clearTimeout(handle)
-  }, [content, isDirty, activeNotebookId, lessonId, upsertEntry])
+  }, [content, tags, isDirty, activeNotebookId, lessonId, upsertEntry])
+
+  // Mesma normalização do server para evitar duplicatas no chip ao adicionar.
+  function normalizeTagClient(raw: string): string {
+    return raw
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .slice(0, 24)
+  }
+
+  function addTag(raw: string) {
+    const t = normalizeTagClient(raw)
+    if (!t) return
+    if (tags.includes(t)) {
+      setTagInput('')
+      return
+    }
+    if (tags.length >= 8) return
+    setTags([...tags, t])
+    setTagInput('')
+    setIsDirty(true)
+    setSaveStatus('idle')
+  }
+
+  function removeTag(tag: string) {
+    setTags(tags.filter((t) => t !== tag))
+    setIsDirty(true)
+    setSaveStatus('idle')
+  }
 
   async function handleCreateNotebook() {
     const title = newNotebookTitle.trim()
@@ -368,6 +404,50 @@ export function NotebookSection({
                 maxLength={20000}
                 className="min-h-[180px] w-full rounded-xl border border-gray-200 bg-[#F7F5F2] px-4 py-3 text-sm leading-6 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
               />
+              <div className="mt-3">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#F37E20]/10 px-2.5 py-1 text-[11px] font-semibold text-[#F37E20]"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        aria-label={`Remover etiqueta ${tag}`}
+                        className="text-[#F37E20]/70 hover:text-[#F37E20]"
+                      >
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M6 18L18 6" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                  {tags.length < 8 && (
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault()
+                          addTag(tagInput)
+                        }
+                        if (e.key === 'Backspace' && tagInput === '' && tags.length > 0) {
+                          removeTag(tags[tags.length - 1])
+                        }
+                      }}
+                      onBlur={() => {
+                        if (tagInput.trim()) addTag(tagInput)
+                      }}
+                      placeholder={tags.length === 0 ? 'Etiquetas (Enter)' : 'Adicionar'}
+                      maxLength={24}
+                      className="min-w-[120px] flex-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/20"
+                    />
+                  )}
+                </div>
+              </div>
               <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
                 <span>
                   {content.length.toLocaleString()} / 20.000 caracteres
@@ -438,6 +518,18 @@ export function NotebookSection({
                             <span className="text-gray-400 italic">Sem conteúdo</span>
                           )}
                         </p>
+                        {e.tags && e.tags.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {e.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </li>
                     )
                   })}

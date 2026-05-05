@@ -34,7 +34,7 @@ export const articleComponents: Components = {
     <h3 className="font-display text-xl font-semibold text-[#111827] mt-6 mb-2" {...props}>{children}</h3>
   ),
   p: ({ children, ...props }) => (
-    <p className="font-serif text-[1.05rem] leading-8 text-[#1F2937] mb-5" {...props}>{children}</p>
+    <p className="font-serif text-[length:var(--rdt-article-text-size,1.05rem)] leading-[var(--rdt-article-line-height,2rem)] text-[#1F2937] mb-5" {...props}>{children}</p>
   ),
   a: ({ children, href, ...props }) => {
     const isExternal = !!href && /^https?:/.test(href)
@@ -56,10 +56,10 @@ export const articleComponents: Components = {
     </blockquote>
   ),
   ul: ({ children, ...props }) => (
-    <ul className="font-serif text-[1.05rem] leading-8 text-[#1F2937] mb-5 ml-6 list-disc space-y-2" {...props}>{children}</ul>
+    <ul className="font-serif text-[length:var(--rdt-article-text-size,1.05rem)] leading-[var(--rdt-article-line-height,2rem)] text-[#1F2937] mb-5 ml-6 list-disc space-y-2" {...props}>{children}</ul>
   ),
   ol: ({ children, ...props }) => (
-    <ol className="font-serif text-[1.05rem] leading-8 text-[#1F2937] mb-5 ml-6 list-decimal space-y-2" {...props}>{children}</ol>
+    <ol className="font-serif text-[length:var(--rdt-article-text-size,1.05rem)] leading-[var(--rdt-article-line-height,2rem)] text-[#1F2937] mb-5 ml-6 list-decimal space-y-2" {...props}>{children}</ol>
   ),
   code: ({ children, ...props }) => (
     <code className="rounded-md bg-[#F0EBE2] px-1.5 py-0.5 font-mono text-[0.9em] text-[#7C2D12]" {...props}>{children}</code>

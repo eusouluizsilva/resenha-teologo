@@ -19,6 +19,8 @@ import { useCurrentAppUser } from '@/lib/currentUser'
 import { EmptyBooksIllustration } from '@/components/ui/EmptyIllustration'
 import { useAlunoTheme } from '@/lib/alunoTheme'
 import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
+import { READING_FONT_SIZES, useReadingFontSize } from '@/lib/useReadingFontSize'
+import { ReadingFontSizeControl } from '@/components/ui/ReadingFontSizeControl'
 
 function formatDate(ts?: number) {
   if (!ts) return ''
@@ -60,6 +62,7 @@ type EnrichedEntry = {
   content: string
   updatedAt?: number
   timestamps?: TimestampEntry[]
+  tags?: string[]
 }
 
 function formatVideoTimestamp(seconds: number): string {
@@ -158,6 +161,8 @@ function ReadingMode({
 
   const words = countWords(entry.content)
   const [alunoTheme] = useAlunoTheme()
+  const [fontSize, setFontSize] = useReadingFontSize()
+  const fontStyle = READING_FONT_SIZES[fontSize]
 
   function handleExport() {
     void downloadEntryPdf({
@@ -190,6 +195,7 @@ function ReadingMode({
           Voltar
         </button>
         <div className="flex items-center gap-2">
+          <ReadingFontSizeControl size={fontSize} onChange={setFontSize} theme="light" />
           <AlunoThemeToggle size="sm" />
           <button
             type="button"
@@ -212,7 +218,10 @@ function ReadingMode({
           <p className="mt-3 text-sm text-[#6B7280]">
             {formatDate(entry.updatedAt ?? entry._creationTime)} · {words} {words === 1 ? 'palavra' : 'palavras'}
           </p>
-          <div className="mt-8 whitespace-pre-wrap text-[18px] leading-[1.8] text-[#1F2937]">
+          <div
+            className="mt-8 whitespace-pre-wrap text-[#1F2937]"
+            style={{ fontSize: fontStyle.fontSize, lineHeight: fontStyle.lineHeight }}
+          >
             {entry.content || '(sem conteúdo)'}
           </div>
           {entry.timestamps && entry.timestamps.length > 0 && (
@@ -263,6 +272,7 @@ function NotebookDetail({
     | undefined
   const [query, setQuery] = useState('')
   const [courseFilter, setCourseFilter] = useState<string>('all')
+  const [tagFilter, setTagFilter] = useState<string | null>(null)
   const [sortMode, setSortMode] = useState<SortMode>('updated_desc')
   const [readingEntry, setReadingEntry] = useState<EnrichedEntry | null>(null)
 
@@ -278,6 +288,15 @@ function NotebookDetail({
     )
   }, [entries])
 
+  const tagOptions = useMemo(() => {
+    if (!entries) return [] as string[]
+    const set = new Set<string>()
+    for (const e of entries) {
+      if (e.tags) for (const t of e.tags) set.add(t)
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  }, [entries])
+
   const filtered = useMemo(() => {
     if (!entries) return [] as EnrichedEntry[]
     const q = query.trim().toLowerCase()
@@ -287,11 +306,15 @@ function NotebookDetail({
         (e) =>
           e.lessonTitle.toLowerCase().includes(q) ||
           e.courseTitle.toLowerCase().includes(q) ||
-          e.content.toLowerCase().includes(q),
+          e.content.toLowerCase().includes(q) ||
+          (e.tags ?? []).some((t) => t.includes(q)),
       )
     }
     if (courseFilter !== 'all') {
       list = list.filter((e) => (e.courseSlug ?? e.courseTitle) === courseFilter)
+    }
+    if (tagFilter) {
+      list = list.filter((e) => (e.tags ?? []).includes(tagFilter))
     }
     const sorted = [...list]
     if (sortMode === 'updated_desc') {
@@ -302,7 +325,7 @@ function NotebookDetail({
       sorted.sort((a, b) => a.lessonTitle.localeCompare(b.lessonTitle, 'pt-BR'))
     }
     return sorted
-  }, [entries, query, courseFilter, sortMode])
+  }, [entries, query, courseFilter, tagFilter, sortMode])
 
   const totalWords = useMemo(() => {
     if (!entries) return 0
@@ -416,6 +439,41 @@ function NotebookDetail({
           </select>
         </div>
 
+        {tagOptions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-white/6 px-6 py-3">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/36">
+              Etiquetas
+            </span>
+            <button
+              type="button"
+              onClick={() => setTagFilter(null)}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
+                tagFilter === null
+                  ? 'bg-[#F37E20]/15 text-[#F2BD8A]'
+                  : 'border border-white/8 text-white/56 hover:text-white/80',
+              )}
+            >
+              Todas
+            </button>
+            {tagOptions.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                className={cn(
+                  'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
+                  tagFilter === tag
+                    ? 'bg-[#F37E20]/15 text-[#F2BD8A]'
+                    : 'border border-white/8 text-white/56 hover:text-white/80',
+                )}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
           {entries.length === 0 ? (
             <p className="py-8 text-center text-sm text-white/48">
@@ -441,6 +499,20 @@ function NotebookDetail({
                       </p>
                     </div>
                     <p className="mt-0.5 text-xs uppercase tracking-[0.14em] text-white/36">{entry.courseTitle}</p>
+                    {entry.tags && entry.tags.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {entry.tags.map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                            className="rounded-full bg-[#F37E20]/10 px-2 py-0.5 text-[10px] font-semibold text-[#F2BD8A] hover:bg-[#F37E20]/20"
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/78">{entry.content}</p>
                     {entry.timestamps && entry.timestamps.length > 0 && (
                       <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4">

@@ -12,6 +12,8 @@ import type { Id } from '@convex/_generated/dataModel'
 import { BIBLE_BOOKS, getBibleBook } from '@/lib/bible/books'
 import { BIBLE_SOURCES, DEFAULT_BIBLE_SOURCE_ID, getBibleSource } from '@/lib/bible/translations'
 import { fetchChapter, type BibleVerse } from '@/lib/bible/api'
+import { READING_FONT_SIZES, useReadingFontSize } from '@/lib/useReadingFontSize'
+import { ReadingFontSizeControl } from '@/components/ui/ReadingFontSizeControl'
 
 const STORAGE_KEY = 'rdt_biblia_state_v1'
 
@@ -75,6 +77,8 @@ export function BibliaReader({ backHref, backLabel = 'Voltar' }: BibliaReaderPro
   const [newNoteDraft, setNewNoteDraft] = useState('')
 
   const popoverRef = useRef<HTMLDivElement | null>(null)
+  const [fontSize, setFontSize] = useReadingFontSize()
+  const fontStyle = READING_FONT_SIZES[fontSize]
 
   const { isSignedIn } = useUser()
 
@@ -237,6 +241,7 @@ export function BibliaReader({ backHref, backLabel = 'Voltar' }: BibliaReaderPro
               {book?.name ?? 'Selecione um livro'} {chapter}
             </h1>
           </div>
+          <ReadingFontSizeControl size={fontSize} onChange={setFontSize} theme="light" />
           {backHref && (
             <Link
               to={backHref}
@@ -297,7 +302,10 @@ export function BibliaReader({ backHref, backLabel = 'Voltar' }: BibliaReaderPro
           </p>
         )}
         {!loading && !error && verses && (
-          <article className="space-y-4 font-['Source_Serif_4'] text-[17px] leading-[1.8] text-[#111827]">
+          <article
+            className="space-y-4 font-['Source_Serif_4'] text-[#111827]"
+            style={{ fontSize: fontStyle.fontSize, lineHeight: fontStyle.lineHeight }}
+          >
             {verses.map((v) => {
               const color = highlightByVerse.get(v.verse)
               const verseNotes = notesByVerse.get(v.verse) ?? []

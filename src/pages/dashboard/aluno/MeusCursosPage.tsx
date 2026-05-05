@@ -1,11 +1,15 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import { DashboardPageShell, DashboardEmptyState } from '@/components/dashboard/PageShell'
-import { brandPanelClass, brandPanelSoftClass, brandStatusPillClass, cn } from '@/lib/brand'
+import { brandInputClass, brandPanelClass, brandPanelSoftClass, brandStatusPillClass, cn } from '@/lib/brand'
 import { BannerCursosObrigatorios } from '@/components/aluno/BannerCursosObrigatorios'
 import { CursosRecomendados } from '@/components/aluno/CursosRecomendados'
 import { EmptyBooksIllustration } from '@/components/ui/EmptyIllustration'
+
+type StatusFilter = 'todos' | 'em_andamento' | 'concluido' | 'nao_iniciado'
+type SortMode = 'progresso_desc' | 'recente' | 'titulo_asc'
 
 function levelLabel(level: string) {
   if (level === 'iniciante') return 'Iniciante'
@@ -102,8 +106,49 @@ function CourseCard({ course, completedLessons, totalLessons, percentage, certif
 
 export function MeusCursosPage() {
   const data = useQuery(api.enrollments.listByStudent)
+  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos')
+  const [sortMode, setSortMode] = useState<SortMode>('recente')
 
   const isLoading = data === undefined
+
+  const filtered = useMemo(() => {
+    if (!data) return [] as NonNullable<NonNullable<typeof data>[number]>[]
+    const q = query.trim().toLowerCase()
+    let list = data.filter(
+      (x): x is NonNullable<typeof x> => x !== null,
+    )
+    if (q) {
+      list = list.filter(
+        (item) =>
+          item.course.title.toLowerCase().includes(q) ||
+          item.course.category.toLowerCase().includes(q),
+      )
+    }
+    if (statusFilter !== 'todos') {
+      list = list.filter((item) => {
+        if (statusFilter === 'concluido') return item.percentage >= 100
+        if (statusFilter === 'em_andamento') return item.percentage > 0 && item.percentage < 100
+        return item.percentage === 0
+      })
+    }
+    const sorted = [...list]
+    if (sortMode === 'progresso_desc') {
+      sorted.sort((a, b) => b.percentage - a.percentage)
+    } else if (sortMode === 'titulo_asc') {
+      sorted.sort((a, b) => a.course.title.localeCompare(b.course.title, 'pt-BR'))
+    } else {
+      sorted.sort((a, b) => (b.enrollment._creationTime ?? 0) - (a.enrollment._creationTime ?? 0))
+    }
+    return sorted
+  }, [data, query, statusFilter, sortMode])
+
+  const statusPills: { id: StatusFilter; label: string }[] = [
+    { id: 'todos', label: 'Todos' },
+    { id: 'em_andamento', label: 'Em andamento' },
+    { id: 'nao_iniciado', label: 'Não iniciados' },
+    { id: 'concluido', label: 'Concluídos' },
+  ]
 
   return (
     <DashboardPageShell
@@ -159,7 +204,7 @@ export function MeusCursosPage() {
           }
         />
       ) : (
-        <>
+        <div className="space-y-5">
           <div className={cn('grid grid-cols-3 gap-px overflow-hidden text-center', brandPanelSoftClass)}>
             {[
               { label: 'Matriculado em', value: data.length, sub: data.length === 1 ? 'curso' : 'cursos' },
@@ -174,10 +219,53 @@ export function MeusCursosPage() {
             ))}
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {data.map((item: NonNullable<typeof data>[number]) => {
-              if (!item) return null
-              return (
+          <div className={cn('flex flex-col gap-3 p-4 sm:flex-row sm:items-center', brandPanelSoftClass)}>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por título ou categoria..."
+              className={cn(brandInputClass, 'flex-1')}
+            />
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              className={cn(brandInputClass, 'sm:w-48')}
+            >
+              <option value="recente">Mais recentes</option>
+              <option value="progresso_desc">Maior progresso</option>
+              <option value="titulo_asc">Título (A-Z)</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {statusPills.map((pill) => (
+              <button
+                key={pill.id}
+                type="button"
+                onClick={() => setStatusFilter(pill.id)}
+                className={cn(
+                  'rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
+                  statusFilter === pill.id
+                    ? 'bg-[#F37E20]/15 text-[#F2BD8A] border border-[#F37E20]/30'
+                    : 'border border-white/10 text-white/56 hover:text-white/80',
+                )}
+              >
+                {pill.label}
+              </button>
+            ))}
+            <span className="ml-auto text-[11px] text-white/36">
+              {filtered.length} {filtered.length === 1 ? 'curso' : 'cursos'}
+            </span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className={cn('p-8 text-center text-sm text-white/48', brandPanelClass)}>
+              Nenhum curso corresponde aos filtros.
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {filtered.map((item) => (
                 <CourseCard
                   key={item.enrollment._id}
                   course={item.course}
@@ -186,14 +274,14 @@ export function MeusCursosPage() {
                   percentage={item.percentage}
                   certificateIssued={item.enrollment.certificateIssued}
                 />
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="mt-8">
             <CursosRecomendados limit={4} />
           </div>
-        </>
+        </div>
       )}
     </DashboardPageShell>
   )
