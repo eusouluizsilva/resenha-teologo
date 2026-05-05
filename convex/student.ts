@@ -1012,3 +1012,96 @@ export const getCourseRating = query({
     return rating ?? null
   },
 })
+
+// ─── rateLesson ───────────────────────────────────────────────────────────────
+// Aluno avalia uma aula específica com 1-5 estrelas + review opcional. Exige
+// matrícula no curso da aula. Substitui qualquer avaliação anterior (1 por
+// par aluno+aula). Rate-limited igual rateCourse.
+
+export const rateLesson = mutation({
+  args: {
+    lessonId: v.id('lessons'),
+    stars: v.number(),
+    review: v.optional(v.string()),
+  },
+  handler: async (ctx, { lessonId, stars, review }) => {
+    const identity = await requireIdentity(ctx)
+    await checkRateLimit(ctx, identity.subject, 'lesson.rate', { max: 5, windowMs: 60_000 })
+
+    if (stars < 1 || stars > 5) throw new Error('Avaliação deve ser entre 1 e 5 estrelas')
+
+    const lesson = await ctx.db.get(lessonId)
+    if (!lesson) throw new Error('Aula não encontrada')
+
+    const enrollment = await ctx.db
+      .query('enrollments')
+      .withIndex('by_student_course', (q) =>
+        q.eq('studentId', identity.subject).eq('courseId', lesson.courseId),
+      )
+      .unique()
+    if (!enrollment) throw new Error('Você precisa estar matriculado para avaliar esta aula')
+
+    const cleanReview = review?.trim().slice(0, 600) || undefined
+
+    const existing = await ctx.db
+      .query('lessonRatings')
+      .withIndex('by_student_lesson', (q) =>
+        q.eq('studentId', identity.subject).eq('lessonId', lessonId),
+      )
+      .unique()
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { stars, review: cleanReview, updatedAt: Date.now() })
+    } else {
+      await ctx.db.insert('lessonRatings', {
+        studentId: identity.subject,
+        lessonId,
+        courseId: lesson.courseId,
+        stars,
+        review: cleanReview,
+        createdAt: Date.now(),
+      })
+    }
+
+    return { stars }
+  },
+})
+
+// ─── getMyLessonRating ────────────────────────────────────────────────────────
+// Retorna a avaliação deste aluno para uma aula (estrelas + review), ou null.
+
+export const getMyLessonRating = query({
+  args: { lessonId: v.id('lessons') },
+  handler: async (ctx, { lessonId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const rating = await ctx.db
+      .query('lessonRatings')
+      .withIndex('by_student_lesson', (q) =>
+        q.eq('studentId', identity.subject).eq('lessonId', lessonId),
+      )
+      .unique()
+
+    if (!rating) return null
+    return { stars: rating.stars, review: rating.review ?? null }
+  },
+})
+
+// ─── getLessonAggregateRating ────────────────────────────────────────────────
+// Média + contagem de estrelas para uma aula. Usado pela UI da AulaPage para
+// mostrar "X.Y de Y avaliações" abaixo do player.
+
+export const getLessonAggregateRating = query({
+  args: { lessonId: v.id('lessons') },
+  handler: async (ctx, { lessonId }) => {
+    const ratings = await ctx.db
+      .query('lessonRatings')
+      .withIndex('by_lessonId', (q) => q.eq('lessonId', lessonId))
+      .collect()
+    const count = ratings.length
+    if (count === 0) return { avg: 0, count: 0 }
+    const avg = Math.round((ratings.reduce((s, r) => s + r.stars, 0) / count) * 10) / 10
+    return { avg, count }
+  },
+})

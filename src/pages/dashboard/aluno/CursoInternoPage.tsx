@@ -10,6 +10,7 @@ import { CursosRelacionados } from '@/components/aluno/CursosRelacionados'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAlunoTheme } from '@/lib/alunoTheme'
 import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
+import { StreakIndicatorLight } from '@/components/aluno/StreakIndicatorLight'
 
 type LessonWithSlug = {
   _id: string
@@ -283,7 +284,10 @@ export function CursoInternoPage() {
               <span>/</span>
               <span className="text-gray-600 font-medium line-clamp-1">{course.title}</span>
             </div>
-            <AlunoThemeToggle size="sm" />
+            <div className="flex items-center gap-2">
+              <StreakIndicatorLight compact />
+              <AlunoThemeToggle size="sm" />
+            </div>
           </nav>
 
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">

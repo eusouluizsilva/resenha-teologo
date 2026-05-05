@@ -576,6 +576,23 @@ export default defineSchema({
     .index('by_courseId', ['courseId'])
     .index('by_student_course', ['studentId', 'courseId']),
 
+  // Avaliação por aula (1-5 estrelas + review opcional). Único por aluno+aula.
+  // Aluno só pode avaliar se matriculado no curso da aula. Diferente de
+  // courseRatings (avaliação do curso inteiro), aqui é granular por aula:
+  // útil para o professor identificar quais aulas estão funcionando.
+  lessonRatings: defineTable({
+    studentId: v.string(),
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    stars: v.number(),
+    review: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_lessonId', ['lessonId'])
+    .index('by_student_lesson', ['studentId', 'lessonId'])
+    .index('by_courseId', ['courseId']),
+
   // Notificações direcionadas a um usuário. `kind` identifica o tipo (curso
   // concluído, nova resposta em comentário, certificado emitido, etc.), `link`
   // aponta para o destino dentro do painel, `readAt` marca leitura. O sino do

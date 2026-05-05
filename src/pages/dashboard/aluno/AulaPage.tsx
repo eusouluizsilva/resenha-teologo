@@ -11,6 +11,7 @@ import { SecaoFlashcardsAula } from '@/components/aula/SecaoFlashcardsAula'
 import { AvisoCursoEmConstrucao } from '@/components/aula/AvisoCursoEmConstrucao'
 import { ToastCelebracaoAula } from '@/components/aula/ToastCelebracaoAula'
 import { BotaoComunidadeWhatsApp } from '@/components/aula/BotaoComunidadeWhatsApp'
+import { AvaliacaoAula } from '@/components/aula/AvaliacaoAula'
 import { CursosRelacionados } from '@/components/aluno/CursosRelacionados'
 
 import { COMPLETION_RATIO, type YTPlayer } from './aula/player-helpers'
@@ -26,6 +27,7 @@ import { QuizSection } from './aula/QuizSection'
 import { AulaPageSkeleton } from './aula/AulaPageSkeleton'
 import { useAlunoTheme } from '@/lib/alunoTheme'
 import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
+import { StreakIndicatorLight } from '@/components/aluno/StreakIndicatorLight'
 
 export function AulaPage() {
   const { courseId: rawCourseRef, lessonId: rawLessonRef } = useParams<{
@@ -325,6 +327,7 @@ export function AulaPage() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <StreakIndicatorLight compact />
             <AlunoThemeToggle size="sm" />
             <button
               type="button"
@@ -486,6 +489,9 @@ export function AulaPage() {
 
           {/* 7. Fórum de comentários */}
           <ForumSection lessonId={lesson._id as Id<'lessons'>} />
+
+          {/* 7a. Avaliação da aula em 5 estrelas (paralelo ao fórum) */}
+          <AvaliacaoAula lessonId={lesson._id as Id<'lessons'>} />
 
           {/* 7b. Perguntas privadas ao professor (escondida para o próprio criador) */}
           <PrivateQuestionsSection
