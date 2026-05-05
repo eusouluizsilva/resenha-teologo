@@ -12,7 +12,10 @@ import {
 import { internal } from './_generated/api'
 
 const MAX_USERS_PER_RUN = 200
-const PROCESS_BATCH = 25
+// Resend limita free tier a 5 req/seg. Mandamos 4 em paralelo por janela de
+// 1100ms pra deixar margem confortável (e evitar erros 429 transientes).
+const RATE_BATCH = 4
+const RATE_WINDOW_MS = 1100
 const SITE_URL = 'https://resenhadoteologo.com'
 // Convex injeta CONVEX_SITE_URL no runtime das functions. Apontando pra ele
 // resolvemos o /api/unsubscribe sem hardcodar o nome do deployment. Em prod
@@ -26,7 +29,9 @@ function convexSiteUrl(): string {
 // Lista usuários candidatos a receber o email de hoje. Filtros:
 // - email não vazio
 // - emailDailyArticleOptOut !== true
-// - já houve envio nas últimas 20 horas → pula (idempotência diária)
+// - já houve envio com status='sent' nas últimas 20 horas → pula (idempotência
+//   diária). Logs com status 'error'/'skipped' não bloqueiam (são transientes
+//   por rate limit ou config faltante).
 export const listCandidates = internalQuery({
   args: {},
   handler: async (ctx) => {
@@ -38,12 +43,15 @@ export const listCandidates = internalQuery({
       if (!u.email) continue
       if (u.emailDailyArticleOptOut === true) continue
 
-      const lastLog = await ctx.db
+      const recentLogs = await ctx.db
         .query('articleEmailLog')
         .withIndex('by_user', (q) => q.eq('userId', u.clerkId))
         .order('desc')
-        .first()
-      if (lastLog && lastLog.sentAt > cutoffTwentyHours) continue
+        .take(5)
+      const recentlySent = recentLogs.some(
+        (l) => l.status === 'sent' && l.sentAt > cutoffTwentyHours,
+      )
+      if (recentlySent) continue
 
       out.push({ userId: u.clerkId, email: u.email, name: u.name })
       if (out.length >= MAX_USERS_PER_RUN) break
@@ -54,15 +62,19 @@ export const listCandidates = internalQuery({
 
 // Para um usuário, encontra o post publicado mais antigo que ainda NÃO foi
 // enviado pra ele. Retorna null se não há candidato (usuário já recebeu todos).
+// Apenas logs com status='sent' bloqueiam retry; 'error' e 'skipped' são
+// transientes (rate limit, RESEND_API_KEY ausente etc.) e devem ser retentados
+// na próxima rodada do cron.
 export const pickArticleForUser = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    // Logs anteriores deste usuário: postIds já enviados.
     const logs = await ctx.db
       .query('articleEmailLog')
       .withIndex('by_user', (q) => q.eq('userId', userId))
       .collect()
-    const sentPostIds = new Set(logs.map((l) => String(l.postId)))
+    const sentPostIds = new Set(
+      logs.filter((l) => l.status === 'sent').map((l) => String(l.postId)),
+    )
 
     // Posts publicados ordenados por publishedAt ASC (mais antigo primeiro).
     // Pega em batch e procura o primeiro não enviado. Limite de 500 cobre o
@@ -155,8 +167,9 @@ export const run = internalAction({
     let errors = 0
 
     type Candidate = { userId: string; email: string; name: string }
-    for (let i = 0; i < candidates.length; i += PROCESS_BATCH) {
-      const batch = candidates.slice(i, i + PROCESS_BATCH) as Candidate[]
+    for (let i = 0; i < candidates.length; i += RATE_BATCH) {
+      const batch = candidates.slice(i, i + RATE_BATCH) as Candidate[]
+      const startedAt = Date.now()
       await Promise.all(
         batch.map(async (c: Candidate) => {
           const post = await ctx.runQuery(internal.articleEmail.pickArticleForUser, {
@@ -197,6 +210,12 @@ export const run = internalAction({
           }
         }),
       )
+      // Rate limit: aguarda o resto da janela de 1100ms antes do próximo batch.
+      const elapsed = Date.now() - startedAt
+      const remaining = RATE_WINDOW_MS - elapsed
+      if (remaining > 0 && i + RATE_BATCH < candidates.length) {
+        await new Promise((r) => setTimeout(r, remaining))
+      }
     }
 
     console.log(
