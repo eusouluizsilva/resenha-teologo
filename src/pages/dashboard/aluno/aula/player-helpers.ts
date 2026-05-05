@@ -26,8 +26,6 @@ export interface YTPlayer {
   pauseVideo: () => void
   seekTo: (seconds: number, allowSeekAhead: boolean) => void
   destroy: () => void
-  setPlaybackRate: (rate: number) => void
-  getPlaybackRate: () => number
   getAvailableQualityLevels?: () => string[]
   getPlaybackQuality?: () => string
   setPlaybackQuality?: (level: string) => void
@@ -49,16 +47,6 @@ const QUALITY_LABELS: Record<string, string> = {
 
 export function qualityLabel(level: string): string {
   return QUALITY_LABELS[level] ?? level
-}
-
-export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
-export const PLAYBACK_RATE_STORAGE_KEY = 'rdt_player_rate'
-
-export function readSavedPlaybackRate(): number {
-  if (typeof window === 'undefined') return 1
-  const raw = window.localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY)
-  const n = raw ? Number(raw) : NaN
-  return PLAYBACK_RATES.includes(n as (typeof PLAYBACK_RATES)[number]) ? n : 1
 }
 
 export function extractYouTubeId(url: string): string | null {

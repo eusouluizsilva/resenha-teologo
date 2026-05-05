@@ -2,12 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/brand'
 import {
   COMPLETION_RATIO,
-  PLAYBACK_RATES,
-  PLAYBACK_RATE_STORAGE_KEY,
   extractYouTubeId,
   formatClock,
   qualityLabel,
-  readSavedPlaybackRate,
   type YTPlayer,
 } from './player-helpers'
 
@@ -51,7 +48,6 @@ export function VideoPlayer({
   const [maxWatched, setMaxWatched] = useState(initialWatched)
   const [overlayVisible, setOverlayVisible] = useState(true)
   const [blockToast, setBlockToast] = useState(false)
-  const [playbackRate, setPlaybackRate] = useState<number>(() => readSavedPlaybackRate())
   const [availableQualities, setAvailableQualities] = useState<string[]>([])
   const [currentQuality, setCurrentQuality] = useState<string>('auto')
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false)
@@ -100,15 +96,6 @@ export function VideoPlayer({
           if (playerHandleRef) playerHandleRef.current = e.target
           const d = e.target.getDuration()
           if (d > 0) setDuration(d)
-          const saved = readSavedPlaybackRate()
-          if (saved !== 1) {
-            try {
-              e.target.setPlaybackRate(saved)
-            } catch {
-              // ignora — algumas instancias do YT.Player ainda nao expuseram
-              // setPlaybackRate quando onReady dispara em conexoes lentas.
-            }
-          }
           // Qualidades disponíveis só ficam acessíveis depois que o vídeo
           // começa a carregar. Tentamos no ready e o onPlaybackQualityChange
           // confirma o estado real.
@@ -303,21 +290,6 @@ export function VideoPlayer({
       document.removeEventListener('keydown', handleKey)
     }
   }, [qualityMenuOpen])
-
-  function cyclePlaybackRate() {
-    if (!playerRef.current) return
-    const idx = PLAYBACK_RATES.indexOf(playbackRate as (typeof PLAYBACK_RATES)[number])
-    const next = PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length]
-    setPlaybackRate(next)
-    try {
-      playerRef.current.setPlaybackRate(next)
-    } catch {
-      // ignora
-    }
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, String(next))
-    }
-  }
 
   function seekFromPointer(clientX: number) {
     if (!barRef.current || !playerRef.current) return
@@ -514,15 +486,6 @@ export function VideoPlayer({
             )}
           </button>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={cyclePlaybackRate}
-              className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-white/90 transition-colors hover:bg-white/20"
-              aria-label="Alterar velocidade de reprodução"
-              title="Velocidade"
-            >
-              {playbackRate}x
-            </button>
             {availableQualities.length > 0 && (
               <div className="relative" ref={qualityMenuRef}>
                 <button
