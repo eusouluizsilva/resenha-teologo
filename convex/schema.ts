@@ -48,6 +48,10 @@ export default defineSchema({
     // Timestamp em que o usuário concluiu (ou pulou) o tour de boas-vindas.
     // Quando ausente, o OnboardingModal é exibido ao entrar no dashboard.
     onboardingCompletedAt: v.optional(v.number()),
+    // Quando true, o usuário pediu para parar de receber o email diário com
+    // sugestão de artigo. Setado pelo http.route /unsubscribe/daily-article via
+    // token HMAC. Default ausente (= recebe).
+    emailDailyArticleOptOut: v.optional(v.boolean()),
   })
     .index('by_clerkId', ['clerkId'])
     .index('by_handle', ['handle'])
@@ -1122,4 +1126,18 @@ export default defineSchema({
   })
     .index('by_creatorId', ['creatorId'])
     .index('by_kind', ['kind']),
+
+  // Log de envio do email diário de artigo. Garante que cada usuário receba
+  // cada artigo no máximo uma vez. O cron articleEmail.run busca o post mais
+  // antigo (publishedAt ASC) que ainda não está logado para o usuário.
+  // status='sent' quando Resend aceitou; 'skipped' quando RESEND_API_KEY ausente
+  // (registra para não reenviar quando a chave for setada).
+  articleEmailLog: defineTable({
+    userId: v.string(),
+    postId: v.id('posts'),
+    sentAt: v.number(),
+    status: v.union(v.literal('sent'), v.literal('skipped'), v.literal('error')),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_post', ['userId', 'postId']),
 })

@@ -926,6 +926,74 @@ export const getRecommendations = query({
   },
 })
 
+// ─── getRelatedCourses ───────────────────────────────────────────────────────
+// Cursos similares ao curso atualmente em foco (mesma categoria/tags), exclui
+// o próprio e os que o aluno já estuda. Diferente de getRecommendations:
+// contextual (passa courseId), não baseado no perfil agregado do aluno.
+// Usado em CursoInternoPage e AulaPage como ponte para o próximo estudo.
+
+export const getRelatedCourses = query({
+  args: {
+    courseId: v.id('courses'),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { courseId, limit }) => {
+    const cap = Math.min(Math.max(limit ?? 4, 1), 8)
+    const reference = await ctx.db.get(courseId)
+    if (!reference) return []
+
+    // Set de exclusão: o próprio curso. Se logado, soma matrículas.
+    const excluded = new Set<string>([String(courseId)])
+    const identity = await ctx.auth.getUserIdentity()
+    if (identity) {
+      const enrollments = await ctx.db
+        .query('enrollments')
+        .withIndex('by_studentId', (q) => q.eq('studentId', identity.subject))
+        .collect()
+      for (const e of enrollments) excluded.add(String(e.courseId))
+    }
+
+    const candidates = await ctx.db
+      .query('courses')
+      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .take(200)
+
+    const refTags = new Set(reference.tags ?? [])
+    type Scored = { course: (typeof candidates)[number]; score: number }
+    const scored: Scored[] = []
+    for (const course of candidates) {
+      if (excluded.has(String(course._id))) continue
+      if (course.visibility === 'institution') continue
+      if ((course.totalLessons ?? 0) === 0) continue
+
+      let score = 0
+      if (course.category === reference.category) score += 10
+      for (const tag of course.tags ?? []) {
+        if (refTags.has(tag)) score += 3
+      }
+      score += Math.log10((course.totalStudents ?? 0) + 1)
+      if (score <= 0) continue
+
+      scored.push({ course, score })
+    }
+
+    scored.sort((a, b) => b.score - a.score)
+
+    return scored.slice(0, cap).map(({ course }) => ({
+      _id: course._id,
+      title: course.title,
+      description: course.description,
+      thumbnail: course.thumbnail,
+      category: course.category,
+      level: course.level,
+      slug: course.slug,
+      totalLessons: course.totalLessons,
+      totalStudents: course.totalStudents,
+      tags: course.tags ?? [],
+    }))
+  },
+})
+
 // ─── getCourseRating ──────────────────────────────────────────────────────────
 // Retorna a avaliação do aluno para um curso específico.
 

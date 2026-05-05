@@ -195,6 +195,36 @@ export const sendReengagement = internalAction({
   },
 })
 
+export const sendDailyArticle = internalAction({
+  args: {
+    to: v.string(),
+    name: v.string(),
+    postTitle: v.string(),
+    postExcerpt: v.string(),
+    postUrl: v.string(),
+    unsubscribeUrl: v.string(),
+  },
+  handler: async (
+    _ctx,
+    { to, name, postTitle, postExcerpt, postUrl, unsubscribeUrl },
+  ): Promise<SendResult> => {
+    const firstName = name.split(' ')[0] || name
+    return await sendViaResend({
+      to,
+      subject: `Leitura de hoje: ${postTitle}`,
+      html: baseHtml({
+        title: postTitle,
+        intro: `
+          <p>Olá, ${escapeHtml(firstName)}. Selecionamos um artigo do nosso acervo para você ler hoje.</p>
+          <p style="color:#475569;">${escapeHtml(postExcerpt)}</p>
+        `,
+        cta: { label: 'Ler artigo', url: postUrl },
+        footer: `Você recebe um artigo por dia, do mais antigo ao mais recente. <a href="${escapeAttr(unsubscribeUrl)}" style="color:#6B7280;text-decoration:underline;">Parar de receber</a>.`,
+      }),
+    })
+  },
+})
+
 export const sendInstitutionInvite = internalAction({
   args: {
     to: v.string(),

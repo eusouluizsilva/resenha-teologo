@@ -11,6 +11,7 @@ import { SecaoFlashcardsAula } from '@/components/aula/SecaoFlashcardsAula'
 import { AvisoCursoEmConstrucao } from '@/components/aula/AvisoCursoEmConstrucao'
 import { ToastCelebracaoAula } from '@/components/aula/ToastCelebracaoAula'
 import { BotaoComunidadeWhatsApp } from '@/components/aula/BotaoComunidadeWhatsApp'
+import { CursosRelacionados } from '@/components/aluno/CursosRelacionados'
 
 import { COMPLETION_RATIO, type YTPlayer } from './aula/player-helpers'
 import type { QuizData, QuizProgressState, VerseRef } from './aula/types'
@@ -596,6 +597,13 @@ export function AulaPage() {
               scheduleText={course.nextLessonScheduleText ?? null}
               nextScheduledLessonAt={nextScheduledLesson?.publishAt ?? null}
             />
+          ) : null}
+
+          {/* 11. Cursos relacionados — só na última aula (sem nextLesson) e em
+               cursos finalizados. Em cursos in_progress o AvisoCursoEmConstrucao
+               já cobre essa função. */}
+          {!nextLesson && course.releaseStatus !== 'in_progress' ? (
+            <CursosRelacionados courseId={courseId as Id<'courses'>} limit={4} />
           ) : null}
         </div>
       </main>

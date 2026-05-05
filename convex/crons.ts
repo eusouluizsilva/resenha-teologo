@@ -17,6 +17,16 @@ crons.daily(
   internal.reengagement.run,
 )
 
+// Email diário de artigo. 13:00 UTC = 10:00 BRT (uma hora depois do
+// reengagement, fora da janela de envio). Para cada usuário sem opt-out,
+// pega o post publicado mais antigo que ainda não foi enviado pra ele e
+// dispara via Resend. Idempotente por (userId, postId) na articleEmailLog.
+crons.daily(
+  'article-email-daily',
+  { hourUTC: 13, minuteUTC: 0 },
+  internal.articleEmail.run,
+)
+
 // Ranking diário do blog (03:00 UTC = 00:00 BRT). Recalcula snapshots por
 // categoria + global usados pela LandingPage e BlogIndexPage.
 crons.daily(

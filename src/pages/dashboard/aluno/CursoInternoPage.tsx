@@ -6,6 +6,7 @@ import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 import { CourseForum } from '@/components/cursoForum/CourseForum'
 import { AvaliacaoCursoModal } from '@/components/aluno/AvaliacaoCursoModal'
+import { CursosRelacionados } from '@/components/aluno/CursosRelacionados'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAlunoTheme } from '@/lib/alunoTheme'
 import { AlunoThemeToggle } from '@/components/aluno/AlunoThemeToggle'
@@ -374,6 +375,8 @@ export function CursoInternoPage() {
             </div>
 
             <CourseForum courseId={course._id as Id<'courses'>} />
+
+            <CursosRelacionados courseId={course._id as Id<'courses'>} limit={4} />
           </div>
 
           {/* Painel lateral */}
