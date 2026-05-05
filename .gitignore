@@ -36,3 +36,9 @@ credenciais/
 
 # Pasta local de organização do criador (não versionada)
 canal do youtube/
+
+# Exports locais do Google Search Console
+*Performance-on-Search*.zip
+
+# Lock file local do agente de tarefas (sem propósito no repo)
+.claude/scheduled_tasks.lock
