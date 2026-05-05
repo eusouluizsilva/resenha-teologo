@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
 // Tipo do evento beforeinstallprompt (não está em lib.dom). O navegador só
 // dispara em contexto seguro (HTTPS) e quando o app passa nos critérios PWA
@@ -12,6 +13,20 @@ type BeforeInstallPromptEvent = Event & {
 
 const STORAGE_KEY = 'rdt_pwa_install_dismissed_v1'
 const DISMISS_DAYS = 30
+
+// Em rotas de leitura/foco o banner atrapalha mais do que ajuda. O
+// beforeinstallprompt fica armazenado e reaparece quando o usuário sai
+// dessa rota (não é descartado, só ocultado).
+function isReadingRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith('/biblia/') ||
+    pathname.includes('/aula/') ||
+    /^\/blog\/[^/]+\/[^/]+/.test(pathname) ||
+    pathname.startsWith('/dashboard/blog/') ||
+    pathname.startsWith('/dashboard/cursos/novo') ||
+    pathname.startsWith('/dashboard/cursos/editar')
+  )
+}
 
 function isStandalone(): boolean {
   if (typeof window === 'undefined') return false
@@ -44,6 +59,7 @@ export function PWAInstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
   const [showIos, setShowIos] = useState(false)
   const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
 
   useEffect(() => {
     if (isStandalone() || wasRecentlyDismissed()) return
@@ -105,6 +121,9 @@ export function PWAInstallPrompt() {
 
   if (!open) return null
   if (!deferred && !showIos) return null
+  // Esconde em rotas de leitura. O state continua vivo: quando o usuário sair
+  // dessa rota, o banner reaparece sem precisar do evento original.
+  if (isReadingRoute(pathname)) return null
 
   return (
     <div

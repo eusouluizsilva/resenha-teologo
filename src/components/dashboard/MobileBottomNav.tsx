@@ -4,9 +4,9 @@ import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
 
 // Bottom navigation para mobile (<lg). Substitui o sidebar slide-out como
-// modo principal de navegação por toque. Mostra 4 atalhos contextualizados
-// pelo perfil ativo: aluno vê Início/Cursos/Bíblia/Perfil; criador vê Painel/
-// Cursos/Visão geral/Perfil; instituição vê Painel/Membros/Cursos/Perfil.
+// modo principal de navegação por toque. Mostra atalhos contextualizados
+// pelo perfil ativo: aluno vê Início/Cursos/Caderno/Bíblia/Perfil (5);
+// criador vê Painel/Cursos/Alunos/Perfil (4).
 
 type Item = {
   to: string
@@ -32,6 +32,15 @@ const ALUNO_ITEMS: Item[] = [
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+      </svg>
+    ),
+  },
+  {
+    to: '/dashboard/caderno',
+    label: 'Caderno',
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
       </svg>
     ),
   },
@@ -99,12 +108,19 @@ export function MobileBottomNav() {
   const { functions } = useCurrentAppUser()
   const { pathname } = useLocation()
 
-  // Não renderiza no leitor bíblico ou em rotas de aula (interfaces full-screen).
+  // Esconde em interfaces de leitura/foco onde a barra atrapalha:
+  // - leitor bíblico (capítulo)
+  // - aula (interna ou preview)
+  // - leitura de artigo individual
+  // - editores do criador
   if (
     pathname.startsWith('/biblia/') ||
     pathname.includes('/aula/') ||
+    /^\/blog\/[^/]+\/[^/]+/.test(pathname) ||
     pathname.startsWith('/dashboard/cursos/novo') ||
-    pathname.startsWith('/dashboard/cursos/editar')
+    pathname.startsWith('/dashboard/cursos/editar') ||
+    pathname.startsWith('/dashboard/blog/') ||
+    pathname.startsWith('/dashboard/admin')
   ) {
     return null
   }
@@ -112,6 +128,9 @@ export function MobileBottomNav() {
   const isCriador = functions.includes('criador')
   const isInstituicao = functions.includes('instituicao')
   const items = isCriador || isInstituicao ? CRIADOR_ITEMS : ALUNO_ITEMS
+  // grid-cols-* dinâmico: aluno tem 5, criador/instituição 4. Tailwind 4 não
+  // resolve a partir de string template, então mapeamos explicitamente.
+  const colsClass = items.length === 5 ? 'grid-cols-5' : 'grid-cols-4'
 
   return (
     <nav
@@ -119,7 +138,7 @@ export function MobileBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-[rgba(10,14,20,0.95)] backdrop-blur-lg lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul className="grid grid-cols-4">
+      <ul className={cn('grid', colsClass)}>
         {items.map((item) => (
           <li key={item.to}>
             <NavLink
@@ -127,13 +146,19 @@ export function MobileBottomNav() {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-1 px-2 py-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors',
+                  'relative flex flex-col items-center gap-1 px-2 py-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors',
                   isActive ? 'text-[#F2BD8A]' : 'text-white/52 hover:text-white/76',
                 )
               }
             >
               {({ isActive }) => (
                 <>
+                  {isActive && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-3 top-0 h-[2px] rounded-b-full bg-[#F37E20]"
+                    />
+                  )}
                   <span
                     className={cn(
                       'flex h-9 w-9 items-center justify-center rounded-2xl transition-all',
