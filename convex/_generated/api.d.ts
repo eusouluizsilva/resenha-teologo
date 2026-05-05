@@ -28,6 +28,7 @@ import type * as creatorProfile from "../creatorProfile.js";
 import type * as crons from "../crons.js";
 import type * as dataRetention from "../dataRetention.js";
 import type * as email from "../email.js";
+import type * as emailPreferences from "../emailPreferences.js";
 import type * as enrollments from "../enrollments.js";
 import type * as flashcards from "../flashcards.js";
 import type * as gamification from "../gamification.js";
@@ -48,9 +49,11 @@ import type * as lib_autoEnroll from "../lib/autoEnroll.js";
 import type * as lib_notifications from "../lib/notifications.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_slug from "../lib/slug.js";
+import type * as lib_unsubscribeToken from "../lib/unsubscribeToken.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
 import type * as modules from "../modules.js";
+import type * as newLessonEmail from "../newLessonEmail.js";
 import type * as notebooks from "../notebooks.js";
 import type * as notifications from "../notifications.js";
 import type * as orders from "../orders.js";
@@ -82,6 +85,7 @@ import type * as subscriptions from "../subscriptions.js";
 import type * as testimonials from "../testimonials.js";
 import type * as userFunctions from "../userFunctions.js";
 import type * as users from "../users.js";
+import type * as weeklyDigest from "../weeklyDigest.js";
 
 import type {
   ApiFromModules,
@@ -110,6 +114,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dataRetention: typeof dataRetention;
   email: typeof email;
+  emailPreferences: typeof emailPreferences;
   enrollments: typeof enrollments;
   flashcards: typeof flashcards;
   gamification: typeof gamification;
@@ -130,9 +135,11 @@ declare const fullApi: ApiFromModules<{
   "lib/notifications": typeof lib_notifications;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/slug": typeof lib_slug;
+  "lib/unsubscribeToken": typeof lib_unsubscribeToken;
   "lib/validators": typeof lib_validators;
   migrations: typeof migrations;
   modules: typeof modules;
+  newLessonEmail: typeof newLessonEmail;
   notebooks: typeof notebooks;
   notifications: typeof notifications;
   orders: typeof orders;
@@ -164,6 +171,7 @@ declare const fullApi: ApiFromModules<{
   testimonials: typeof testimonials;
   userFunctions: typeof userFunctions;
   users: typeof users;
+  weeklyDigest: typeof weeklyDigest;
 }>;
 
 /**

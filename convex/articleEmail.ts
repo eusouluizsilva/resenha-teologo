@@ -10,6 +10,11 @@ import {
   internalQuery,
 } from './_generated/server'
 import { internal } from './_generated/api'
+import {
+  buildUnsubscribeToken,
+  verifyUnsubscribeToken as verifyTokenShared,
+  convexSiteUrl,
+} from './lib/unsubscribeToken'
 
 const MAX_USERS_PER_RUN = 200
 // Resend limita free tier a 5 req/seg. Mandamos 4 em paralelo por janela de
@@ -17,14 +22,6 @@ const MAX_USERS_PER_RUN = 200
 const RATE_BATCH = 4
 const RATE_WINDOW_MS = 1100
 const SITE_URL = 'https://resenhadoteologo.com'
-// Convex injeta CONVEX_SITE_URL no runtime das functions. Apontando pra ele
-// resolvemos o /api/unsubscribe sem hardcodar o nome do deployment. Em prod
-// vira https://blessed-platypus-993.convex.site.
-function convexSiteUrl(): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const env = (globalThis as any).process?.env ?? {}
-  return env.CONVEX_SITE_URL ?? 'https://blessed-platypus-993.convex.site'
-}
 
 // Lista usuários candidatos a receber o email de hoje. Filtros:
 // - email não vazio
@@ -114,43 +111,6 @@ export const recordSent = internalMutation({
   },
 })
 
-// Marca opt-out a partir do clerkId. Usado pelo http.route /unsubscribe.
-export const setOptOut = internalMutation({
-  args: { clerkId: v.string(), value: v.boolean() },
-  handler: async (ctx, { clerkId, value }) => {
-    const u = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
-      .first()
-    if (!u) return false
-    await ctx.db.patch(u._id, { emailDailyArticleOptOut: value })
-    return true
-  },
-})
-
-// Token HMAC-SHA256 para o link de unsubscribe. Estável (não expira) e único
-// por usuário. Reutilizado pelo http.route que valida e seta o opt-out.
-async function buildUnsubscribeToken(clerkId: string): Promise<string> {
-  const secret =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (globalThis as any).process?.env?.UNSUBSCRIBE_HMAC_SECRET ??
-    'rdt-fallback-unsubscribe-secret'
-  const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(clerkId))
-  const bytes = new Uint8Array(sig)
-  let bin = ''
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
-  // base64url (sem +, /, =) pra ficar URL-safe sem encode adicional
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
 // Action top-level disparada pelo cron diário. Pré-busca candidatos, escolhe
 // o artigo de cada um, envia em paralelo (em batches pra não estourar o Resend).
 export const run = internalAction({
@@ -184,7 +144,7 @@ export const run = internalAction({
 
           const token = await buildUnsubscribeToken(c.userId)
           const postUrl = `${SITE_URL}/blog/${post.slug}?utm_source=email&utm_medium=daily&utm_campaign=artigo_diario`
-          const unsubscribeUrl = `${convexSiteUrl()}/api/unsubscribe?u=${encodeURIComponent(c.userId)}&t=${token}`
+          const unsubscribeUrl = `${convexSiteUrl()}/api/unsubscribe?u=${encodeURIComponent(c.userId)}&t=${token}&type=daily`
 
           try {
             const res = await ctx.runAction(internal.email.sendDailyArticle, {
@@ -225,17 +185,12 @@ export const run = internalAction({
   },
 })
 
-// Helper exposto para o http.route validar o token de unsubscribe.
+// Helper exposto para o http.route validar o token de unsubscribe. Delega
+// para o helper compartilhado em lib/unsubscribeToken.ts, que também é usado
+// pelos emails semanal e de nova aula.
 export const verifyUnsubscribeToken = internalQuery({
   args: { clerkId: v.string(), token: v.string() },
   handler: async (_ctx, { clerkId, token }) => {
-    const expected = await buildUnsubscribeToken(clerkId)
-    // timing-safe-ish: lengths primeiro
-    if (expected.length !== token.length) return false
-    let diff = 0
-    for (let i = 0; i < expected.length; i++) {
-      diff |= expected.charCodeAt(i) ^ token.charCodeAt(i)
-    }
-    return diff === 0
+    return await verifyTokenShared(clerkId, token)
   },
 })

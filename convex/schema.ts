@@ -52,6 +52,12 @@ export default defineSchema({
     // sugestão de artigo. Setado pelo http.route /unsubscribe/daily-article via
     // token HMAC. Default ausente (= recebe).
     emailDailyArticleOptOut: v.optional(v.boolean()),
+    // Opt-out de email avisando que uma nova aula foi publicada num curso
+    // onde o aluno está matriculado. Default ausente (= recebe).
+    emailNewLessonOptOut: v.optional(v.boolean()),
+    // Opt-out do digest semanal (top artigos + cursos novos + estatísticas
+    // pessoais). Default ausente (= recebe).
+    emailWeeklyDigestOptOut: v.optional(v.boolean()),
   })
     .index('by_clerkId', ['clerkId'])
     .index('by_handle', ['handle'])
@@ -1157,4 +1163,27 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_user_post', ['userId', 'postId']),
+
+  // Idempotência do email de "nova aula publicada". 1 envio por (aluno, aula).
+  // Status 'sent' bloqueia retry; 'error'/'skipped' permitem nova tentativa.
+  newLessonEmailLog: defineTable({
+    userId: v.string(),
+    lessonId: v.id('lessons'),
+    courseId: v.id('courses'),
+    sentAt: v.number(),
+    status: v.union(v.literal('sent'), v.literal('skipped'), v.literal('error')),
+  })
+    .index('by_user_lesson', ['userId', 'lessonId'])
+    .index('by_lesson', ['lessonId']),
+
+  // Idempotência do digest semanal. Chave (userId, weekKey) onde weekKey é
+  // 'YYYY-WW' (ISO week). Garante 1 envio por usuário por semana.
+  weeklyDigestLog: defineTable({
+    userId: v.string(),
+    weekKey: v.string(),
+    sentAt: v.number(),
+    status: v.union(v.literal('sent'), v.literal('skipped'), v.literal('error')),
+  })
+    .index('by_user_week', ['userId', 'weekKey'])
+    .index('by_user', ['userId']),
 })

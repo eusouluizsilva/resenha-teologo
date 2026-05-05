@@ -225,6 +225,98 @@ export const sendDailyArticle = internalAction({
   },
 })
 
+export const sendNewLesson = internalAction({
+  args: {
+    to: v.string(),
+    name: v.string(),
+    courseTitle: v.string(),
+    lessonTitle: v.string(),
+    lessonUrl: v.string(),
+    unsubscribeUrl: v.string(),
+  },
+  handler: async (
+    _ctx,
+    { to, name, courseTitle, lessonTitle, lessonUrl, unsubscribeUrl },
+  ): Promise<SendResult> => {
+    const firstName = name.split(' ')[0] || name
+    return await sendViaResend({
+      to,
+      subject: `Nova aula em ${courseTitle}: ${lessonTitle}`,
+      html: baseHtml({
+        title: lessonTitle,
+        intro: `
+          <p>Olá, ${escapeHtml(firstName)}. Uma nova aula foi publicada no curso <strong>${escapeHtml(courseTitle)}</strong>.</p>
+          <p style="color:#475569;">A aula <strong>${escapeHtml(lessonTitle)}</strong> já está disponível para você assistir.</p>
+        `,
+        cta: { label: 'Assistir agora', url: lessonUrl },
+        footer: `Você recebe um aviso quando uma nova aula sai em algum curso seu. <a href="${escapeAttr(unsubscribeUrl)}" style="color:#6B7280;text-decoration:underline;">Parar de receber</a>.`,
+      }),
+    })
+  },
+})
+
+export const sendWeeklyDigest = internalAction({
+  args: {
+    to: v.string(),
+    name: v.string(),
+    streakDays: v.number(),
+    lessonsThisWeek: v.number(),
+    topPosts: v.array(
+      v.object({
+        title: v.string(),
+        url: v.string(),
+        excerpt: v.string(),
+      }),
+    ),
+    unsubscribeUrl: v.string(),
+  },
+  handler: async (
+    _ctx,
+    { to, name, streakDays, lessonsThisWeek, topPosts, unsubscribeUrl },
+  ): Promise<SendResult> => {
+    const firstName = name.split(' ')[0] || name
+    const streakLine = streakDays > 0
+      ? `<p>Você está com uma sequência de <strong>${streakDays} ${streakDays === 1 ? 'dia' : 'dias'}</strong> de estudo. Continue assim.</p>`
+      : `<p>Que tal começar uma nova sequência de estudo esta semana?</p>`
+    const lessonsLine = lessonsThisWeek > 0
+      ? `<p>Você concluiu <strong>${lessonsThisWeek} ${lessonsThisWeek === 1 ? 'aula' : 'aulas'}</strong> nos últimos 7 dias.</p>`
+      : ''
+    const postsBlock = topPosts.length > 0
+      ? `
+        <p style="margin-top:24px;font-weight:600;color:#111827;">Leituras recomendadas</p>
+        <ul style="padding-left:18px;color:#374151;">
+          ${topPosts
+            .map(
+              (p) => `
+            <li style="margin-bottom:10px;">
+              <a href="${escapeAttr(p.url)}" style="color:#B5560F;font-weight:600;text-decoration:none;">${escapeHtml(p.title)}</a><br/>
+              <span style="color:#6B7280;font-size:13px;">${escapeHtml(p.excerpt)}</span>
+            </li>
+          `,
+            )
+            .join('')}
+        </ul>
+      `
+      : ''
+
+    return await sendViaResend({
+      to,
+      subject: 'Sua semana na Resenha do Teólogo',
+      html: baseHtml({
+        title: 'Sua semana na Resenha',
+        intro: `
+          <p>Olá, ${escapeHtml(firstName)}. Aqui está um resumo do que rolou esta semana.</p>
+          ${streakLine}
+          ${lessonsLine}
+          ${postsBlock}
+        `,
+        cta: { label: 'Acessar plataforma', url: 'https://resenhadoteologo.com/dashboard' },
+        footer: `Você recebe este resumo uma vez por semana. <a href="${escapeAttr(unsubscribeUrl)}" style="color:#6B7280;text-decoration:underline;">Parar de receber</a>.`,
+      }),
+    })
+  },
+})
+
 export const sendInstitutionInvite = internalAction({
   args: {
     to: v.string(),

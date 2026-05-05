@@ -312,6 +312,11 @@ export const update = mutation({
           link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
         }))
         await scheduleBulkNotifications(ctx, 'lesson_scheduled_published', targets)
+        // Email aos matriculados (paralelo às notificações in-app). Idempotente
+        // por (userId, lessonId) na newLessonEmailLog.
+        await ctx.scheduler.runAfter(0, internal.newLessonEmail.notifyEnrolled, {
+          lessonId: id,
+        })
       }
     }
   },
@@ -363,6 +368,10 @@ export const runScheduledPublish = internalMutation({
         link: `/dashboard/meus-cursos/${courseRef}/aula/${lessonRef}`,
       }))
       await scheduleBulkNotifications(ctx, 'lesson_scheduled_published', targets)
+      // Email aos matriculados (paralelo às notificações in-app).
+      await ctx.scheduler.runAfter(0, internal.newLessonEmail.notifyEnrolled, {
+        lessonId: lesson._id,
+      })
 
       if (course.slug && lesson.slug && course.visibility !== 'institution') {
         indexNowUrls.push(`https://resenhadoteologo.com/cursos/${course.slug}/${lesson.slug}`)

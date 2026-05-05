@@ -27,6 +27,16 @@ crons.daily(
   internal.articleEmail.run,
 )
 
+// Digest semanal: domingo 14:00 UTC = 11:00 BRT. Cada usuário recebe streak +
+// aulas concluídas na semana + top 3 artigos. Idempotente por (userId,
+// weekKey) em weeklyDigestLog. Domingo escolhido pra cair antes da semana de
+// trabalho/estudo do leitor.
+crons.weekly(
+  'weekly-digest',
+  { dayOfWeek: 'sunday', hourUTC: 14, minuteUTC: 0 },
+  internal.weeklyDigest.run,
+)
+
 // Ranking diário do blog (03:00 UTC = 00:00 BRT). Recalcula snapshots por
 // categoria + global usados pela LandingPage e BlogIndexPage.
 crons.daily(

@@ -431,14 +431,25 @@ function bytesToHex(bytes: Uint8Array): string {
   return out
 }
 
-// Unsubscribe one-click do email diário de artigo. Token HMAC validado em
-// articleEmail.verifyUnsubscribeToken. Aceita GET e POST (Gmail e Outlook
-// usam POST quando renderizam o cabeçalho List-Unsubscribe-Post; suportar
-// os dois evita ônus de configurar o header).
+// Unsubscribe one-click. Token HMAC validado em
+// articleEmail.verifyUnsubscribeToken (delega ao helper compartilhado). Aceita
+// GET e POST (Gmail e Outlook usam POST quando renderizam o cabeçalho
+// List-Unsubscribe-Post; suportar os dois evita ônus de configurar o header).
+//
+// Query string esperada:
+//   u=<clerkId>&t=<hmacToken>&type=daily|new_lesson|weekly|all
+// 'type' é opcional; default 'daily' preserva os links já enviados antes da
+// generalização. 'all' desliga os três opt-outs ao mesmo tempo (link mais
+// agressivo, exposto no painel do usuário).
 const handleUnsubscribe = httpAction(async (ctx, request) => {
   const url = new URL(request.url)
   const clerkId = url.searchParams.get('u') ?? ''
   const token = url.searchParams.get('t') ?? ''
+  const rawType = url.searchParams.get('type') ?? 'daily'
+  const type =
+    rawType === 'daily' || rawType === 'new_lesson' || rawType === 'weekly' || rawType === 'all'
+      ? rawType
+      : 'daily'
 
   if (!clerkId || !token) {
     return new Response('Link inválido.', {
@@ -458,8 +469,9 @@ const handleUnsubscribe = httpAction(async (ctx, request) => {
     })
   }
 
-  const updated = await ctx.runMutation(internal.articleEmail.setOptOut, {
+  const updated = await ctx.runMutation(internal.emailPreferences.setOptOutByType, {
     clerkId,
+    type,
     value: true,
   })
   if (!updated) {
@@ -469,12 +481,18 @@ const handleUnsubscribe = httpAction(async (ctx, request) => {
     })
   }
 
+  const labelByType: Record<string, string> = {
+    daily: 'o email diário de artigo',
+    new_lesson: 'os emails de novas aulas',
+    weekly: 'o resumo semanal',
+    all: 'os emails de divulgação',
+  }
   const html = `<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8" /><title>Cancelamento confirmado</title></head>
 <body style="margin:0;padding:48px 16px;background:#0F141A;color:#fff;font-family:Inter,-apple-system,sans-serif;text-align:center;">
   <div style="max-width:520px;margin:0 auto;background:#fff;color:#111827;padding:40px;border-radius:20px;">
     <h1 style="font-family:'Source Serif 4',Georgia,serif;font-size:24px;margin:0 0 12px 0;">Cancelamento confirmado</h1>
-    <p style="margin:0 0 8px 0;color:#475569;">Você não receberá mais o email diário de artigo.</p>
+    <p style="margin:0 0 8px 0;color:#475569;">Você não receberá mais ${labelByType[type]}.</p>
     <p style="margin:0;color:#475569;font-size:13px;">Pode ativar de novo no painel quando quiser.</p>
     <p style="margin:24px 0 0 0;">
       <a href="https://resenhadoteologo.com" style="display:inline-block;background:#F37E20;color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:600;font-size:14px;">Voltar ao site</a>
