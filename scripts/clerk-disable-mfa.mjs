@@ -1,6 +1,11 @@
-// Lista usuarios do Clerk com MFA habilitado e (opcionalmente) desabilita.
+// AVISO: SCRIPT DESTRUTIVO. Roda contra a instancia indicada por CLERK_SECRET_KEY,
+// detecta usuarios com MFA habilitado (TOTP, backup codes, email reserved_for_2fa)
+// e remove esses fatores. Sem --apply o script imprime quem seria afetado e sai.
+// Use somente com aprovacao explicita do dono. Live e test usam chaves diferentes,
+// confira o prefixo da chave (sk_live_ vs sk_test_) antes de --apply.
+//
 // Uso:
-//   CLERK_SECRET_KEY=sk_live_xxx node scripts/clerk-disable-mfa.mjs            # dry-run
+//   CLERK_SECRET_KEY=sk_test_xxx node scripts/clerk-disable-mfa.mjs            # dry-run
 //   CLERK_SECRET_KEY=sk_live_xxx node scripts/clerk-disable-mfa.mjs --apply    # aplica
 //
 // Endpoints:

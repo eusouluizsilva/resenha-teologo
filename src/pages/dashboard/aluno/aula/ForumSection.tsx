@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
 import { ComentarioMarkdown } from '@/components/comentarios/ComentarioMarkdown'
+import { MarkdownToolbar } from '@/components/comentarios/MarkdownToolbar'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import type { CommentItem } from './types'
 
@@ -179,6 +180,8 @@ export function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
   const [replyText, setReplyText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const rootRef = useRef<HTMLTextAreaElement>(null)
+  const replyRef = useRef<HTMLTextAreaElement>(null)
 
   async function handlePostRoot() {
     const trimmed = rootText.trim()
@@ -240,7 +243,12 @@ export function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <MarkdownToolbar textareaRef={rootRef} value={rootText} onChange={setRootText} />
+          <span className="text-xs text-gray-400">{rootText.length} / 2.000</span>
+        </div>
         <textarea
+          ref={rootRef}
           value={rootText}
           onChange={(e) => setRootText(e.target.value)}
           placeholder="Escreva uma dúvida ou reflexão..."
@@ -248,14 +256,9 @@ export function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
           className="min-h-[80px] w-full rounded-xl border border-gray-200 bg-[#F7F5F2] px-4 py-3 text-sm leading-6 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F37E20]/30"
         />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-gray-400">
-              {rootText.length} / 2.000
-            </span>
-            <span className="text-[11px] text-gray-400">
-              Markdown: **negrito**, *itálico*, `código`, &gt; citação, listas com - ou 1.
-            </span>
-          </div>
+          <span className="text-[11px] text-gray-400">
+            Markdown: **negrito**, *itálico*, `código`, &gt; citação, listas com - ou 1.
+          </span>
           <button
             type="button"
             onClick={handlePostRoot}
@@ -301,7 +304,11 @@ export function ForumSection({ lessonId }: { lessonId: Id<'lessons'> }) {
 
               {replyingTo === root._id ? (
                 <div className="ml-10 mt-3">
+                  <div className="mb-2">
+                    <MarkdownToolbar textareaRef={replyRef} value={replyText} onChange={setReplyText} />
+                  </div>
                   <textarea
+                    ref={replyRef}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Escreva uma resposta..."

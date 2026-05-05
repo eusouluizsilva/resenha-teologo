@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { useCurrentAppUser } from '@/lib/currentUser'
 import { cn } from '@/lib/brand'
 import { ComentarioMarkdown } from '@/components/comentarios/ComentarioMarkdown'
+import { MarkdownToolbar } from '@/components/comentarios/MarkdownToolbar'
 
 type Comment = {
   _id: Id<'courseComments'>
@@ -272,6 +273,7 @@ export function CourseForum({ courseId }: { courseId: Id<'courses'> }) {
   const create = useMutation(api.courseComments.create)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
+  const rootRef = useRef<HTMLTextAreaElement>(null)
 
   const canModerate = data?.viewerRole === 'criador'
   const threads: Thread[] = (data?.threads ?? []) as Thread[]
@@ -303,7 +305,9 @@ export function CourseForum({ courseId }: { courseId: Id<'courses'> }) {
       </div>
 
       <form onSubmit={handleRootSubmit} className="mb-6 flex flex-col gap-2">
+        <MarkdownToolbar textareaRef={rootRef} value={text} onChange={setText} />
         <textarea
+          ref={rootRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
