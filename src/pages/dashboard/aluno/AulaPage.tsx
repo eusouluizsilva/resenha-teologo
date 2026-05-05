@@ -10,6 +10,7 @@ import { BotaoDoar } from '@/components/doar/BotaoDoar'
 import { SecaoFlashcardsAula } from '@/components/aula/SecaoFlashcardsAula'
 import { AvisoCursoEmConstrucao } from '@/components/aula/AvisoCursoEmConstrucao'
 import { ToastCelebracaoAula } from '@/components/aula/ToastCelebracaoAula'
+import { BotaoComunidadeWhatsApp } from '@/components/aula/BotaoComunidadeWhatsApp'
 
 import { COMPLETION_RATIO, type YTPlayer } from './aula/player-helpers'
 import type { QuizData, QuizProgressState, VerseRef } from './aula/types'
@@ -449,6 +450,9 @@ export function AulaPage() {
               <BotaoDoar tone="light" variant="inline" />
             </div>
           </div>
+
+          {/* 3b. Comunidade no WhatsApp do Pr Luiz Silva */}
+          <BotaoComunidadeWhatsApp />
 
           {/* 4. Versículos citados (abaixo do vídeo) */}
           <VersesSection
