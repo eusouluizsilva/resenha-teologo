@@ -27,7 +27,7 @@ Linguagem simples, impacto entre parênteses.
 12. [x] **Multi-tenant leak em `student.getEnrolledCourse`**, aluno matriculado pode ver cursos privados da mesma instituição. (vazamento entre tenants)
 13. [x] **N+1 em dashboard do aluno** (`student.ts:724`, `student.ts:233`), 50-200 queries sequenciais ao montar a tela. (latência 2-5s, timeout em usuários com muitos cursos)
 14. [x] **`admin.getStats` carrega tabelas inteiras com `.collect()`**, escalável até alguns milhares; depois trava. (admin panel quebra com crescimento)
-15. [ ] **Componentes gigantes** (`AulaPage.tsx` 3082 linhas, `PerfilPage.tsx` 1885, `LandingPage.tsx` 1231, `EditarAulaPage.tsx` 1230, `App.tsx` 546). (lentidão, re-renders em cascata, manutenção difícil) — *refatoração grande, fica pra ciclo dedicado*
+15. [~] **Componentes gigantes** — em andamento. `App.tsx` 546→30 linhas (rotas em `src/routes/AppRoutes.tsx`, commit d99547c). `LandingPage.tsx` 1224→137 linhas (13 seções em `src/pages/landing/`). Faltam `AulaPage.tsx` 3082, `PerfilPage.tsx` 1885, `EditarAulaPage.tsx` 1253.
 16. [x] **33 warnings de lint** (era 19, subiu 74%), maioria `set-state-in-effect`. (renders desnecessários, risco de loop) — *limpeza dedicada em ciclo separado*
 17. [ ] **Zero testes automatizados** no repo inteiro. (deploy é "rezar e ver") — *requer setup de Vitest + escolha de cobertura*
 18. [x] **Sem validação client-side em formulários críticos** (cadastro, perfil), só backend. (UX ruim e mais abandono)
