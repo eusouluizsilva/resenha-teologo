@@ -29,7 +29,7 @@ Linguagem simples, impacto entre parênteses.
 14. [x] **`admin.getStats` carrega tabelas inteiras com `.collect()`**, escalável até alguns milhares; depois trava. (admin panel quebra com crescimento)
 15. [~] **Componentes gigantes** — em andamento. `App.tsx` 546→30 linhas (rotas em `src/routes/AppRoutes.tsx`, commit d99547c). `LandingPage.tsx` 1224→137 linhas (13 seções em `src/pages/landing/`). Faltam `AulaPage.tsx` 3082, `PerfilPage.tsx` 1885, `EditarAulaPage.tsx` 1253.
 16. [x] **33 warnings de lint** (era 19, subiu 74%), maioria `set-state-in-effect`. (renders desnecessários, risco de loop) — *limpeza dedicada em ciclo separado*
-17. [ ] **Zero testes automatizados** no repo inteiro. (deploy é "rezar e ver") — *requer setup de Vitest + escolha de cobertura*
+17. [~] **Testes automatizados** — Vitest configurado, 10 test files / 54 testes passando. Convex: `slug`, `validators`, `auth`, `auth.userFunction`. src/lib: `uuid`, `certificate`, `perfil`, `brand`, `verified`, `device`. Cobertura ainda parcial: faltam mutations Convex de integração (precisa convex-test) e React components.
 18. [x] **Sem validação client-side em formulários críticos** (cadastro, perfil), só backend. (UX ruim e mais abandono)
 19. [x] **Imagens sem `loading="lazy"` em ~42% dos `<img>`**, e várias sem `width/height`. (banda desperdiçada e CLS ruim no SEO)
 20. [x] **Bundle React vendor (179 KB) carregado em rota pública**, anônimo paga o preço de framework cheio. (LCP +1,5s na landing) — *LandingPage migrada pra `LazyMotion + m + domAnimation`, framer só ativa após primeiro paint*
