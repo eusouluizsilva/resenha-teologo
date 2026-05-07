@@ -31,6 +31,7 @@ import {
   CadernoPage,
   CatalogoPage,
   CertificadosPage,
+  CertificadosVendasPage,
   CheckoutCertificadoPage,
   CoautoresPage,
   ComentariosAdminPage,
@@ -189,6 +190,7 @@ export default function App() {
               <Route path="admin/notificacoes" element={<NotificacoesAdminPage />} />
               <Route path="admin/cursos" element={<CursosAdminPage />} />
               <Route path="admin/comentarios" element={<ComentariosAdminPage />} />
+              <Route path="admin/certificados" element={<CertificadosVendasPage />} />
 
               {/* Catch-all dentro do dashboard */}
               <Route

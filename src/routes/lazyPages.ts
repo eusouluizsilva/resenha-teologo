@@ -98,6 +98,11 @@ export const ComentariosAdminPage = lazy(() =>
     default: m.ComentariosAdminPage,
   })),
 )
+export const CertificadosVendasPage = lazy(() =>
+  import('@/pages/dashboard/admin/CertificadosVendasPage').then((m) => ({
+    default: m.CertificadosVendasPage,
+  })),
+)
 
 // Aluno
 export const MeusCursosPage = lazy(() =>

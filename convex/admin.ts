@@ -1530,3 +1530,90 @@ export const softDeleteCommentAsAdmin = mutation({
     return { ok: true }
   },
 })
+
+// Vendas de certificado: agrega contadores e devolve a lista completa de
+// certificateOrders com nome do aluno e título do curso. A volumetria é baixa
+// (1 ordem por aluno por curso, paid/expired/refunded), então collect+join
+// em memória basta. Quando passar de alguns milhares, paginar e indexar
+// por status+createdAt.
+export const listCertificateOrders = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+
+    const orders = await ctx.db.query('certificateOrders').collect()
+    orders.sort((a, b) => b.createdAt - a.createdAt)
+
+    const userIds = Array.from(new Set(orders.map((o) => o.userId)))
+    const courseIds = Array.from(new Set(orders.map((o) => String(o.courseId))))
+
+    const usersById = new Map<string, { name: string; email: string; handle: string | null }>()
+    await Promise.all(
+      userIds.map(async (id) => {
+        const u = await ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', id))
+          .unique()
+        if (u) usersById.set(id, { name: u.name, email: u.email, handle: u.handle ?? null })
+      }),
+    )
+
+    const coursesById = new Map<string, { title: string; slug: string | null }>()
+    await Promise.all(
+      courseIds.map(async (id) => {
+        const c = await ctx.db.get(id as Id<'courses'>)
+        if (c) coursesById.set(id, { title: c.title, slug: c.slug ?? null })
+      }),
+    )
+
+    const rows = orders.map((o) => {
+      const u = usersById.get(o.userId)
+      const c = coursesById.get(String(o.courseId))
+      return {
+        _id: o._id,
+        status: o.status,
+        amount: o.amount,
+        currency: o.currency,
+        createdAt: o.createdAt,
+        paidAt: o.paidAt ?? null,
+        refundedAt: o.refundedAt ?? null,
+        expiredAt: o.expiredAt ?? null,
+        stripeSessionId: o.stripeSessionId,
+        stripePaymentIntentId: o.stripePaymentIntentId ?? null,
+        buyerName: u?.name ?? 'Aluno removido',
+        buyerEmail: u?.email ?? '',
+        courseTitle: c?.title ?? 'Curso removido',
+        courseSlug: c?.slug,
+      }
+    })
+
+    const paid = rows.filter((r) => r.status === 'paid')
+    const refunded = rows.filter((r) => r.status === 'refunded')
+    const pending = rows.filter((r) => r.status === 'pending')
+    const expired = rows.filter((r) => r.status === 'expired')
+
+    const grossCents = paid.reduce((acc, r) => acc + r.amount, 0)
+    const refundedCents = refunded.reduce((acc, r) => acc + r.amount, 0)
+    const netCents = grossCents - refundedCents
+
+    const now = Date.now()
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
+    const paid30d = paid.filter((r) => (r.paidAt ?? 0) >= thirtyDaysAgo)
+    const gross30dCents = paid30d.reduce((acc, r) => acc + r.amount, 0)
+
+    return {
+      stats: {
+        paidCount: paid.length,
+        pendingCount: pending.length,
+        expiredCount: expired.length,
+        refundedCount: refunded.length,
+        grossCents,
+        refundedCents,
+        netCents,
+        paid30dCount: paid30d.length,
+        gross30dCents,
+      },
+      orders: rows,
+    }
+  },
+})

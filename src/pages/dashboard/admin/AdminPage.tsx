@@ -456,6 +456,34 @@ export function AdminPage() {
                   Feed unificado de aulas, fóruns de curso e artigos. Remova conteúdo abusivo em um clique.
                 </p>
               </Link>
+
+              <Link
+                to="/dashboard/admin/certificados"
+                className={cn(
+                  'group block p-5 transition hover:border-[#F37E20]/35 hover:bg-[#F37E20]/[0.04]',
+                  brandPanelClass,
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#F37E20]/18 bg-[#F37E20]/10 text-[#F37E20]">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9a9.75 9.75 0 010-13.5h9a9.75 9.75 0 010 13.5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75v-7.5m-2.25 2.25h4.5" />
+                    </svg>
+                  </span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-white/52 transition group-hover:bg-[#F37E20]/16 group-hover:text-[#F37E20]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+                <p className="mt-4 font-display text-lg font-semibold text-white">
+                  Vendas de certificado
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-white/64">
+                  Pedidos pagos, pendentes e expirados do produto Certificado R$ 29,90, com receita líquida e link direto pro Stripe.
+                </p>
+              </Link>
             </div>
           </div>
 
