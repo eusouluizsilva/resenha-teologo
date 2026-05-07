@@ -84,11 +84,20 @@ export const pickArticleForUser = internalQuery({
 
     for (const p of posts) {
       if (sentPostIds.has(String(p._id))) continue
+      const author = await ctx.db
+        .query('users')
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', p.authorUserId))
+        .unique()
+      const handle = author?.handle ?? null
+      // Sem handle não há rota válida pro post (BlogPostPage exige handle e
+      // slug). Pula e continua a busca, em vez de mandar email com 404.
+      if (!handle) continue
       return {
         postId: p._id,
         title: p.title,
         excerpt: p.excerpt,
         slug: p.slug,
+        handle,
       }
     }
     return null
@@ -143,7 +152,7 @@ export const run = internalAction({
           }
 
           const token = await buildUnsubscribeToken(c.userId)
-          const postUrl = `${SITE_URL}/blog/${post.slug}?utm_source=email&utm_medium=daily&utm_campaign=artigo_diario`
+          const postUrl = `${SITE_URL}/blog/${post.handle}/${post.slug}?utm_source=email&utm_medium=daily&utm_campaign=artigo_diario`
           const unsubscribeUrl = `${convexSiteUrl()}/api/unsubscribe?u=${encodeURIComponent(c.userId)}&t=${token}&type=daily`
 
           try {

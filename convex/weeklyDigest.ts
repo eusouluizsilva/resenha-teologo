@@ -55,11 +55,19 @@ export const listTopPostsThisWeek = internalQuery({
     ranked.sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
     const top = ranked.slice(0, 3)
 
-    return top.map((p) => ({
-      title: p.title,
-      excerpt: p.excerpt,
-      slug: p.slug,
-    }))
+    // Resolve handle do autor pra montar a rota /blog/:handle/:slug. Posts cujo
+    // autor não tem handle são descartados pra evitar 404 no email.
+    const out: { title: string; excerpt: string; slug: string; handle: string }[] = []
+    for (const p of top) {
+      const author = await ctx.db
+        .query('users')
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', p.authorUserId))
+        .unique()
+      const handle = author?.handle
+      if (!handle) continue
+      out.push({ title: p.title, excerpt: p.excerpt, slug: p.slug, handle })
+    }
+    return out
   },
 })
 
@@ -147,7 +155,7 @@ export const run = internalAction({
     const topPostsForEmail = topPosts.map((p) => ({
       title: p.title,
       excerpt: p.excerpt,
-      url: `${SITE_URL}/blog/${p.slug}?utm_source=email&utm_medium=weekly&utm_campaign=resumo_semanal`,
+      url: `${SITE_URL}/blog/${p.handle}/${p.slug}?utm_source=email&utm_medium=weekly&utm_campaign=resumo_semanal`,
     }))
 
     let sent = 0
