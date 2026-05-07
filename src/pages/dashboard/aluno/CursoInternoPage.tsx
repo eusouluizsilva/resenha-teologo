@@ -4,7 +4,7 @@ import { useQuery } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import { cn } from '@/lib/brand'
-import { CourseForum } from '@/components/cursoForum/CourseForum'
+import { CursoForum } from '@/components/cursoForum/CursoForum'
 import { AvaliacaoCursoModal } from '@/components/aluno/AvaliacaoCursoModal'
 import { CursosRelacionados } from '@/components/aluno/CursosRelacionados'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -378,7 +378,7 @@ export function CursoInternoPage() {
               })}
             </div>
 
-            <CourseForum courseId={course._id as Id<'courses'>} />
+            <CursoForum courseId={course._id as Id<'courses'>} />
 
             <CursosRelacionados courseId={course._id as Id<'courses'>} limit={4} />
           </div>

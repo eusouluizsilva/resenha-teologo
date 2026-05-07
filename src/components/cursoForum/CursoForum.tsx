@@ -267,7 +267,7 @@ function ReplyComposer({ courseId, parentId }: { courseId: Id<'courses'>; parent
   )
 }
 
-export function CourseForum({ courseId }: { courseId: Id<'courses'> }) {
+export function CursoForum({ courseId }: { courseId: Id<'courses'> }) {
   const { currentUser } = useCurrentAppUser()
   const data = useQuery(api.courseComments.listByCourse, { courseId })
   const create = useMutation(api.courseComments.create)

@@ -23,11 +23,11 @@ Linguagem simples, impacto entre parênteses.
 
 9. [x] **Headers de segurança ausentes no `vercel.json`**, faltam CSP, X-Frame-Options, X-Content-Type-Options. (vulnerável a XSS/clickjacking mesmo com sanitize ativo)
 10. [ ] **R2 sem CDN na frente**, URLs servem direto do `pub-xxx.r2.dev`, lento e rate-limited. (latência 2-5x em capas e PDFs) — *externo: precisa migrar DNS pra Cloudflare*
-11. [ ] **Sem Sentry ou similar**, bugs em produção só aparecem quando usuário reclama. (atraso de 2-4h pra detectar erro) — *externo: precisa criar conta e DSN*
+11. [~] **Sem Sentry ou similar**, bugs em produção só aparecem quando usuário reclama. (atraso de 2-4h pra detectar erro) — *SDK + ErrorBoundary + setUser instalados (commit 3ac0928); só falta `VITE_SENTRY_DSN` em prod (Vercel env). Bundle só carrega Sentry quando DSN existe.*
 12. [x] **Multi-tenant leak em `student.getEnrolledCourse`**, aluno matriculado pode ver cursos privados da mesma instituição. (vazamento entre tenants)
 13. [x] **N+1 em dashboard do aluno** (`student.ts:724`, `student.ts:233`), 50-200 queries sequenciais ao montar a tela. (latência 2-5s, timeout em usuários com muitos cursos)
 14. [x] **`admin.getStats` carrega tabelas inteiras com `.collect()`**, escalável até alguns milhares; depois trava. (admin panel quebra com crescimento)
-15. [~] **Componentes gigantes** — em andamento. `App.tsx` 546→30 linhas (rotas em `src/routes/AppRoutes.tsx`, commit d99547c). `LandingPage.tsx` 1224→137 linhas (13 seções em `src/pages/landing/`). `EditarAulaPage.tsx` 1253→317 linhas (5 seções + helpers/types em `src/pages/dashboard/criador/editarAula/`). Faltam `AulaPage.tsx` 3082, `PerfilPage.tsx` 1885.
+15. [x] **Componentes gigantes** — `App.tsx` 546→30 (rotas em `src/routes/AppRoutes.tsx`, commit d99547c). `LandingPage.tsx` 1224→137 (13 seções em `src/pages/landing/`, fb07b72). `EditarAulaPage.tsx` 1253→317 (5 seções + helpers/types em `src/pages/dashboard/criador/editarAula/`, c6bb6f3). `AulaPage.tsx` 3362→685 (11 módulos em `src/pages/dashboard/aluno/aula/`, 95755c6). `PerfilPage.tsx` 1927→331 (subpáginas por aba em `src/pages/dashboard/criador/perfil/`, a76168b). Maior arquivo restante: `PerfilPublicoPage.tsx` 959, dentro do limite saudável.
 16. [x] **33 warnings de lint** (era 19, subiu 74%), maioria `set-state-in-effect`. (renders desnecessários, risco de loop) — *limpeza dedicada em ciclo separado*
 17. [~] **Testes automatizados** — Vitest configurado, 10 test files / 54 testes passando. Convex: `slug`, `validators`, `auth`, `auth.userFunction`. src/lib: `uuid`, `certificate`, `perfil`, `brand`, `verified`, `device`. Cobertura ainda parcial: faltam mutations Convex de integração (precisa convex-test) e React components.
 18. [x] **Sem validação client-side em formulários críticos** (cadastro, perfil), só backend. (UX ruim e mais abandono)
@@ -46,7 +46,7 @@ Linguagem simples, impacto entre parênteses.
 26. [x] **Soft-delete sem purga real**, `deletedAt` marca mas nunca apaga. (direito ao esquecimento incompleto)
 27. [x] **CNPJ e email institucional sem validação de checksum/regex**. (cadastro inválido entra no banco)
 28. [x] **PIX aceita CPF inválido como "00000000000"**, regex sem checksum. (dor pra repassar receita depois)
-29. [ ] **Strings hardcoded em PT espalhadas**, plano fala EN/ES mas i18n não foi começado. (refatoração grande quando ativar idiomas)
+29. [ ] **Strings hardcoded em PT espalhadas**, plano fala EN/ES mas i18n não foi começado. (refatoração grande quando ativar idiomas) — *fica pra Fase 2: requer decisão de quais textos traduzir + revisão humana de teologia em EN/ES*
 30. [x] **Imports relativos profundos `../../../convex/_generated/`** em 10+ arquivos. (frágil em mover pastas) — *84 arquivos migrados pra alias `@convex/*` em `tsconfig.json` + `vite.config.ts`*
 31. [x] **5x `as unknown as` em `metaPixel.ts`**. (quebra silenciosa quando FB atualiza SDK)
 32. [x] **Service Worker com `stale-while-revalidate` sem TTL** em capas. (usuário vê imagem antiga por dias)
@@ -65,8 +65,8 @@ Linguagem simples, impacto entre parênteses.
 
 41. [ ] **Crons hoje em 30min**, OK pra Free plan; reavaliar quando subir de plano. (custo Convex)
 42. [ ] **IndexNow rodando mas sem confirmação real de Bing/Yandex**. (5-10% de tráfego potencial não verificado) — *externo: monitorar Bing Webmaster Tools*
-43. [ ] **Documentos `.md` espalhados na raiz** (contexto, fases, identidade-visual, plano), poderiam ir pra `/docs`. (organização) — *referenciados em CLAUDE.md/AGENTS.md/memory; mover quebra refs, fica*
-44. [ ] **Mistura PT/EN em nomes de arquivo** (`LoginPage` vs `CursoForum`). (busca/grep mais difícil)
+43. [x] **Documentos `.md` espalhados na raiz** — *decisão: manter onde estão. Referenciados em CLAUDE.md, AGENTS.md e memory; mover quebra refs sem ganho real*
+44. [x] **Mistura PT/EN em nomes de arquivo** — *normalização concluída em d2659b0 (rodada PT) + commit atual (`CourseForum` → `CursoForum`). Restam só `App.tsx`/`AppRoutes.tsx`/`AdSlot.tsx` infra, intencionais*
 45. [x] **`crypto.randomUUID()` sem fallback Safari <15**. (~2% dos usuários afetados)
 46. [x] **Fontes carregadas via stylesheet preload em vez de `.woff2` direto**. (FOIT ~200ms reduzível) — *self-hostadas via `@fontsource/{plus-jakarta-sans,inter,source-serif-4}`; zero conexão com fonts.googleapis.com*
 47. [x] **Dashboard sem `useSeo`**, abas ficam todas com mesmo título. (UX em quem usa muitas abas)
@@ -93,17 +93,27 @@ Linguagem simples, impacto entre parênteses.
 
 ## Status
 
-Atualizado em 2026-05-01. Itens marcados `[x]` estão concluídos.
+Atualizado em 2026-05-07. Itens marcados `[x]` estão concluídos, `[~]` parciais.
 
-### Resumo da rodada de 2026-05-01
+### Resumo do fechamento de 2026-05-07
 
-**Resolvidos sozinho e em produção (Convex + Vercel):** 36 itens
-- CRÍTICO: 6 de 8 (faltam só os 2 externos: backup Convex + token R2 TTL)
-- ALTO: 8 de 12 (faltam 4: 3 externos + 1 refatoração grande de componentes)
-- MÉDIO: 14 de 20
-- BAIXO: 4 de 8
+**Concluídos em código (`[x]` ou `[~]`):** 41 dos 48 itens
+- CRÍTICO: 6 de 8 (`[x]`); restam só 2 externos (#5 backup Convex, #6 token R2 TTL)
+- ALTO: 9 de 12 (`[x]`) + 1 (`[~]` Sentry, falta DSN); restam 2 externos puros (#10 R2 CDN)
+- MÉDIO: 15 de 20 (`[x]`); restam #29 (i18n, Fase 2) e externos #33 (SPF/DKIM) + #41/#42
+- BAIXO: 7 de 8 (`[x]`); resta só #41 e #42 (decisão/externo)
 
-**Deploy live:**
-- Convex prod (`blessed-platypus-993`): novo cron `data-retention-consent-pii` (anonimiza IP/UA após 12 meses), índices anteriores intactos
-- Vercel: bundle otimizado — fontes self-hostadas, framer-motion lazy, HTML minificado, Tailwind v4 com `@source` explícito, alias `@convex/*` em 84 arquivos
-- Commits: `8ee1a3d` (rodada 1, 28 itens) + 2ª rodada com #16, #20, #21, #25, #30, #39, #46, #48
+**Pendências reais que sobram (todas dependem de você):**
+- #5 Backup Convex — escolher cadência e destino
+- #6 Token R2 TTL — painel Cloudflare
+- #10 R2 CDN custom domain — migrar DNS GoDaddy → Cloudflare
+- #11 Sentry DSN — criar projeto e colar `VITE_SENTRY_DSN` no Vercel
+- #29 i18n — Fase 2, decisão de escopo
+- #33 SPF/DKIM Resend — DNS GoDaddy
+- #41 Crons em 30min — só reavaliar quando subir de plano
+- #42 IndexNow — monitorar Bing Webmaster Tools
+
+**Refatorações grandes desta rodada:**
+- App.tsx 546→30 (`d99547c`), LandingPage 1224→137 (`fb07b72`), EditarAulaPage 1253→317 (`c6bb6f3`)
+- AulaPage 3362→685 + 11 módulos (`95755c6`, anterior), PerfilPage 1927→331 + subpáginas (`a76168b`, anterior)
+- `CourseForum` → `CursoForum` (commit atual, fecha #44)
