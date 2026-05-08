@@ -26,7 +26,6 @@ import { initConsent, applyCurrentConsent } from './lib/consent'
 import { initGA4 } from './lib/analytics'
 import { initAdSense } from './lib/ads'
 import { initMetaPixel } from './lib/metaPixel'
-import { initSentry, captureError, setSentryUser } from './lib/sentry'
 
 class AppErrorBoundary extends Component<
   { children: ReactNode },
@@ -40,7 +39,6 @@ class AppErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[AppErrorBoundary]', error, info.componentStack)
-    captureError(error, { componentStack: info.componentStack ?? null })
   }
 
   render() {
@@ -198,12 +196,9 @@ function AuthSyncGate({ children }: { children: React.ReactNode }) {
       if (!isSignedIn || !syncPayload) {
         lastSyncedRef.current = null
         setSyncFailed(false)
-        setSentryUser(null)
         setReady(true)
         return
       }
-
-      setSentryUser({ id: syncPayload.payload.clerkId, email: syncPayload.payload.email })
 
       if (lastSyncedRef.current === syncPayload.fingerprint) {
         setReady(true)
@@ -302,10 +297,6 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       })
   })
 }
-
-// Sentry primeiro: precisa estar pronto antes de qualquer init (GA4/AdSense)
-// pra capturar erros que acontecem no carregamento dos próprios scripts.
-initSentry()
 
 // Consent Mode v2: configurar default 'denied' antes de qualquer script do
 // Google carregar. Em seguida, GA4 e AdSense carregam sempre (se env var

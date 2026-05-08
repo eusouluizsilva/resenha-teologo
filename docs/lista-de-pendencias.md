@@ -23,7 +23,7 @@ Linguagem simples, impacto entre parênteses.
 
 9. [x] **Headers de segurança ausentes no `vercel.json`**, faltam CSP, X-Frame-Options, X-Content-Type-Options. (vulnerável a XSS/clickjacking mesmo com sanitize ativo)
 10. [ ] **R2 sem CDN na frente**, URLs servem direto do `pub-xxx.r2.dev`, lento e rate-limited. (latência 2-5x em capas e PDFs) — *externo: precisa migrar DNS pra Cloudflare*
-11. [~] **Sem Sentry ou similar**, bugs em produção só aparecem quando usuário reclama. (atraso de 2-4h pra detectar erro) — *SDK + ErrorBoundary + setUser instalados (commit 3ac0928); só falta `VITE_SENTRY_DSN` em prod (Vercel env). Bundle só carrega Sentry quando DSN existe.*
+11. [x] **Sem Sentry ou similar** — *decisão 2026-05-07: dispensado. SDK e integração removidos. Voltamos pros logs do console + Vercel + Convex; reavaliar se precisar quando o tráfego escalar.*
 12. [x] **Multi-tenant leak em `student.getEnrolledCourse`**, aluno matriculado pode ver cursos privados da mesma instituição. (vazamento entre tenants)
 13. [x] **N+1 em dashboard do aluno** (`student.ts:724`, `student.ts:233`), 50-200 queries sequenciais ao montar a tela. (latência 2-5s, timeout em usuários com muitos cursos)
 14. [x] **`admin.getStats` carrega tabelas inteiras com `.collect()`**, escalável até alguns milhares; depois trava. (admin panel quebra com crescimento)
@@ -83,7 +83,6 @@ Linguagem simples, impacto entre parênteses.
 - **AdSense slots**, espera aprovação Google e os 4 `data-ad-slot`
 - **Token R2 com TTL**, só pelo painel Cloudflare
 - **SPF/DKIM Resend**, precisa do seu acesso GoDaddy DNS
-- **DSN do Sentry**, precisa criar conta e me passar
 - **i18n EN/ES**, decisão de quais textos traduzir e revisão humana
 - **Plano biblioteca de playlists YouTube** (aprovado, não implementado)
 - **Avatar custom via R2** (hoje só Clerk, baixa prioridade)
@@ -97,17 +96,16 @@ Atualizado em 2026-05-07. Itens marcados `[x]` estão concluídos, `[~]` parciai
 
 ### Resumo do fechamento de 2026-05-07
 
-**Concluídos em código (`[x]` ou `[~]`):** 41 dos 48 itens
+**Concluídos em código:** 42 de 48 itens
 - CRÍTICO: 6 de 8 (`[x]`); restam só 2 externos (#5 backup Convex, #6 token R2 TTL)
-- ALTO: 9 de 12 (`[x]`) + 1 (`[~]` Sentry, falta DSN); restam 2 externos puros (#10 R2 CDN)
-- MÉDIO: 15 de 20 (`[x]`); restam #29 (i18n, Fase 2) e externos #33 (SPF/DKIM) + #41/#42
-- BAIXO: 7 de 8 (`[x]`); resta só #41 e #42 (decisão/externo)
+- ALTO: 10 de 12 (`[x]`); resta 1 externo (#10 R2 CDN)
+- MÉDIO: 15 de 20 (`[x]`); restam #29 (i18n, Fase 2) e externos #33/#41/#42
+- BAIXO: 7 de 8 (`[x]`); resta só #41 e #42
 
 **Pendências reais que sobram (todas dependem de você):**
 - #5 Backup Convex — escolher cadência e destino
 - #6 Token R2 TTL — painel Cloudflare
 - #10 R2 CDN custom domain — migrar DNS GoDaddy → Cloudflare
-- #11 Sentry DSN — criar projeto e colar `VITE_SENTRY_DSN` no Vercel
 - #29 i18n — Fase 2, decisão de escopo
 - #33 SPF/DKIM Resend — DNS GoDaddy
 - #41 Crons em 30min — só reavaliar quando subir de plano
