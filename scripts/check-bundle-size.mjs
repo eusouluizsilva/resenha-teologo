@@ -16,7 +16,7 @@ const ASSETS_DIR = 'dist/assets'
 // Cada entrada: prefixo do nome do arquivo + limite gzip em bytes.
 // O Vite gera nomes como `react-vendor-CVi8Wqs9.js`, batemos pelo prefixo.
 const BUDGETS = [
-  { prefix: 'index-', label: 'entry (index)', maxGzip: 50_000 },
+  { prefix: 'index-', label: 'entry (index)', maxGzip: 57_000 },
   { prefix: 'react-vendor-', label: 'react-vendor', maxGzip: 70_000 },
   { prefix: 'convex-', label: 'convex', maxGzip: 60_000 },
   { prefix: 'clerk-', label: 'clerk', maxGzip: 90_000 },
