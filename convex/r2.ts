@@ -429,6 +429,23 @@ export async function presignR2DownloadUrl(
   })
 }
 
+// Helper exportado pra outros módulos (migrations, jobs admin). Gera URL
+// pré-assinada de PUT pra que o caller suba os bytes diretamente no R2.
+// Caller já validou autorização. Não fazer chamadas diretas do cliente.
+export async function presignR2UploadUrl(opts: {
+  key: string
+  contentType: string
+  expiresInSec?: number
+}): Promise<string> {
+  return await presignS3Url({
+    env: getR2Env(),
+    method: 'PUT',
+    key: opts.key,
+    expiresInSec: opts.expiresInSec ?? 60 * 5,
+    contentType: opts.contentType,
+  })
+}
+
 // Helper exportado pra outros módulos (migrations, jobs). Caller já validou
 // autorização. Faz PUT direto via presigned URL e retorna a key gravada.
 export async function uploadBytesToR2(opts: {

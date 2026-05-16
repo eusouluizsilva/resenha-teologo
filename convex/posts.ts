@@ -6,14 +6,14 @@
 // avatarUrl, bio?, institutionName? }.
 
 import { v } from 'convex/values'
-import { query, mutation, internalMutation, type QueryCtx } from './_generated/server'
+import { query, mutation, internalAction, internalMutation, internalQuery, type QueryCtx } from './_generated/server'
 import type { Doc, Id } from './_generated/dataModel'
 import { requireIdentity, requireCurrentUser } from './lib/auth'
 import { checkRateLimit } from './lib/rateLimit'
 import { scheduleBulkNotifications, type NotifyTarget } from './lib/notifications'
 import { toSlug } from './lib/slug'
 import { internal } from './_generated/api'
-import { resolveR2PublicUrl } from './r2'
+import { resolveR2PublicUrl, presignR2UploadUrl } from './r2'
 
 // Resolve URL da capa preferindo R2 (novo) sobre Convex storage (legado).
 // Posts antigos têm só coverImageStorageId; novos têm só coverImageR2Key.
@@ -614,5 +614,163 @@ export const getMineForEditor = query({
       publishedAt: post.publishedAt ?? null,
       updatedAt: post.updatedAt,
     }
+  },
+})
+
+// =============================================================
+// Admin: bulk publish via convex CLI (sem auth Clerk).
+// Usado para publicar artigos em lote a partir de scripts locais
+// (ex.: roteiros do canal convertidos em editorial). Não exposto
+// na UI; só roda via `npx convex run --prod posts:adminCreateAndPublish`.
+// =============================================================
+
+export const adminLookupClerkIdByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .unique()
+    if (!user) return null
+    return { clerkId: user.clerkId, name: user.name, handle: user.handle ?? null }
+  },
+})
+
+export const adminCreateAndPublish = internalMutation({
+  args: {
+    authorClerkId: v.string(),
+    title: v.string(),
+    excerpt: v.string(),
+    bodyMarkdown: v.string(),
+    categorySlug: v.string(),
+    tags: v.array(v.string()),
+    authorIdentity: identityValidator,
+    authorInstitutionId: v.optional(v.id('institutions')),
+  },
+  handler: async (ctx, args) => {
+    const title = args.title.trim().slice(0, MAX_TITLE)
+    if (!title) throw new Error('Título obrigatório.')
+    const excerpt = args.excerpt.trim().slice(0, MAX_EXCERPT)
+    if (!excerpt) throw new Error('Resumo obrigatório.')
+    const body = args.bodyMarkdown.slice(0, MAX_BODY)
+    if (!body.trim()) throw new Error('Conteúdo obrigatório.')
+
+    const cat = await ctx.db
+      .query('postCategories')
+      .withIndex('by_slug', (q) => q.eq('slug', args.categorySlug))
+      .unique()
+    if (!cat) throw new Error(`Categoria inválida: ${args.categorySlug}`)
+
+    await ensureCanPublishAs(ctx, args.authorClerkId, args.authorIdentity, args.authorInstitutionId)
+
+    const baseSlug = toSlug(title)
+    const slug = await ensureUniqueSlugForAuthor(ctx, args.authorClerkId, baseSlug)
+    const tagSlugs = sanitizeTags(args.tags)
+
+    const now = Date.now()
+    const id = await ctx.db.insert('posts', {
+      authorUserId: args.authorClerkId,
+      authorIdentity: args.authorIdentity,
+      authorInstitutionId:
+        args.authorIdentity === 'instituicao' ? args.authorInstitutionId : undefined,
+      title,
+      slug,
+      excerpt,
+      bodyMarkdown: body,
+      categorySlug: args.categorySlug,
+      tagSlugs,
+      status: 'published',
+      publishedAt: now,
+      updatedAt: now,
+      likeCount: 0,
+      commentCount: 0,
+      shareCount: 0,
+      viewCount: 0,
+    })
+
+    const author = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', args.authorClerkId))
+      .unique()
+    const handle = author?.handle ?? null
+
+    if (handle) {
+      await ctx.scheduler.runAfter(0, internal.indexnow.submitUrls, {
+        urls: [`https://resenhadoteologo.com/blog/${handle}/${slug}`],
+      })
+    }
+
+    return { id, slug, handle, url: handle ? `https://resenhadoteologo.com/blog/${handle}/${slug}` : null }
+  },
+})
+
+// Admin: gera URL pre-assinada de upload (PUT) pra capa de um post existente.
+// Usado para fazer bulk upload de capas geradas em batch (Canva, IA, etc) sem
+// passar bytes via JSON da CLI. Caller faz PUT direto no R2 e depois chama
+// adminSetCover com a r2Key. Roda via `npx convex run --prod`.
+export const adminGetCoverUploadUrl = internalAction({
+  args: {
+    authorClerkId: v.string(),
+    slug: v.string(),
+    contentType: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ uploadUrl: string; r2Key: string }> => {
+    const post = await ctx.runQuery(internal.posts.adminLookupPostBySlug, {
+      authorClerkId: args.authorClerkId,
+      slug: args.slug,
+    })
+    if (!post) throw new Error(`Post nao encontrado: ${args.authorClerkId}/${args.slug}`)
+    const ext =
+      args.contentType === 'image/png'
+        ? 'png'
+        : args.contentType === 'image/webp'
+          ? 'webp'
+          : 'jpg'
+    const r2Key = `posts/${args.authorClerkId}/cover-${args.slug}.${ext}`
+    const uploadUrl = await presignR2UploadUrl({
+      key: r2Key,
+      contentType: args.contentType,
+      expiresInSec: 60 * 10,
+    })
+    return { uploadUrl, r2Key }
+  },
+})
+
+export const adminLookupPostBySlug = internalQuery({
+  args: {
+    authorClerkId: v.string(),
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db
+      .query('posts')
+      .withIndex('by_author_slug', (q) =>
+        q.eq('authorUserId', args.authorClerkId).eq('slug', args.slug),
+      )
+      .unique()
+    if (!post) return null
+    return { _id: post._id, slug: post.slug, title: post.title }
+  },
+})
+
+export const adminSetCover = internalMutation({
+  args: {
+    authorClerkId: v.string(),
+    slug: v.string(),
+    r2Key: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db
+      .query('posts')
+      .withIndex('by_author_slug', (q) =>
+        q.eq('authorUserId', args.authorClerkId).eq('slug', args.slug),
+      )
+      .unique()
+    if (!post) throw new Error(`Post nao encontrado: ${args.authorClerkId}/${args.slug}`)
+    await ctx.db.patch(post._id, {
+      coverImageR2Key: args.r2Key,
+      updatedAt: Date.now(),
+    })
+    return { ok: true, slug: post.slug, r2Key: args.r2Key }
   },
 })
